@@ -1,0 +1,222 @@
+src/screens/AllStylesScreen.tsx(181,42): error TS2345: Argument of type '[string, { styleName: string; }]' is not assignable to parameter of type 'never'.
+src/screens/AppointmentDetailScreen copy.tsx(332,11): error TS2339: Property 'id' does not exist on type '{}'.
+src/screens/AppointmentDetailScreen copy.tsx(338,23): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ "1": { id: string; status: string; provider: { id: string; name: string; avatar: string; rating: number; address: string; phone: string; }; service: { name: string; duration: string; price: string; }; date: string; time: string; bookingId: string; notes: string; cancellationPolicy: string; }; "2": { ...; }; }'.
+src/screens/BottomNavigation.tsx(22,28): error TS2532: Object is possibly 'undefined'.
+src/screens/BottomNavigation.tsx(22,57): error TS2532: Object is possibly 'undefined'.
+src/screens/BottomNavigation.tsx(24,24): error TS7006: Parameter 'targetPath' implicitly has an 'any' type.
+src/screens/ClientOnboardingScreen.tsx(77,25): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"LocationAccess"' is not assignable to parameter of type 'never'.
+src/screens/DeleteAccountScreen.tsx(47,31): error TS7031: Binding element 'Icon' implicitly has an 'any' type.
+src/screens/DeleteAccountScreen.tsx(47,37): error TS7031: Binding element 'title' implicitly has an 'any' type.
+src/screens/DeleteAccountScreen.tsx(47,44): error TS7031: Binding element 'subtitle' implicitly has an 'any' type.
+src/screens/DeleteAccountScreen.tsx(60,27): error TS7031: Binding element 'reason' implicitly has an 'any' type.
+src/screens/DeleteAccountScreen.tsx(60,35): error TS7031: Binding element 'selected' implicitly has an 'any' type.
+src/screens/DeleteAccountScreen.tsx(60,45): error TS7031: Binding element 'onToggle' implicitly has an 'any' type.
+src/screens/DeleteAccountScreen.tsx(93,24): error TS2345: Argument of type '(prev: never[]) => string[]' is not assignable to parameter of type 'SetStateAction<never[]>'.
+  Type '(prev: never[]) => string[]' is not assignable to type '(prevState: never[]) => never[]'.
+    Type 'string[]' is not assignable to type 'never[]'.
+      Type 'string' is not assignable to type 'never'.
+src/screens/DeleteAccountScreen.tsx(94,21): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/screens/DeleteAccountScreen.tsx(129,24): error TS2322: Type 'string' is not assignable to type 'never'.
+src/screens/DeleteAccountScreen.tsx(195,32): error TS2322: Type 'string' is not assignable to type 'never'.
+src/screens/DeleteAccountScreen.tsx(289,56): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"PrivacySettings"' is not assignable to parameter of type 'never'.
+src/screens/DeleteAccountScreen.tsx(295,56): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"NotificationSettings"' is not assignable to parameter of type 'never'.
+src/screens/DeleteAccountScreen.tsx(301,56): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Support"' is not assignable to parameter of type 'never'.
+src/screens/DeleteAccountScreen.tsx(318,58): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/screens/DeleteAccountScreen.tsx(323,43): error TS2345: Argument of type '"Anderer Grund"' is not assignable to parameter of type 'never'.
+src/screens/EditProfileScreen.tsx(44,20): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/screens/EditProfileScreen.tsx(45,29): error TS7006: Parameter 'data' implicitly has an 'any' type.
+src/screens/EditProfileScreen.tsx(47,24): error TS7006: Parameter 'file' implicitly has an 'any' type.
+src/screens/EditProfileScreen.tsx(119,18): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ MALE: string; FEMALE: string; OTHER: string; }'.
+  No index signature with a parameter of type 'string' was found on type '{ MALE: string; FEMALE: string; OTHER: string; }'.
+src/screens/EditProfileScreen.tsx(149,26): error TS7053: Element implicitly has an 'any' type because expression of type '"" | "female" | "male" | "other"' can't be used to index type '{ male: string; female: string; other: string; }'.
+  Property '' does not exist on type '{ male: string; female: string; other: string; }'.
+src/screens/EditProfileScreen.tsx(213,18): error TS2322: Type '() => React.JSX.Element' is not assignable to type 'ReactNode'.
+src/screens/HairPreferencesScreen.tsx(123,17): error TS2345: Argument of type '(prev: { hairType: string; hairLength: string; preferredStyles: string[]; allergies: never[]; sensitivScalp: boolean; additionalNotes: string; }) => { allergies: string[]; hairType: string; hairLength: string; preferredStyles: string[]; sensitivScalp: boolean; additionalNotes: string; }' is not assignable to parameter of type 'SetStateAction<{ hairType: string; hairLength: string; preferredStyles: string[]; allergies: never[]; sensitivScalp: boolean; additionalNotes: string; }>'.
+  Type '(prev: { hairType: string; hairLength: string; preferredStyles: string[]; allergies: never[]; sensitivScalp: boolean; additionalNotes: string; }) => { allergies: string[]; hairType: string; hairLength: string; preferredStyles: string[]; sensitivScalp: boolean; additionalNotes: string; }' is not assignable to type '(prevState: { hairType: string; hairLength: string; preferredStyles: string[]; allergies: never[]; sensitivScalp: boolean; additionalNotes: string; }) => { hairType: string; hairLength: string; preferredStyles: string[]; allergies: never[]; sensitivScalp: boolean; additionalNotes: string; }'.
+    Call signature return types '{ allergies: string[]; hairType: string; hairLength: string; preferredStyles: string[]; sensitivScalp: boolean; additionalNotes: string; }' and '{ hairType: string; hairLength: string; preferredStyles: string[]; allergies: never[]; sensitivScalp: boolean; additionalNotes: string; }' are incompatible.
+      The types of 'allergies' are incompatible between these types.
+        Type 'string[]' is not assignable to type 'never[]'.
+          Type 'string' is not assignable to type 'never'.
+src/screens/HairPreferencesScreen.tsx(125,42): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/screens/HairPreferencesScreen.tsx(230,56): error TS2345: Argument of type 'string' is not assignable to parameter of type 'never'.
+src/screens/HairPreferencesScreen.tsx(245,15): error TS2322: Type '{ label: string; checked: boolean; onPress: () => void; style: { marginTop: number; backgroundColor: string; borderColor: string; }; }' is not assignable to type 'IntrinsicAttributes & { label: string; checked: boolean; onPress: () => void; }'.
+  Property 'style' does not exist on type 'IntrinsicAttributes & { label: string; checked: boolean; onPress: () => void; }'.
+src/screens/HomeScreen.tsx(19,18): error TS2307: Cannot find module 'react-native-vector-icons/Feather' or its corresponding type declarations.
+src/screens/HomeScreen.tsx(21,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/screens/HomeScreen.tsx(22,21): error TS2307: Cannot find module '@/services/http' or its corresponding type declarations.
+src/screens/HomeScreen.tsx(23,61): error TS2307: Cannot find module '@/services/favorites' or its corresponding type declarations.
+src/screens/HomeScreen.tsx(85,40): error TS2304: Cannot find name 'NearbyItem'.
+src/screens/HomeScreen.tsx(92,59): error TS2304: Cannot find name 'NearbyItem'.
+src/screens/HomeScreen.tsx(126,42): error TS2304: Cannot find name 'NearbyItem'.
+src/screens/HomeScreen.tsx(171,27): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Login"' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(196,37): error TS7031: Binding element 'item' implicitly has an 'any' type.
+src/screens/HomeScreen.tsx(199,42): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Search"' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(223,40): error TS7031: Binding element 'braider' implicitly has an 'any' type.
+src/screens/HomeScreen.tsx(227,44): error TS2345: Argument of type '[string, { id: any; }]' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(272,61): error TS7006: Parameter 'specialty' implicitly has an 'any' type.
+src/screens/HomeScreen.tsx(272,72): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+src/screens/HomeScreen.tsx(273,18): error TS2741: Property 'style' is missing in type '{ children: any; key: any; variant: string; textStyle: { fontSize: number; }; }' but required in type '{ children: any; variant?: string | undefined; textStyle: any; style: any; }'.
+src/screens/HomeScreen.tsx(283,18): error TS2741: Property 'style' is missing in type '{ children: string; variant: string; textStyle: { fontSize: number; }; }' but required in type '{ children: any; variant?: string | undefined; textStyle: any; style: any; }'.
+src/screens/HomeScreen.tsx(324,54): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Login"' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(353,48): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Search"' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(357,14): error TS2739: Type '{ placeholder: string; editable: false; style: { paddingLeft: number; height: number; borderRadius: number; }; leftIcon: Element; }' is missing the following properties from type '{ placeholder: any; value: any; onChangeText: any; editable?: boolean | undefined; leftIcon: any; style: any; }': value, onChangeText
+src/screens/HomeScreen.tsx(380,18): error TS2741: Property 'icon' is missing in type '{ children: string; size: string; onPress: () => void; style: { backgroundColor: string; alignSelf: "flex-start"; height: number; paddingHorizontal: number; paddingVertical: number; }; textStyle: { ...; }; }' but required in type '{ children: any; onPress: any; icon: any; size?: string | undefined; variant?: string | undefined; style: any; textStyle: any; }'.
+src/screens/HomeScreen.tsx(382,54): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Verify"' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(404,41): error TS2345: Argument of type '[string, { screen: string; params: { urgent: boolean; }; }]' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(406,41): error TS2345: Argument of type '[string, { screen: string; params: { mobileService: boolean; }; }]' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(408,41): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Vouchers"' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(410,41): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Favorites"' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(412,41): error TS2345: Argument of type '[string, { screen: string; params: { newProviders: boolean; }; }]' is not assignable to parameter of type 'never'.
+src/screens/HomeScreen.tsx(433,50): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"AllStyles"' is not assignable to parameter of type 'never'.
+src/screens/ImprintScreen.tsx(38,17): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/screens/ImprintScreen.tsx(38,27): error TS7031: Binding element 'style' implicitly has an 'any' type.
+src/screens/ImprintScreen.tsx(55,28): error TS7006: Parameter 'url' implicitly has an 'any' type.
+src/screens/ImprintScreen.tsx(290,48): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"Terms"' is not assignable to parameter of type 'never'.
+src/screens/ImprintScreen.tsx(297,48): error TS2769: No overload matches this call.
+  Argument of type '[string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(options: never): void', gave the following error.
+    Argument of type '"PrivacyPolicy"' is not assignable to parameter of type 'never'.
+src/screens/LanguageScreen.tsx(50,17): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/screens/LanguageScreen.tsx(50,27): error TS7031: Binding element 'style' implicitly has an 'any' type.
+src/screens/LoginScreen.tsx(23,24): error TS2339: Property 'message' does not exist on type '{}'.
+src/screens/MessagesScreen.tsx(20,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/screens/PasswordResetScreen.tsx(23,21): error TS2307: Cannot find module '@/services/http' or its corresponding type declarations.
+src/screens/PasswordResetScreen.tsx(288,21): error TS2322: Type '(el: TextInput | null) => TextInput | null' is not assignable to type 'Ref<TextInput> | undefined'.
+  Type '(el: TextInput | null) => TextInput | null' is not assignable to type '(instance: TextInput | null) => void | (() => VoidOrUndefinedOnly)'.
+    Type 'TextInput | null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+      Type 'null' is not assignable to type 'void | (() => VoidOrUndefinedOnly)'.
+src/screens/PasswordResetScreen.tsx(306,19): error TS2322: Type '"link"' is not assignable to type 'ButtonVariant | undefined'.
+src/screens/PaymentMethodsScreen.tsx(137,72): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/screens/PersonalInfoScreen.tsx(23,26): error TS2307: Cannot find module '../components/CustomPicker' or its corresponding type declarations.
+src/screens/PrivacySecurityScreen.tsx(33,10): error TS2440: Import declaration conflicts with local declaration of 'Badge'.
+src/screens/ProfileScreen.tsx(13,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/screens/ProfileScreen.tsx(14,21): error TS2307: Cannot find module '@/services/http' or its corresponding type declarations.
+src/screens/ProfileScreen.tsx(17,26): error TS2307: Cannot find module '@/services/users' or its corresponding type declarations.
+src/screens/ProfileScreen.tsx(38,30): error TS2307: Cannot find module 'expo-image-picker' or its corresponding type declarations.
+src/screens/ProfileScreen.tsx(175,14): error TS7006: Parameter 'res' implicitly has an 'any' type.
+src/screens/ProfileScreen.tsx(179,15): error TS7006: Parameter 'err' implicitly has an 'any' type.
+src/screens/ProtectedRoute.tsx(4,25): error TS2307: Cannot find module '@/contexts/AuthContext' or its corresponding type declarations.
+src/screens/ProtectedRoute.tsx(18,34): error TS7031: Binding element 'children' implicitly has an 'any' type.
+src/screens/provider/CreateAppointmentScreen.tsx(150,17): error TS2322: Type '{ value: string; onChangeText: Dispatch<SetStateAction<string>>; placeholder: string; icon: string; style: { marginBottom: number; }; }' is not assignable to type 'IntrinsicAttributes & InputProps & RefAttributes<TextInput>'.
+  Property 'icon' does not exist on type 'IntrinsicAttributes & InputProps & RefAttributes<TextInput>'.
+src/screens/provider/CreateAppointmentScreen.tsx(214,17): error TS2322: Type '{ placeholder: string; value: string; onChangeText: Dispatch<SetStateAction<string>>; icon: string; }' is not assignable to type 'IntrinsicAttributes & InputProps & RefAttributes<TextInput>'.
+  Property 'icon' does not exist on type 'IntrinsicAttributes & InputProps & RefAttributes<TextInput>'.
+src/screens/provider/CreateAppointmentScreen.tsx(224,17): error TS2322: Type '{ placeholder: string; value: string; onChangeText: Dispatch<SetStateAction<string>>; icon: string; }' is not assignable to type 'IntrinsicAttributes & InputProps & RefAttributes<TextInput>'.
+  Property 'icon' does not exist on type 'IntrinsicAttributes & InputProps & RefAttributes<TextInput>'.
+src/screens/provider/CreateAppointmentScreen.tsx(303,49): error TS2345: Argument of type 'string' is not assignable to parameter of type 'SetStateAction<"pending" | "paid" | "invoice">'.
+src/screens/provider/ProviderBottomNav.tsx(31,7): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '"navigation" | undefined' is not assignable to type 'AccessibilityRole | undefined'.
+      Type '"navigation"' is not assignable to type 'AccessibilityRole | undefined'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '"navigation" | undefined' is not assignable to type 'AccessibilityRole | undefined'.
+      Type '"navigation"' is not assignable to type 'AccessibilityRole | undefined'.
+src/screens/provider/ProviderClients.tsx(12,31): error TS7006: Parameter 'iso' implicitly has an 'any' type.
+src/screens/provider/ProviderClients.tsx(51,23): error TS2339: Property 'message' does not exist on type '{}'.
+src/screens/provider/ProviderClients.tsx(62,26): error TS2339: Property 'items' does not exist on type 'never'.
+src/screens/provider/ProviderClients.tsx(65,26): error TS7006: Parameter 'c' implicitly has an 'any' type.
+src/screens/provider/ProviderClients.tsx(73,23): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/screens/provider/ProviderClients.tsx(107,24): error TS2339: Property 'totalClients' does not exist on type 'never'.
+src/screens/provider/ProviderClients.tsx(113,24): error TS2339: Property 'regularCustomers' does not exist on type 'never'.
+src/screens/provider/ProviderClients.tsx(119,31): error TS2339: Property 'newThisWeek' does not exist on type 'never'.
+src/screens/provider/ProviderClients.tsx(119,68): error TS2339: Property 'newThisWeek' does not exist on type 'never'.
+src/screens/provider/ProviderClients.tsx(139,35): error TS7006: Parameter 'client' implicitly has an 'any' type.
+src/screens/provider/ProviderDashboard.tsx(12,21): error TS7006: Parameter 'cents' implicitly has an 'any' type.
+src/screens/provider/ProviderDashboard.tsx(17,24): error TS7006: Parameter 'status' implicitly has an 'any' type.
+src/screens/provider/ProviderDashboard.tsx(51,26): error TS2339: Property 'response' does not exist on type '{}'.
+src/screens/provider/ProviderDashboard.tsx(51,58): error TS2339: Property 'message' does not exist on type '{}'.
+src/screens/provider/ProviderDashboard.tsx(76,46): error TS2339: Property 'user' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(76,77): error TS2339: Property 'user' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(117,35): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(133,31): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(135,82): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(136,92): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(138,62): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(138,138): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(153,108): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(168,80): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(169,85): error TS2339: Property 'stats' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(185,30): error TS2339: Property 'todayAppointments' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(185,60): error TS7006: Parameter 'appointment' implicitly has an 'any' type.
+src/screens/provider/ProviderDashboard.tsx(252,33): error TS2322: Type 'string' is not assignable to type '"options" | "link" | "unlink" | "search" | "repeat" | "at" | "push" | "map" | "filter" | "body" | "code" | "menu" | "time" | "ellipse" | "image" | "stop" | "text" | "warning" | "scale" | ... 1338 more ... | undefined'.
+src/screens/provider/ProviderDashboard.tsx(270,30): error TS2339: Property 'recentReviews' does not exist on type 'never'.
+src/screens/provider/ProviderDashboard.tsx(270,56): error TS7006: Parameter 'review' implicitly has an 'any' type.
+src/screens/provider/ProviderHelpScreen.tsx(138,33): error TS2322: Type 'string' is not assignable to type '"options" | "link" | "unlink" | "search" | "repeat" | "at" | "push" | "map" | "filter" | "body" | "code" | "menu" | "time" | "ellipse" | "image" | "stop" | "text" | "warning" | "scale" | ... 1338 more ... | undefined'.
+src/screens/provider/ProviderMore.tsx(172,25): error TS2322: Type '{ source: { uri: string; }; size: number; }' is not assignable to type 'IntrinsicAttributes & AvatarProps'.
+  Property 'source' does not exist on type 'IntrinsicAttributes & AvatarProps'.
+src/screens/provider/ProviderPublicProfileScreen.tsx(171,35): error TS2339: Property 'starRow' does not exist on type '{ flexContainer: { flex: number; backgroundColor: string; }; fixedHeader: { backgroundColor: string; paddingHorizontal: number; paddingVertical: number; borderBottomWidth: number; borderBottomColor: string; ... 5 more ...; zIndex: number; }; ... 57 more ...; viewAllReviewsButton: { ...; }; }'.
+src/screens/provider/ProviderPublicProfileScreen.tsx(192,9): error TS2322: Type '{ title: string; variant: "outline"; iconRight: Element; onPress: () => any; style: { borderColor: string; marginTop: number; }; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.
+  Property 'iconRight' does not exist on type 'IntrinsicAttributes & ButtonProps'.
+src/screens/provider/ProviderPublicProfileScreen.tsx(215,21): error TS2322: Type '{ source: { uri: string; }; size: number; }' is not assignable to type 'IntrinsicAttributes & AvatarProps'.
+  Property 'source' does not exist on type 'IntrinsicAttributes & AvatarProps'.
+src/screens/provider/ProviderPublicProfileScreen.tsx(252,97): error TS2322: Type '{ name: string; onPress: () => any; variant: string; }' is not assignable to type 'IntrinsicAttributes & IconButtonProps'.
+  Property 'variant' does not exist on type 'IntrinsicAttributes & IconButtonProps'.
+src/screens/provider/ProviderPublicProfileScreen.tsx(253,80): error TS2322: Type '{ name: string; onPress: () => void; variant: string; }' is not assignable to type 'IntrinsicAttributes & IconButtonProps'.
+  Property 'variant' does not exist on type 'IntrinsicAttributes & IconButtonProps'.
+src/screens/provider/ProviderReviews.tsx(115,17): error TS2322: Type '{ source: { uri: string; }; size: number; }' is not assignable to type 'IntrinsicAttributes & AvatarProps'.
+  Property 'source' does not exist on type 'IntrinsicAttributes & AvatarProps'.
+src/screens/provider/ProviderReviews.tsx(296,21): error TS2322: Type '{ key: string; title: string; size: "sm"; variant: "default" | "outline"; onPress: () => void; style: { borderColor: string; }; iconRight: Element | null; }' is not assignable to type 'IntrinsicAttributes & ButtonProps'.
+  Property 'iconRight' does not exist on type 'IntrinsicAttributes & ButtonProps'.
+src/screens/provider/ProviderReviews.tsx(340,13): error TS2322: Type 'Dispatch<SetStateAction<null>>' is not assignable to type '(id: number | null) => void'.
+  Types of parameters 'value' and 'id' are incompatible.
+    Type 'number | null' is not assignable to type 'SetStateAction<null>'.
+      Type 'number' is not assignable to type 'SetStateAction<null>'.
+src/screens/provider/ProviderSubscriptionScreen.tsx(82,22): error TS7006: Parameter 'message' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(87,21): error TS7031: Binding element 'plan' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(87,27): error TS7031: Binding element 'isCurrent' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(87,38): error TS7031: Binding element 'onAction' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(132,29): error TS7006: Parameter 'feature' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(132,38): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(138,32): error TS7006: Parameter 'limit' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(138,39): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/screens/provider/ProviderSubscriptionScreen.tsx(216,48): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '{ color: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '{ color: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+src/screens/provider/ProviderSubscriptionScreen.tsx(220,48): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: ViewProps): View', gave the following error.
+    Type '{ color: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+  Overload 2 of 2, '(props: ViewProps, context: any): View', gave the following error.
+    Type '{ color: string; }' is not assignable to type 'ViewStyle | Falsy | RegisteredStyle<ViewStyle> | RecursiveArray<ViewStyle | Falsy | RegisteredStyle<ViewStyle>> | readonly (ViewStyle | ... 1 more ... | RegisteredStyle<...>)[]'.
+src/screens/provider/ProviderSubscriptionScreen.tsx(240,28): error TS7006: Parameter 'planName' implicitly has an 'any' type.
