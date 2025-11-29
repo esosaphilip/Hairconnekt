@@ -1,0 +1,19 @@
+{
+  "name": "hairconnekt-monorepo",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Root scripts for running Hairconnekt frontend and backend together",
+  "scripts": {
+    "dev": "concurrently -k -n BACKEND,FRONTEND -c blue,magenta \"npm --prefix backend run start:dev\" \"npm --prefix \\\"apps/Hairconnekt web design\\\" run dev\"",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:client": "npm --prefix \"apps/Hairconnekt web design\" run dev",
+    "dev:mobile": "npm --prefix apps/mobile run start",
+    "build": "npm run build:backend && npm run build:client",
+    "build:backend": "npm --prefix backend run build",
+    "build:client": "npm --prefix \"apps/Hairconnekt web design\" run build",
+    "install:all": "npm --prefix backend install && npm --prefix \"apps/Hairconnekt web design\" install && npm --prefix apps/mobile install"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}

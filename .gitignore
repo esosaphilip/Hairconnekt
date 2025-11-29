@@ -1,0 +1,32 @@
+# Root gitignore for Hairconnekt monorepo
+
+# General
+.DS_Store
+Thumbs.db
+*.log
+logs/
+
+# Env files
+.env
+.env.*
+backend/.env
+
+# Node/Nest backend
+backend/node_modules/
+backend/dist/
+backend/uploads/
+backend/npm-debug.log*
+backend/yarn-error.log*
+
+# Mobile app (Kotlin Multiplatform)
+apps/mobile/build/
+apps/mobile/.gradle/
+apps/mobile/.kotlin/
+apps/mobile/local.properties
+apps/mobile/androidApp/.idea/
+apps/mobile/iosApp/Pods/
+
+# IDE caches
+.idea/
+.vscode/
+**/.swp
