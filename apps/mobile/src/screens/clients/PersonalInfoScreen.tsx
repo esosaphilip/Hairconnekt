@@ -1,4 +1,3 @@
-/* eslint-disable */
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
@@ -376,4 +375,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-// @ts-nocheck

@@ -1,0 +1,7 @@
+assets/
+docs/
+guildlines/
+**/*.md
+node_modules/
+dist/
+build/

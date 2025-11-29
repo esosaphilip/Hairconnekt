@@ -137,7 +137,17 @@ const MenuItem: React.FC<{ item: MenuItemData; onPress: (path: string) => void }
 export function ProviderMore() {
   const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
   const { logout, user } = useAuth();
-  const [profile, setProfile] = useState<any | null>(null);
+  type ProviderProfileSummary = {
+    businessName?: string | null;
+    isVerified?: boolean;
+    acceptsSameDayBooking?: boolean;
+    user?: {
+      firstName?: string | null;
+      lastName?: string | null;
+      profilePictureUrl?: string | null;
+    };
+  };
+  const [profile, setProfile] = useState<ProviderProfileSummary | null>(null);
   const [loadingProfile, setLoadingProfile] = useState<boolean>(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [earningsBadge, setEarningsBadge] = useState<string | null>(null);
@@ -219,6 +229,16 @@ export function ProviderMore() {
   return (
     <SafeAreaView style={styles.flexContainer}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {loadingProfile && (
+          <View style={{ padding: SPACING.md }}>
+            <Text style={{ color: COLORS.textSecondary }}>Profil wird geladen…</Text>
+          </View>
+        )}
+        {!!profileError && (
+          <View style={{ padding: SPACING.md }}>
+            <Text style={{ color: COLORS.danger }}>{profileError}</Text>
+          </View>
+        )}
         {/* Header with Profile */}
         <View style={styles.profileHeader}>
           <Text style={styles.screenTitle}>Mehr</Text>
@@ -230,9 +250,9 @@ export function ProviderMore() {
           >
             <Card style={styles.profileCard}>
               <View style={styles.profileSummary}>
-                <Avatar size={64}>
-                  <AvatarImage source={{ uri: getAvatarUrl(user, profile) }} />
-                </Avatar>
+            <Avatar size={64}>
+              <AvatarImage source={{ uri: getAvatarUrl(user, profile) }} />
+            </Avatar>
                 <View style={styles.profileTextContainer}>
                   <Text style={styles.profileName}>{[user?.firstName, user?.lastName].filter(Boolean).join(' ') || profile?.user?.firstName || 'Profil'}</Text>
                   <Text style={styles.profileStudio}>{profile?.businessName || 'Studio'}</Text>
@@ -271,19 +291,26 @@ export function ProviderMore() {
             </View>
           ))}
 
+          {/* Earnings error */}
+          {!!earningsError && (
+            <Card style={{ padding: SPACING.md }}>
+              <Text style={{ color: COLORS.danger }}>{earningsError}</Text>
+            </Card>
+          )}
+
           {/* Logout */}
           <Card style={styles.logoutCard}>
             <TouchableOpacity
               onPress={handleLogout}
-              style={styles.logoutButton}
-              activeOpacity={0.7}
-            >
-              <View style={styles.logoutIconCircle}>
-                <Icon name="log-out" size={20} color={COLORS.danger} />
-              </View>
-              <Text style={styles.logoutLabel}>Abmelden</Text>
-            </TouchableOpacity>
-          </Card>
+            style={styles.logoutButton}
+            activeOpacity={0.7}
+          >
+            <View style={styles.logoutIconCircle}>
+              <Icon name="log-out" size={20} color={COLORS.danger} />
+            </View>
+            <Text style={styles.logoutLabel}>Abmelden</Text>
+          </TouchableOpacity>
+        </Card>
         </View>
         
         {/* App Version */}
@@ -322,8 +349,8 @@ function getAvatarUrl(user: unknown, profile: unknown): string {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   scrollContent: {
     paddingBottom: SPACING.xl * 2,
@@ -331,11 +358,11 @@ const styles = StyleSheet.create({
   // --- Profile Header Styles ---
   profileHeader: {
     backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    paddingBottom: SPACING.md || 16,
     paddingHorizontal: SPACING.md || 16,
     paddingTop: SPACING.md || 16,
-    paddingBottom: SPACING.md || 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
   },
   screenTitle: {
     fontSize: FONT_SIZES.h3 || 20,
@@ -346,8 +373,8 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   profileSummary: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.sm || 8,
   },
   profileTextContainer: {
@@ -358,8 +385,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   profileStudio: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
   profileBadgeRow: {
     flexDirection: 'row',
@@ -368,38 +395,38 @@ const styles = StyleSheet.create({
   },
   // --- Menu Sections Styles ---
   menuSectionsContainer: {
+    gap: SPACING.lg || 24,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.md,
-    gap: SPACING.lg || 24,
   },
   section: {
     // Container for title + card
   },
   sectionTitle: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
     fontWeight: '600',
-    textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: SPACING.sm,
+    textTransform: 'uppercase',
   },
   cardContainer: {
+    backgroundColor: COLORS.white,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: COLORS.white,
   },
   divider: {
-    height: 1,
     backgroundColor: COLORS.border || '#E5E7EB',
+    height: 1,
     marginLeft: 50 + SPACING.sm * 2, // Indent past the icon circle + spacing
   },
   menuItem: {
-    width: '100%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: SPACING.sm || 8,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm || 8,
+    width: '100%',
   },
   menuIconCircle: {
     width: 40,
@@ -411,9 +438,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   menuLabel: {
+    color: COLORS.text || '#1F2937',
     flex: 1,
     fontSize: FONT_SIZES.body || 14,
-    color: COLORS.text || '#1F2937',
   },
   // --- Logout Styles ---
   logoutCard: {
@@ -421,12 +448,12 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   logoutButton: {
-    width: '100%',
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: SPACING.sm || 8,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm || 8,
+    width: '100%',
   },
   logoutIconCircle: {
     width: 40,
@@ -438,9 +465,9 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   logoutLabel: {
+    color: COLORS.danger || '#EF4444',
     flex: 1,
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.danger || '#EF4444', // red-600
+    fontSize: FONT_SIZES.body || 14, // red-600
   },
   // --- Version Info ---
   versionContainer: {
@@ -448,7 +475,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.lg,
   },
   versionText: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
   },
 });

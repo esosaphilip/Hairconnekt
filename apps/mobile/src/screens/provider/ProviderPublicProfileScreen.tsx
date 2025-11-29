@@ -14,7 +14,9 @@ import {
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, CompositeNavigationProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ProviderMoreStackParamList, RootStackParamList } from '@/navigation/types';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import IconButton from '../../components/IconButton';
@@ -58,8 +60,12 @@ type PortfolioItem = {
 
 // --- Main Component ---
 export function ProviderPublicProfileScreen() {
-  const navigation = useNavigation<any>();
-  const route = useRoute<any>();
+  type Nav = CompositeNavigationProp<
+    NativeStackNavigationProp<ProviderMoreStackParamList>,
+    NativeStackNavigationProp<RootStackParamList>
+  >;
+  const navigation = useNavigation<Nav>();
+  const route = useRoute<RouteProp<ProviderMoreStackParamList, 'ProviderPublicProfileScreen'>>();
   // Accept both { id } and legacy { providerId }
   const providerId: string | undefined = route?.params?.id ?? route?.params?.providerId;
   const [activeTab, setActiveTab] = useState('about'); // 'about' | 'services' | 'portfolio' | 'reviews'
@@ -92,8 +98,15 @@ export function ProviderPublicProfileScreen() {
         const res = await http.get(`/providers/public/${providerId}`);
         const data = res?.data as PublicProfile;
         if (mounted) setPublicData(data);
-      } catch (err: any) {
-        const msg = err?.response?.data?.message || err?.message || 'Fehler beim Laden des Profils';
+      } catch (err: unknown) {
+        const msg = (() => {
+          if (typeof err === 'string') return err;
+          if (typeof err === 'object' && err) {
+            const e = err as { message?: string; response?: { data?: { message?: string } } };
+            return e.response?.data?.message ?? e.message ?? 'Fehler beim Laden des Profils';
+          }
+          return 'Fehler beim Laden des Profils';
+        })();
         if (mounted) setErrorPublic(msg);
       } finally {
         if (mounted) setLoadingPublic(false);
@@ -106,11 +119,19 @@ export function ProviderPublicProfileScreen() {
       setErrorPortfolio(null);
       try {
         const res = await http.get(`/provider/${providerId}/portfolio`, { params: { limit: 12, sort: 'latest' } });
-        const items = Array.isArray(res?.data?.items) ? res.data.items : [];
-        const mapped: PortfolioItem[] = items.map((it: any) => ({ id: it?.id, imageUrl: it?.imageUrl, uploadedAt: it?.uploadedAt }));
+        type RawPortfolioItem = { id: string; imageUrl?: string; uploadedAt?: string };
+        const items = Array.isArray(res?.data?.items) ? (res.data.items as RawPortfolioItem[]) : [];
+        const mapped: PortfolioItem[] = items.map((it) => ({ id: it.id, imageUrl: it.imageUrl ?? '', uploadedAt: it.uploadedAt }));
         if (mounted) setPortfolioItems(mapped.filter((x) => !!x.imageUrl));
-      } catch (err: any) {
-        const msg = err?.response?.data?.message || err?.message || 'Fehler beim Laden des Portfolios';
+      } catch (err: unknown) {
+        const msg = (() => {
+          if (typeof err === 'string') return err;
+          if (typeof err === 'object' && err) {
+            const e = err as { message?: string; response?: { data?: { message?: string } } };
+            return e.response?.data?.message ?? e.message ?? 'Fehler beim Laden des Portfolios';
+          }
+          return 'Fehler beim Laden des Portfolios';
+        })();
         if (mounted) setErrorPortfolio(msg);
       } finally {
         if (mounted) setLoadingPortfolio(false);
@@ -121,8 +142,9 @@ export function ProviderPublicProfileScreen() {
       if (!providerId) return;
       try {
         const res = await favoriteStatus(providerId);
-        if (mounted) setIsFavorite(!!(res as any)?.isFavorite);
-      } catch (e) {
+        const fav = (res as { isFavorite?: boolean })?.isFavorite === true;
+        if (mounted) setIsFavorite(fav);
+      } catch {
         if (mounted) setIsFavorite(false);
       }
     }
@@ -151,7 +173,7 @@ export function ProviderPublicProfileScreen() {
     try {
       if (next) await addFavorite(providerId);
       else await removeFavorite(providerId);
-    } catch (err) {
+    } catch {
       // revert on failure
       setIsFavorite(!next);
       Alert.alert('Fehler', 'Aktion fehlgeschlagen');
@@ -391,26 +413,26 @@ export function ProviderPublicProfileScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   // --- Fixed Header Styles ---
   fixedHeader: {
     backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    elevation: 2,
     paddingHorizontal: SPACING.md || 16,
     paddingVertical: SPACING.sm || 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: SPACING.xs,
   },
@@ -419,8 +441,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
   // --- Profile Header ---
   scrollContent: {
@@ -428,9 +450,9 @@ const styles = StyleSheet.create({
   },
   profileHeader: {
     backgroundColor: COLORS.white,
+    marginBottom: SPACING.xs,
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.lg,
-    marginBottom: SPACING.xs, // Separator from tabs
+    paddingVertical: SPACING.lg, // Separator from tabs
   },
   profileSummary: {
     flexDirection: 'row',
@@ -441,16 +463,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   businessTitleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   businessName: {
     fontSize: FONT_SIZES.h3 || 20,
     fontWeight: 'bold',
   },
   ownerName: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
     marginBottom: SPACING.xs,
   },
   badgeRow: {
@@ -459,8 +481,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   ratingRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   ratingValue: {
@@ -468,33 +490,29 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   reviewCountText: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body || 14,
   },
   locationInfo: {
     gap: SPACING.xs,
     marginBottom: SPACING.md,
   },
   infoRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
   },
   infoText: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary,
-  },
-  openText: {
     fontSize: FONT_SIZES.body || 14,
-    color: COLORS.success || '#10B981',
   },
   actionButtons: {
     flexDirection: 'row',
     gap: SPACING.sm,
   },
   bookNowButton: {
-    flex: 1,
     backgroundColor: COLORS.primary || '#8B4513',
+    flex: 1,
     height: 48,
   },
   // --- Tabs Styles ---
@@ -503,25 +521,25 @@ const styles = StyleSheet.create({
     // No top margin needed since it follows the profile header
   },
   tabsList: {
-    flexDirection: 'row',
-    borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
     paddingHorizontal: SPACING.md,
   },
   tabTrigger: {
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: SPACING.md,
-    marginRight: SPACING.md,
-    borderBottomWidth: 2,
     borderBottomColor: 'transparent',
+    borderBottomWidth: 2,
+    marginRight: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
   },
   tabTriggerActive: {
     borderBottomColor: COLORS.primary || '#8B4513',
   },
   tabText: {
+    color: COLORS.textSecondary,
     fontSize: FONT_SIZES.body || 14,
     fontWeight: '500',
-    color: COLORS.textSecondary,
   },
   tabTextActive: {
     color: COLORS.primary,
@@ -543,8 +561,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   bodyText: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.text || '#1F2937',
+    fontSize: FONT_SIZES.body || 14,
   },
   badgeWrap: {
     flexDirection: 'row',
@@ -555,39 +573,22 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   featureItem: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     gap: SPACING.xs,
   },
   checkIcon: {
     flexShrink: 0,
     marginTop: 2,
   },
-  hoursList: {
-    gap: SPACING.xs,
-  },
-  hoursRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    fontSize: FONT_SIZES.body || 14,
-  },
-  hoursDay: {
-    color: COLORS.textSecondary,
-  },
-  hoursTimeOpen: {
-    color: COLORS.text,
-  },
-  hoursTimeClosed: {
-    color: COLORS.danger || '#EF4444',
-  },
   // --- Services Tab Styles ---
   serviceCard: {
     padding: SPACING.md,
   },
   serviceHeader: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: SPACING.sm,
   },
   serviceInfo: {
@@ -595,8 +596,8 @@ const styles = StyleSheet.create({
     paddingRight: SPACING.md,
   },
   serviceTitleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
   },
   serviceName: {
@@ -604,24 +605,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   serviceDuration: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body || 14,
   },
   servicePrice: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.primary || '#8B4513',
+    fontSize: FONT_SIZES.body || 14,
     fontWeight: 'bold',
   },
   bookButton: {
-    width: '100%',
     backgroundColor: COLORS.primary,
+    width: '100%',
   },
   // --- Portfolio Tab Styles ---
   portfolioGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
     gap: SPACING.sm,
+    justifyContent: 'space-between',
   },
   portfolioItem: {
     width: (Dimensions.get('window').width - SPACING.md * 2 - SPACING.sm) / 2, // Calculate for 2 columns
@@ -630,46 +631,16 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   portfolioImage: {
-    width: '100%',
     height: '100%',
+    width: '100%',
   },
   // --- Reviews Tab Styles ---
-  reviewCard: {
-    padding: SPACING.md,
-  },
-  reviewHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: SPACING.sm,
-  },
-  reviewClient: {
-    fontSize: FONT_SIZES.h5 || 16,
-    fontWeight: '600',
-    marginBottom: SPACING.xs / 2,
-  },
-  reviewDate: {
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary,
-  },
-  reviewServiceBadge: {
-    alignSelf: 'flex-start',
-    marginBottom: SPACING.sm,
-  },
-  reviewText: {
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.text || '#1F2937',
-  },
   viewAllReviewsButton: {
     borderColor: COLORS.border,
     marginTop: SPACING.sm,
   },
-  starRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   iconButtonOutline: {
-    borderWidth: 1,
     borderColor: COLORS.border,
+    borderWidth: 1,
   }
 });

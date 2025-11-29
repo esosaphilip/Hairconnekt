@@ -27,10 +27,21 @@ export const providerVouchersApi = {
     try {
       const res = await http.get('/providers/vouchers', { params: { status } });
       return res.data as ListProviderVouchersResponse;
-    } catch (err) {
+    } catch {
       // Fallback: use consumer vouchers endpoint and adapt structure
       const res = await http.get('/vouchers', { params: { status: status === 'used' ? 'used' : 'active' } });
-      const items = (res.data?.items || []).map((v: any) => ({
+      type ConsumerVoucher = {
+        id: string;
+        code: string;
+        title?: string;
+        description?: string;
+        discount: string;
+        minAmount?: number;
+        expiresAt?: string;
+        usedAt?: string;
+      };
+      const raw = (res.data?.items || []) as ConsumerVoucher[];
+      const items: ProviderVoucher[] = raw.map((v) => ({
         id: v.id,
         code: v.code,
         title: v.title,
@@ -39,7 +50,7 @@ export const providerVouchersApi = {
         minAmount: v.minAmount,
         expiresAt: v.expiresAt ?? v.usedAt,
         status: status ?? (v.usedAt ? 'used' : 'active'),
-      })) as ProviderVoucher[];
+      }));
       return { items };
     }
   },

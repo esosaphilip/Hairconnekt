@@ -27,15 +27,37 @@ module.exports = {
       files: ['**/*.ts', '**/*.tsx'],
       parser: '@typescript-eslint/parser',
     },
+    {
+      files: ['src/api/**/*.{ts,tsx}', 'src/auth/**/*.{ts,tsx}'],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'error',
+        '@typescript-eslint/no-unused-vars': 'error',
+      },
+    },
   ],
   rules: {
-    // You can tune rules here. Keeping defaults for now.
-    'react/react-in-jsx-scope': 'off', // Not needed in React 17+
+    'react/react-in-jsx-scope': 'off',
+    'react/prop-types': 'off',
+    'react-native/no-unused-styles': 'error',
+    'react-native/split-platform-components': 'error',
+    'react-native/no-single-element-style-arrays': 'error',
+    'react-native/sort-styles': 'off',
+    'react-native/no-color-literals': 'off',
+    'react-native/no-inline-styles': 'off',
+    'react-native/no-raw-text': 'off',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/ban-ts-comment': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn',
+    'react/no-unescaped-entities': 'off',
   },
   ignorePatterns: [
     'node_modules/',
     'dist/',
     'build/',
     'typecheck.out',
+    'assets/',
+    'docs/',
+    'guildlines/',
+    '**/*.md',
   ],
 };

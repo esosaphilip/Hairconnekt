@@ -8,11 +8,10 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/avatar';
 import { Switch } from 'react-native';
 import { http } from '@/api/http';
 import { colors, spacing, typography } from '@/theme/tokens';
-import { useNavigation } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { logger } from '@/services/logger';
 import { API_CONFIG, MESSAGES } from '@/constants';
-import type { ProviderTabsParamList } from '@/navigation/types';
+// Removed unused ProviderTabsParamList import
 
 type NextAppointment = {
   time: string;
@@ -93,7 +92,6 @@ function statusToBadge(status: string) {
 }
 
 export function ProviderDashboard() {
-  const navigation = useNavigation();
   const [isAvailable, setIsAvailable] = useState(true);
   const [profile, setProfile] = useState<{ name?: string; avatarUrl?: string | null } | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -171,7 +169,7 @@ export function ProviderDashboard() {
 
             {/* Availability Toggle */}
             <Card>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={styles.rowBetweenCenter}>
                 <View>
                   <Text style={[styles.availabilityText, { color: isAvailable ? colors.green600 : colors.gray600 }]}>
                     {isAvailable ? 'Verfügbar' : 'Nicht verfügbar'}
@@ -196,7 +194,7 @@ export function ProviderDashboard() {
                   <Ionicons name="calendar-outline" size={16} color={colors.primary} style={styles.statIcon} />
                   <Text style={styles.statLabel}>Termine heute</Text>
                 </View>
-                <View style={{ flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+                <View style={styles.rowEndBetween}>
                   <View>
                     <Text style={styles.statNumber}>
                       {dashboard?.stats?.todayCount ?? 0}
@@ -220,14 +218,14 @@ export function ProviderDashboard() {
                 <View>
                   {dashboard?.stats?.nextAppointment ? (
                     <>
-                      <Text style={{ fontSize: 22, marginBottom: 2 }}>{dashboard.stats.nextAppointment.time}</Text>
-                      <Text style={{ fontSize: 12, color: colors.gray600 }}>mit {dashboard.stats.nextAppointment.client}</Text>
+                      <Text style={styles.nextTimeText}>{dashboard.stats.nextAppointment.time}</Text>
+                      <Text style={styles.smallMutedText}>mit {dashboard.stats.nextAppointment.client}</Text>
                       <Text style={styles.timeUntilText}>
                         In {Math.max(0, Math.floor(dashboard.stats.nextAppointment.hoursUntil))} Std. {Math.max(0, Math.round((dashboard.stats.nextAppointment.hoursUntil % 1) * 60))} Min.
                       </Text>
                     </>
                   ) : (
-                    <Text style={{ fontSize: 12, color: colors.gray600 }}>Keine Termine heute</Text>
+                    <Text style={styles.smallMutedText}>Keine Termine heute</Text>
                   )}
                 </View>
               </Card>
@@ -241,7 +239,7 @@ export function ProviderDashboard() {
                   <Text style={styles.statLabel}>Diese Woche</Text>
                 </View>
                 <View>
-                  <Text style={[styles.statNumber, { color: colors.green600, marginBottom: 2 }]}>{formatEuro(dashboard?.stats?.weekEarningsCents || 0)}</Text>
+                  <Text style={[styles.statNumber, styles.mb2, { color: colors.green600 }]}>{formatEuro(dashboard?.stats?.weekEarningsCents || 0)}</Text>
                   <Text style={styles.nettoText}>(netto)</Text>
                   <View style={styles.changeRow}>
                     <Ionicons name="arrow-up-outline" size={12} color={colors.green600} />
@@ -267,8 +265,8 @@ export function ProviderDashboard() {
             </View>
 
             {/* Today's Schedule */}
-            <View style={{ marginBottom: spacing.md }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+                <View style={styles.mbMd}>
+              <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionTitle}>Heutiger Zeitplan</Text>
                 <Pressable onPress={() => rootNavigationRef.current?.navigate('Kalender', { screen: 'ProviderCalendar', params: { targetDate: todayYmd, viewMode: 'day' } })}>
                   <Text style={styles.seeAllText}>Alle anzeigen</Text>
@@ -277,15 +275,15 @@ export function ProviderDashboard() {
 
               <View>
                 {todayAppointments.map((appointment: Appointment) => (
-                  <Card key={appointment.id} style={{ marginBottom: 12 }}>
-                    <View style={{ flexDirection: 'row' }}>
-                      <View style={{ width: 8, alignItems: 'center', paddingTop: 4 }}>
+                  <Card key={appointment.id} style={styles.cardMb12}>
+                    <View style={styles.row}>
+                      <View style={styles.indicatorContainer}>
                         <View style={styles.appointmentIndicator} />
                       </View>
-                      <View style={{ flex: 1 }}>
-                        <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <View style={styles.flex1}>
+                        <View style={styles.appointmentHeaderRow}>
                           <View>
-                            <Text style={{ fontSize: 12, color: colors.gray600 }}>{appointment.time}</Text>
+                            <Text style={styles.smallMutedText}>{appointment.time}</Text>
                             {appointment.hoursUntil <= 3 && (
                               <Text style={styles.timeUntilText}>
                                 In {Math.max(0, Math.floor(appointment.hoursUntil))} Std. {Math.max(0, Math.round((appointment.hoursUntil % 1) * 60))} Min.
@@ -302,7 +300,7 @@ export function ProviderDashboard() {
                           })()}
                         </View>
 
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                        <View style={styles.appointmentRow}>
                           <Avatar size={40}>
                             {appointment.client.image ? (
                               <AvatarImage uri={appointment.client.image} />
@@ -310,18 +308,18 @@ export function ProviderDashboard() {
                               <AvatarFallback label={(appointment.client.name || 'K').slice(0, 2).toUpperCase()} />
                             )}
                           </Avatar>
-                          <View style={{ flex: 1, marginLeft: 12 }}>
-                            <Text style={{ fontSize: 16, fontWeight: '700' }}>{appointment.client.name}</Text>
-                            <Text style={{ fontSize: 12, color: colors.gray600 }}>{appointment.service}</Text>
+                          <View style={styles.clientInfo}>
+                            <Text style={styles.clientName}>{appointment.client.name}</Text>
+                            <Text style={styles.smallMutedText}>{appointment.service}</Text>
                           </View>
                           <Text style={styles.priceText}>{formatEuro(appointment.priceCents)}</Text>
                         </View>
 
-                        <View style={{ flexDirection: 'row' }}>
+                        <View style={styles.row}>
                           {appointment.hoursUntil <= 0.5 && (
                             <Button title="Starten" style={[styles.actionButton, { backgroundColor: colors.green600 }]} />
                           )}
-                          <Button title="Nachricht" variant="ghost" style={{ flex: 1, marginRight: 8 }} />
+                          <Button title="Nachricht" variant="ghost" style={styles.ghostButtonWide} />
                           <Button title="Mehr" variant="ghost" />
                         </View>
                       </View>
@@ -329,19 +327,19 @@ export function ProviderDashboard() {
                   </Card>
                 ))}
 
-                <View style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}>
-                  <View style={{ height: 48, borderLeftWidth: 2, borderStyle: 'dashed', borderColor: colors.gray300, marginRight: 8 }} />
-                  <Text style={{ fontSize: 12, color: colors.gray500 }}>15:00 - 16:00 Frei</Text>
+                <View style={styles.dashedRow}>
+                  <View style={styles.dashedDivider} />
+                  <Text style={styles.smallGrayText}>15:00 - 16:00 Frei</Text>
                 </View>
               </View>
             </View>
 
             {/* Quick Actions */}
-            <View style={{ marginBottom: spacing.md }}>
-              <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Schnellaktionen</Text>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <View style={styles.mbMd}>
+              <Text style={[styles.sectionTitle, styles.mbSm]}>Schnellaktionen</Text>
+              <View style={styles.quickActionsRow}>
                 {quickActions.map((qa) => (
-                  <Card key={qa.label} style={{ width: '48%', paddingVertical: 16 }}>
+                  <Card key={qa.label} style={styles.quickActionCard}>
                     <Pressable
                       onPress={() => {
                         switch (qa.label) {
@@ -361,19 +359,19 @@ export function ProviderDashboard() {
                             break;
                         }
                       }}
-                      style={{ alignItems: 'center' }}
+                      style={styles.centered}
                     >
                       <Ionicons name={qa.icon} size={24} color={colors.gray600} />
-                      <Text style={{ fontSize: 12, color: colors.gray700, marginTop: 8 }}>{qa.label}</Text>
+                      <Text style={styles.quickActionLabel}>{qa.label}</Text>
                     </Pressable>
                   </Card>
                 ))}
               </View>
-            </View>
+              </View>
 
             {/* Recent Reviews */}
             <View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+              <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionTitle}>Neueste Bewertungen</Text>
                 <Pressable onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen' })}>
                   <Text style={styles.seeAllText}>Alle anzeigen</Text>
@@ -382,19 +380,19 @@ export function ProviderDashboard() {
 
               <View>
                 {recentReviews.map((review: Review) => (
-                  <Card key={review.id} style={{ marginBottom: 12 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <Card key={review.id} style={styles.cardMb12}>
+                    <View style={styles.reviewHeaderRow}>
                       <View>
-                        <Text style={{ fontSize: 16, fontWeight: '700' }}>{review.client}</Text>
-                        <View style={{ flexDirection: 'row', marginTop: 4 }}>
+                        <Text style={styles.reviewClientName}>{review.client}</Text>
+                        <View style={styles.reviewStarsRow}>
                           {Array.from({ length: review.rating }).map((_, i) => (
                             <Ionicons key={i} name="star" size={12} color={colors.amber600} style={styles.starIcon} />
                           ))}
                         </View>
                       </View>
-                      <Text style={{ fontSize: 12, color: colors.gray500 }}>{safeLocaleDateString(new Date(review.date), 'de-DE')}</Text>
+                      <Text style={styles.smallGrayText}>{safeLocaleDateString(new Date(review.date), 'de-DE')}</Text>
                     </View>
-                    <Text style={{ fontSize: 14, color: colors.gray700, marginBottom: 8 }}>{review.text}</Text>
+                    <Text style={styles.reviewText}>{review.text}</Text>
                     {!review.hasResponse && (
                       <Button
                         title="Antworten"
@@ -409,7 +407,7 @@ export function ProviderDashboard() {
           </View>
 
           {!!error && (
-            <View style={{ paddingHorizontal: 16 }}>
+            <View style={styles.errorContainerPadding}>
               <Card>
                 <Text style={styles.errorText}>{error}</Text>
               </Card>
@@ -422,14 +420,78 @@ export function ProviderDashboard() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.gray50,
+  appointmentHeaderRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  appointmentRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: 8,
+  },
+  cardMb12: {
+    marginBottom: 12,
+  },
+  actionButton: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  appointmentIndicator: {
+    backgroundColor: colors.green600,
+    borderRadius: 1,
+    height: '100%',
+    width: 2,
+  },
+  centered: {
+    alignItems: 'center',
+  },
+  flex1: {
     flex: 1,
   },
-  loadingContainer: {
-    alignItems: 'center',
+  availabilityDescription: {
+    color: colors.gray600,
+    fontSize: typography.small.fontSize,
+  },
+  availabilityText: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+  },
+  clientInfo: {
     flex: 1,
-    justifyContent: 'center',
+    marginLeft: 12,
+  },
+  clientName: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  changeRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: spacing.xs,
+  },
+  dashedDivider: {
+    borderColor: colors.gray300,
+    borderLeftWidth: 2,
+    borderStyle: 'dashed',
+    height: 48,
+    marginRight: 8,
+  },
+  dashedRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingVertical: 8,
+  },
+  dateText: {
+    color: colors.gray600,
+    fontSize: typography.small.fontSize,
+  },
+  errorText: {
+    color: colors.error,
+  },
+  errorContainerPadding: {
+    paddingHorizontal: 16,
   },
   header: {
     backgroundColor: colors.white,
@@ -439,43 +501,112 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
   },
+  headerActionButton: {
+    padding: spacing.sm,
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
   headerTop: {
     alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
-  welcomeText: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
+  indicatorContainer: {
+    alignItems: 'center',
+    paddingTop: 4,
+    width: 8,
   },
-  dateText: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
+  loadingContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
   },
-  headerActions: {
-    flexDirection: 'row',
+  mb2: {
+    marginBottom: 2,
   },
-  headerActionButton: {
-    padding: spacing.sm,
+  mbMd: {
+    marginBottom: spacing.md,
   },
-  availabilityText: {
-    fontSize: typography.body.fontSize,
+  mbSm: {
+    marginBottom: spacing.sm,
+  },
+  nettoText: {
+    color: colors.gray500,
+    fontSize: 10,
+  },
+  nextTimeText: {
+    fontSize: 22,
+    marginBottom: 2,
+  },
+  positiveChangeText: {
+    color: colors.green600,
+    fontSize: 11,
+    marginLeft: spacing.xs,
+  },
+  priceText: {
+    color: colors.primary,
     fontWeight: '700',
   },
-  availabilityDescription: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
+  ghostButtonWide: {
+    flex: 1,
   },
-  statsContainer: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
+  quickActionCard: {
+    paddingVertical: 16,
+    width: '48%',
   },
-  statsGrid: {
+  quickActionLabel: {
+    color: colors.gray700,
+    fontSize: 12,
+    marginTop: 8,
+  },
+  quickActionsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
+  },
+  safeArea: {
+    backgroundColor: colors.gray50,
+    flex: 1,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  rowBetweenCenter: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  rowEndBetween: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  sectionTitle: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+  },
+  sectionHeaderRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: spacing.sm,
+  },
+  seeAllText: {
+    color: colors.primary,
+    fontSize: typography.small.fontSize,
+  },
+  smallGrayText: {
+    color: colors.gray500,
+    fontSize: 12,
+  },
+  smallMutedText: {
+    color: colors.gray600,
+    fontSize: 12,
+  },
+  starIcon: {
+    marginRight: 2,
   },
   statCard: {
     width: '48%',
@@ -498,51 +629,42 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: spacing.xs,
   },
-  changeRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginTop: spacing.xs,
+  statsContainer: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
-  positiveChangeText: {
-    color: colors.green600,
-    fontSize: 11,
-    marginLeft: spacing.xs,
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  reviewClientName: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  reviewHeaderRow: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  reviewStarsRow: {
+    flexDirection: 'row',
+    marginTop: 4,
+  },
+  reviewText: {
+    color: colors.gray700,
+    fontSize: 14,
+    marginBottom: 8,
   },
   timeUntilText: {
     color: colors.blue900,
     fontSize: typography.small.fontSize,
     marginTop: 2,
   },
-  nettoText: {
-    color: colors.gray500,
-    fontSize: 10,
-  },
-  sectionTitle: {
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-  },
-  seeAllText: {
-    color: colors.primary,
-    fontSize: typography.small.fontSize,
-  },
-  appointmentIndicator: {
-    backgroundColor: colors.green600,
-    borderRadius: 1,
-    height: '100%',
-    width: 2,
-  },
-  priceText: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  actionButton: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  starIcon: {
-    marginRight: 2,
-  },
-  errorText: {
-    color: colors.error,
+  welcomeText: {
+    fontSize: typography.h3.fontSize,
+    fontWeight: typography.h3.fontWeight,
   },
 });

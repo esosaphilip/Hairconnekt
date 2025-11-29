@@ -3,16 +3,15 @@ import { useEffect, useState } from "react";
 // For now, we’ll inline simple text placeholders so the file compiles
 const TrendingUp = () => <Text>↗</Text>;
 const Download    = () => <Text>↓</Text>;
-const Calendar    = () => <Text>📅</Text>;
-const CreditCard  = () => <Text>💳</Text>;
-const Euro        = () => <Text>€</Text>;
 import { useNavigation } from "@react-navigation/native";
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from "react-native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { ProviderMoreStackParamList } from "@/navigation/types";
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StyleProp, ViewStyle } from "react-native";
 import { getProviderAppointments, AppointmentListItem } from "@/api/appointments";
 import { paymentsApi, PLATFORM_FEE_RATE, centsToEuros } from "@/api/payments";
 
 // Minimal inline Card component to replace missing import
-type CardProps = { children: React.ReactNode; style?: any };
+type CardProps = { children: React.ReactNode; style?: StyleProp<ViewStyle> };
 const Card = ({ children, style }: CardProps) => (
   <View style={[styles.card, style]}>
     {children}
@@ -23,186 +22,186 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: "#fff",
     borderRadius: 8,
+    elevation: 2,
     padding: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 2,
   },
 });
 
 // React Native specific styles for this screen
 const rnStyles = StyleSheet.create({
-  safeArea: {
+  amountLarge: {
+    color: '#8B4513',
+    fontSize: 32,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  amountMedium: {
+    color: '#111827',
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  chartBar: {
+    backgroundColor: '#8B4513',
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    width: '100%',
+  },
+  chartBarContainer: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    justifyContent: 'flex-end',
+    width: '100%',
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
-  },
-  header: {
-    flexDirection: 'row',
+  chartColumn: {
     alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 2,
+  },
+
+  chartDay: {
+    color: '#6B7280',
+    fontSize: 12,
+  },
+  chartWrapper: {
+    alignItems: 'flex-end',
+    flexDirection: 'row',
+    height: 160,
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+
+  chipActive: {
+    backgroundColor: '#8B4513',
+    borderColor: '#8B4513',
+  },
+  chipButton: {
+    borderColor: '#D1D5DB',
+    borderRadius: 999,
+    borderWidth: 1,
+    marginLeft: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  chipInactive: {
+    backgroundColor: '#FFFFFF',
+  },
+  detailLabel: {
+    color: '#6B7280',
+    fontSize: 12,
+  },
+  detailList: {
+    marginVertical: 8,
+  },
+
+  detailRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  detailValue: {
+    color: '#111827',
+    fontSize: 12,
+  },
+
+  header: {
+    alignItems: 'center',
+    backgroundColor: 'white',
+    elevation: 2,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
     zIndex: 10,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#374151',
   },
   headerAction: {
     padding: 4,
   },
-
-  section: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
+  headerTitle: {
+    color: '#374151',
+    fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-
-  labelMuted: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 6,
-  },
-  amountLarge: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#8B4513',
-    marginBottom: 12,
-  },
-  amountMedium: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#111827',
   },
   helperText: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     marginTop: 8,
     textAlign: 'center',
+  },
+
+  itemSubtitle: {
+    color: '#6B7280',
+    fontSize: 13,
+  },
+  itemTitle: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  labelMuted: {
+    color: '#6B7280',
+    fontSize: 14,
+    marginBottom: 6,
   },
   linkPrimary: {
     color: '#8B4513',
     fontSize: 14,
     fontWeight: '600',
   },
-
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-
   primaryButton: {
     backgroundColor: '#8B4513',
-    paddingVertical: 10,
     borderRadius: 8,
+    paddingVertical: 10,
   },
-  chipButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    marginLeft: 8,
+  row: {
+    alignItems: 'center',
+    flexDirection: 'row',
   },
-  chipActive: {
-    backgroundColor: '#8B4513',
-    borderColor: '#8B4513',
-  },
-  chipInactive: {
-    backgroundColor: '#FFFFFF',
+  rowBetween: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
 
-  chartWrapper: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-    height: 160,
-    marginBottom: 8,
-  },
-  chartColumn: {
+  safeArea: {
+    backgroundColor: '#F9FAFB',
     flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 2,
   },
-  chartBarContainer: {
-    flex: 1,
-    width: '100%',
-    justifyContent: 'flex-end',
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 24,
   },
-  chartBar: {
-    width: '100%',
-    backgroundColor: '#8B4513',
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
+  section: {
+    marginBottom: 16,
   },
-  chartDay: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  trendText: {
-    fontSize: 12,
-    color: '#16A34A',
-  },
-
-  itemTitle: {
+  sectionTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#111827',
+    marginBottom: 8,
   },
-  itemSubtitle: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  detailList: {
-    marginVertical: 8,
-  },
-  detailRow: {
-    flexDirection: 'row',
+  summaryRow: {
     alignItems: 'center',
+    borderTopColor: '#E5E7EB',
+    borderTopWidth: 1,
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingTop: 12,
   },
-  detailLabel: {
+  trendText: {
+    color: '#16A34A',
     fontSize: 12,
-    color: '#6B7280',
-  },
-  detailValue: {
-    fontSize: 12,
-    color: '#111827',
   },
 });
 
 // Minimal inline Button component to replace missing import
-type ButtonProps = { children: React.ReactNode; onPress?: () => void; style?: any };
+type ButtonProps = { children: React.ReactNode; onPress?: () => void; style?: StyleProp<ViewStyle> };
 const Button = ({ children, onPress, style }: ButtonProps) => (
   <TouchableOpacity
     onPress={onPress}
@@ -240,14 +239,11 @@ const initialRecentTransactions: TransactionItemTS[] = [];
 
 export function ProviderEarnings() {
   const [period, setPeriod] = useState("week");
-  const navigation = useNavigation() as any;
-  const navigate = (path: string) => {
-    // In a full app, map path to route names; for now, keep compile-safe navigation
+  const navigation = useNavigation<NativeStackNavigationProp<ProviderMoreStackParamList>>();
+  const navigateToTransactions = () => {
     try {
-      navigation.navigate(path);
-    } catch (e) {
-      // noop fallback
-    }
+      navigation.navigate('TransactionsScreen');
+    } catch {}
   };
 
   const [availableBalance, setAvailableBalance] = useState(0);
@@ -416,7 +412,7 @@ export function ProviderEarnings() {
         <View style={rnStyles.section}>
           <View style={rnStyles.rowBetween}>
             <Text style={rnStyles.sectionTitle}>Letzte Transaktionen</Text>
-            <TouchableOpacity onPress={() => navigate('/provider/earnings/transactions')}>
+            <TouchableOpacity onPress={navigateToTransactions}>
               <Text style={rnStyles.linkPrimary}>Alle anzeigen</Text>
             </TouchableOpacity>
           </View>

@@ -2,17 +2,15 @@ import React, { ReactNode } from 'react';
 import { View, TouchableOpacity, Text, ViewProps, TouchableOpacityProps, StyleProp, ViewStyle } from 'react-native';
 import { colors, radii, spacing, shadows } from '../theme/tokens';
 
-export interface CardProps {
+type NativeProps = ViewProps & TouchableOpacityProps;
+
+export interface CardProps extends Partial<NativeProps> {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
   elevated?: boolean;
   onPress?: () => void;
   activeOpacity?: number;
   disabled?: boolean;
-  // Allow passing any native props to underlying container
-  // Use a union to satisfy both View and TouchableOpacity depending on onPress
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
 }
 
 export function Card(props: CardProps) {
@@ -49,17 +47,14 @@ export function Card(props: CardProps) {
       disabled,
       activeOpacity,
       style: baseStyle,
-      // Spread rest as it may include accessibility props etc.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ...(rest as any),
+      ...(rest as TouchableOpacityProps),
     };
     return <TouchableOpacity {...touchableProps}>{renderChildren(children)}</TouchableOpacity>;
   }
 
   const viewProps: ViewProps = {
     style: baseStyle,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(rest as any),
+    ...(rest as ViewProps),
   };
   return <View {...viewProps}>{renderChildren(children)}</View>;
 }

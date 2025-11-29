@@ -6,7 +6,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { Badge } from '../../components/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
-import { colors, spacing, radii, typography } from '../../theme/tokens';
+import { colors, spacing, typography } from '../../theme/tokens';
 import { http } from '../../api/http';
 import { useAuth } from '../../auth/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -70,11 +70,46 @@ export function ProviderProfileScreen() {
   const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
   type Dashboard = { todayAppointments?: unknown[]; stats?: { reviewCount?: number; ratingAverage?: number } };
   type PublicData = { rating?: number; reviews?: number; specialties?: string[] };
-  const [profile, setProfile] = React.useState<any>(null);
+  type ProviderUser = {
+    id: string;
+    email?: string | null;
+    phone?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    profilePictureUrl?: string | null;
+  };
+  type ProviderProfile = {
+    id: string;
+    businessName: string | null;
+    bio?: string | null;
+    coverPhotoUrl?: string | null;
+    isVerified: boolean;
+    acceptsSameDayBooking?: boolean;
+    createdAt?: string;
+    user?: ProviderUser;
+  };
+  const [profile, setProfile] = React.useState<ProviderProfile | null>(null);
   const [dashboard, setDashboard] = React.useState<Dashboard | null>(null);
   const [publicData, setPublicData] = React.useState<PublicData | null>(null);
   const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  function getMessage(err: unknown, fallback = 'Fehler beim Laden des Profils'): string {
+    if (typeof err === 'string') return err;
+    if (typeof err === 'object' && err) {
+      const e = err as { message?: string; response?: { data?: { message?: string } } };
+      return e.response?.data?.message ?? e.message ?? fallback;
+    }
+    return fallback;
+  }
+
+  function getStatus(err: unknown): number | undefined {
+    if (typeof err === 'object' && err) {
+      const e = err as { response?: { status?: number } };
+      return e.response?.status;
+    }
+    return undefined;
+  }
 
   React.useEffect(() => {
     let mounted = true;
@@ -92,13 +127,13 @@ export function ProviderProfileScreen() {
           me = meRes.data;
           if (!mounted) return;
           setProfile(me);
-        } catch (e: any) {
+        } catch (e: unknown) {
           // Suppress the red error banner for "Provider profile not found" (404)
-          const status = e?.response?.status;
-          const msg = e?.response?.data?.message || e?.message || '';
+          const status = getStatus(e);
+          const msg = getMessage(e, '');
           const isNotFound = status === 404 && typeof msg === 'string' && msg.toLowerCase().includes('provider profile not found');
           if (!isNotFound) {
-            if (mounted) setError(e?.response?.data?.message || e?.message || 'Fehler beim Laden des Profils');
+            if (mounted) setError(getMessage(e));
           }
           // If not found, we keep placeholders and continue without breaking the screen.
         }
@@ -113,8 +148,8 @@ export function ProviderProfileScreen() {
           setDashboard(dashRes.data);
           setPublicData(pubRes.data);
         }
-      } catch (e: any) {
-        const msg = e?.response?.data?.message || e?.message || 'Fehler beim Laden des Profils';
+      } catch (e: unknown) {
+        const msg = getMessage(e);
         if (mounted) setError(msg);
       } finally {
         if (mounted) setLoading(false);
@@ -264,7 +299,7 @@ export function ProviderProfileScreen() {
 
         {/* Bio Section */}
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
-          <View style={[styles.sectionHeader]}> 
+          <View style={styles.sectionHeader}> 
             <Text style={styles.sectionTitle}>Über mich</Text>
             <Pressable onPress={onEdit} style={styles.iconBtn}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
@@ -381,110 +416,110 @@ export function ProviderProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.gray50,
-  },
-  header: {
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  badgeItem: {
     marginBottom: spacing.sm,
+    marginRight: spacing.sm,
   },
-  headerTitle: {
-    textAlign: 'center',
-    flex: 1,
-  },
-  iconBtn: {
-    padding: spacing.sm,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    paddingBottom: spacing.xl,
-  },
-  profileCard: {
-    padding: spacing.lg,
-  },
-  centered: {
-    alignItems: 'center',
-    marginBottom: spacing.md,
+  badgeWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   cameraBtn: {
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    bottom: 0,
+    height: 32,
+    justifyContent: 'center',
     position: 'absolute',
     right: 0,
-    bottom: 0,
     width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
     ...Platform.select({
       ios: { shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 4, shadowOffset: { width: 0, height: 2 } },
       android: { elevation: 3 },
       default: {},
     }),
   },
-  row: {
-    flexDirection: 'row',
+  centered: {
     alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  container: {
+    backgroundColor: colors.gray50,
+    flex: 1,
+  },
+  header: {
+    backgroundColor: colors.white,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  headerTitle: {
+    flex: 1,
+    textAlign: 'center',
+  },
+  iconBtn: {
+    padding: spacing.sm,
   },
   infoRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: spacing.sm,
   },
   infoText: {
-    marginLeft: spacing.sm,
     color: colors.black,
+    marginLeft: spacing.sm,
+  },
+  profileCard: {
+    padding: spacing.lg,
+  },
+  row: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
   },
   sectionHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
   sectionTitle: {
+    color: colors.black,
     fontSize: 18,
     fontWeight: '600',
-    color: colors.black,
   },
-  badgeWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  statItem: {
+    alignItems: 'center',
+    marginBottom: spacing.md,
+    paddingHorizontal: spacing.sm,
+    width: '50%',
   },
-  badgeItem: {
-    marginRight: spacing.sm,
-    marginBottom: spacing.sm,
+  statLabel: {
+    color: colors.gray600,
+    fontSize: 12,
+  },
+  statValue: {
+    color: colors.primary,
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 2,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginHorizontal: -spacing.sm,
-  },
-  statItem: {
-    width: '50%',
-    paddingHorizontal: spacing.sm,
-    marginBottom: spacing.md,
-    alignItems: 'center',
-  },
-  statValue: {
-    fontSize: 24,
-    color: colors.primary,
-    marginBottom: 2,
-    fontWeight: '700',
-  },
-  statLabel: {
-    fontSize: 12,
-    color: colors.gray600,
   },
 });

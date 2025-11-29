@@ -12,6 +12,8 @@ import {
 
 // Replaced web imports with assumed custom/community React Native components
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { ProviderMoreStackParamList } from '@/navigation/types';
 import Card from '../../components/Card';
 import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
@@ -78,7 +80,7 @@ const LinkItem = ({ icon, title, subtitle, onPress, isDestructive = false }: Lin
 
 // --- Main Component ---
 export function ProviderSettingsScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<ProviderMoreStackParamList>>();
   
   // --- Notification States ---
   const [pushNotifications, setPushNotifications] = useState(true);
@@ -315,26 +317,26 @@ export function ProviderSettingsScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   // --- Header Styles ---
   header: {
     backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    elevation: 2,
     paddingHorizontal: SPACING.md || 16,
     paddingVertical: SPACING.sm || 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.sm || 8,
   },
   headerTitle: {
@@ -350,39 +352,39 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.lg || 24,
   },
   sectionTitle: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
     fontWeight: '600',
-    textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: SPACING.sm,
+    textTransform: 'uppercase',
   },
   dangerTitle: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.danger || '#EF4444',
+    fontSize: FONT_SIZES.small || 12,
     fontWeight: '600',
-    textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: SPACING.sm,
+    textTransform: 'uppercase',
   },
   // --- Card Container (Simulates divide-y) ---
   cardContainer: {
+    backgroundColor: COLORS.white,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: COLORS.white,
     // Note: Border lines (divider) are applied manually between items
   },
   divider: {
-    height: 1,
     backgroundColor: COLORS.border || '#E5E7EB',
+    height: 1,
     marginLeft: 50, // Indent the divider for visual hierarchy
   },
   // --- List Item Styles ---
   listItem: {
-    padding: SPACING.md,
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    padding: SPACING.md,
   },
   linkItem: {
     // Styles for touchable rows
@@ -392,10 +394,10 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   itemContent: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.sm || 8,
+    flexDirection: 'row',
     flex: 1,
+    gap: SPACING.sm || 8,
   },
   itemTextContainer: {
     flexShrink: 1,
@@ -407,8 +409,8 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   itemSubtitle: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
     marginTop: SPACING.xs / 2,
   },
   dangerText: {

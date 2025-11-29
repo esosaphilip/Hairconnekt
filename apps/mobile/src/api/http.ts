@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL } from '../config';
 import { getAccessToken, getRefreshToken, saveTokens, getAuthBundle, getPreferredLanguageSetting } from '../auth/tokenStorage';
 
@@ -16,7 +16,7 @@ export function setAuthDisabled(disabled: boolean) {
 }
 
 // Attach Authorization header from secure storage
-http.interceptors.request.use(async (config) => {
+http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
   // Allow callers to explicitly skip attaching auth
   let skip = false;
   const hdrs = config.headers;
@@ -28,7 +28,7 @@ http.interceptors.request.use(async (config) => {
   if (skip || authDisabled) return config;
   const token = await getAccessToken();
   if (token) {
-    const headers = ((config.headers && typeof config.headers === 'object') ? config.headers : {}) as any;
+    const headers = (config.headers && typeof config.headers === 'object') ? (config.headers as any) : {};
     headers['Authorization'] = `Bearer ${token}`;
     config.headers = headers;
   }
@@ -40,7 +40,7 @@ http.interceptors.request.use(async (config) => {
       lang = (await getPreferredLanguageSetting()) || undefined;
     }
     if (lang) {
-      const headers = ((config.headers && typeof config.headers === 'object') ? config.headers : {}) as any;
+      const headers = (config.headers && typeof config.headers === 'object') ? (config.headers as any) : {};
       headers['Accept-Language'] = lang;
       config.headers = headers;
     }
@@ -51,7 +51,7 @@ http.interceptors.request.use(async (config) => {
 let isRefreshing = false;
 
 // Queue of pending requests waiting for a token refresh
-let pendingQueue = [] as Array<{ resolve: (token: string | null) => void; reject: (reason?: any) => void }>;
+let pendingQueue = [] as Array<{ resolve: (token: string | null) => void; reject: (reason?: unknown) => void }>;
 
 async function refreshTokenFlow() {
   // Prevent concurrent refreshes
@@ -93,7 +93,7 @@ export function abortAuthRefresh() {
 http.interceptors.response.use(
   (res) => res,
   async (error) => {
-    const config = error?.config || undefined;
+    const config = error?.config as InternalAxiosRequestConfig | undefined;
     const status = error?.response?.status;
     let skip = false;
     const hdrs = config?.headers;
@@ -103,12 +103,12 @@ http.interceptors.response.use(
     }
 
     // Skip refresh if globally disabled (e.g., after logout)
-    if (status === 401 && config && !config._retry && !skip && !authDisabled) {
-      config._retry = true;
+    if (status === 401 && config && !(config as any)._retry && !skip && !authDisabled) {
+      (config as any)._retry = true;
       try {
         const newToken = await refreshTokenFlow();
         if (!newToken) throw error;
-        const headers = ((config.headers && typeof config.headers === 'object') ? config.headers : {}) as any;
+        const headers = (config.headers && typeof config.headers === 'object') ? (config.headers as any) : {};
         headers['Authorization'] = `Bearer ${newToken}`;
         config.headers = headers;
         return http(config);

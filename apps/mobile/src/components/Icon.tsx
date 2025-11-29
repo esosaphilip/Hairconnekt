@@ -52,10 +52,11 @@ const NAME_MAP: Record<string, string> = {
   'message-square': 'chatbubble-outline',
 };
 
+type IonName = React.ComponentProps<typeof Ionicons>['name'];
+
 export default function Icon({ name, size = 24, color: c, fill, style }: IconProps) {
-  const ionName = NAME_MAP[name] || name;
+  const ionName: IonName = (NAME_MAP[name] || name) as IonName;
   // Prefer explicit color, fall back to fill, then default gray
   const finalColor = c || fill || colors.gray700;
-  // Cast to any to avoid union type restrictions from Ionicons name prop
-  return <Ionicons name={ionName as any} size={size} color={finalColor} style={style} />;
+  return <Ionicons name={ionName} size={size} color={finalColor} style={style} />;
 }

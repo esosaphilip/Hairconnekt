@@ -103,11 +103,12 @@ export type ProviderClientsStackParamList = {
 export type ProviderMoreStackParamList = {
   ProviderMore: undefined;
   ProviderProfileScreen: undefined;
-  ProviderPublicProfileScreen: undefined;
+  ProviderPublicProfileScreen: { id?: string; providerId?: string } | undefined;
   ProviderServicesScreen: { mode?: 'add' | 'edit'; serviceId?: string } | undefined;
   ProviderPortfolioScreen: undefined;
   Booking: { providerId?: string } | undefined;
-  BookingFlowScreen: { providerId?: string } | undefined;
+  // Allow passing a suggested service name for preselection
+  BookingFlowScreen: { providerId?: string; serviceName?: string } | undefined;
   ChatScreen: { conversationId?: string; userId?: string } | undefined;
   ProviderProfile: { id: string };
   PayoutRequestScreen: undefined;
