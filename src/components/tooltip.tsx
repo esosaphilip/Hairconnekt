@@ -72,8 +72,8 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: theme.radii.md,
-    ...(theme.shadows.sm || {}),
+    borderRadius: theme?.radii?.md ?? 0,
+    ...(theme.shadows?.sm || {}),
   },
   text: {
     color: theme.colors.white,

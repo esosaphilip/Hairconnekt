@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,11 @@ import {
   Alert,
   Dimensions,
   Clipboard, // For Share/Copy link functionality
+  ActivityIndicator,
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import IconButton from '../../components/IconButton';
@@ -21,33 +22,141 @@ import { Badge } from '../../components/badge';
 import Avatar, { AvatarImage } from '../../components/avatar';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { http } from '@/api/http';
+import { addFavorite, removeFavorite, favoriteStatus } from '@/services/favorites';
+import { useAuth } from '@/auth/AuthContext';
 
-// --- Static Data (Replicated) ---
-const services = [
-  { id: 1, name: "Box Braids", duration: "3-4 Std.", price: "€85 - €95", popular: true, },
-  { id: 2, name: "Knotless Braids", duration: "4-5 Std.", price: "€95 - €110", popular: true, },
-  { id: 3, name: "Cornrows", duration: "2-3 Std.", price: "€55 - €75", popular: false, },
-  { id: 4, name: "Senegalese Twists", duration: "4-5 Std.", price: "€95 - €115", popular: false, },
-];
+// --- Types for dynamic data ---
+type PublicProfile = {
+  id: string;
+  name: string;
+  business: string | null;
+  verified: boolean;
+  imageUrl: string | null;
+  rating: number;
+  reviews: number;
+  specialties: string[];
+  priceFromCents: number | null;
+  profile?: {
+    id: string;
+    businessName: string | null;
+    bio?: string | null;
+    user?: {
+      id: string;
+      firstName?: string;
+      lastName?: string;
+      profilePictureUrl?: string | null;
+    };
+  };
+};
 
-const portfolio = [
-  "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=400",
-  "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400",
-  "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400",
-  "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=400",
-  "https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400",
-  "https://images.unsplash.com/photo-1605980413361-8f8b5630a0a7?w=400",
-];
-
-const reviews = [
-  { id: 1, client: "Sarah M.", rating: 5, text: "Fantastisch! Meine Box Braids sehen perfekt aus und Aisha war super professionell.", date: "vor 2 Tagen", service: "Box Braids" },
-  { id: 2, client: "Maria K.", rating: 5, text: "Sehr professionell und freundlich. Komme definitiv wieder!", date: "vor 5 Tagen", service: "Cornrows" },
-];
+type PortfolioItem = {
+  id: string;
+  imageUrl: string;
+  uploadedAt?: string;
+};
 
 // --- Main Component ---
 export function ProviderPublicProfileScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  // Accept both { id } and legacy { providerId }
+  const providerId: string | undefined = route?.params?.id ?? route?.params?.providerId;
   const [activeTab, setActiveTab] = useState('about'); // 'about' | 'services' | 'portfolio' | 'reviews'
+  const { tokens } = useAuth();
+  const isAuthenticated = !!tokens?.accessToken;
+
+  // Dynamic data state
+  const [publicData, setPublicData] = useState<PublicProfile | null>(null);
+  const [loadingPublic, setLoadingPublic] = useState(false);
+  const [errorPublic, setErrorPublic] = useState<string | null>(null);
+
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [loadingPortfolio, setLoadingPortfolio] = useState(false);
+  const [errorPortfolio, setErrorPortfolio] = useState<string | null>(null);
+
+  const [isFavorite, setIsFavorite] = useState(false);
+  // For now we only read the param; later we'll fetch provider data by id
+  if (providerId) {
+    // lightweight debug log to confirm navigation param wiring
+    console.debug('ProviderPublicProfileScreen opened for provider id:', providerId);
+  }
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchPublicProfile() {
+      if (!providerId) return;
+      setLoadingPublic(true);
+      setErrorPublic(null);
+      try {
+        const res = await http.get(`/providers/public/${providerId}`);
+        const data = res?.data as PublicProfile;
+        if (mounted) setPublicData(data);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Fehler beim Laden des Profils';
+        if (mounted) setErrorPublic(msg);
+      } finally {
+        if (mounted) setLoadingPublic(false);
+      }
+    }
+
+    async function fetchPortfolio() {
+      if (!providerId) return;
+      setLoadingPortfolio(true);
+      setErrorPortfolio(null);
+      try {
+        const res = await http.get(`/provider/${providerId}/portfolio`, { params: { limit: 12, sort: 'latest' } });
+        const items = Array.isArray(res?.data?.items) ? res.data.items : [];
+        const mapped: PortfolioItem[] = items.map((it: any) => ({ id: it?.id, imageUrl: it?.imageUrl, uploadedAt: it?.uploadedAt }));
+        if (mounted) setPortfolioItems(mapped.filter((x) => !!x.imageUrl));
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Fehler beim Laden des Portfolios';
+        if (mounted) setErrorPortfolio(msg);
+      } finally {
+        if (mounted) setLoadingPortfolio(false);
+      }
+    }
+
+    async function loadFavoriteStatus() {
+      if (!providerId) return;
+      try {
+        const res = await favoriteStatus(providerId);
+        if (mounted) setIsFavorite(!!(res as any)?.isFavorite);
+      } catch (e) {
+        if (mounted) setIsFavorite(false);
+      }
+    }
+
+    fetchPublicProfile();
+    fetchPortfolio();
+    loadFavoriteStatus();
+    return () => { mounted = false; };
+  }, [providerId]);
+
+  const ownerName = useMemo(() => {
+    const first = publicData?.profile?.user?.firstName || '';
+    const last = publicData?.profile?.user?.lastName || '';
+    const name = [first, last].filter(Boolean).join(' ').trim();
+    return name ? `von ${name}` : '';
+  }, [publicData]);
+
+  const handleToggleFavorite = async () => {
+    if (!providerId) return;
+    if (!isAuthenticated) {
+      navigation.navigate('Login');
+      return;
+    }
+    const next = !isFavorite;
+    setIsFavorite(next);
+    try {
+      if (next) await addFavorite(providerId);
+      else await removeFavorite(providerId);
+    } catch (err) {
+      // revert on failure
+      setIsFavorite(!next);
+      Alert.alert('Fehler', 'Aktion fehlgeschlagen');
+    }
+  };
 
   // Function to handle sharing link
   const handleShare = () => {
@@ -61,21 +170,25 @@ export function ProviderPublicProfileScreen() {
     <View style={styles.tabContentContainer}>
       <Card style={styles.tabCard}>
         <Text style={styles.cardTitle}>Über uns</Text>
-        <Text style={styles.bodyText}>
-          Hallo! Ich bin Aisha und habe über 10 Jahre Erfahrung mit afrikanischen
-          Flechtfrisuren. Meine Leidenschaft ist es, jedem Kunden einen
-          individuellen Look zu kreieren, der perfekt zu ihm passt.
-        </Text>
+        {loadingPublic ? (
+          <ActivityIndicator />
+        ) : (
+          <Text style={styles.bodyText}>
+            {publicData?.profile?.bio || 'Der Anbieter hat noch keine Beschreibung hinzugefügt.'}
+          </Text>
+        )}
       </Card>
 
       <Card style={styles.tabCard}>
         <Text style={styles.cardTitle}>Spezialisierungen</Text>
         <View style={styles.badgeWrap}>
-          <Badge title="Box Braids" variant="secondary" />
-          <Badge title="Cornrows" variant="secondary" />
-          <Badge title="Senegalese Twists" variant="secondary" />
-          <Badge title="Knotless Braids" variant="secondary" />
-          <Badge title="Passion Twists" variant="secondary" />
+          {(publicData?.specialties && publicData.specialties.length > 0) ? (
+            publicData.specialties.map((s, idx) => (
+              <Badge key={`${s}-${idx}`} title={s} variant="secondary" />
+            ))
+          ) : (
+            <Text style={styles.bodyText}>Keine Spezialisierungen hinterlegt.</Text>
+          )}
         </View>
       </Card>
 
@@ -83,10 +196,9 @@ export function ProviderPublicProfileScreen() {
         <Text style={styles.cardTitle}>Was uns auszeichnet</Text>
         <View style={styles.featureList}>
           {[
-            "Über 10 Jahre Erfahrung",
-            "Nur hochwertige Produkte",
-            "Entspannte Atmosphäre",
-            "Kostenlose Nachbesserung innerhalb 7 Tagen",
+            'Qualität und Sorgfalt',
+            'Individuelle Beratung',
+            'Angenehme Atmosphäre',
           ].map((feature, index) => (
             <View key={index} style={styles.featureItem}>
               <Icon name="check" size={20} color={COLORS.success} style={styles.checkIcon} />
@@ -98,98 +210,83 @@ export function ProviderPublicProfileScreen() {
 
       <Card style={styles.tabCard}>
         <Text style={styles.cardTitle}>Öffnungszeiten</Text>
-        <View style={styles.hoursList}>
-          {[
-            { day: 'Montag', time: '9:00 - 20:00', closed: false },
-            { day: 'Dienstag', time: '9:00 - 20:00', closed: false },
-            { day: 'Mittwoch', time: '9:00 - 20:00', closed: false },
-            { day: 'Donnerstag', time: '9:00 - 20:00', closed: false },
-            { day: 'Freitag', time: '9:00 - 20:00', closed: false },
-            { day: 'Samstag', time: '9:00 - 20:00', closed: false },
-            { day: 'Sonntag', time: 'Geschlossen', closed: true },
-          ].map((item, index) => (
-            <View key={index} style={styles.hoursRow}>
-              <Text style={styles.hoursDay}>{item.day}</Text>
-              <Text style={item.closed ? styles.hoursTimeClosed : styles.hoursTimeOpen}>
-                {item.time}
-              </Text>
-            </View>
-          ))}
-        </View>
+        <Text style={styles.bodyText}>Bitte kontaktiere den Anbieter für aktuelle Öffnungszeiten.</Text>
       </Card>
     </View>
   );
 
   const renderServicesTab = () => (
     <View style={styles.tabContentContainer}>
-      {services.map((service) => (
-        <Card key={service.id} style={styles.serviceCard}>
-          <View style={styles.serviceHeader}>
-            <View style={styles.serviceInfo}>
-              <View style={styles.serviceTitleRow}>
-                <Text style={styles.serviceName}>{service.name}</Text>
-                {service.popular && (
-                  <Badge title="Beliebt" color="red" />
-                )}
+      {(publicData?.specialties && publicData.specialties.length > 0) ? (
+        publicData.specialties.map((name, idx) => (
+          <Card key={`${name}-${idx}`} style={styles.serviceCard}>
+            <View style={styles.serviceHeader}>
+              <View style={styles.serviceInfo}>
+                <View style={styles.serviceTitleRow}>
+                  <Text style={styles.serviceName}>{name}</Text>
+                </View>
+                <Text style={styles.serviceDuration}>Dauer je nach Style</Text>
               </View>
-              <Text style={styles.serviceDuration}>{service.duration}</Text>
+              <Text style={styles.servicePrice}>
+                {publicData?.priceFromCents != null ? `ab €${(publicData.priceFromCents / 100).toFixed(0)}` : 'Preis auf Anfrage'}
+              </Text>
             </View>
-            <Text style={styles.servicePrice}>{service.price}</Text>
-          </View>
-          <Button
-            title="Buchen"
-            size="sm"
-            onPress={() => navigation.navigate("BookingFlowScreen", { serviceId: service.id })}
-            style={styles.bookButton}
-          />
-        </Card>
-      ))}
+            <Button
+              title="Buchen"
+              size="sm"
+              onPress={() => navigation.navigate('BookingFlowScreen', { providerId, serviceName: name })}
+              style={styles.bookButton}
+            />
+          </Card>
+        ))
+      ) : (
+        <Text style={styles.bodyText}>Keine Services hinterlegt.</Text>
+      )}
     </View>
   );
 
   const renderPortfolioTab = () => (
-    <View style={styles.portfolioGrid}>
-      {portfolio.map((image, index) => (
-        <TouchableOpacity key={index} style={styles.portfolioItem} onPress={() => { /* View Image Modal */ }}>
-          <Image
-            source={{ uri: image }}
-            style={styles.portfolioImage}
-            resizeMode="cover"
-          />
-        </TouchableOpacity>
-      ))}
+    <View>
+      {loadingPortfolio ? (
+        <View style={{ paddingVertical: SPACING.md }}>
+          <ActivityIndicator />
+        </View>
+      ) : errorPortfolio ? (
+        <Text style={styles.bodyText}>{errorPortfolio}</Text>
+      ) : (
+        <View style={styles.portfolioGrid}>
+          {portfolioItems.length > 0 ? (
+            portfolioItems.map((item, index) => (
+              <TouchableOpacity key={item.id || index} style={styles.portfolioItem} onPress={() => { /* View Image Modal */ }}>
+                <Image
+                  source={{ uri: item.imageUrl }}
+                  style={styles.portfolioImage}
+                  resizeMode="cover"
+                />
+              </TouchableOpacity>
+            ))
+          ) : (
+            <Text style={styles.bodyText}>Noch keine Portfolio-Bilder.</Text>
+          )}
+        </View>
+      )}
     </View>
   );
 
   const renderReviewsTab = () => (
     <View style={styles.tabContentContainer}>
-      {reviews.map((review) => (
-        <Card key={review.id} style={styles.reviewCard}>
-          <View style={styles.reviewHeader}>
-            <View>
-              <Text style={styles.reviewClient}>{review.client}</Text>
-              <View style={styles.starRow}>
-                {[...Array(review.rating)].map((_, i) => (
-                  <Icon
-                    key={i}
-                    name="star"
-                    size={12}
-                    color={COLORS.amber}
-                    fill={COLORS.amber}
-                  />
-                ))}
-              </View>
-            </View>
-            <Text style={styles.reviewDate}>{review.date}</Text>
-          </View>
-          <Badge title={review.service} variant="secondary" style={styles.reviewServiceBadge} />
-          <Text style={styles.reviewText}>{review.text}</Text>
-        </Card>
-      ))}
+      <Card style={styles.tabCard}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: SPACING.xs }}>
+          <Icon name="star" size={16} color={COLORS.amber} fill={COLORS.amber} />
+          <Text style={styles.ratingValue}>{publicData?.rating ?? '–'}</Text>
+          <Text style={styles.reviewCountText}>({publicData?.reviews ?? 0} Bewertungen)</Text>
+        </View>
+        <Text style={[styles.bodyText, { marginTop: SPACING.sm }]}>Detailbewertungen folgen demnächst.</Text>
+      </Card>
       <Button
         title="Alle Bewertungen anzeigen"
         variant="outline"
-        onPress={() => navigation.navigate("ProviderReviewsScreen")}
+        onPress={() => setActiveTab('reviews')}
         style={styles.viewAllReviewsButton}
       />
     </View>
@@ -212,27 +309,29 @@ export function ProviderPublicProfileScreen() {
         <View style={styles.profileHeader}>
           <View style={styles.profileSummary}>
             <Avatar size={80}>
-              <AvatarImage uri="https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=200" />
+              <AvatarImage uri={publicData?.imageUrl || 'https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=200'} />
             </Avatar>
             <View style={styles.summaryTextContainer}>
               <View style={styles.businessTitleRow}>
-                <Text style={styles.businessName}>Aisha's Braiding Studio</Text>
+                <Text style={styles.businessName}>{publicData?.business || publicData?.name || 'Anbieter'}</Text>
                 <TouchableOpacity onPress={() => { /* Navigate to edit profile/dashboard */ }} style={{ marginLeft: SPACING.xs }}>
                    {/* For provider's own screen, show link to dashboard/edit */}
                    <Icon name="edit" size={16} color={COLORS.primary} />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.ownerName}>von Aisha Mensah</Text>
+              {!!ownerName && <Text style={styles.ownerName}>{ownerName}</Text>}
               
               <View style={styles.badgeRow}>
                 <Badge title="Pro" color="amber" />
-                <Badge title="Verifiziert" variant="outline" />
+                {publicData?.verified ? (
+                  <Badge title="Verifiziert" variant="outline" />
+                ) : null}
               </View>
               
               <View style={styles.ratingRow}>
                 <Icon name="star" size={16} color={COLORS.amber} fill={COLORS.amber} />
-                <Text style={styles.ratingValue}>4.8</Text>
-                <Text style={styles.reviewCountText}>(234 Bewertungen)</Text>
+                <Text style={styles.ratingValue}>{publicData?.rating ?? '–'}</Text>
+                <Text style={styles.reviewCountText}>({publicData?.reviews ?? 0} Bewertungen)</Text>
               </View>
             </View>
           </View>
@@ -240,18 +339,14 @@ export function ProviderPublicProfileScreen() {
           <View style={styles.locationInfo}>
             <View style={styles.infoRow}>
               <Icon name="map-pin" size={16} color={COLORS.textSecondary} />
-              <Text style={styles.infoText}>Kantstraße 42, 10625 Berlin (2.3 km)</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <Icon name="clock" size={16} color={COLORS.textSecondary} />
-              <Text style={styles.openText}>Geöffnet · Schließt um 20:00</Text>
+              <Text style={styles.infoText}>Adresse wird demnächst angezeigt</Text>
             </View>
           </View>
 
           <View style={styles.actionButtons}>
             <Button title="Jetzt buchen" onPress={() => navigation.navigate("BookingFlowScreen")} style={styles.bookNowButton} />
             <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen")} style={styles.iconButtonOutline} color={COLORS.textSecondary} />
-            <IconButton name="heart" onPress={() => { /* Toggle favorite */ }} style={styles.iconButtonOutline} color={COLORS.textSecondary} />
+            <IconButton name={isFavorite ? 'heart' : 'heart'} onPress={handleToggleFavorite} style={styles.iconButtonOutline} color={isFavorite ? COLORS.primary : COLORS.textSecondary} />
           </View>
         </View>
 
@@ -280,6 +375,11 @@ export function ProviderPublicProfileScreen() {
             {activeTab === 'services' && renderServicesTab()}
             {activeTab === 'portfolio' && renderPortfolioTab()}
             {activeTab === 'reviews' && renderReviewsTab()}
+            {errorPublic ? (
+              <View style={{ paddingTop: SPACING.sm }}>
+                <Text style={{ color: COLORS.danger || '#EF4444' }}>{errorPublic}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </ScrollView>

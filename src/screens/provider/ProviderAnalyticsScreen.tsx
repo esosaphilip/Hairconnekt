@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import Button from '../../components/Button';
 import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { providersApi } from '../../services/providers';
 
 // Screen width for responsive layout
 const screenWidth = Dimensions.get('window').width;
@@ -49,8 +50,13 @@ const peakHours = [
 
 // --- Main Component ---
 export function ProviderAnalyticsScreen() {
-  const navigation: any = useNavigation();
+  const navigation = useNavigation();
   const [period, setPeriod] = useState("month"); // "week" | "month" | "year"
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  type DashboardStats = { weekEarningsCents?: number; todayCount?: number; reviewCount?: number; ratingAverage?: number };
+  type Dashboard = { stats?: DashboardStats } | null;
+  const [dashboard, setDashboard] = useState<Dashboard>(null);
 
   const maxRevenue = Math.max(...monthlyData.map(d => d.revenue));
   const maxBookings = Math.max(...peakHours.map(d => d.bookings));
@@ -62,6 +68,33 @@ export function ProviderAnalyticsScreen() {
       Alert.alert("Download", "Bericht-Download - Funktion in Entwicklung");
   };
 
+  // Helper: format cents to EUR string
+  const formatCurrency = useMemo(() => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }), []);
+
+  useEffect(() => {
+    let active = true;
+    const fetchDashboard = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await providersApi.getDashboard();
+        if (active) setDashboard((data as Dashboard) || null);
+      } catch (e) {
+        console.error('Failed to load dashboard', e);
+        let msg = 'Fehler beim Laden der Statistiken';
+        if (typeof e === 'object' && e !== null && 'message' in (e as Record<string, unknown>)) {
+          const m = (e as Record<string, unknown>).message;
+          if (typeof m === 'string') msg = m;
+        }
+        if (active) setError(msg);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    fetchDashboard();
+    return () => { active = false; };
+  }, []);
+
   return (
     <SafeAreaView style={styles.flexContainer}>
       {/* Header */}
@@ -71,6 +104,12 @@ export function ProviderAnalyticsScreen() {
           <Text style={styles.headerTitle}>Statistiken & Berichte</Text>
           <IconButton name="download" onPress={handleDownload} />
         </View>
+        {loading && (
+          <Text style={{ marginTop: SPACING.xs, color: COLORS.textSecondary }}>Lade Daten…</Text>
+        )}
+        {!!error && (
+          <Text style={{ marginTop: SPACING.xs, color: COLORS.danger }}>Fehler: {error}</Text>
+        )}
       </View>
 
       {/* Period Selector (Fixed underneath the header) */}
@@ -94,14 +133,18 @@ export function ProviderAnalyticsScreen() {
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         
-        {/* Key Metrics */}
+        {/* Key Metrics (connected to backend where available) */}
         <View style={styles.metricsGrid}>
           <Card style={styles.metricCard}>
             <View style={styles.metricRow}>
               <Icon name="euro" size={20} color={COLORS.success} />
               <Text style={styles.metricLabel}>Umsatz</Text>
             </View>
-            <Text style={styles.metricValue}>€4,100</Text>
+            <Text style={styles.metricValue}>
+              {dashboard?.stats?.weekEarningsCents != null
+                ? formatCurrency.format((dashboard.stats.weekEarningsCents || 0) / 100)
+                : "€4,100"}
+            </Text>
             <View style={styles.metricTrendRow}>
               <Icon name="trending-up" size={12} color={COLORS.success} />
               <Text style={styles.trendTextSuccess}>+8% vs. letzter Monat</Text>
@@ -111,9 +154,11 @@ export function ProviderAnalyticsScreen() {
           <Card style={styles.metricCard}>
             <View style={styles.metricRow}>
               <Icon name="calendar" size={20} color={COLORS.infoText} />
-              <Text style={styles.metricLabel}>Termine</Text>
+              <Text style={styles.metricLabel}>Heutige Termine</Text>
             </View>
-            <Text style={styles.metricValue}>52</Text>
+            <Text style={styles.metricValue}>
+              {dashboard?.stats?.todayCount != null ? String(dashboard.stats.todayCount) : '52'}
+            </Text>
             <View style={styles.metricTrendRow}>
               <Icon name="trending-up" size={12} color={COLORS.success} />
               <Text style={styles.trendTextSuccess}>+5 vs. letzter Monat</Text>
@@ -122,10 +167,12 @@ export function ProviderAnalyticsScreen() {
 
           <Card style={styles.metricCard}>
             <View style={styles.metricRow}>
-              <Icon name="users" size={20} color={COLORS.purple} />
-              <Text style={styles.metricLabel}>Neue Kunden</Text>
+              <Icon name="message-square" size={20} color={COLORS.purple} />
+              <Text style={styles.metricLabel}>Bewertungen</Text>
             </View>
-            <Text style={styles.metricValue}>20</Text>
+            <Text style={styles.metricValue}>
+              {dashboard?.stats?.reviewCount != null ? String(dashboard.stats.reviewCount) : '20'}
+            </Text>
             <View style={styles.metricTrendRow}>
               <Icon name="trending-up" size={12} color={COLORS.success} />
               <Text style={styles.trendTextSuccess}>+25%</Text>
@@ -137,7 +184,11 @@ export function ProviderAnalyticsScreen() {
               <Icon name="star" size={20} color={COLORS.amber} />
               <Text style={styles.metricLabel}>Bewertung</Text>
             </View>
-            <Text style={styles.metricValue}>4.8 ★</Text>
+            <Text style={styles.metricValue}>
+              {dashboard?.stats?.ratingAverage != null
+                ? `${(dashboard.stats.ratingAverage || 0).toFixed(1)} ★`
+                : '4.8 ★'}
+            </Text>
             <View style={styles.metricTrendRow}>
               <Text style={styles.trendTextNeutral}>→ Stabil</Text>
             </View>
@@ -298,26 +349,26 @@ export function ProviderAnalyticsScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
+    backgroundColor: COLORS.background,
     flex: 1,
-    backgroundColor: COLORS.background || '#F9FAFB',
   },
   // --- Header Styles ---
   header: {
-    backgroundColor: COLORS.white || '#FFFFFF',
-    paddingHorizontal: SPACING.md || 16,
-    paddingVertical: SPACING.sm || 8,
+    backgroundColor: COLORS.white,
+    borderBottomColor: COLORS.border,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
-    shadowColor: '#000',
+    elevation: 2,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   headerTitle: {
@@ -325,16 +376,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   // --- Period Selector ---
-  periodSelectorContainer: {
-    backgroundColor: COLORS.white,
-    paddingHorizontal: SPACING.md,
-    paddingBottom: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
   periodSelector: {
     flexDirection: 'row',
     gap: SPACING.xs,
+  },
+  periodSelectorContainer: {
+    backgroundColor: COLORS.white,
+    borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
+    paddingBottom: SPACING.sm,
+    paddingHorizontal: SPACING.md,
   },
   activeButton: {
     backgroundColor: COLORS.primary || '#8B4513',
@@ -346,7 +397,7 @@ const styles = StyleSheet.create({
   },
   // --- Scroll Content & Metrics Grid ---
   scrollContent: {
-    padding: SPACING.md || 16,
+    padding: SPACING.md,
     paddingBottom: SPACING.xl * 2,
   },
   metricsGrid: {
@@ -360,14 +411,14 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   metricRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.xs,
   },
   metricLabel: {
     fontSize: FONT_SIZES.body || 14,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
   },
   metricValue: {
     fontSize: 24,
@@ -375,21 +426,21 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs / 2,
   },
   metricTrendRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   trendTextSuccess: {
     fontSize: FONT_SIZES.small || 12,
-    color: COLORS.success || '#10B981',
+    color: COLORS.success,
   },
   trendTextNeutral: {
     fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
   },
   trendTextDanger: {
     fontSize: FONT_SIZES.small || 12,
-    color: COLORS.danger || '#EF4444',
+    color: COLORS.danger,
   },
   // --- Chart Cards ---
   chartCard: {
@@ -403,29 +454,29 @@ const styles = StyleSheet.create({
   },
   // --- Revenue Bar Chart ---
   barChartContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: SPACING.xs,
-    height: 192, // h-48
-    marginBottom: SPACING.md,
     alignItems: 'flex-end',
+    flexDirection: 'row',
+    gap: SPACING.xs,
+    height: 192,
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
   },
   barColumn: {
+    alignItems: 'center',
     flex: 1,
     flexDirection: 'column',
-    alignItems: 'center',
     height: '100%',
     justifyContent: 'flex-end',
   },
   bar: {
-    width: '100%',
-    backgroundColor: COLORS.primary || '#8B4513',
+    backgroundColor: COLORS.primary,
     borderTopLeftRadius: 4,
     borderTopRightRadius: 4,
+    width: '100%',
   },
   barLabel: {
     fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
     marginTop: SPACING.xs,
   },
   trendSummary: {
@@ -444,16 +495,16 @@ const styles = StyleSheet.create({
   },
   trendLabel: {
     fontSize: FONT_SIZES.body || 14,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
   },
   trendValueSuccess: {
     fontSize: FONT_SIZES.h5 || 16,
     fontWeight: 'bold',
-    color: COLORS.success || '#10B981',
+    color: COLORS.success,
   },
   trendRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   // --- Top Services ---
@@ -487,7 +538,7 @@ const styles = StyleSheet.create({
   serviceRevenue: {
     fontSize: FONT_SIZES.h5 || 16,
     fontWeight: '600',
-    color: COLORS.primary || '#8B4513',
+    color: COLORS.primary,
   },
   trendRowSuccess: {
     flexDirection: 'row',
@@ -500,47 +551,47 @@ const styles = StyleSheet.create({
     gap: SPACING.xs / 2,
   },
   progressBarBackground: {
-    width: '100%',
+    backgroundColor: COLORS.border,
     height: 8,
-    backgroundColor: COLORS.border || '#E5E7EB',
     borderRadius: 4,
     overflow: 'hidden',
+    width: '100%',
   },
   progressBarFill: {
+    backgroundColor: COLORS.primary,
     height: '100%',
-    backgroundColor: COLORS.primary || '#8B4513',
   },
   // --- Peak Hours ---
   peakHoursTitleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
   },
   peakHoursList: {
     gap: SPACING.sm,
   },
   peakHourItem: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.sm,
   },
   peakHourLabel: {
     fontSize: FONT_SIZES.body || 14,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
     width: 60,
   },
   peakHourBarBackground: {
+    backgroundColor: COLORS.border,
     flex: 1,
-    height: 32, // h-8
-    backgroundColor: COLORS.border || '#E5E7EB',
+    height: 32,
     borderRadius: 4,
     overflow: 'hidden',
   },
   peakHourBarFill: {
-    height: '100%',
-    backgroundColor: COLORS.infoText || '#3B82F6', // blue-500
-    justifyContent: 'center',
     alignItems: 'flex-end',
+    backgroundColor: COLORS.infoText,
+    height: '100%',
+    justifyContent: 'center',
     paddingRight: SPACING.xs,
   },
   peakHourCount: {
@@ -553,9 +604,9 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   kpiItem: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingBottom: SPACING.sm,
   },
   kpiSeparator: {

@@ -1,9 +1,19 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
-import { getAccessToken, getRefreshToken, saveTokens } from '../auth/tokenStorage';
+import { getAccessToken, getRefreshToken, saveTokens, getAuthBundle, getPreferredLanguageSetting } from '../auth/tokenStorage';
 
-// Axios instance
-export const http = axios.create({ baseURL: API_BASE_URL });
+// Axios instance with sensible defaults to avoid hanging requests
+export const http = axios.create({ baseURL: API_BASE_URL, timeout: 15000 });
+// eslint-disable-next-line no-console
+if (typeof __DEV__ !== 'undefined' && __DEV__) {
+  console.log('[HTTP] axios baseURL =', API_BASE_URL);
+}
+
+// Global flag to temporarily disable auth behavior (used during logout)
+export let authDisabled = false;
+export function setAuthDisabled(disabled: boolean) {
+  authDisabled = disabled;
+}
 
 // Attach Authorization header from secure storage
 http.interceptors.request.use(async (config) => {
@@ -14,13 +24,27 @@ http.interceptors.request.use(async (config) => {
     const maybe = hdrs['x-skip-auth'];
     skip = maybe === 'true';
   }
-  if (skip) return config;
+  // Also skip auth headers if globally disabled (e.g., during logout)
+  if (skip || authDisabled) return config;
   const token = await getAccessToken();
   if (token) {
     const headers = ((config.headers && typeof config.headers === 'object') ? config.headers : {}) as any;
     headers['Authorization'] = `Bearer ${token}`;
     config.headers = headers;
   }
+  // Attach Accept-Language from persisted auth bundle (preferredLanguage) if available
+  try {
+    const bundle = await getAuthBundle();
+    let lang = bundle?.user?.preferredLanguage || undefined;
+    if (!lang) {
+      lang = (await getPreferredLanguageSetting()) || undefined;
+    }
+    if (lang) {
+      const headers = ((config.headers && typeof config.headers === 'object') ? config.headers : {}) as any;
+      headers['Accept-Language'] = lang;
+      config.headers = headers;
+    }
+  } catch {}
   return config;
 });
 
@@ -57,6 +81,15 @@ async function refreshTokenFlow() {
   }
 }
 
+// Allow auth layer to abort any refresh-in-progress during logout
+export function abortAuthRefresh() {
+  try {
+    pendingQueue.forEach((p) => p.reject(new Error('Auth refresh aborted')));
+  } catch {}
+  pendingQueue = [];
+  isRefreshing = false;
+}
+
 http.interceptors.response.use(
   (res) => res,
   async (error) => {
@@ -69,7 +102,8 @@ http.interceptors.response.use(
       skip = maybe === 'true';
     }
 
-    if (status === 401 && config && !config._retry && !skip) {
+    // Skip refresh if globally disabled (e.g., after logout)
+    if (status === 401 && config && !config._retry && !skip && !authDisabled) {
       config._retry = true;
       try {
         const newToken = await refreshTokenFlow();

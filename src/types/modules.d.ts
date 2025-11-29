@@ -14,15 +14,15 @@ declare module '@react-native-picker/picker' {
   import * as React from 'react';
   import { ViewProps } from 'react-native';
   export interface PickerProps extends ViewProps {
-    selectedValue?: any;
-    onValueChange?: (itemValue: any, itemIndex: number) => void;
+    selectedValue?: string;
+    onValueChange?: (itemValue: string, itemIndex: number) => void;
     enabled?: boolean;
   }
   export class Picker extends React.Component<PickerProps> {}
   export namespace Picker {
     export interface ItemProps extends ViewProps {
       label: string;
-      value: any;
+      value: string;
       color?: string;
     }
     export class Item extends React.Component<ItemProps> {}

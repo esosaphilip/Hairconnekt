@@ -1,14 +1,13 @@
 "use client";
 
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
-import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
-import type { StyleProp, ViewStyle } from "react-native";
+import React, { createContext, useCallback, useContext, useMemo, useState, ReactNode } from "react";
+import { Modal, Pressable, StyleSheet, Text, View, StyleProp, ViewStyle, TextStyle } from "react-native";
 import { theme } from "../theme/tokens";
 
-type DialogContextValue = { open: boolean; setOpen: (next: boolean) => void };
-const DialogContext = createContext<DialogContextValue | null>(null);
+type DialogContextValue = { open: boolean; setOpen: (next: boolean) => void } | null;
+const DialogContext = createContext<DialogContextValue>(null);
 
-function useDialogCtx() {
+function useDialogCtx(): { open: boolean; setOpen: (next: boolean) => void } {
   const ctx = useContext(DialogContext);
   if (!ctx) throw new Error("Dialog components must be used within <Dialog>");
   return ctx;
@@ -18,14 +17,14 @@ export interface DialogProps {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (next: boolean) => void;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 function Dialog(props: DialogProps = {}) {
   const { open, defaultOpen, onOpenChange, children } = props ?? {};
   const isControlled = typeof open === "boolean";
-  const [internal, setInternal] = useState(defaultOpen ?? false);
-  const value = isControlled ? open : internal;
+  const [internal, setInternal] = useState<boolean>(defaultOpen ?? false);
+  const value = isControlled ? (open as boolean) : internal;
   const setOpen = useCallback(
     (next: boolean) => {
       if (!isControlled) setInternal(next);
@@ -39,15 +38,13 @@ function Dialog(props: DialogProps = {}) {
   return <DialogContext.Provider value={ctx}>{children}</DialogContext.Provider>;
 }
 
-export interface DialogTriggerProps { children?: React.ReactNode }
-function DialogTrigger(props: DialogTriggerProps = {}) {
+function DialogTrigger(props: { children?: ReactNode } = {}) {
   const { children } = props ?? {};
   const { setOpen } = useDialogCtx();
   return <Pressable onPress={() => setOpen(true)}>{children}</Pressable>;
 }
 
-export interface DialogPortalProps { children?: React.ReactNode }
-function DialogPortal(props: DialogPortalProps = {}) {
+function DialogPortal(props: { children?: ReactNode } = {}) {
   const { children } = props ?? {};
   return <>{children}</>;
 }
@@ -56,8 +53,7 @@ function DialogOverlay() {
   return <View style={styles.overlay} />;
 }
 
-export interface DialogContentProps { children?: React.ReactNode; style?: StyleProp<ViewStyle> }
-function DialogContent(props: DialogContentProps = {}) {
+function DialogContent(props: { children?: ReactNode; style?: StyleProp<ViewStyle> } = {}) {
   const { children, style } = props ?? {};
   const { open, setOpen } = useDialogCtx();
   return (
@@ -78,45 +74,48 @@ function DialogContent(props: DialogContentProps = {}) {
           >
             <Text style={styles.closeIcon}>×</Text>
           </Pressable>
-          {children}
+          {typeof children === 'string' || typeof children === 'number' ? <Text>{children}</Text> : children}
         </View>
       </View>
     </Modal>
   );
 }
 
-export interface DialogHeaderProps { children?: React.ReactNode }
-function DialogHeader(props: DialogHeaderProps = {}) {
-  const { children } = props ?? {};
-  return <View style={styles.header}>{children}</View>;
-}
-
-export interface DialogFooterProps { children?: React.ReactNode }
-function DialogFooter(props: DialogFooterProps = {}) {
-  const { children } = props ?? {};
-  return <View style={styles.footer}>{children}</View>;
-}
-
-export interface DialogTitleProps { children?: React.ReactNode }
-function DialogTitle(props: DialogTitleProps = {}) {
+function DialogHeader(props: { children?: ReactNode } = {}) {
   const { children } = props ?? {};
   return (
-    <Text style={[theme.typography.h3, { color: theme.colors.black }]}>
+    <View style={styles.header}>
+      {typeof children === 'string' || typeof children === 'number' ? <Text>{children}</Text> : children}
+    </View>
+  );
+}
+
+function DialogFooter(props: { children?: ReactNode } = {}) {
+  const { children } = props ?? {};
+  return (
+    <View style={styles.footer}>
+      {typeof children === 'string' || typeof children === 'number' ? <Text>{children}</Text> : children}
+    </View>
+  );
+}
+
+function DialogTitle(props: { children?: ReactNode } = {}) {
+  const { children } = props ?? {};
+  return (
+    <Text style={[theme.typography.h3 as TextStyle, { color: theme.colors.black }]}>
       {children}
     </Text>
   );
 }
 
-export interface DialogDescriptionProps { children?: React.ReactNode }
-function DialogDescription(props: DialogDescriptionProps = {}) {
+function DialogDescription(props: { children?: ReactNode } = {}) {
   const { children } = props ?? {};
   return (
     <Text style={{ fontSize: 14, color: theme.colors.gray600 }}>{children}</Text>
   );
 }
 
-export interface DialogCloseProps { children?: React.ReactNode }
-function DialogClose(props: DialogCloseProps = {}) {
+function DialogClose(props: { children?: ReactNode } = {}) {
   const { children } = props ?? {};
   const { setOpen } = useDialogCtx();
   return <Pressable onPress={() => setOpen(false)}>{children}</Pressable>;
@@ -139,7 +138,7 @@ const styles = StyleSheet.create({
   content: {
     width: "88%",
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radii.lg,
+    borderRadius: theme?.radii?.lg ?? 0,
     padding: 16,
     borderWidth: 1,
     borderColor: theme.colors.gray200,

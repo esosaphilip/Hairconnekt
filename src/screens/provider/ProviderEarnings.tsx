@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 // lucide-react is not available in React Native; using react-native-svg or local SVG instead
 // For now, we’ll inline simple text placeholders so the file compiles
 const TrendingUp = () => <Text>↗</Text>;
@@ -8,9 +8,12 @@ const CreditCard  = () => <Text>💳</Text>;
 const Euro        = () => <Text>€</Text>;
 import { useNavigation } from "@react-navigation/native";
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView } from "react-native";
+import { getProviderAppointments, AppointmentListItem } from "@/api/appointments";
+import { paymentsApi, PLATFORM_FEE_RATE, centsToEuros } from "@/api/payments";
 
 // Minimal inline Card component to replace missing import
-const Card = ({ children, style }: any) => (
+type CardProps = { children: React.ReactNode; style?: any };
+const Card = ({ children, style }: CardProps) => (
   <View style={[styles.card, style]}>
     {children}
   </View>
@@ -63,7 +66,6 @@ const rnStyles = StyleSheet.create({
   },
 
   section: {
-    gap: 12,
     marginBottom: 16,
   },
   sectionTitle: {
@@ -104,7 +106,6 @@ const rnStyles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   rowBetween: {
     flexDirection: 'row',
@@ -143,7 +144,6 @@ const rnStyles = StyleSheet.create({
   chartColumn: {
     flex: 1,
     alignItems: 'center',
-    gap: 6,
     marginHorizontal: 2,
   },
   chartBarContainer: {
@@ -184,7 +184,6 @@ const rnStyles = StyleSheet.create({
     color: '#6B7280',
   },
   detailList: {
-    gap: 6,
     marginVertical: 8,
   },
   detailRow: {
@@ -203,9 +202,10 @@ const rnStyles = StyleSheet.create({
 });
 
 // Minimal inline Button component to replace missing import
-const Button = ({ children, onPress, onClick, size, variant, style }: any) => (
+type ButtonProps = { children: React.ReactNode; onPress?: () => void; style?: any };
+const Button = ({ children, onPress, style }: ButtonProps) => (
   <TouchableOpacity
-    onPress={onPress || onClick}
+    onPress={onPress}
     activeOpacity={0.8}
     style={style}
   >
@@ -224,50 +224,103 @@ const weeklyData = [
   { day: "So", amount: 380, appointments: 4 },
 ];
 
-const recentTransactions = [
-  {
-    id: 1,
-    date: "28. Okt. 14:30",
-    client: "Sarah Müller",
-    service: "Box Braids",
-    gross: 95,
-    fee: 9.5,
-    net: 85.5,
-    status: "paid",
-  },
-  {
-    id: 2,
-    date: "27. Okt. 18:00",
-    client: "Lisa Werner",
-    service: "Cornrows",
-    gross: 65,
-    fee: 6.5,
-    net: 58.5,
-    status: "paid",
-  },
-  {
-    id: 3,
-    date: "27. Okt. 14:00",
-    client: "Maria König",
-    service: "Senegalese Twists",
-    gross: 115,
-    fee: 11.5,
-    net: 103.5,
-    status: "pending",
-  },
-];
+/**
+ * @typedef {Object} TransactionItem
+ * @property {string} id
+ * @property {string} date
+ * @property {string} client
+ * @property {string} service
+ * @property {number} gross
+ * @property {number} fee
+ * @property {number} net
+ * @property {('paid'|'pending')} status
+ */
+type TransactionItemTS = { id: string; date: string; client: string; service: string; gross: number; fee: number; net: number; status: 'paid' | 'pending' };
+const initialRecentTransactions: TransactionItemTS[] = [];
 
 export function ProviderEarnings() {
-  const [period, setPeriod] = useState<"week" | "month">("week");
-  const navigation = useNavigation<any>();
+  const [period, setPeriod] = useState("week");
+  const navigation = useNavigation() as any;
   const navigate = (path: string) => {
     // In a full app, map path to route names; for now, keep compile-safe navigation
     try {
-      navigation.navigate(path as never);
+      navigation.navigate(path);
     } catch (e) {
       // noop fallback
     }
   };
+
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [pendingPayments, setPendingPayments] = useState(0);
+  const [recentTransactions, setRecentTransactions] = useState<TransactionItemTS[]>(initialRecentTransactions);
+
+  useEffect(() => {
+    let mounted = true;
+    async function loadFinancials() {
+      try {
+        const [completed, upcoming, payoutsRes] = await Promise.all([
+          // API expects a StatusGroup ('upcoming' | 'completed' | 'cancelled'), not an object
+          getProviderAppointments('completed'),
+          getProviderAppointments('upcoming'),
+          paymentsApi.listProviderPayouts(),
+        ]);
+
+        if (!mounted) return;
+
+        // Compute balances
+        const completedGrossCents = (completed.items || []).reduce(
+          (sum: number, a: AppointmentListItem) => sum + (a.totalPriceCents || 0),
+          0
+        );
+        const completedNetCents = completedGrossCents * (1 - PLATFORM_FEE_RATE);
+        // paymentsApi.listProviderPayouts() returns { items, count }
+        const reservedOrPaidOutCents = (payoutsRes.items || []).reduce(
+          (sum: number, p) => sum + (p.amountCents || 0),
+          0
+        );
+        setAvailableBalance(Math.max(0, centsToEuros(completedNetCents - reservedOrPaidOutCents)));
+
+        const upcomingGrossCents = (upcoming.items || []).reduce(
+          (sum: number, a: AppointmentListItem) => sum + (a.totalPriceCents || 0),
+          0
+        );
+        const upcomingNetCents = upcomingGrossCents * (1 - PLATFORM_FEE_RATE);
+        setPendingPayments(centsToEuros(upcomingNetCents));
+
+        // Build recent transactions from appointments
+        const mapApptToItem = (a: AppointmentListItem): TransactionItemTS => {
+          const dateStr = `${a.appointmentDate}T${(a.startTime || '00:00:00')}`;
+          const dt = new Date(dateStr);
+          return {
+            id: String(a.id || `${a.appointmentDate}-${a.startTime}`),
+            date: dt.toLocaleString('de-DE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+            client: a.client?.name || 'Kunde',
+            service: (a.services || []).map((s: { name: string }) => s.name).join(', '),
+            gross: centsToEuros(a.totalPriceCents || 0),
+            fee: centsToEuros((a.totalPriceCents || 0) * PLATFORM_FEE_RATE),
+            net: centsToEuros((a.totalPriceCents || 0) * (1 - PLATFORM_FEE_RATE)),
+            status: a.status === 'COMPLETED' ? 'paid' as const : 'pending' as const,
+          };
+        };
+        const recent: TransactionItemTS[] = [
+          ...((completed.items || []).map(mapApptToItem)),
+          ...((upcoming.items || []).map(mapApptToItem)),
+        ]
+          .sort((a, b) => {
+            // sort descending by date (approximate, using string parse)
+            const ad = new Date(a.date.replace(' ', ' ')).getTime();
+            const bd = new Date(b.date.replace(' ', ' ')).getTime();
+            return bd - ad;
+          })
+          .slice(0, 5);
+        setRecentTransactions(recent);
+      } catch (err) {
+        console.warn('Failed to load provider earnings', err);
+      }
+    }
+    loadFinancials();
+    return () => { mounted = false; };
+  }, []);
 
   const maxAmount = Math.max(...weeklyData.map(d => d.amount));
 
@@ -286,9 +339,9 @@ export function ProviderEarnings() {
         <View style={rnStyles.section}>
           <Card>
             <Text style={rnStyles.labelMuted}>Verfügbares Guthaben</Text>
-            <Text style={rnStyles.amountLarge}>€1,245.50</Text>
+            <Text style={rnStyles.amountLarge}>€{availableBalance.toFixed(2)}</Text>
             <Button
-              onPress={() => navigate('/provider/earnings/payout-request')}
+              onPress={() => navigation.navigate('PayoutRequestScreen')}
               style={rnStyles.primaryButton}
             >
               Auszahlung beantragen
@@ -300,7 +353,7 @@ export function ProviderEarnings() {
             <View style={rnStyles.rowBetween}>
               <View>
                 <Text style={rnStyles.labelMuted}>Ausstehende Zahlungen</Text>
-                <Text style={rnStyles.amountMedium}>€350.00</Text>
+                <Text style={rnStyles.amountMedium}>€{pendingPayments.toFixed(2)}</Text>
               </View>
               <View style={{ alignItems: 'flex-end' }}>
                 <Badge variant="outline">Ausstehend</Badge>
@@ -368,15 +421,15 @@ export function ProviderEarnings() {
             </TouchableOpacity>
           </View>
 
-          <View style={{ gap: 12 }}>
+          <View>
             {recentTransactions.map((transaction) => (
-              <Card key={transaction.id}>
+              <Card key={transaction.id} style={{ marginBottom: 12 }}>
                 <View style={rnStyles.rowBetween}>
                   <View>
                     <Text style={rnStyles.itemTitle}>{transaction.client}</Text>
                     <Text style={rnStyles.itemSubtitle}>{transaction.service}</Text>
                   </View>
-                  <Badge variant={transaction.status === 'paid' ? 'default' : 'secondary'}>
+                  <Badge variant={transaction.status === 'paid' ? 'success' : 'secondary'}>
                     {transaction.status === 'paid' ? 'Bezahlt' : 'Ausstehend'}
                   </Badge>
                 </View>

@@ -5,6 +5,13 @@
     "allowJs": true,
     "noEmit": true,
     "skipLibCheck": true,
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
+    "types": [
+      "react"
+    ],
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

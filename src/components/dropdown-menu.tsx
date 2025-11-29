@@ -178,11 +178,11 @@ const styles = StyleSheet.create({
     minWidth: 200,
     width: "80%",
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radii.md,
+    borderRadius: theme?.radii?.md ?? 0,
     borderWidth: 1,
     borderColor: theme.colors.gray200,
     paddingVertical: 4,
-    ...(theme.shadows.md || {}),
+    ...(theme.shadows?.md || {}),
   },
   item: {
     paddingVertical: 10,

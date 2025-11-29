@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,23 +12,57 @@ import {
 
 // Replaced web imports with assumed custom/community React Native components
 import { useNavigation } from '@react-navigation/native';
-import Button from '../../components/Button';
-import IconButton from '../../components/IconButton';
-import Card from '../../components/Card';
-import Input from '../../components/Input'; // Custom Input for standard fields
-import Icon from '../../components/Icon';
-import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import Button from '@/components/Button';
+import IconButton from '@/components/IconButton';
+import Card from '@/components/Card';
+// Removed unused Input import
+import Icon from '@/components/Icon';
+import { COLORS, SPACING, FONT_SIZES } from '@/theme/tokens';
+import { paymentsApi, centsToEuros, PLATFORM_FEE_RATE } from '@/api/payments';
+import { getProviderAppointments } from '@/api/appointments';
 
 // --- Constants ---
-const availableBalance = 1245.5;
-const minimumPayout = 50;
-const processingFee = 2.5;
+const minimumPayout = 50; // TODO: fetch from backend settings if available
+const processingFee = 2.5; // temporary flat processing fee
+const defaultIban = 'DE89 3704 0044 0532 0130 00';
 
 // --- Main Component ---
+type Nav = { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
+
 export function PayoutRequestScreen() {
-  const navigation = useNavigation<any>();
-  const [amount, setAmount] = useState(availableBalance.toFixed(2));
+  const navigation = useNavigation<Nav>();
+  const [amount, setAmount] = useState('0.00');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableBalance, setAvailableBalance] = useState(0);
+  const [payouts, setPayouts] = useState<import('@/api/payments').ProviderPayout[]>([]);
+  const [iban] = useState(defaultIban);
+
+  // Load payouts and compute available balance from completed appointments
+  useEffect(() => {
+    let mounted = true;
+    async function loadData() {
+      try {
+        const [completed, payoutsRes] = await Promise.all([
+          // Backend expects lowercase status group values: 'completed' | 'upcoming' | 'cancelled'
+          getProviderAppointments('completed'),
+          paymentsApi.listProviderPayouts(),
+        ]);
+
+        if (!mounted) return;
+
+        const completedNetCents = (completed.items || []).reduce((sum, a) => sum + (a.totalPriceCents || 0), 0) * (1 - PLATFORM_FEE_RATE);
+        const reservedOrPaidOutCents = (payoutsRes.items || []).reduce((sum, p) => sum + (p.amountCents || 0), 0);
+        const computedAvailable = Math.max(0, centsToEuros(completedNetCents - reservedOrPaidOutCents));
+        setAvailableBalance(computedAvailable);
+        setAmount(computedAvailable.toFixed(2));
+        setPayouts(payoutsRes.items || []);
+      } catch (err) {
+        console.warn('Failed to load payouts/appointments', err);
+      }
+    }
+    loadData();
+    return () => { mounted = false; };
+  }, []);
 
   const parsedAmount = parseFloat(amount) || 0;
   const netAmount = parsedAmount > 0 ? parsedAmount - processingFee : 0;
@@ -38,27 +72,29 @@ export function PayoutRequestScreen() {
   const isBalanceSufficient = parsedAmount <= availableBalance;
   const canSubmit = isAmountValid && isBalanceSufficient && !isSubmitting;
 
-
-  const handleSubmit = () => {
-    
+  const handleSubmit = async () => {
     if (!isAmountValid) {
-      Alert.alert("Fehler", `Mindestbetrag für Auszahlung: €${minimumPayout.toFixed(2)}`);
+      Alert.alert('Fehler', `Mindestbetrag für Auszahlung: €${minimumPayout.toFixed(2)}`);
       return;
     }
-
     if (!isBalanceSufficient) {
-      Alert.alert("Fehler", "Nicht genügend Guthaben verfügbar");
+      Alert.alert('Fehler', 'Nicht genügend Guthaben verfügbar');
       return;
     }
-
     setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await paymentsApi.requestPayout({ amount: parsedAmount, currency: 'eur', iban });
+      Alert.alert('Erfolg', 'Auszahlung beantragt! Du erhältst eine Bestätigung per E-Mail.');
+      const payoutsRes = await paymentsApi.listProviderPayouts();
+      setPayouts(payoutsRes.items || []);
+      navigation.navigate('TransactionsScreen');
+    } catch (err) {
+      const anyErr = err as unknown as { response?: { data?: { message?: string } } };
+      const message = anyErr?.response?.data?.message || 'Fehler beim Beantragen der Auszahlung';
+      Alert.alert('Fehler', String(message));
+    } finally {
       setIsSubmitting(false);
-      Alert.alert("Erfolg", "Auszahlung beantragt! Du erhältst eine Bestätigung per E-Mail.");
-      navigation.navigate("TransactionsScreen");
-    }, 2000);
+    }
   };
 
   // --- Utility Component for Euro Input ---
@@ -66,7 +102,10 @@ export function PayoutRequestScreen() {
     <View style={styles.euroInputContainer}>
       <Icon name="euro" size={20} color={COLORS.textSecondary} style={styles.euroIcon} />
       <TextInput
-        style={styles.inputField}
+        style={[
+          styles.inputField,
+          (!isAmountValid || !isBalanceSufficient) ? styles.inputInvalid : undefined,
+        ]}
         keyboardType="decimal-pad"
         placeholder="0.00"
         value={amount}
@@ -75,8 +114,6 @@ export function PayoutRequestScreen() {
             const cleanValue = v.replace(/[^\d.]/g, '');
             setAmount(cleanValue);
         }}
-        // Using red border if invalid
-        {...(!isAmountValid || !isBalanceSufficient) && { style: styles.inputInvalid }}
       />
     </View>
   );
@@ -121,14 +158,14 @@ export function PayoutRequestScreen() {
               size="sm"
               variant="outline"
               onPress={() => setAmount(minimumPayout.toFixed(2))}
-              style={styles.quickButton}
+              style={[styles.quickButton, { marginRight: SPACING.xs }]}
             />
             <Button
               title="50%"
               size="sm"
               variant="outline"
               onPress={() => setAmount((availableBalance / 2).toFixed(2))}
-              style={styles.quickButton}
+              style={[styles.quickButton, { marginRight: SPACING.xs }]}
             />
             <Button
               title="Alles"
@@ -172,9 +209,9 @@ export function PayoutRequestScreen() {
             <View style={styles.bankIconCircle}>
               <Icon name="building-2" size={20} color={COLORS.infoText} />
             </View>
-            <View style={styles.bankTextContainer}>
+            <View style={[styles.bankTextContainer, { marginLeft: SPACING.sm }] }>
               <Text style={styles.bankTitle}>Bankkonto</Text>
-              <Text style={styles.bankSubtitle}>DE89 3704 0044 0532 0130 00</Text>
+              <Text style={styles.bankSubtitle}>{iban}</Text>
             </View>
           </View>
           <Button
@@ -189,7 +226,7 @@ export function PayoutRequestScreen() {
         {/* Info Alert */}
         <View style={styles.alertContainer}>
           <Icon name="alert-circle" size={20} color={COLORS.infoText} />
-          <Text style={styles.alertDescription}>
+          <Text style={[styles.alertDescription, { marginLeft: SPACING.xs }] }>
             Die Auszahlung wird innerhalb von 2-3 Werktagen auf dein hinterlegtes
             Bankkonto überwiesen. Du erhältst eine Bestätigungs-E-Mail.
           </Text>
@@ -200,8 +237,8 @@ export function PayoutRequestScreen() {
           <Text style={styles.cardTitle}>Auszahlungsmethode</Text>
           <TouchableOpacity style={styles.radioContainer} activeOpacity={0.8}>
             <View style={styles.radioButtonChecked} />
-            <Icon name="credit-card" size={20} color={COLORS.textSecondary} />
-            <View style={styles.methodTextContainer}>
+            <Icon name="credit-card" size={20} color={COLORS.textSecondary} style={{ marginLeft: SPACING.sm }} />
+            <View style={[styles.methodTextContainer, { marginLeft: SPACING.sm }] }>
               <Text style={styles.methodTitle}>Banküberweisung</Text>
               <Text style={styles.methodSubtitle}>2-3 Werktage</Text>
             </View>
@@ -212,22 +249,27 @@ export function PayoutRequestScreen() {
         <Card style={styles.contentCard}>
           <Text style={styles.cardTitle}>Letzte Auszahlungen</Text>
           <View style={styles.payoutList}>
-            {[
-              { amount: 950.00, date: '15. September 2025' },
-              { amount: 1120.00, date: '15. August 2025' },
-              { amount: 890.00, date: '15. Juli 2025' },
-            ].map((payout, index) => (
-              <View key={index} style={[styles.payoutItem, index < 2 && styles.payoutSeparator]}>
-                <View>
-                  <Text style={styles.payoutAmount}>€{payout.amount.toFixed(2)}</Text>
-                  <Text style={styles.payoutDate}>{payout.date}</Text>
-                </View>
-                <View style={styles.payoutStatus}>
-                  <Icon name="check-circle" size={16} color={COLORS.success} />
-                  <Text style={styles.payoutStatusText}>Abgeschlossen</Text>
-                </View>
-              </View>
-            ))}
+            {payouts
+              .slice()
+              .sort((a, b) => new Date(b.requestedAt || b.completedAt || '').getTime() - new Date(a.requestedAt || a.completedAt || '').getTime())
+              .slice(0, 3)
+              .map((payout, index) => {
+                const statusUpper = (payout.status || '').toUpperCase();
+                const isCompleted = statusUpper === 'COMPLETED';
+                const dateStr = payout.requestedAt || payout.completedAt || '';
+                return (
+                  <View key={payout.id || index} style={[styles.payoutItem, index < 2 && styles.payoutSeparator, index > 0 && { marginTop: SPACING.xs }]}>
+                    <View>
+                      <Text style={styles.payoutAmount}>€{centsToEuros(payout.amountCents).toFixed(2)}</Text>
+                      <Text style={styles.payoutDate}>{dateStr ? new Date(dateStr).toLocaleDateString('de-DE') : ''}</Text>
+                    </View>
+                    <View style={styles.payoutStatus}>
+                      <Icon name={isCompleted ? 'check-circle' : 'clock'} size={16} color={isCompleted ? COLORS.success : COLORS.textSecondary} />
+                      <Text style={[styles.payoutStatusText, { marginLeft: SPACING.xs / 2 }]}>{isCompleted ? 'Abgeschlossen' : 'Ausstehend'}</Text>
+                    </View>
+                  </View>
+                );
+              })}
           </View>
         </Card>
 
@@ -242,7 +284,7 @@ export function PayoutRequestScreen() {
           disabled={!canSubmit}
         />
         <Text style={styles.footerHint}>
-          Durch Klicken auf "Auszahlung beantragen" bestätigst du, dass die Angaben
+          Durch Klicken auf &quot;Auszahlung beantragen&quot; bestätigst du, dass die Angaben
           korrekt sind.
         </Text>
       </View>
@@ -253,177 +295,64 @@ export function PayoutRequestScreen() {
 
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
-  flexContainer: {
-    flex: 1,
-    backgroundColor: COLORS.background || '#F9FAFB',
-  },
-  // --- Header ---
-  header: {
-    backgroundColor: COLORS.white || '#FFFFFF',
-    paddingHorizontal: SPACING.md || 16,
-    paddingVertical: SPACING.sm || 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-    elevation: 2,
-    zIndex: 10,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm || 8,
-  },
-  headerTitle: {
-    fontSize: FONT_SIZES.h4 || 18,
-    fontWeight: 'bold',
-  },
-  // --- Scroll Content ---
-  scrollContent: {
-    padding: SPACING.md || 16,
-    paddingBottom: SPACING.xl * 4, // Space for the fixed footer
-  },
-  // --- Balance Card (Gradient Fallback) ---
-  balanceCardWrapper: {
-    marginBottom: SPACING.md,
+  alertContainer: {
+    alignItems: 'flex-start',
+    backgroundColor: COLORS.infoBg || '#EFF6FF',
+    borderColor: COLORS.infoBorder || '#DBEAFE',
     borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    marginBottom: SPACING.md,
+    padding: SPACING.md,
+  },
+  alertDescription: {
+    color: COLORS.infoTextDark || '#374151',
+    flex: 1,
+    fontSize: FONT_SIZES.body || 14,
+  },
+  balanceCard: {
+    backgroundColor: COLORS.primary,
+    padding: SPACING.lg,
+  },
+  balanceCardWrapper: {
+    borderRadius: 8,
+    marginBottom: SPACING.md,
     overflow: 'hidden',
     padding: 0,
   },
-  balanceCard: {
-    padding: SPACING.lg,
-    backgroundColor: COLORS.primary, // Fallback for gradient
+  balanceHint: {
+    color: COLORS.white,
+    fontSize: FONT_SIZES.small || 12,
+    marginTop: SPACING.xs,
+    opacity: 0.75,
   },
   balanceLabel: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.white,
-    opacity: 0.9,
+    fontSize: FONT_SIZES.body || 14,
     marginBottom: SPACING.xs,
+    opacity: 0.9,
   },
   balanceValue: {
+    color: COLORS.white,
     fontSize: 32,
     fontWeight: 'bold',
-    color: COLORS.white,
-  },
-  balanceHint: {
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.white,
-    opacity: 0.75,
-    marginTop: SPACING.xs,
-  },
-  // --- Standard Content Card ---
-  contentCard: {
-    padding: SPACING.md,
-    marginBottom: SPACING.md,
-  },
-  cardTitle: {
-    fontSize: FONT_SIZES.h5 || 16,
-    fontWeight: 'bold',
-    marginBottom: SPACING.md,
-  },
-  formGroup: {
-    marginBottom: SPACING.md,
-  },
-  label: {
-    fontSize: FONT_SIZES.body || 14,
-    fontWeight: '500',
-    marginBottom: SPACING.xs,
-  },
-  // --- Euro Input Styling (Custom Native Implementation) ---
-  euroInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 8,
-    backgroundColor: COLORS.white,
-    paddingLeft: SPACING.lg, // Space for the icon
-    height: 48,
-  },
-  euroIcon: {
-    position: 'absolute',
-    left: SPACING.sm,
-    top: 13,
-    zIndex: 1,
-  },
-  inputField: {
-    flex: 1,
-    height: '100%',
-    fontSize: FONT_SIZES.h4 || 18,
-    color: COLORS.text,
-  },
-  inputInvalid: {
-    borderColor: COLORS.danger,
-    borderWidth: 2,
-  },
-  errorText: {
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.danger || '#EF4444',
-    marginTop: SPACING.xs,
-  },
-  // --- Quick Select Buttons ---
-  buttonRow: {
-    flexDirection: 'row',
-    gap: SPACING.xs,
-    marginBottom: SPACING.md,
-  },
-  quickButton: {
-    flex: 1,
-    height: 36,
-  },
-  // --- Breakdown ---
-  breakdownList: {
-    gap: SPACING.xs,
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingBottom: SPACING.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  breakdownLabel: {
-    color: COLORS.textSecondary || '#6B7280',
-    fontSize: FONT_SIZES.body || 14,
-  },
-  breakdownValue: {
-    fontSize: FONT_SIZES.body || 14,
-    fontWeight: '500',
-  },
-  expenseText: {
-    color: COLORS.danger || '#EF4444',
-  },
-  breakdownTotalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: SPACING.xs,
-  },
-  breakdownTotalLabel: {
-    color: COLORS.text || '#1F2937',
-    fontWeight: '500',
-    fontSize: FONT_SIZES.body || 14,
-  },
-  breakdownTotalValue: {
-    color: COLORS.success || '#10B981',
-    fontSize: FONT_SIZES.h5 || 16,
-    fontWeight: 'bold',
-  },
-  // --- Bank Info ---
-  bankInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-    marginBottom: SPACING.md,
   },
   bankIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: COLORS.infoBg || '#DBEAFE', // blue-100
     alignItems: 'center',
+    backgroundColor: COLORS.infoBg || '#DBEAFE',
+    borderRadius: 20,
+    height: 40,
     justifyContent: 'center',
+    width: 40,
+  },
+  bankInfoRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: SPACING.md,
+  },
+  bankSubtitle: {
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
   },
   bankTextContainer: {
     flex: 1,
@@ -432,47 +361,131 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.body || 14,
     fontWeight: '500',
   },
-  bankSubtitle: {
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary,
+  breakdownLabel: {
+    color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
-  fullWidthButton: {
-    width: '100%',
-    height: 36,
-  },
-  // --- Info Alert ---
-  alertContainer: {
+  breakdownList: {},
+  breakdownRow: {
+    borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: SPACING.xs,
-    padding: SPACING.md,
-    backgroundColor: COLORS.infoBg || '#EFF6FF',
-    borderColor: COLORS.infoBorder || '#DBEAFE',
-    borderWidth: 1,
-    borderRadius: 8,
+    justifyContent: 'space-between',
+    paddingBottom: SPACING.xs,
+  },
+  breakdownTotalLabel: {
+    color: COLORS.text || '#1F2937',
+    fontSize: FONT_SIZES.body || 14,
+    fontWeight: '500',
+  },
+  breakdownTotalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: SPACING.xs,
+  },
+  breakdownTotalValue: {
+    color: COLORS.success || '#10B981',
+    fontSize: FONT_SIZES.h5 || 16,
+    fontWeight: 'bold',
+  },
+  breakdownValue: {
+    fontSize: FONT_SIZES.body || 14,
+    fontWeight: '500',
+  },
+  buttonRow: {
+    flexDirection: 'row',
     marginBottom: SPACING.md,
   },
-  alertDescription: {
-    flex: 1,
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.infoTextDark || '#374151',
+  cardTitle: {
+    fontSize: FONT_SIZES.h5 || 16,
+    fontWeight: 'bold',
+    marginBottom: SPACING.md,
   },
-  // --- Payment Method (Radio Button Mock) ---
-  radioContainer: {
-    flexDirection: 'row',
+  contentCard: {
+    marginBottom: SPACING.md,
+    padding: SPACING.md,
+  },
+  errorText: {
+    color: COLORS.danger || '#EF4444',
+    fontSize: FONT_SIZES.small || 12,
+    marginTop: SPACING.xs,
+  },
+  euroIcon: {
+    left: SPACING.sm,
+    position: 'absolute',
+    top: 13,
+    zIndex: 1,
+  },
+  euroInputContainer: {
     alignItems: 'center',
-    gap: SPACING.sm,
-    padding: SPACING.sm,
-    borderWidth: 2,
-    borderColor: COLORS.primary || '#8B4513',
+    backgroundColor: COLORS.white,
+    borderColor: COLORS.border,
     borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: 'row',
+    height: 48,
+    paddingLeft: SPACING.lg,
   },
-  radioButtonChecked: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 4,
-    borderColor: COLORS.primary,
+  expenseText: {
+    color: COLORS.danger || '#EF4444',
+  },
+  flexContainer: {
+    backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
+  },
+  footerHint: {
+    color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
+    marginTop: SPACING.xs,
+    textAlign: 'center',
+  },
+  formGroup: {
+    marginBottom: SPACING.md,
+  },
+  fullWidthButton: {
+    height: 36,
+    width: '100%',
+  },
+  header: {
+    backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    elevation: 2,
+    paddingHorizontal: SPACING.md || 16,
+    paddingVertical: SPACING.sm || 8,
+    shadowColor: COLORS.black || '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 1,
+    zIndex: 10,
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  headerTitle: {
+    fontSize: FONT_SIZES.h4 || 18,
+    fontWeight: 'bold',
+    marginLeft: SPACING.sm || 8,
+  },
+  inputField: {
+    color: COLORS.text,
+    flex: 1,
+    fontSize: FONT_SIZES.h4 || 18,
+    height: '100%',
+  },
+  inputInvalid: {
+    borderColor: COLORS.danger,
+    borderWidth: 2,
+  },
+  label: {
+    fontSize: FONT_SIZES.body || 14,
+    fontWeight: '500',
+    marginBottom: SPACING.xs,
+  },
+  methodSubtitle: {
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
   },
   methodTextContainer: {
     flex: 1,
@@ -481,62 +494,70 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.body || 14,
     fontWeight: '500',
   },
-  methodSubtitle: {
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary,
-  },
-  // --- Previous Payouts ---
-  payoutList: {
-    gap: SPACING.xs,
-  },
-  payoutItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: SPACING.sm,
-  },
-  payoutSeparator: {
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
   payoutAmount: {
     fontSize: FONT_SIZES.body || 14,
     fontWeight: '500',
   },
   payoutDate: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
+  },
+  payoutItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: SPACING.sm,
+  },
+  payoutList: {},
+  payoutSeparator: {
+    borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
   },
   payoutStatus: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.xs / 2,
+    flexDirection: 'row',
   },
   payoutStatusText: {
     color: COLORS.success || '#10B981',
     fontSize: FONT_SIZES.body || 14,
   },
-  // --- Submit Footer (Fixed at Bottom) ---
-  submitFooter: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: COLORS.white,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
+  quickButton: {
+    flex: 1,
+    height: 36,
+  },
+  radioButtonChecked: {
+    borderColor: COLORS.primary,
+    borderRadius: 8,
+    borderWidth: 4,
+    height: 16,
+    width: 16,
+  },
+  radioContainer: {
+    alignItems: 'center',
+    borderColor: COLORS.primary || '#8B4513',
+    borderRadius: 8,
+    borderWidth: 2,
+    flexDirection: 'row',
+    padding: SPACING.sm,
+  },
+  scrollContent: {
     padding: SPACING.md || 16,
-    zIndex: 20,
+    paddingBottom: SPACING.xl * 4,
   },
   submitButton: {
-    width: '100%',
-    height: 48,
     backgroundColor: COLORS.primary || '#8B4513',
+    height: 48,
+    width: '100%',
   },
-  footerHint: {
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary || '#6B7280',
-    textAlign: 'center',
-    marginTop: SPACING.xs,
+  submitFooter: {
+    backgroundColor: COLORS.white,
+    borderTopColor: COLORS.border,
+    borderTopWidth: 1,
+    bottom: 0,
+    left: 0,
+    padding: SPACING.md || 16,
+    position: 'absolute',
+    right: 0,
+    zIndex: 20,
   },
 });

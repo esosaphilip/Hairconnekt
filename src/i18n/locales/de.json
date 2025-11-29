@@ -1,0 +1,251 @@
+{
+  "common": {
+    "loading": "Laden…",
+    "actions": {
+      "login": "Login",
+      "goToLogin": "Zum Login",
+      "logIn": "Anmelden",
+      "retry": "Erneut versuchen"
+    },
+    "provider": "Anbieter",
+    "successTitle": "Erfolg",
+    "errorTitle": "Fehler",
+    "languages": {
+      "en": "Englisch",
+      "de": "Deutsch"
+    }
+  },
+  "screens": {
+    "bookings": {
+      "title": "Termine",
+      "detailTitle": "Termin"
+    },
+    "profile": {
+      "title": "Profil",
+      "editProfile": "Profil bearbeiten",
+      "loadError": "Fehler beim Laden des Profils",
+      "avatar": {
+        "uploadSuccess": "Profilbild aktualisiert",
+        "uploadError": "Upload fehlgeschlagen",
+        "permissionTitle": "Berechtigung erforderlich",
+        "permissionText": "Wir benötigen Zugriff auf deine Fotos, um ein Profilbild hochzuladen."
+      },
+      "verified": {
+        "email": "✓ E-Mail verifiziert",
+        "phone": "✓ Telefon verifiziert"
+      },
+      "memberSince": "Mitglied seit {{date}}",
+      "stats": {
+        "appointments": "Termine",
+        "favorites": "Favoriten",
+        "reviews": "Bewertungen"
+      },
+      "sections": {
+        "myProfile": "Mein Profil",
+        "myActivities": "Meine Aktivitäten",
+        "payments": "Zahlungen",
+        "settings": "Einstellungen",
+        "legal": "Rechtliches",
+        "account": "Account"
+      },
+      "menu": {
+        "notifications": "Benachrichtigungen",
+        "personalInfo": "Persönliche Informationen",
+        "addresses": "Meine Adressen",
+        "preferences": "Haartyp & Präferenzen",
+        "favorites": "Favoriten",
+        "myReviews": "Meine Bewertungen",
+        "bookingHistory": "Buchungshistorie",
+        "paymentMethods": "Zahlungsmethoden",
+        "vouchers": "Gutscheine & Rabatte",
+        "transactions": "Transaktionshistorie",
+        "language": "Sprache",
+        "privacy": "Datenschutz & Sicherheit",
+        "support": "Hilfe & Support",
+        "terms": "Allgemeine Geschäftsbedingungen",
+        "privacyPolicy": "Datenschutzerklärung",
+        "imprint": "Impressum",
+        "logout": "Abmelden",
+        "deleteAccount": "Account löschen",
+        "about": "Über HairConnekt"
+      },
+      "logoutConfirmTitle": "Abmelden",
+      "logoutConfirmText": "Möchtest du dich wirklich abmelden?",
+      "logoutConfirmCancel": "Abbrechen",
+      "logoutConfirmConfirm": "Abmelden"
+    },
+    "home": {
+      "hello": "Hallo,",
+      "welcomeTo": "Willkommen bei",
+      "searchPlaceholder": "Suche nach Styles, Braiders, Salons…",
+      "location": {
+        "detecting": "Standort wird ermittelt…",
+        "disabled": "Standort deaktiviert",
+        "permissionRequired": "Standortzugriff erforderlich.",
+        "currentLocation": "Mein Standort"
+      },
+      "quickActions": {
+        "urgent": "Notfall-Termin",
+        "mobileService": "Mobile Service",
+        "vouchers": "Gutscheine",
+        "favorites": "Favoriten",
+        "newBraiders": "Neue Braider"
+      },
+      "popularStylesTitle": "Beliebte Styles",
+      "popularStyles": {
+        "priceFrom": "ab {{price}}"
+      },
+      "duration": {
+        "hoursRange": "{{hours}} Std."
+      },
+      "seeAll": "Alle ansehen",
+      "nearbyTitle": "Braiders in deiner Nähe",
+      "loadingNearby": "Lade nahegelegene Anbieter…",
+      "fetchError": "Konnte nahegelegene Anbieter nicht laden",
+      "noNearbyFound": "Keine Braider in deiner Nähe gefunden.",
+      "verification": {
+        "promptWithWhich": "Bitte verifiziere deine {{which}}, um alle Funktionen zu nutzen.",
+        "email": "E-Mail",
+        "phone": "Telefonnummer",
+        "verifyNow": "Jetzt verifizieren"
+      }
+    },
+    "search": {
+      "searchPlaceholder": "Suche nach Styles, Braiders, Salons...",
+      "recent": {
+        "title": "Zuletzt gesucht",
+        "clearAll": "Alle löschen",
+        "empty": "Keine bisherigen Suchen"
+      },
+      "filters": {
+        "advanced": "Erweiterte Filter",
+        "alertTitle": "Filter",
+        "alertMessage": "Erweiterte Filter öffnen"
+      },
+      "chips": {
+        "salon": "Salon",
+        "individual": "Einzelperson",
+        "mobile": "Mobil",
+        "today": "Heute",
+        "nearby": "< 5km"
+      },
+      "results": {
+        "searching": "Suchen...",
+        "count": "{{count}} Ergebnisse"
+      },
+      "sort": {
+        "title": "Sortierung",
+        "message": "Sortieroptionen auswählen (Simuliert)",
+        "recommended": "Empfohlen"
+      },
+      "activeFilters": {
+        "reset": "Filter zurücksetzen"
+      },
+      "empty": {
+        "noResultsTitle": "Keine Ergebnisse",
+        "noResultsMessage": "Suche ist bald verfügbar, während wir unser Provider-Verzeichnis aufbauen.",
+        "defaultTitle": "Finde deinen perfekten Braider",
+        "defaultMessage": "Suche nach Styles, Braiders oder Salons"
+      },
+      "error": {
+        "unavailable": "Suche derzeit nicht verfügbar"
+      }
+    },
+    "messages": {
+      "title": "Nachrichten",
+      "searchPlaceholder": "Suche nach Namen...",
+      "empty": {
+        "title": "Keine Unterhaltungen",
+        "subtitle": "Chats werden hier erscheinen, sobald unsere Messaging-Funktion live ist."
+      },
+      "unverified": {
+        "title": "Verifizierung erforderlich",
+        "description": "Bitte verifiziere deine E-Mail oder Telefonnummer, um Nachrichten zu verwenden.",
+        "button": "Jetzt verifizieren"
+      }
+    },
+    "personalInfo": {
+      "title": "Persönliche Informationen",
+      "firstName": "Vorname",
+      "lastName": "Nachname",
+      "email": "E-Mail",
+      "phone": "Telefonnummer",
+      "dateOfBirth": "Geburtsdatum",
+      "gender": "Geschlecht",
+      "save": "Änderungen speichern",
+      "saving": "Wird gespeichert…",
+      "loading": "Laden…",
+      "successTitle": "Erfolg",
+      "successMessage": "Persönliche Informationen erfolgreich aktualisiert!",
+      "errorTitle": "Fehler",
+      "errorMessage": "Aktualisierung fehlgeschlagen."
+    },
+    "language": {
+      "title": "Sprache",
+      "appLanguage": "App-Sprache",
+      "info": "Wähle die Sprache, in der die App angezeigt werden soll.",
+      "noteTitle": "Hinweis",
+      "noteText": "Die Spracheinstellung betrifft nur die Benutzeroberfläche der App. Profile und Inhalte von Anbietern können in verschiedenen Sprachen sein.",
+      "successTitle": "Erfolg",
+      "errorTitle": "Fehler",
+      "changedTo": "Die App-Sprache wurde auf {{language}} geändert.",
+      "changeFailed": "Sprachänderung fehlgeschlagen"
+    },
+    "myReviews": {
+      "title": "Meine Bewertungen",
+      "loginPrompt": "Bitte anmelden, um Ihre Bewertungen zu sehen.",
+      "average": "Durchschnitt",
+      "countLabel": "Bewertungen",
+      "helpfulCount": "{{count}} Personen fanden dies hilfreich",
+      "emptyTitle": "Noch keine Bewertungen",
+      "emptySubtitle": "Buche deinen ersten Termin und bewerte deinen Braider!",
+      "goToSearch": "Braider finden"
+    },
+    "bookingsList": {
+      "loginPrompt": "Bitte melden Sie sich an, um Ihre Buchungen zu sehen.",
+      "loginButton": "Zum Login",
+      "errorLogin": "Anmelden",
+      "status": {
+        "upcoming": "Bevorstehend",
+        "completed": "Abgeschlossen",
+        "cancelled": "Storniert"
+      }
+    },
+    "favorites": {
+      "title": "Favoriten",
+      "loading": "Lade Favoriten…",
+      "loadError": "Fehler beim Laden der Favoriten",
+      "removedSuccess": "{{name}} wurde aus den Favoriten entfernt.",
+      "removeError": "Entfernen fehlgeschlagen. Bitte versuche es erneut.",
+      "empty": {
+        "title": "Noch keine Favoriten",
+        "subtitle": "Speichere deine Lieblings-Braider für schnellen Zugriff"
+      },
+      "discoverButton": "Braider entdecken",
+      "count": {
+        "one": "1 Favorit",
+        "other": "{{count}} Favoriten"
+      },
+      "suggestions": {
+        "title": "Weitere Empfehlungen",
+        "seeAll": "Alle ansehen",
+        "subtitle": "Entdecke ähnliche Braider in deiner Nähe"
+      }
+    }
+  }
+  ,
+  "tabs": {
+    "home": "Startseite",
+    "search": "Suche",
+    "appointments": "Termine",
+    "messages": "Nachrichten",
+    "profile": "Profil"
+  },
+  "providerTabs": {
+    "dashboard": "Dashboard",
+    "calendar": "Kalender",
+    "clients": "Kunden",
+    "messages": "Nachrichten",
+    "more": "Mehr"
+  }
+}

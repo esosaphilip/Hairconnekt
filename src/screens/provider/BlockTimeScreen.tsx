@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { SafeAreaView, View, Text, ScrollView, Pressable, TextInput, Platform, Alert } from 'react-native';
+import { SafeAreaView, View, Text, ScrollView, Pressable, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
-import { Switch } from '../../components/switch';
+import { Switch } from 'react-native';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
+import { http } from '../../api/http';
 
-// Reasons for blocking time
-const BLOCK_REASONS = [
+const BLOCK_REASONS: { value: BlockReason; label: string }[] = [
   { value: 'pause', label: 'Pause' },
   { value: 'lunch', label: 'Mittagspause' },
   { value: 'external', label: 'Termin außerhalb' },
@@ -17,8 +17,7 @@ const BLOCK_REASONS = [
   { value: 'other', label: 'Sonstiges' },
 ];
 
-// Days of the week for weekly repeats
-const DAYS_OF_WEEK = [
+const DAYS_OF_WEEK: { value: DayValue; label: string }[] = [
   { value: 'monday', label: 'Mo' },
   { value: 'tuesday', label: 'Di' },
   { value: 'wednesday', label: 'Mi' },
@@ -28,74 +27,100 @@ const DAYS_OF_WEEK = [
   { value: 'sunday', label: 'So' },
 ];
 
-export function BlockTimeScreen() {
-  // Form state
-  const [reason, setReason] = useState<string>('vacation');
-  const [customReason, setCustomReason] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [startTime, setStartTime] = useState<string>('09:00');
-  const [endTime, setEndTime] = useState<string>('17:00');
-  const [allDay, setAllDay] = useState<boolean>(true);
-  const [repeat, setRepeat] = useState<boolean>(false);
-  const [repeatFrequency, setRepeatFrequency] = useState<string>('weekly');
-  const [repeatDays, setRepeatDays] = useState<string[]>([]);
-  const [repeatEndType, setRepeatEndType] = useState<string>('never');
-  const [repeatEndDate, setRepeatEndDate] = useState<string>('');
-  const [repeatCount, setRepeatCount] = useState<number>(1);
-  const [notes, setNotes] = useState<string>('');
+type BlockReason = 'pause' | 'lunch' | 'external' | 'vacation' | 'sick' | 'other';
+type RepeatFrequency = 'daily' | 'weekly' | 'monthly';
+type DayValue = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
+type RepeatEndType = 'never' | 'date' | 'count';
 
-  const toggleRepeatDay = (day: string) => {
+export function BlockTimeScreen() {
+  const [reason, setReason] = useState<BlockReason>('vacation');
+  const [customReason, setCustomReason] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
+  const [allDay, setAllDay] = useState(true);
+  const [repeat, setRepeat] = useState(false);
+  const [repeatFrequency, setRepeatFrequency] = useState<RepeatFrequency>('weekly');
+  const [repeatDays, setRepeatDays] = useState<DayValue[]>([]);
+  const [repeatEndType, setRepeatEndType] = useState<RepeatEndType>('never');
+  const [repeatEndDate, setRepeatEndDate] = useState('');
+  const [repeatCount, setRepeatCount] = useState(1);
+  const [notes, setNotes] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const toggleRepeatDay = (day: DayValue) => {
     setRepeatDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
   };
 
   const navToCalendar = () => {
-    // Navigate back to Provider Calendar; using hash route on web for consistency with existing navigation
-    if (Platform.OS === 'web') {
-  try {
-    if (typeof window !== 'undefined' && window.location) {
-      window.location.hash = '/provider/calendar';
-    }
-  } catch {}
-    } else {
-      console.log('Navigate to provider calendar');
-    }
+    // Navigation back to calendar can be integrated here
   };
 
-  const handleBlock = () => {
-    if (!startDate) {
-      Alert.alert('Fehler', 'Bitte wähle ein Startdatum');
-      return;
+  const handleBlock = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!startDate) {
+        Alert.alert('Fehler', 'Bitte wähle ein Startdatum.');
+        return;
+      }
+      if (!allDay && (!startTime || !endTime)) {
+        Alert.alert('Fehler', 'Bitte wähle Start- und Endzeit.');
+        return;
+      }
+
+      const payload = {
+        reason,
+        customReason: reason === 'other' ? customReason : undefined,
+        startDate,
+        endDate: endDate || startDate,
+        startTime: allDay ? null : startTime,
+        endTime: allDay ? null : endTime,
+        allDay,
+        repeat: repeat
+          ? {
+              frequency: repeatFrequency,
+              days: repeatFrequency === 'weekly' ? repeatDays : [],
+              endType: repeatEndType,
+              endDate: repeatEndType === 'date' ? repeatEndDate : null,
+              count: repeatEndType === 'count' ? repeatCount : null,
+            }
+          : null,
+        notes,
+      };
+
+      await http.post('/blocked-time', payload);
+      Alert.alert('Erfolg', 'Zeit wurde erfolgreich blockiert.');
+      navToCalendar();
+    } catch (e: unknown) {
+      const err = e as { response?: { data?: { message?: string } }; message?: string };
+      console.error(err);
+      setError(err?.response?.data?.message || err?.message || 'Unbekannter Fehler');
+      Alert.alert('Fehler', 'Die Zeit konnte nicht blockiert werden.');
+    } finally {
+      setLoading(false);
     }
-    if (repeat && repeatFrequency === 'weekly' && repeatDays.length === 0) {
-      Alert.alert('Fehler', 'Bitte wähle mindestens einen Wochentag');
-      return;
-    }
-    if (!allDay && startTime >= endTime) {
-      Alert.alert('Fehler', 'Endzeit muss nach Startzeit liegen');
-      return;
-    }
-    Alert.alert('Erfolg', 'Zeit erfolgreich blockiert!');
-    setTimeout(navToCalendar, 800);
   };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.gray50 }}>
-      {/* Header */}
       <View style={{ backgroundColor: colors.white, paddingHorizontal: spacing.md, paddingVertical: spacing.md, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
           <Pressable onPress={navToCalendar} style={{ padding: spacing.xs }}>
-        <Ionicons name={'chevron-back'} size={24} color={colors.gray700} />
+            <Ionicons name={'chevron-back'} size={24} color={colors.gray700} />
           </Pressable>
           <View style={{ flex: 1 }}>
-        <Text style={[typography.h3]}>Zeit blockieren</Text>
+            <Text style={[typography.h3]}>Zeit blockieren</Text>
             <Text style={{ fontSize: 12, color: colors.gray600 }}>Blockiere Zeiten für Pausen oder Urlaub</Text>
           </View>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: spacing.md, rowGap: spacing.md }}>
-        {/* Reason Selection */}
+        {/* Reason */}
         <Card style={{ padding: spacing.md }}>
           <Text style={{ marginBottom: spacing.sm, fontWeight: '600' }}>Grund</Text>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm }}>
@@ -121,7 +146,7 @@ export function BlockTimeScreen() {
           )}
         </Card>
 
-        {/* Date and Time Selection */}
+        {/* Date & time */}
         <Card style={{ padding: spacing.md }}>
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             <View style={{ flex: 1 }}>
@@ -133,7 +158,7 @@ export function BlockTimeScreen() {
           </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Ionicons name={'time-outline'} size={18} color={colors.gray600} />
+              <Ionicons name={'time-outline'} size={18} color={colors.gray600} />
               <Text style={{ fontSize: 14, color: colors.gray700 }}>Ganztägig</Text>
             </View>
             <Switch value={allDay} onValueChange={setAllDay} />
@@ -150,7 +175,7 @@ export function BlockTimeScreen() {
           )}
         </Card>
 
-        {/* Repeat Options */}
+        {/* Repeat */}
         <Card style={{ padding: spacing.md }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={{ fontWeight: '600' }}>Wiederholung</Text>
@@ -160,11 +185,11 @@ export function BlockTimeScreen() {
             <View style={{ marginTop: spacing.sm, rowGap: spacing.sm }}>
               <Text style={{ fontWeight: '600' }}>Häufigkeit</Text>
               <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                {[
+                {([
                   { value: 'daily', label: 'Täglich' },
                   { value: 'weekly', label: 'Wöchentlich' },
                   { value: 'monthly', label: 'Monatlich' },
-                ].map((f) => (
+                ] as { value: RepeatFrequency; label: string }[]).map((f) => (
                   <Pressable
                     key={f.value}
                     onPress={() => setRepeatFrequency(f.value)}
@@ -210,11 +235,11 @@ export function BlockTimeScreen() {
               <View>
                 <Text style={{ marginBottom: spacing.xs }}>Wiederholung endet</Text>
                 <View style={{ flexDirection: 'row', gap: spacing.sm, marginBottom: spacing.sm }}>
-                  {[
+                  {([
                     { value: 'never', label: 'Nie' },
                     { value: 'date', label: 'Am Datum' },
                     { value: 'count', label: 'Nach X Wiederholungen' },
-                  ].map((opt) => (
+                  ] as { value: RepeatEndType; label: string }[]).map((opt) => (
                     <Pressable
                       key={opt.value}
                       onPress={() => setRepeatEndType(opt.value)}
@@ -235,10 +260,15 @@ export function BlockTimeScreen() {
                   <Input label="Enddatum" value={repeatEndDate} onChangeText={setRepeatEndDate} placeholder="YYYY-MM-DD" />
                 )}
                 {repeatEndType === 'count' && (
-                  <Input label="Anzahl" value={String(repeatCount)} onChangeText={(t) => {
-                    const n = parseInt(t || '1', 10);
-                    setRepeatCount(Number.isNaN(n) ? 1 : Math.max(1, n));
-                  }} keyboardType="numeric" />
+                  <Input
+                    label="Anzahl"
+                    value={String(repeatCount)}
+                    onChangeText={(t) => {
+                      const n = parseInt(t || '1', 10);
+                      setRepeatCount(Number.isNaN(n) ? 1 : Math.max(1, n));
+                    }}
+                    keyboardType="numeric"
+                  />
                 )}
               </View>
             </View>
@@ -260,7 +290,7 @@ export function BlockTimeScreen() {
 
         {/* Summary */}
         <Card style={{ padding: spacing.md }}>
-        <Text style={[typography.h3, { marginBottom: spacing.xs }]}>Zusammenfassung</Text>
+          <Text style={[typography.h3, { marginBottom: spacing.xs }]}>Zusammenfassung</Text>
           <Text style={{ fontSize: 12 }}>
             <Text style={{ color: colors.gray600 }}>Grund:</Text> {reason === 'other' ? (customReason || 'Sonstiges') : (BLOCK_REASONS.find((r) => r.value === reason)?.label || '')}
           </Text>
@@ -293,15 +323,20 @@ export function BlockTimeScreen() {
           )}
         </Card>
 
-        {/* Action Buttons */}
+        {/* Error message */}
+        {error && <Text style={{ color: colors.error, marginTop: spacing.md }}>{error}</Text>}
+
+        {/* Actions */}
         <View style={{ flexDirection: 'row', gap: spacing.sm }}>
           <View style={{ flex: 1 }}>
             <Button title="Abbrechen" variant="ghost" onPress={navToCalendar} />
           </View>
           <View style={{ flex: 1 }}>
-            <Button title="Zeit blockieren" onPress={handleBlock} style={{ backgroundColor: colors.primary }} />
+            <Button title="Zeit blockieren" onPress={handleBlock} style={{ backgroundColor: colors.primary }} disabled={loading} />
           </View>
         </View>
+
+        {loading && <ActivityIndicator />}
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import IconButton from '../../components/IconButton';
@@ -21,74 +21,28 @@ import Avatar, { AvatarImage } from '../../components/avatar';
 import Textarea from '../../components/textarea'; // Custom multiline Input component
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { http } from '../../api/http';
 
 // Screen width for responsive layout
 const screenWidth = Dimensions.get('window').width;
 
-// --- Mock Data (Simplified to use RN image source format) ---
-const reviews = [
-  {
-    id: 1,
-    client: {
-      name: "Sarah Müller",
-      image: "https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=100",
-      verified: true,
-    },
-    rating: 5,
-    date: "vor 2 Tagen",
-    service: "Box Braids",
-    text: "Fantastisch! Meine Box Braids sehen perfekt aus und Aisha war super professionell. Die Atmosphäre war sehr entspannt und ich habe mich sehr wohl gefühlt. Kann ich nur weiterempfehlen!",
-    helpful: 12,
-    hasResponse: false,
-    images: [],
-  },
-  {
-    id: 2,
-    client: {
-      name: "Maria König",
-      image: "https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=100",
-      verified: true,
-    },
-    rating: 5,
-    date: "vor 5 Tagen",
-    service: "Cornrows",
-    text: "Sehr professionell und freundlich. Die Cornrows halten super und sehen toll aus. Komme definitiv wieder!",
-    helpful: 8,
-    hasResponse: true,
-    response: {
-      text: "Vielen Dank für deine tolle Bewertung, Maria! Es war mir eine Freude, dich zu bedienen. Bis bald! 😊",
-      date: "vor 5 Tagen",
-    },
-    images: [],
-  },
-  {
-    id: 3,
-    client: {
-      name: "Lisa Werner",
-      image: "https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=100",
-      verified: true,
-    },
-    rating: 4,
-    date: "vor 1 Woche",
-    service: "Senegalese Twists",
-    text: "Sehr schöne Arbeit, aber die Wartezeit war etwas länger als erwartet. Ansonsten bin ich sehr zufrieden mit dem Ergebnis!",
-    helpful: 5,
-    hasResponse: true,
-    response: {
-      text: "Danke für dein Feedback, Lisa! Entschuldige die Wartezeit - ich arbeite daran, meine Zeitplanung zu verbessern. Freut mich, dass dir das Ergebnis gefällt!",
-      date: "vor 1 Woche",
-    },
-    images: [],
-  },
-];
+// --- Utility ---
+function formatDateDE(d: string | Date) {
+  try {
+    const date = typeof d === 'string' ? new Date(d) : d;
+    return date.toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch {
+    return typeof d === 'string' ? d : '';
+  }
+}
 
 // --- Review Item Component ---
 type Review = {
-  id: number;
-  client: { name: string; image: string; verified: boolean };
+  id: number | string;
+  client: { name: string; image?: string | null; verified: boolean };
   rating: number;
   date: string;
-  service: string;
+  service?: string;
   text: string;
   helpful: number;
   hasResponse: boolean;
@@ -98,22 +52,22 @@ type Review = {
 
 type ReviewItemProps = {
   review: Review;
-  respondingTo: number | null;
+  respondingTo: string | number | null;
   responseText: string;
   setResponseText: (t: string) => void;
-  handleSubmitResponse: (id: number) => void;
-  setRespondingTo: (id: number | null) => void;
+  handleSubmitResponse: (id: string | number) => void;
+  setRespondingTo: (id: string | number | null) => void;
 };
 
 const ReviewItem = ({ review, respondingTo, responseText, setResponseText, handleSubmitResponse, setRespondingTo }: ReviewItemProps) => {
-  const isResponding = respondingTo === review.id && !review.hasResponse;
+  const isResponding = String(respondingTo) === String(review.id) && !review.hasResponse;
 
   return (
     <Card style={styles.reviewCard}>
       {/* Client Info */}
       <View style={styles.clientInfoRow}>
         <Avatar size={48}>
-          <AvatarImage source={{ uri: review.client.image }} />
+          <AvatarImage uri={review.client.image || undefined} />
         </Avatar>
         <View style={styles.clientTextContainer}>
           <View style={styles.nameBadgeRow}>
@@ -141,7 +95,9 @@ const ReviewItem = ({ review, respondingTo, responseText, setResponseText, handl
       </View>
 
       {/* Service Tag */}
-      <Badge title={review.service} variant="secondary" style={styles.serviceBadge} />
+      {review.service ? (
+        <Badge title={review.service} variant="secondary" style={styles.serviceBadge} />
+      ) : null}
 
       {/* Review Text */}
       <Text style={styles.reviewText}>{review.text}</Text>
@@ -210,23 +166,97 @@ const ReviewItem = ({ review, respondingTo, responseText, setResponseText, handl
 // --- Main Component ---
 export function ProviderReviews() {
   const [filter, setFilter] = useState<string>("all");
-  const [respondingTo, setRespondingTo] = useState<number | null>(null);
+  const [respondingTo, setRespondingTo] = useState<string | number | null>(null);
   const [responseText, setResponseText] = useState<string>("");
+  const [reviewsData, setReviewsData] = useState<Review[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
 
-  const filteredReviews = reviews.filter(review => {
+  // Initialize filter/responding state from route params when provided
+  useEffect(() => {
+    const params = (route as any)?.params || {};
+    const allowedFilters = ["all", "unresponded", "5stars", "with-photos"];
+    if (typeof params?.initialFilter === 'string' && allowedFilters.includes(params.initialFilter)) {
+      setFilter(params.initialFilter);
+    }
+    if (typeof params?.focusReviewId === 'number' || typeof params?.focusReviewId === 'string') {
+      setRespondingTo(params.focusReviewId);
+    }
+  }, [route]);
+
+  // Fetch provider reviews
+  useEffect(() => {
+    let mounted = true;
+    async function fetchReviews() {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await http.get('/reviews/provider');
+        const list = Array.isArray(res?.data) ? res.data : [];
+        const mapped: Review[] = list.map((r: any) => ({
+          id: r.id,
+          client: r.isAnonymous
+            ? { name: 'Anonym', image: null, verified: false }
+            : { name: r.client?.name ?? 'Kunde', image: r.client?.avatarUrl ?? null, verified: true },
+          rating: r.rating ?? 0,
+          date: r.createdAt ? formatDateDE(r.createdAt) : '',
+          service: Array.isArray(r.appointment?.services) && r.appointment.services.length > 0
+            ? r.appointment.services[0]?.name
+            : undefined,
+          text: r.comment ?? '',
+          helpful: 0,
+          hasResponse: !!r.providerResponse,
+          response: r.providerResponse ? { text: r.providerResponse, date: formatDateDE(r.createdAt) } : undefined,
+          images: Array.isArray(r.images) ? r.images.map((img: any) => img.url) : [],
+        }));
+        if (mounted) setReviewsData(mapped);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Fehler beim Laden der Bewertungen';
+        if (mounted) setError(msg);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    fetchReviews();
+    return () => { mounted = false; };
+  }, []);
+
+  const filteredReviews = reviewsData.filter(review => {
     if (filter === "unresponded") return !review.hasResponse;
     if (filter === "5stars") return review.rating === 5;
     if (filter === "with-photos") return review.images.length > 0;
     return true;
   });
 
-  const handleSubmitResponse = (reviewId: number) => {
-    // Mock submit logic
-    Alert.alert("Erfolg", `Antwort gesendet für Bewertung #${reviewId}`);
-    setRespondingTo(null);
-    setResponseText("");
-    // In a real app, you'd update the local state or refetch data here.
+  const handleSubmitResponse = async (reviewId: number | string) => {
+    const payload = { reviewId: String(reviewId), response: responseText.trim() };
+    if (!payload.response) {
+      Alert.alert('Fehler', 'Bitte gib eine Antwort ein.');
+      return;
+    }
+    try {
+      const res = await http.post('/reviews/respond', payload);
+      const updated = res?.data;
+      // Optimistically update local state
+      setReviewsData((prev) => prev.map((r) => {
+        if (String(r.id) === String(reviewId)) {
+          return {
+            ...r,
+            hasResponse: true,
+            response: { text: payload.response, date: formatDateDE(new Date()) },
+          };
+        }
+        return r;
+      }));
+      Alert.alert('Erfolg', 'Antwort gesendet.');
+      setRespondingTo(null);
+      setResponseText('');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Fehler beim Senden der Antwort';
+      Alert.alert('Fehler', msg);
+    }
   };
   
   // Header component including the overall stats and filter chips
@@ -285,19 +315,29 @@ export function ProviderReviews() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterChipsContainer}
         >
-          {["Alle", "Unbeantwortet", "5 Sterne", "Mit Fotos"].map((f) => {
-            const key = f.toLowerCase().replace(/ /g, '-').replace('ä', 'a').replace('ö', 'o');
-            return (
+          {(() => {
+            const labels = ["Alle", "Unbeantwortet", "5 Sterne", "Mit Fotos"] as const;
+            const map: Record<typeof labels[number], string> = {
+              "Alle": "all",
+              "Unbeantwortet": "unresponded",
+              "5 Sterne": "5stars",
+              "Mit Fotos": "with-photos",
+            };
+            return labels.map((label) => {
+              const key = map[label];
+              const isActive = filter === key;
+              return (
                 <Button
-                    key={key}
-                    title={f}
-                    size="sm"
-                    variant={filter === key ? "default" : "outline"}
-                    onPress={() => setFilter(key)}
-                    style={filter === key ? styles.activeButton : styles.inactiveButton}
+                  key={key}
+                  title={label}
+                  size="sm"
+                  variant={isActive ? "default" : "outline"}
+                  onPress={() => setFilter(key)}
+                  style={isActive ? styles.activeButton : styles.inactiveButton}
                 />
-            );
-          })}
+              );
+            });
+          })()}
         </ScrollView>
       </View>
   );
@@ -328,24 +368,33 @@ export function ProviderReviews() {
           <IconButton name="filter" onPress={() => Alert.alert("Filter", "Öffne erweitertes Filter-Modal")} />
         </View>
       </View>
-
-      <FlatList
-        data={filteredReviews}
-        renderItem={({ item }) => (
-          <ReviewItem
-            review={item}
-            respondingTo={respondingTo}
-            responseText={responseText}
-            setResponseText={setResponseText}
-            handleSubmitResponse={handleSubmitResponse}
-            setRespondingTo={setRespondingTo}
-          />
-        )}
-        keyExtractor={(item) => item.id.toString()}
-        ListHeaderComponent={ListHeader}
-        ListEmptyComponent={EmptyState}
-        contentContainerStyle={styles.listContent}
-      />
+      {loading ? (
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.md }}>
+          <Text style={{ color: COLORS.textSecondary }}>Lade Bewertungen…</Text>
+        </View>
+      ) : error ? (
+        <View style={{ paddingHorizontal: SPACING.md, paddingTop: SPACING.md }}>
+          <Text style={{ color: '#EF4444' }}>{error}</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredReviews}
+          renderItem={({ item }) => (
+            <ReviewItem
+              review={item}
+              respondingTo={respondingTo}
+              responseText={responseText}
+              setResponseText={setResponseText}
+              handleSubmitResponse={handleSubmitResponse}
+              setRespondingTo={setRespondingTo}
+            />
+          )}
+          keyExtractor={(item) => String(item.id)}
+          ListHeaderComponent={ListHeader}
+          ListEmptyComponent={EmptyState}
+          contentContainerStyle={styles.listContent}
+        />
+      )}
     </SafeAreaView>
   );
 }

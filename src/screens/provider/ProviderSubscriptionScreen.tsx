@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Alert,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
@@ -17,6 +18,9 @@ import Card from '../../components/Card';
 import { Badge } from '../../components/badge';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { providersApi } from '../../services/providers';
+import { paymentsApi, centsToEuros, PLATFORM_FEE_RATE } from '../../api/payments';
+import type { ProviderPayout } from '../../api/payments';
 
 // --- Static Data ---
 type Plan = {
@@ -93,14 +97,11 @@ const handleAlert = (message: string) => {
     Alert.alert("Info", message);
 };
 
-// --- Plan Card Component ---
-type PlanCardProps = {
-  plan: Plan;
-  isCurrent: boolean;
-  onAction: (planName: string) => void;
-};
+// --- Backend wiring state ---
 
-const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent, onAction }) => {
+
+// --- Plan Card Component ---
+const PlanCard = ({ plan, isCurrent, onAction }: { plan: Plan; isCurrent: boolean; onAction: (planName: string) => void }) => {
   const actionText = isCurrent ? "Plan kündigen" : (plan.price > 0 ? "Upgrade" : "Downgrade");
   const actionStyle = isCurrent ? styles.cancelButton : styles.primaryButton;
   
@@ -172,7 +173,81 @@ const PlanCard: React.FC<PlanCardProps> = ({ plan, isCurrent, onAction }) => {
 
 // --- Main Component ---
 export function ProviderSubscriptionScreen() {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation();
+
+  // State for backend data
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  type ProviderProfile = { id?: string; _id?: string; providerId?: string } & Record<string, unknown>;
+  const [profile, setProfile] = useState<ProviderProfile | null>(null);
+  type Dashboard = { weeklyBookings?: number; weeklyGrossCents?: number };
+  const [dashboard, setDashboard] = useState<Dashboard | null>(null);
+  type PayoutItem = { id?: string; completedAt?: string; processedAt?: string; requestedAt?: string; amountCents?: number; status?: string };
+  const [payouts, setPayouts] = useState<PayoutItem[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const [pRes, dRes, payRes] = await Promise.all([
+          providersApi.getMyProfile().catch(() => null),
+          providersApi.getDashboard().catch(() => null),
+          paymentsApi.listProviderPayouts().catch(() => ({ items: [] })),
+        ]);
+        if (!mounted) return;
+        setProfile((pRes as ProviderProfile) || null);
+        setDashboard((dRes as Dashboard) || null);
+        const items: ProviderPayout[] = Array.isArray(payRes?.items) ? payRes.items : [];
+        const normalizedItems: PayoutItem[] = items.map((it) => ({
+          id: it.id,
+          completedAt: it.completedAt ?? undefined,
+          processedAt: it.processedAt ?? undefined,
+          requestedAt: it.requestedAt ?? undefined,
+          amountCents: it.amountCents,
+          status: it.status,
+        }));
+        setPayouts(normalizedItems);
+      } catch (e) {
+        const msg = (e as { message?: string })?.message || 'Fehler beim Laden der Zahlungsdaten';
+        setError(msg);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const serviceFeeRate = PLATFORM_FEE_RATE; // default 10%
+
+  const handleManagePayment = async () => {
+    try {
+        const providerId = (profile?.id as string | undefined) || (profile?._id as string | undefined) || (profile?.providerId as string | undefined);
+      if (!providerId) {
+        Alert.alert('Info', 'Provider-ID nicht gefunden. Bitte Profil prüfen.');
+        return;
+      }
+      const w = typeof window !== 'undefined' ? window : null;
+      const origin = w && w.location && w.location.origin
+        ? w.location.origin
+        : 'https://hairconnekt.app';
+      const returnUrl = origin + '/stripe/return';
+      const refreshUrl = origin + '/stripe/refresh';
+      const linkRes = await paymentsApi.createAccountLink(String(providerId), returnUrl, refreshUrl);
+      const url = linkRes?.url || linkRes?.accountLinkUrl || linkRes?.link || linkRes;
+      if (typeof url === 'string') {
+        if (typeof window !== 'undefined' && typeof window.open === 'function') {
+          window.open(url, '_blank');
+        } else {
+          Linking.openURL(url);
+        }
+      } else {
+        Alert.alert('Fehler', 'Stripe-Link konnte nicht erstellt werden.');
+      }
+    } catch (e) {
+      const msg = (e as { message?: string })?.message || 'Unbekannter Fehler beim Öffnen des Zahlungslinks';
+      Alert.alert('Fehler', msg);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.flexContainer}>
@@ -181,11 +256,22 @@ export function ProviderSubscriptionScreen() {
         <View style={styles.headerRow}>
           <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>Abonnement & Gebühren</Text>
-          <View style={{ width: 24 }} />
+          <View style={styles.placeholder24} />
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Loading / Error States */}
+        {loading && (
+          <Card style={styles.loadingCard}>
+            <Text>Bitte warten, Daten werden geladen…</Text>
+          </Card>
+        )}
+        {error && (
+          <Card style={styles.loadingCard}>
+            <Text style={styles.errorText}>Fehler: {error}</Text>
+          </Card>
+        )}
         {/* Current Plan Status */}
         <Card style={styles.currentPlanCardWrapper}>
           <View style={styles.currentPlanGradient}>
@@ -199,47 +285,63 @@ export function ProviderSubscriptionScreen() {
             <View style={styles.currentPlanStatsGrid}>
               <View style={styles.planStatItem}>
                 <Text style={styles.planStatLabel}>Nächste Zahlung</Text>
-                <Text style={styles.planStatValue}>€29.99</Text>
+                <Text style={styles.planStatValue}>
+                  {currentPlan === 'pro' ? '€29.99' : currentPlan === 'premium' ? '€49.99' : '€0.00'}
+                </Text>
               </View>
               <View style={styles.planStatItem}>
                 <Text style={styles.planStatLabel}>Servicegebühr</Text>
-                <Text style={styles.planStatValue}>10%</Text>
+                <Text style={styles.planStatValue}>{Math.round(serviceFeeRate * 100)}%</Text>
               </View>
             </View>
 
             <Button
               title="Zahlungsmethode verwalten"
               icon="credit-card"
-              onPress={() => handleAlert("Zahlungsmethode verwalten")}
+              onPress={handleManagePayment}
               style={styles.managePaymentButton}
               textStyle={styles.managePaymentButtonText}
             />
           </View>
         </Card>
 
-        {/* This Month's Stats */}
+        {/* Weekly Stats from Backend (fallbacks to 0) */}
         <Card style={styles.monthlyStatsCard}>
-          <Text style={styles.sectionTitle}>Dieser Monat</Text>
+          <Text style={styles.sectionTitle}>Diese Woche</Text>
           <View style={styles.statList}>
             <View style={styles.statListItem}>
               <Text style={styles.statListItemLabel}>Buchungen</Text>
-              <Text style={styles.statListItemValue}>52 Termine</Text>
+              <Text style={styles.statListItemValue}>
+                {typeof dashboard?.weeklyBookings === 'number' ? dashboard.weeklyBookings : 0} Termine
+              </Text>
             </View>
             <View style={styles.statListItem}>
               <Text style={styles.statListItemLabel}>Brutto-Umsatz</Text>
-              <Text style={styles.statListItemValue}>€4,100</Text>
+              <Text style={styles.statListItemValue}>
+                €{centsToEuros(typeof dashboard?.weeklyGrossCents === 'number' ? dashboard.weeklyGrossCents : 0).toFixed(2)}
+              </Text>
             </View>
             <View style={styles.statListItem}>
-              <Text style={styles.statListItemLabel}>Servicegebühren (10%)</Text>
-              <Text style={[styles.statListItemValue, styles.expenseValueText]}>-€410</Text>
+              <Text style={styles.statListItemLabel}>Servicegebühren ({Math.round(serviceFeeRate * 100)}%)</Text>
+              <Text style={[styles.statListItemValue, styles.expenseValueText]}>
+                -€{(
+                  centsToEuros(typeof dashboard?.weeklyGrossCents === 'number' ? dashboard.weeklyGrossCents : 0) * serviceFeeRate
+                ).toFixed(2)}
+              </Text>
             </View>
             <View style={styles.statListItem}>
               <Text style={styles.statListItemLabel}>Abonnement</Text>
-              <Text style={[styles.statListItemValue, styles.expenseValueText]}>-€29.99</Text>
+              <Text style={[styles.statListItemValue, styles.expenseValueText]}>
+                -€{currentPlan === 'pro' ? '29.99' : currentPlan === 'premium' ? '49.99' : '0.00'}
+              </Text>
             </View>
             <View style={styles.statListItem}>
               <Text style={styles.statListItemTotalLabel}>Deine Einnahmen</Text>
-              <Text style={styles.statListItemTotalValue}>€3,660.01</Text>
+              <Text style={styles.statListItemTotalValue}>
+                €{(
+                  centsToEuros(typeof dashboard?.weeklyGrossCents === 'number' ? dashboard.weeklyGrossCents : 0) * (1 - serviceFeeRate)
+                ).toFixed(2)}
+              </Text>
             </View>
           </View>
         </Card>
@@ -269,10 +371,10 @@ export function ProviderSubscriptionScreen() {
                 { icon: 'users', color: COLORS.success, title: 'Mehr Buchungen', subtitle: 'Profis erhalten durchschnittlich 40% mehr Buchungen' },
                 { icon: 'zap', color: COLORS.purple, title: 'Bessere Tools', subtitle: 'Nutze erweiterte Funktionen für besseres Business-Management' },
                 { icon: 'shield', color: COLORS.amber, title: 'Niedrigere Gebühren', subtitle: 'Spare bei jeder Buchung durch reduzierte Servicegebühren' },
-              ] as Array<{ icon: string; color: string; title: string; subtitle: string }>
-            ).map((benefit, index: number) => (
+              ]
+            ).map((benefit, index) => (
               <View key={index} style={styles.benefitItem}>
-                <View style={[styles.benefitIconCircle, { backgroundColor: benefit.color + '1A' }]}>
+                <View style={styles.benefitIconCircle}>
                   <Icon name={benefit.icon} size={20} color={benefit.color} />
                 </View>
                 <View style={styles.benefitTextContainer}>
@@ -284,30 +386,34 @@ export function ProviderSubscriptionScreen() {
           </View>
         </Card>
 
-        {/* Payment History */}
+        {/* Payment History (Provider Payouts) */}
         <Card style={styles.paymentHistoryCard}>
           <View style={styles.historyHeader}>
-            <Text style={styles.sectionTitle}>Zahlungshistorie</Text>
-            <TouchableOpacity onPress={() => handleAlert("Alle Zahlungen anzeigen")}>
+            <Text style={styles.sectionTitle}>Auszahlungen</Text>
+            <TouchableOpacity onPress={() => handleAlert('Alle Auszahlungen anzeigen')}>
               <Text style={styles.viewAllText}>Alle anzeigen</Text>
             </TouchableOpacity>
           </View>
           <View style={styles.historyList}>
-            {(
-              [
-                { date: '15. Oktober 2025', amount: 29.99 },
-                { date: '15. September 2025', amount: 29.99 },
-                { date: '15. August 2025', amount: 29.99 },
-              ] as Array<{ date: string; amount: number }>
-            ).map((item, index: number) => (
-              <View key={index} style={[styles.historyItem, index < 2 && styles.historySeparator]}>
-                <View>
-                  <Text style={styles.historyItemTitle}>Pro Abonnement</Text>
-                  <Text style={styles.historyItemDate}>{item.date}</Text>
+            {(payouts && payouts.length > 0 ? payouts.slice(0, 3) : []).map((item, index) => {
+              const date = item?.completedAt || item?.processedAt || item?.requestedAt;
+              const amount = typeof item?.amountCents === 'number' ? centsToEuros(item.amountCents) : 0;
+              const status = String(item?.status || '').toUpperCase();
+              return (
+                <View key={String(item?.id || index)} style={[styles.historyItem, index < 2 && styles.historySeparator]}>
+                  <View>
+                    <Text style={styles.historyItemTitle}>Auszahlung ({status})</Text>
+                    <Text style={styles.historyItemDate}>{date ? new Date(date).toLocaleDateString('de-DE') : '—'}</Text>
+                  </View>
+                  <Text style={styles.historyItemAmount}>€{amount.toFixed(2)}</Text>
                 </View>
-                <Text style={styles.historyItemAmount}>€{item.amount.toFixed(2)}</Text>
+              );
+            })}
+            {(!payouts || payouts.length === 0) && (
+              <View style={styles.historyItem}>
+                <Text style={styles.historyItemDate}>Keine Auszahlungen gefunden</Text>
               </View>
-            ))}
+            )}
           </View>
         </Card>
       </ScrollView>
@@ -319,98 +425,107 @@ export function ProviderSubscriptionScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
+    backgroundColor: COLORS.background,
     flex: 1,
-    backgroundColor: COLORS.background || '#F9FAFB',
   },
   // --- Header Styles ---
   header: {
-    backgroundColor: COLORS.white || '#FFFFFF',
-    paddingHorizontal: SPACING.md || 16,
-    paddingVertical: SPACING.sm || 8,
+    backgroundColor: COLORS.white,
+    borderBottomColor: COLORS.border,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
-    shadowColor: '#000',
+    elevation: 2,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    shadowColor: COLORS.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   headerTitle: {
-    fontSize: FONT_SIZES.h4 || 18,
+    color: COLORS.text,
+    fontSize: FONT_SIZES.h4,
     fontWeight: 'bold',
   },
+  placeholder24: {
+    width: 24,
+    height: 24,
+  },
   // --- Scroll Content & Titles ---
+  loadingCard: {
+    marginBottom: SPACING.md,
+    padding: SPACING.md,
+  },
   scrollContent: {
-    padding: SPACING.md || 16,
+    padding: SPACING.md,
     paddingBottom: SPACING.xl * 2,
   },
+  currentPlanCardWrapper: {
+    borderRadius: 8,
+    marginBottom: SPACING.md,
+    overflow: 'hidden',
+    padding: 0,
+  },
   sectionTitle: {
-    fontSize: FONT_SIZES.h4 || 18,
+    fontSize: FONT_SIZES.h4,
     fontWeight: 'bold',
     marginBottom: SPACING.md,
   },
   // --- Current Plan Card (Gradient Background) ---
-  currentPlanCardWrapper: {
-    marginBottom: SPACING.md,
-    overflow: 'hidden',
-    borderRadius: 8,
-    padding: 0, // Card wrapper handles rounding
-  },
   currentPlanGradient: {
-    padding: SPACING.lg,
     backgroundColor: COLORS.primary, // Fallback color
+    padding: SPACING.lg,
     // NOTE: Implementing gradient (from-[#8B4513] to-[#5C2E0A]) requires a library like 'react-native-linear-gradient'
   },
   currentPlanIconRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.sm,
   },
   currentPlanStatus: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.white,
+    fontSize: FONT_SIZES.body,
     opacity: 0.9,
   },
   currentPlanName: {
+    color: COLORS.white,
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.white,
     marginBottom: SPACING.xs,
   },
   currentPlanRenewal: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.white,
-    opacity: 0.9,
+    fontSize: FONT_SIZES.body,
     marginBottom: SPACING.md,
+    opacity: 0.9,
   },
   currentPlanStatsGrid: {
-    flexDirection: 'row',
     gap: SPACING.sm,
+    flexDirection: 'row',
     marginBottom: SPACING.md,
   },
   planStatItem: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // white bg-opacity-20
+    backgroundColor: COLORS.white,
     borderRadius: 6,
+    flex: 1,
     padding: SPACING.sm,
   },
   planStatLabel: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.white,
+    fontSize: FONT_SIZES.small,
     opacity: 0.75,
     marginBottom: SPACING.xs / 2,
   },
   planStatValue: {
-    fontSize: FONT_SIZES.h5 || 16,
-    fontWeight: 'bold',
     color: COLORS.white,
+    fontSize: FONT_SIZES.h5,
+    fontWeight: 'bold',
   },
   managePaymentButton: {
     backgroundColor: COLORS.white,
@@ -423,38 +538,41 @@ const styles = StyleSheet.create({
   },
   // --- Monthly Stats ---
   monthlyStatsCard: {
-    padding: SPACING.md,
     marginBottom: SPACING.xl,
+    padding: SPACING.md,
   },
   statList: {
     gap: SPACING.sm,
   },
   statListItem: {
+    alignItems: 'center',
+    borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingBottom: SPACING.xs,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
   },
   statListItemLabel: {
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body,
   },
   statListItemValue: {
-    fontSize: FONT_SIZES.body || 14,
+    fontSize: FONT_SIZES.body,
   },
   // Apply danger color to Text elements specifically
   expenseValueText: {
-    color: COLORS.danger || '#EF4444',
+    color: COLORS.danger,
+  },
+  errorText: {
+    color: COLORS.danger,
   },
   statListItemTotalLabel: {
+    color: COLORS.text,
     fontWeight: 'bold',
-    color: COLORS.text || '#1F2937',
   },
   statListItemTotalValue: {
-    color: COLORS.success || '#10B981',
-    fontSize: FONT_SIZES.h5 || 16,
+    color: COLORS.success,
+    fontSize: FONT_SIZES.h5,
     fontWeight: 'bold',
   },
   // --- Plans ---
@@ -465,58 +583,58 @@ const styles = StyleSheet.create({
     gap: SPACING.md, // Spacing between each plan card
   },
   planCard: {
-    padding: SPACING.md,
+    borderColor: COLORS.border,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: COLORS.border,
+    padding: SPACING.md,
   },
   currentPlanCard: {
-    borderWidth: 2,
     borderColor: COLORS.primary,
+    borderWidth: 2,
   },
   popularBadgeContainer: {
+    alignSelf: 'center',
     position: 'absolute',
     top: -12,
-    alignSelf: 'center',
     zIndex: 1,
   },
   planHeader: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: SPACING.md,
   },
   planTitleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.xs / 2,
   },
   planName: {
-    fontSize: FONT_SIZES.h4 || 18,
+    fontSize: FONT_SIZES.h4,
     fontWeight: 'bold',
   },
   planPriceRow: {
-    flexDirection: 'row',
     alignItems: 'baseline',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   planPriceValue: {
-    fontSize: 24,
     color: COLORS.primary,
+    fontSize: 24,
     fontWeight: 'bold',
   },
   planPricePeriod: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body,
   },
   featureList: {
     gap: SPACING.xs,
     marginBottom: SPACING.md,
   },
   featureItem: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     gap: SPACING.xs,
   },
   checkIcon: {
@@ -524,11 +642,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   featureText: {
-    fontSize: FONT_SIZES.body || 14,
+    fontSize: FONT_SIZES.body,
   },
   fullWidthButton: {
-    width: '100%',
     height: 48,
+    width: '100%',
   },
   primaryButton: {
     backgroundColor: COLORS.primary,
@@ -538,75 +656,75 @@ const styles = StyleSheet.create({
   },
   // --- Benefits ---
   benefitsCard: {
-    padding: SPACING.md,
     marginBottom: SPACING.xl,
+    padding: SPACING.md,
   },
   benefitsList: {
     gap: SPACING.md,
   },
   benefitItem: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     gap: SPACING.sm,
   },
   benefitIconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 20,
     flexShrink: 0,
+    height: 40,
+    justifyContent: 'center',
+    width: 40,
   },
   benefitTextContainer: {
     flex: 1,
   },
   benefitTitle: {
-    fontSize: FONT_SIZES.h5 || 16,
+    fontSize: FONT_SIZES.h5,
     fontWeight: '600',
     marginBottom: SPACING.xs / 2,
   },
   benefitSubtitle: {
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body,
   },
   // --- Payment History ---
   paymentHistoryCard: {
     padding: SPACING.md,
   },
   historyHeader: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: SPACING.md,
   },
   viewAllText: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.primary,
+    fontSize: FONT_SIZES.body,
     fontWeight: '500',
   },
   historyList: {
     gap: SPACING.xs,
   },
   historyItem: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingBottom: SPACING.sm,
   },
   historySeparator: {
-    borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
   },
   historyItemTitle: {
-    fontSize: FONT_SIZES.body || 14,
+    fontSize: FONT_SIZES.body,
     fontWeight: '500',
   },
   historyItemDate: {
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary || '#6B7280',
+    color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small,
   },
   historyItemAmount: {
-    color: COLORS.success || '#10B981',
+    color: COLORS.success,
     fontWeight: '500',
   },
 });

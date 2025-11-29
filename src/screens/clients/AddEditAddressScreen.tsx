@@ -66,11 +66,12 @@ const fetchAddressById = (id: string): AddressFormData => {
 
 
 export function AddEditAddressScreen() {
-  type Nav = ClientProfileStackScreenProps<'AddEditAddressScreen'>['navigation'];
-  type Route = ClientProfileStackScreenProps<'AddEditAddressScreen'>['route'];
+  type Nav = ClientProfileStackScreenProps<'AddAddress'>['navigation'];
+  type AddRoute = ClientProfileStackScreenProps<'AddAddress'>['route'];
+  type EditRoute = ClientProfileStackScreenProps<'EditAddress'>['route'];
   const navigation = useNavigation<Nav>();
-  const route = useRoute<Route>();
-  const { id } = route.params || {}; // Get ID from route params
+  const route = useRoute<AddRoute | EditRoute>();
+  const id = (route as EditRoute).params?.id;
   const isEditing = !!id;
 
   const [formData, setFormData] = useState<AddressFormData>({

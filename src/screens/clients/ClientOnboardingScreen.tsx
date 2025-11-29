@@ -20,6 +20,7 @@ import Animated, {
 } from 'react-native-reanimated'; // Standard for performant RN animation
 import Icon from '@/components/Icon';
 import { colors } from '@/theme/tokens';
+import type { RootStackScreenProps } from '@/navigation/types';
 
 // Assuming these custom RN components exist
 import Button from '@/components/Button';
@@ -64,7 +65,6 @@ const screenWidth = Dimensions.get('window').width;
 // --- Refactored Component ---
 
 export function ClientOnboardingScreen() {
-  import type { RootStackScreenProps } from '@/navigation/types';
   type RootNav = RootStackScreenProps<'ClientOnboarding'>['navigation'];
   const navigation = useNavigation<RootNav>();
   const [currentStep, setCurrentStep] = useState(0);

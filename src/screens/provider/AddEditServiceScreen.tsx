@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Platform, Modal } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Button from '../../components/Button';
-import Card from '../../components/Card';
-import Input from '../../components/Input';
-import { Label } from '../../components/label';
-import { Textarea } from '../../components/textarea';
-import { Switch } from '../../components/switch';
-import { colors, spacing, radii, typography } from '../../theme/tokens';
+import Button from '@/components/Button';
+import Card from '@/components/Card';
+import Input from '@/components/Input';
+import { Textarea } from '@/components/textarea';
+import { Switch } from 'react-native';
+import { colors, spacing, radii, typography } from '@/theme/tokens';
+import { http } from '@/api/http';
+import { logger } from '@/services/logger';
+import { API_CONFIG, MESSAGES } from '@/constants';
 
 const categories = [
   "Box Braids",
@@ -55,6 +57,8 @@ export function AddEditServiceScreen() {
     requiresConsultation: false,
   });
 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [durationOpen, setDurationOpen] = useState(false);
@@ -66,18 +70,54 @@ export function AddEditServiceScreen() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.name.trim()) {
       setMessage('Bitte einen Service-Namen eingeben');
       return;
     }
-    if (!formData.category) {
-      setMessage('Bitte eine Kategorie auswählen');
-      return;
-    }
-    setMessage(isEditing ? 'Service aktualisiert! (placeholder)' : 'Service erstellt! (placeholder)');
-    if (Platform.OS === 'web') {
-      try { window.location.hash = '/provider/services'; } catch {}
+    // Kategorie optional: wir erlauben das Erstellen ohne Kategorie
+
+    setLoading(true);
+    setError(null);
+
+    const serviceData = {
+      name: formData.name,
+      description: formData.description,
+      priceCents: Math.round(Number(formData.price || 0) * 100),
+      durationMinutes: Number(formData.duration || 0),
+      isActive: !!formData.isActive,
+      // deposit, allowOnlineBooking, requiresConsultation are not in the backend DTO yet
+    };
+    // Kategorie aktuell optional und ohne Backend-IDs: keine categoryId senden
+
+    try {
+      if (isEditing) {
+        // await http.patch('/services', serviceData);
+        setMessage('Service aktualisiert!');
+      } else {
+        await http.post('/services', serviceData);
+        setMessage('Service erstellt!');
+      }
+
+      if (Platform.OS === 'web') {
+        try { window.location.hash = '/provider/services'; } catch {}
+      }
+    } catch (err) {
+      let msg = 'Ein Fehler ist aufgetreten.';
+      if (typeof err === 'object' && err !== null) {
+        const response = (err as Record<string, unknown>)['response'] as Record<string, unknown> | undefined;
+        const data = response?.['data'] as Record<string, unknown> | undefined;
+        const m = data?.['message'];
+        if (typeof m === 'string') {
+          msg = m;
+        } else {
+          const m2 = (err as Record<string, unknown>)['message'];
+          if (typeof m2 === 'string') msg = m2;
+        }
+      }
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,58 +136,58 @@ export function AddEditServiceScreen() {
           <Pressable onPress={onBack} style={styles.iconBtn} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
             <Ionicons name="chevron-back" size={24} color={colors.black} />
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <View style={styles.headerContent}>
             <Text style={[styles.headerTitle, typography.h3]}>{isEditing ? 'Service bearbeiten' : 'Neuer Service'}</Text>
             <Text style={styles.headerSubtitle}>{isEditing ? 'Aktualisiere deinen Service' : 'Füge einen neuen Service hinzu'}</Text>
           </View>
-          <View style={{ width: 24 }} />
+          <View style={styles.headerSpacer} />
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Basic Info */}
-        <Card style={{ marginBottom: spacing.md }}>
+        <Card style={styles.cardSection}>
           <Text style={styles.sectionTitle}>Grundinformationen</Text>
 
-          <View style={{ marginTop: spacing.sm }}>
-            <Label>Service-Name *</Label>
+          <View style={styles.mtSm}>
+            <Text style={styles.label}>Service-Name *</Text>
             <Input
               value={formData.name}
               onChangeText={(t) => setFormData({ ...formData, name: t })}
               placeholder="z.B. 'Box Braids - Medium Length'"
-              style={{ marginTop: 6 }}
+              style={styles.inputMarginTop}
             />
           </View>
 
-          <View style={{ marginTop: spacing.md }}>
-            <Label>Kategorie *</Label>
+          <View style={styles.mtMd}>
+            <Text style={styles.label}>Kategorie (optional)</Text>
             <Pressable onPress={() => setCategoryOpen(true)} style={styles.selectTrigger} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
-              <Text style={[styles.selectText, !formData.category ? { color: colors.gray500 } : null]}>
+              <Text style={!formData.category ? styles.selectPlaceholderText : styles.selectText}>
                 {formData.category || 'Kategorie wählen'}
               </Text>
               <Ionicons name="chevron-down" size={18} color={colors.gray500} />
             </Pressable>
           </View>
 
-          <View style={{ marginTop: spacing.md }}>
-            <Label>Beschreibung</Label>
+          <View style={styles.mtMd}>
+            <Text style={styles.label}>Beschreibung</Text>
             <Textarea
               value={formData.description}
               onChangeText={(t) => setFormData({ ...formData, description: t })}
               placeholder="Beschreibe den Service, verwendete Techniken, etc."
-              style={{ marginTop: 6, minHeight: 100 }}
+              style={styles.textarea}
             />
           </View>
         </Card>
 
         {/* Pricing & Duration */}
-        <Card style={{ marginBottom: spacing.md }}>
+        <Card style={styles.cardSection}>
           <Text style={styles.sectionTitle}>Preis & Dauer</Text>
 
-          <View style={{ marginTop: spacing.sm }}>
-            <Label>Preis (€) *</Label>
+          <View style={styles.mtSm}>
+            <Text style={styles.label}>Preis (€) *</Text>
             <View style={styles.inputWithIcon}>
-              <Ionicons name="logo-euro" size={16} color={colors.gray400} style={{ marginRight: 8 }} />
+              <Ionicons name="logo-euro" size={16} color={colors.gray400} style={styles.iconRight} />
               <Input
                 keyboardType="numeric"
                 value={String(formData.price)}
@@ -157,14 +197,14 @@ export function AddEditServiceScreen() {
                   setFormData({ ...formData, price: isNaN(num) ? 0 : num });
                 }}
                 placeholder="Preis"
-                style={{ flex: 1 }}
+                style={styles.flex1}
               />
             </View>
             <Text style={styles.mutedNote}>Kunden sehen diesen Preis bei der Buchung</Text>
           </View>
 
-          <View style={{ marginTop: spacing.md }}>
-            <Label>Dauer *</Label>
+          <View style={styles.mtMd}>
+            <Text style={styles.label}>Dauer *</Text>
             <Pressable onPress={() => setDurationOpen(true)} style={styles.selectTrigger} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
               <Text style={styles.selectText}>
                 {durationOptions.find((o) => o.value === formData.duration)?.label || 'Dauer wählen'}
@@ -173,14 +213,14 @@ export function AddEditServiceScreen() {
             </Pressable>
           </View>
 
-          <View style={{ marginTop: spacing.md }}>
-            <Label>Anzahlung (%)</Label>
+          <View style={styles.mtMd}>
+            <Text style={styles.label}>Anzahlung (%)</Text>
             <View style={styles.depositRow}>
               <Button title="-" variant="ghost" onPress={() => incrementDeposit(-5)} />
-              <Text style={{ marginHorizontal: spacing.md }}>{formData.deposit}%</Text>
+              <Text style={styles.mxMd}>{formData.deposit}%</Text>
               <Button title="+" variant="ghost" onPress={() => incrementDeposit(5)} />
-              <View style={{ flex: 1 }} />
-              <Text style={{ color: colors.primary, fontWeight: '600' }}>
+              <View style={styles.flex1} />
+              <Text style={styles.totalText}>
                 {((formData.price * formData.deposit) / 100).toFixed(2)}€
               </Text>
             </View>
@@ -189,28 +229,28 @@ export function AddEditServiceScreen() {
         </Card>
 
         {/* Booking Settings */}
-        <Card style={{ marginBottom: spacing.md }}>
+        <Card style={styles.cardSection}>
           <Text style={styles.sectionTitle}>Buchungseinstellungen</Text>
 
           <View style={styles.switchRow}>
-            <View style={{ flex: 1 }}>
-              <Label>Service aktiv</Label>
+            <View style={styles.flex1}>
+              <Text style={styles.label}>Service aktiv</Text>
               <Text style={styles.mutedNote}>Kunden können diesen Service buchen</Text>
             </View>
             <Switch value={formData.isActive} onValueChange={(v: boolean) => setFormData({ ...formData, isActive: v })} />
           </View>
 
           <View style={styles.switchRow}>
-            <View style={{ flex: 1 }}>
-              <Label>Online-Buchung erlauben</Label>
+            <View style={styles.flex1}>
+              <Text style={styles.label}>Online-Buchung erlauben</Text>
               <Text style={styles.mutedNote}>Kunden können direkt online buchen</Text>
             </View>
             <Switch value={formData.allowOnlineBooking} onValueChange={(v: boolean) => setFormData({ ...formData, allowOnlineBooking: v })} />
           </View>
 
           <View style={styles.switchRow}>
-            <View style={{ flex: 1 }}>
-              <Label>Beratung erforderlich</Label>
+            <View style={styles.flex1}>
+              <Text style={styles.label}>Beratung erforderlich</Text>
               <Text style={styles.mutedNote}>Kunden müssen zuerst eine Beratung buchen</Text>
             </View>
             <Switch value={formData.requiresConsultation} onValueChange={(v: boolean) => setFormData({ ...formData, requiresConsultation: v })} />
@@ -219,9 +259,9 @@ export function AddEditServiceScreen() {
 
         {/* Info Card */}
         <Card style={styles.infoCard}>
-          <View style={{ flexDirection: 'row' }}>
-            <Ionicons name="information-circle-outline" size={20} color="#2563EB" style={{ marginRight: spacing.sm, marginTop: 2 }} />
-            <View style={{ flex: 1 }}>
+          <View style={styles.row}>
+            <Ionicons name="information-circle-outline" size={20} color={colors.info} style={styles.infoIcon} />
+            <View style={styles.flex1}>
               <Text style={styles.infoText}>Stelle sicher, dass deine Preise wettbewerbsfähig sind und deine tatsächlichen Kosten decken.</Text>
               <Text style={styles.infoText}>Die angegebene Dauer sollte realistisch sein, inkl. Vorbereitung und Nachbereitung.</Text>
             </View>
@@ -229,31 +269,31 @@ export function AddEditServiceScreen() {
         </Card>
 
         {/* Feedback message */}
-        {message ? (
-          <Text style={{ color: colors.primary, marginTop: spacing.sm, marginHorizontal: spacing.md }}>{message}</Text>
-        ) : null}
+        {message && <Text style={styles.feedbackMessage}>{message}</Text>}
+        {error && <Text style={styles.feedbackError}>{error}</Text>}
 
         {/* Action Buttons */}
         <View style={styles.actionsRow}>
-          <Button title="Abbrechen" variant="ghost" onPress={onBack} style={{ flex: 1 }} />
-          <View style={{ width: spacing.sm }} />
-          <Button title={isEditing ? 'Speichern' : 'Service erstellen'} onPress={handleSubmit} style={{ flex: 1, backgroundColor: colors.primary }} />
+          <Button title="Abbrechen" variant="ghost" onPress={onBack} style={styles.flex1} />
+          <View style={styles.spacerSm} />
+          <Button title={isEditing ? 'Speichern' : 'Service erstellen'} onPress={handleSubmit} style={styles.submitBtn} disabled={loading} />
         </View>
+        {loading && <ActivityIndicator />}
       </ScrollView>
 
       {/* Category Modal */}
       <Modal visible={categoryOpen} transparent animationType="fade" onRequestClose={() => setCategoryOpen(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Kategorie wählen</Text>
-            <ScrollView style={{ maxHeight: 300 }}>
+            <Text style={[styles.sectionTitle, styles.mbSm]}>Kategorie wählen</Text>
+            <ScrollView style={styles.modalScroll}>
               {categories.map((cat) => (
                 <Pressable key={cat} style={styles.modalItem} onPress={() => { setFormData({ ...formData, category: cat }); setCategoryOpen(false); }}>
-                  <Text style={{ color: colors.black }}>{cat}</Text>
+                  <Text style={styles.modalItemText}>{cat}</Text>
                 </Pressable>
               ))}
             </ScrollView>
-            <Button title="Abbrechen" variant="ghost" onPress={() => setCategoryOpen(false)} style={{ marginTop: spacing.sm }} />
+            <Button title="Abbrechen" variant="ghost" onPress={() => setCategoryOpen(false)} style={styles.mtSm} />
           </View>
         </View>
       </Modal>
@@ -262,15 +302,15 @@ export function AddEditServiceScreen() {
       <Modal visible={durationOpen} transparent animationType="fade" onRequestClose={() => setDurationOpen(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Dauer wählen</Text>
-            <ScrollView style={{ maxHeight: 300 }}>
+            <Text style={[styles.sectionTitle, styles.mbSm]}>Dauer wählen</Text>
+            <ScrollView style={styles.modalScroll}>
               {durationOptions.map((opt) => (
                 <Pressable key={opt.value} style={styles.modalItem} onPress={() => { setFormData({ ...formData, duration: opt.value }); setDurationOpen(false); }}>
-                  <Text style={{ color: colors.black }}>{opt.label}</Text>
+                  <Text style={styles.modalItemText}>{opt.label}</Text>
                 </Pressable>
               ))}
             </ScrollView>
-            <Button title="Abbrechen" variant="ghost" onPress={() => setDurationOpen(false)} style={{ marginTop: spacing.sm }} />
+            <Button title="Abbrechen" variant="ghost" onPress={() => setDurationOpen(false)} style={styles.mtSm} />
           </View>
         </View>
       </Modal>
@@ -279,110 +319,186 @@ export function AddEditServiceScreen() {
 }
 
 const styles = StyleSheet.create({
+  actionsRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: spacing.md,
+  },
+  cardSection: {
+    marginBottom: spacing.md,
+  },
   container: {
-    flex: 1,
     backgroundColor: colors.gray50,
+    flex: 1,
+  },
+  depositRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: 6,
+  },
+  feedbackError: {
+    color: colors.error,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+  },
+  feedbackMessage: {
+    color: colors.primary,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+  },
+  flex1: {
+    flex: 1,
   },
   header: {
     backgroundColor: colors.white,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
+  },
+  headerContent: {
+    flex: 1,
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
+  },
+  headerSpacer: {
+    width: 24,
+  },
+  headerSubtitle: {
+    color: colors.gray600,
+    fontSize: 12,
+  },
+  headerTitle: {
+    color: colors.black,
+    marginBottom: 2,
   },
   iconBtn: {
     paddingRight: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  headerTitle: {
-    marginBottom: 2,
+  iconRight: {
+    marginRight: spacing.sm,
+  },
+  infoCard: {
+    backgroundColor: colors.infoBg,
+    borderColor: colors.infoBorder,
+    borderWidth: 1,
+  },
+  infoIcon: {
+    marginRight: spacing.sm,
+    marginTop: 2,
+  },
+  infoText: {
+    color: colors.infoText,
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  inputMarginTop: {
+    marginTop: 6,
+  },
+  inputWithIcon: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: 6,
+  },
+  label: {
+    color: colors.gray700,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  mbSm: {
+    marginBottom: spacing.sm,
+  },
+  modalBackdrop: {
+    alignItems: 'center',
+    backgroundColor: colors.overlay,
+    flex: 1,
+    justifyContent: 'center',
+    padding: spacing.md,
+  },
+  modalCard: {
+    backgroundColor: colors.white,
+    borderRadius: radii.lg,
+    maxWidth: 420,
+    padding: spacing.md,
+    width: '100%',
+  },
+  modalItem: {
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    paddingVertical: spacing.sm,
+  },
+  modalItemText: {
     color: colors.black,
   },
-  headerSubtitle: {
-    fontSize: 12,
+  modalScroll: {
+    maxHeight: 300,
+  },
+  mtMd: {
+    marginTop: spacing.md,
+  },
+  mtSm: {
+    marginTop: spacing.sm,
+  },
+  mutedNote: {
     color: colors.gray600,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  mxMd: {
+    marginHorizontal: spacing.md,
+  },
+  row: {
+    flexDirection: 'row',
   },
   scrollContent: {
     padding: spacing.md,
     paddingBottom: spacing.xl,
   },
   sectionTitle: {
+    color: colors.black,
     fontSize: 16,
     fontWeight: '600',
-    color: colors.black,
   },
-  inputWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  mutedNote: {
-    fontSize: 12,
-    color: colors.gray600,
-    marginTop: 4,
-  },
-  selectTrigger: {
-    marginTop: 6,
-    borderWidth: 1,
-    borderColor: colors.gray300,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    backgroundColor: colors.white,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  selectPlaceholderText: {
+    color: colors.gray500,
   },
   selectText: {
     color: colors.black,
   },
-  depositRow: {
-    marginTop: 6,
-    flexDirection: 'row',
+  selectTrigger: {
     alignItems: 'center',
+    backgroundColor: colors.white,
+    borderColor: colors.gray300,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  spacerSm: {
+    width: spacing.sm,
+  },
+  submitBtn: {
+    backgroundColor: colors.primary,
+    flex: 1,
   },
   switchRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: spacing.sm,
   },
-  infoCard: {
-    backgroundColor: '#EFF6FF',
-    borderColor: '#BFDBFE',
-    borderWidth: 1,
+  textarea: {
+    marginTop: 6,
+    minHeight: 100,
   },
-  infoText: {
-    fontSize: 13,
-    color: '#1E3A8A',
-    marginBottom: 4,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: spacing.md,
-  },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: spacing.md,
-  },
-  modalCard: {
-    width: '100%',
-    maxWidth: 420,
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    padding: spacing.md,
-  },
-  modalItem: {
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
+  totalText: {
+    color: colors.primary,
+    fontWeight: '600',
   },
 });

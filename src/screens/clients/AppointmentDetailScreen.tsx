@@ -4,7 +4,7 @@ import Text from '@/components/Text';
 import { colors, spacing } from '@/theme/tokens';
 import type { BookingsStackScreenProps } from '@/navigation/types';
 
-export default function AppointmentDetailScreen({ route }: BookingsStackScreenProps<'AppointmentDetail'>) {
+export default function AppointmentDetailScreen({ route }: BookingsStackScreenProps<'AppointmentDetail' | 'AppointmentDetails'>) {
   const { id } = route.params;
   return (
     <SafeAreaView style={styles.container}>

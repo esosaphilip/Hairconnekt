@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -17,8 +17,8 @@ import Card from '../../components/Card';
 import { Badge } from '../../components/badge';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { providerVouchersApi } from '../../api/providerVouchers';
 
-// --- Types ---
 type Voucher = {
   id: number;
   code: string;
@@ -34,14 +34,47 @@ type Voucher = {
   minAmount: number;
 };
 
-// --- Mock Data (Remains the same for logic) ---
-const vouchers: Voucher[] = [
-  // ... (Your voucher data goes here)
-  { id: 1, code: "NEUKUNDE20", type: "percentage", value: 20, description: "20% Rabatt für Neukunden", validFrom: "01.10.2025", validUntil: "31.12.2025", usageLimit: 100, usedCount: 34, revenue: 2840, status: "active", minAmount: 50 },
-  { id: 2, code: "SOMMER2025", type: "fixed", value: 15, description: "€15 Rabatt auf alle Services", validFrom: "01.06.2025", validUntil: "31.08.2025", usageLimit: 50, usedCount: 28, revenue: 1890, status: "active", minAmount: 80 },
-  { id: 3, code: "TREUE10", type: "percentage", value: 10, description: "10% Rabatt für treue Kunden", validFrom: "01.01.2025", validUntil: "31.12.2025", usageLimit: null, usedCount: 156, revenue: 8920, status: "active", minAmount: 60 },
-  { id: 4, code: "FRÜHJAHR2025", type: "percentage", value: 15, description: "Frühjahrs-Aktion", validFrom: "01.03.2025", validUntil: "31.05.2025", usageLimit: 80, usedCount: 80, revenue: 4560, status: "expired", minAmount: 70 },
-];
+// --- Helpers ---
+const formatDateDE = (iso?: string) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+};
+
+const parseDiscount = (discount: string | number | null | undefined): { type: 'percentage' | 'fixed'; value: number } => {
+  if (!discount) return { type: 'fixed', value: 0 };
+  const trimmed = String(discount).trim();
+  if (trimmed.endsWith('%')) {
+    const v = parseFloat(trimmed.replace('%', ''));
+    return { type: 'percentage', value: Number.isFinite(v) ? v : 0 };
+  }
+  const v = parseFloat(trimmed.replace('€', '').replace(',', '.'));
+  return { type: 'fixed', value: Number.isFinite(v) ? v : 0 };
+};
+
+const mapProviderVoucher = (pv: any): Voucher => {
+  const { type, value } = parseDiscount(pv.discount);
+  const expiresAt = pv.expiresAt ? new Date(pv.expiresAt) : undefined;
+  const status = expiresAt && expiresAt.getTime() < Date.now() ? 'expired' : 'active';
+  return {
+    id: Number(pv.id) || 0,
+    code: pv.code,
+    type,
+    value,
+    description: pv.description || pv.title || '',
+    validFrom: formatDateDE(pv.startsAt),
+    validUntil: formatDateDE(pv.expiresAt),
+    usageLimit: pv.usageLimit ?? null,
+    usedCount: pv.usedCount ?? 0,
+    revenue: (pv.revenueCents ?? 0) / 100,
+    status,
+    minAmount: pv.minAmount ?? 0,
+  };
+};
 
 // --- Helper Components ---
 
@@ -155,16 +188,38 @@ const VoucherItem = ({ voucher, onCopy, onEdit, onDelete }: { voucher: Voucher; 
 export function ProviderVouchersScreen() {
   const navigation = useNavigation<any>();
   const [filter, setFilter] = useState("active");
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const filteredVouchers = vouchers.filter((v) => {
-    if (filter === "active") return v.status === "active";
-    if (filter === "expired") return v.status === "expired";
-    return true;
-  });
+  useEffect(() => {
+    let cancelled = false;
+    const fetchVouchers = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { items } = await providerVouchersApi.list();
+        const mapped = items.map(mapProviderVoucher);
+        if (!cancelled) setVouchers(mapped);
+      } catch (e) {
+        if (!cancelled) setError((e as any)?.message ?? 'Fehler beim Laden der Gutscheine');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchVouchers();
+    return () => { cancelled = true; };
+  }, []);
 
-  const activeVouchers = vouchers.filter((v) => v.status === "active").length;
-  const totalUsage = vouchers.reduce((sum, v) => sum + v.usedCount, 0);
-  const totalRevenue = vouchers.reduce((sum, v) => sum + v.revenue, 0);
+  const filteredVouchers = useMemo(() => {
+    if (filter === 'active') return vouchers.filter(v => v.status === 'active');
+    if (filter === 'expired') return vouchers.filter(v => v.status === 'expired');
+    return vouchers;
+  }, [filter, vouchers]);
+
+  const activeVouchers = useMemo(() => vouchers.filter(v => v.status === 'active').length, [vouchers]);
+  const totalUsage = useMemo(() => vouchers.reduce((sum, v) => sum + v.usedCount, 0), [vouchers]);
+  const totalRevenue = useMemo(() => vouchers.reduce((sum, v) => sum + v.revenue, 0), [vouchers]);
 
   // Replaces web clipboard and alert
   const handleCopyCode = (code: string) => {
@@ -259,7 +314,7 @@ export function ProviderVouchersScreen() {
         <Button
           title="Gutschein erstellen"
           icon="plus"
-          onPress={() => Alert.alert("Erstellung", "Gutschein erstellen - Funktion in Entwicklung")}
+          onPress={() => navigation.navigate("CreateEditVoucherScreen")}
           style={{ backgroundColor: COLORS.primary, marginTop: SPACING.md }}
         />
     </View>
@@ -288,10 +343,13 @@ export function ProviderVouchersScreen() {
             title="Neu"
             size="sm"
             icon="plus"
-            onPress={() => Alert.alert("Erstellung", "Gutschein erstellen - Funktion in Entwicklung")}
+            onPress={() => navigation.navigate("CreateEditVoucherScreen")}
             style={{ backgroundColor: COLORS.primary }}
           />
         </View>
+        {error && (
+          <Text style={{ color: COLORS.red, marginTop: SPACING.xs }}>{error}</Text>
+        )}
       </View>
 
       <FlatList
@@ -302,6 +360,23 @@ export function ProviderVouchersScreen() {
         ListFooterComponent={ListFooter}
         ListEmptyComponent={EmptyState}
         contentContainerStyle={styles.listContent}
+        refreshing={loading}
+        onRefresh={() => {
+          // Manual refresh
+          (async () => {
+            setLoading(true);
+            setError(null);
+            try {
+              const { items } = await providerVouchersApi.list();
+              const mapped = items.map(mapProviderVoucher);
+              setVouchers(mapped);
+            } catch (e) {
+              setError((e as any)?.message ?? 'Fehler beim Laden der Gutscheine');
+            } finally {
+              setLoading(false);
+            }
+          })();
+        }}
       />
     </SafeAreaView>
   );

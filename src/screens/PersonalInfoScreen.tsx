@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   ScrollView,
@@ -10,10 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import {
-  ArrowLeft,
-  Check,
-} from 'lucide-react-native'; // Using RN-specific lucide icons
+import Icon from '../components/Icon';
 
 // Custom Components (assumed to be available)
 import Text from '../components/Text'; // Custom Text component
@@ -22,6 +19,8 @@ import Card from '../components/Card'; // Custom Card/Container component
 import Input from '../components/Input'; // Custom Input component (RN TextInput wrapper)
 import { Picker } from '@react-native-picker/picker'; // Use RN's built-in Picker
 import { spacing } from '../theme/tokens'; // Assuming a common theme spacing object
+import { usersApi } from '@/services/users';
+import { useAuth } from '@/auth/AuthContext';
 
 // --- Brand Color Constant ---
 const PRIMARY_COLOR = '#8B4513';
@@ -32,35 +31,84 @@ const INFO_BORDER = '#BFDBFE'; // border-blue-100
 
 export function PersonalInfoScreen() {
   const navigation = useNavigation();
+  const { user, setUser } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: 'Max',
-    lastName: 'Müller',
-    email: 'max.mueller@email.com',
-    phone: '+49 151 1234 5678',
-    dateOfBirth: '1995-05-15', // Stored as string for display/API
-    gender: 'male',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    dateOfBirth: '', // Stored as string for display/API
+    gender: '',
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const goBack = () => {
     // @ts-ignore
     navigation.goBack();
   };
 
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [me, prefs] = await Promise.all([
+        usersApi.getMe(),
+        usersApi.getPreferences().catch(() => null),
+      ]);
+      const genderMap = { MALE: 'male', FEMALE: 'female', OTHER: 'diverse' } as const;
+      setFormData({
+        firstName: me.firstName || '',
+        lastName: me.lastName || '',
+        email: me.email || '',
+        phone: me.phone || '',
+        dateOfBirth: (prefs?.dateOfBirth as string) || '',
+        gender: prefs?.gender ? genderMap[prefs.gender as keyof typeof genderMap] : '',
+      });
+    } catch (err) {
+      console.error('Failed to load personal info:', err);
+      Alert.alert('Fehler', 'Fehler beim Laden der persönlichen Informationen.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsSaving(false);
+    try {
+      await usersApi.updateMe({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+      });
+      const genderEnumMap = { male: 'MALE', female: 'FEMALE', diverse: 'OTHER' } as const;
+      const genderEnum = formData.gender ? genderEnumMap[formData.gender as keyof typeof genderEnumMap] : null;
+      await usersApi.updatePreferences({
+        dateOfBirth: formData.dateOfBirth || null,
+        gender: genderEnum as any,
+      });
 
-    // Replace toast.success with native Alert
-    Alert.alert(
-      'Erfolg',
-      'Persönliche Informationen erfolgreich aktualisiert!',
-      [{ text: 'OK', onPress: goBack }]
-    );
-    // Note: navigate(-1) is replaced by goBack() in the alert callback for mobile flow.
+      try {
+        // Safely spread into an object to avoid TS/JS errors when user is null/undefined
+        const baseUser: any = user && typeof user === 'object' ? user : {};
+        const nextUser = { ...baseUser, firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone };
+        const setUserFn: any = setUser;
+        if (typeof setUserFn === 'function') await setUserFn(nextUser);
+      } catch {}
+
+      Alert.alert('Erfolg', 'Persönliche Informationen erfolgreich aktualisiert!', [
+        { text: 'OK', onPress: goBack },
+      ]);
+    } catch (err) {
+      console.error('Personal info update failed:', err);
+      Alert.alert('Fehler', 'Aktualisierung fehlgeschlagen.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Helper function to update form data
@@ -90,7 +138,7 @@ export function PersonalInfoScreen() {
       <View style={styles.header}>
         <View style={styles.headerBar}>
           <Pressable onPress={goBack} style={styles.backButton}>
-            <ArrowLeft size={24} color="#374151" />
+            <Icon name="arrow-left" size={24} color="#374151" />
           </Pressable>
           <Text style={styles.screenTitle}>Persönliche Informationen</Text>
           <View style={styles.placeholderView} />
@@ -192,14 +240,14 @@ export function PersonalInfoScreen() {
           disabled={isSaving}
           style={styles.saveButton}
         >
-          {isSaving ? (
+          {(isSaving || loading) ? (
             <View style={styles.saveButtonLoading}>
               <ActivityIndicator size="small" color="#fff" />
-              <Text style={styles.saveButtonText}>Wird gespeichert...</Text>
+              <Text style={styles.saveButtonText}>{loading ? 'Laden...' : 'Wird gespeichert...'}</Text>
             </View>
           ) : (
             <View style={styles.saveButtonContent}>
-              <Check size={20} color="#fff" style={styles.saveButtonIcon} />
+              <Icon name="check" size={20} color="#fff" style={styles.saveButtonIcon} />
               <Text style={styles.saveButtonText}>Änderungen speichern</Text>
             </View>
           )}

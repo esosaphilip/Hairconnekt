@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.gray50,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: theme.radii.md,
+    borderRadius: theme?.radii?.md ?? 0,
     color: theme.colors.black,
     fontSize: 16,
   },

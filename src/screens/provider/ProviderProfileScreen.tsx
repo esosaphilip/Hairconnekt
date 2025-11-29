@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Pressable, StyleSheet, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import Text from '../../components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '../../components/Card';
@@ -7,9 +7,129 @@ import Button from '../../components/Button';
 import { Badge } from '../../components/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
+import { http } from '../../api/http';
+import { useAuth } from '../../auth/AuthContext';
+import { useNavigation } from '@react-navigation/native';
+
+/**
+ * @typedef {Object} ProviderUser
+ * @property {string} id
+ * @property {string|null=} email
+ * @property {string|null=} phone
+ * @property {string|null=} firstName
+ * @property {string|null=} lastName
+ * @property {string|null=} profilePictureUrl
+ */
+/**
+ * @typedef {Object} ProviderProfile
+ * @property {string} id
+ * @property {string|null} businessName
+ * @property {string|null=} businessType
+ * @property {string|null=} bio
+ * @property {number|null=} yearsOfExperience
+ * @property {string|null=} coverPhotoUrl
+ * @property {boolean} isVerified
+ * @property {boolean=} isMobileService
+ * @property {number|null=} serviceRadiusKm
+ * @property {boolean=} acceptsSameDayBooking
+ * @property {number|null=} advanceBookingDays
+ * @property {string|null=} cancellationPolicy
+ * @property {string=} createdAt
+ * @property {string=} updatedAt
+ * @property {ProviderUser=} user
+ * @property {Array<{weekday: string, start: string, end: string}>=} availability
+ */
+/**
+ * @typedef {Object} ProviderDashboard
+ * @property {{
+ *   todayCount: number,
+ *   nextAppointment: ({ time: string, client: string, hoursUntil: number }|null),
+ *   weekEarningsCents: number,
+ *   ratingAverage: number,
+ *   reviewCount: number,
+ * }} stats
+ * @property {Array<any>} todayAppointments
+ * @property {Array<any>} recentReviews
+ */
+/**
+ * @typedef {Object} ProviderPublic
+ * @property {string} id
+ * @property {string} name
+ * @property {string|null} business
+ * @property {boolean} verified
+ * @property {string|null} imageUrl
+ * @property {number} rating
+ * @property {number} reviews
+ * @property {string[]} specialties
+ * @property {number|null} priceFromCents
+ * @property {ProviderProfile} profile
+ */
 
 export function ProviderProfileScreen() {
+  const { tokens } = useAuth();
+  const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
+  type Dashboard = { todayAppointments?: unknown[]; stats?: { reviewCount?: number; ratingAverage?: number } };
+  type PublicData = { rating?: number; reviews?: number; specialties?: string[] };
+  const [profile, setProfile] = React.useState<any>(null);
+  const [dashboard, setDashboard] = React.useState<Dashboard | null>(null);
+  const [publicData, setPublicData] = React.useState<PublicData | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    let mounted = true;
+    async function load() {
+      try {
+        setLoading(true);
+        setError(null);
+        // Ensure we have a token; http interceptor will attach it
+        if (!tokens?.accessToken) {
+          throw new Error('Nicht authentifiziert');
+        }
+        let me = null;
+        try {
+          const meRes = await http.get('/providers/me');
+          me = meRes.data;
+          if (!mounted) return;
+          setProfile(me);
+        } catch (e: any) {
+          // Suppress the red error banner for "Provider profile not found" (404)
+          const status = e?.response?.status;
+          const msg = e?.response?.data?.message || e?.message || '';
+          const isNotFound = status === 404 && typeof msg === 'string' && msg.toLowerCase().includes('provider profile not found');
+          if (!isNotFound) {
+            if (mounted) setError(e?.response?.data?.message || e?.message || 'Fehler beim Laden des Profils');
+          }
+          // If not found, we keep placeholders and continue without breaking the screen.
+        }
+
+        // Only load dashboard and public info if we have a provider profile id
+        if (me?.id) {
+          const [dashRes, pubRes] = await Promise.all([
+            http.get('/providers/dashboard'),
+            http.get(`/providers/public/${me.id}`),
+          ]);
+          if (!mounted) return;
+          setDashboard(dashRes.data);
+          setPublicData(pubRes.data);
+        }
+      } catch (e: any) {
+        const msg = e?.response?.data?.message || e?.message || 'Fehler beim Laden des Profils';
+        if (mounted) setError(msg);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [tokens?.accessToken]);
+
   const onBack = () => {
+    try {
+      navigation.goBack();
+    } catch {}
     if (Platform.OS === 'web') {
       try {
         window.history.back();
@@ -18,8 +138,12 @@ export function ProviderProfileScreen() {
   };
 
   const onEdit = () => {
-    // Placeholder for future edit profile flow
-    console.log('Edit profile (placeholder)');
+    // Navigate to the real EditProfileScreen
+    try {
+      navigation.navigate('EditProfileScreen');
+    } catch (e) {
+      console.log('Navigation to EditProfileScreen failed', e);
+    }
   };
 
   const onOpenPublicProfile = () => {
@@ -27,7 +151,8 @@ export function ProviderProfileScreen() {
     console.log('Navigate to /provider/more/public-profile (placeholder)');
     if (Platform.OS === 'web') {
       try {
-        window.location.hash = '/provider/more/public-profile';
+        const id = profile?.id;
+        window.location.hash = id ? `/provider/more/public-profile?id=${id}` : '/provider/more/public-profile';
       } catch {}
     }
   };
@@ -48,54 +173,84 @@ export function ProviderProfileScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        {loading && (
+          <View style={{ padding: spacing.md }}>
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        )}
+        {!!error && (
+          <Card style={{ padding: spacing.md, marginBottom: spacing.md, borderColor: colors.error, borderWidth: 1 }}>
+            <Text style={{ color: colors.error }}>{error}</Text>
+          </Card>
+        )}
         {/* Profile Header */}
         <Card style={styles.profileCard}>
           <View style={styles.centered}>
             <View style={{ position: 'relative', marginBottom: spacing.md }}>
               <Avatar size={96}>
-                <AvatarImage uri="https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=200" />
+                <AvatarImage uri={(profile?.user?.profilePictureUrl || profile?.coverPhotoUrl) ?? undefined} />
                 <AvatarFallback label="AM" />
               </Avatar>
 <Pressable style={styles.cameraBtn} onPress={onEdit} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
                 <Ionicons name="camera-outline" size={16} color={colors.white} />
               </Pressable>
             </View>
-
-<Text style={[typography.h3, { marginBottom: 4 }]}>Aisha Mensah</Text>
-            <Text style={{ color: colors.gray600, marginBottom: spacing.sm }}>Aisha's Braiding Studio</Text>
+            <Text style={[typography.h3, { marginBottom: 4 }]}>
+              {[
+                profile?.user?.firstName,
+                profile?.user?.lastName,
+              ].filter(Boolean).join(' ') || 'Mein Name'}
+            </Text>
+            <Text style={{ color: colors.gray600, marginBottom: spacing.sm }}>
+              {profile?.businessName || 'Mein Studio'}
+            </Text>
 
             <View style={[styles.row, { marginBottom: spacing.sm }]}>
               <Badge style={{ backgroundColor: '#F59E0B', borderColor: '#F59E0B' }}>Pro</Badge>
               <View style={{ width: spacing.sm }} />
-              <Badge variant="outline">Verifiziert</Badge>
+              {profile?.isVerified && (
+                <Badge variant="outline">Verifiziert</Badge>
+              )}
               <View style={{ width: spacing.sm }} />
-              <Badge variant="outline" style={{ borderColor: '#16A34A' }} textStyle={{ color: '#16A34A' }}>Geöffnet</Badge>
+              {(profile?.acceptsSameDayBooking ?? false) && (
+                <Badge variant="outline" style={{ borderColor: '#16A34A' }} textStyle={{ color: '#16A34A' }}>Geöffnet</Badge>
+              )}
             </View>
 
             <View style={[styles.row, { marginBottom: 4 }]}>
               <Ionicons name="star" size={16} color="#F59E0B" />
-              <Text style={{ marginLeft: 4 }}>4.8 (234 Bewertungen)</Text>
+              <Text style={{ marginLeft: 4 }}>
+                {publicData?.rating != null ? publicData.rating.toFixed(1) : (dashboard?.stats?.ratingAverage ?? 0).toFixed(1)}
+                {' '}({publicData?.reviews ?? dashboard?.stats?.reviewCount ?? 0} Bewertungen)
+              </Text>
             </View>
-
-            <Text style={{ color: colors.gray600, fontSize: 12 }}>Mitglied seit Januar 2023 · 847 Termine</Text>
+            <Text style={{ color: colors.gray600, fontSize: 12 }}>
+              {(() => {
+                const created = profile?.createdAt ? new Date(profile.createdAt) : null;
+                const seit = created ? created.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }) : '—';
+                const apptCount = dashboard?.todayAppointments?.length;
+                const apptText = typeof apptCount === 'number' ? `${apptCount} Termine heute` : '—';
+                return `Mitglied seit ${seit} · ${apptText}`;
+              })()}
+            </Text>
           </View>
 
           <View style={{ marginTop: spacing.md }}>
             <View style={styles.infoRow}>
               <Ionicons name="location-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>Kantstraße 42, 10625 Berlin</Text>
+              <Text style={styles.infoText}>{/* Address not yet available in API */}Adresse nicht hinterlegt</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="call-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>+49 30 1234567</Text>
+              <Text style={styles.infoText}>{profile?.user?.phone || '—'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="mail-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>aisha@braiding-studio.de</Text>
+              <Text style={styles.infoText}>{profile?.user?.email || '—'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="time-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>Mo-Sa: 9:00 - 20:00, So: Geschlossen</Text>
+              <Text style={styles.infoText}>Öffnungszeiten nicht hinterlegt</Text>
             </View>
           </View>
 
@@ -116,10 +271,7 @@ export function ProviderProfileScreen() {
             </Pressable>
           </View>
           <Text style={{ fontSize: 14, color: colors.gray700 }}>
-            Hallo! Ich bin Aisha und habe über 10 Jahre Erfahrung mit afrikanischen
-            Flechtfrisuren. Meine Leidenschaft ist es, jedem Kunden einen individuellen
-            Look zu kreieren, der perfekt zu ihm passt. Ich verwende nur hochwertige
-            Produkte und lege großen Wert auf die Gesundheit deiner Haare.
+            {profile?.bio || 'Profilbeschreibung ist noch nicht hinterlegt.'}
           </Text>
         </Card>
 
@@ -132,12 +284,13 @@ export function ProviderProfileScreen() {
             </Pressable>
           </View>
           <View style={styles.badgeWrap}>
-            <Badge variant="secondary" style={styles.badgeItem}>Box Braids</Badge>
-            <Badge variant="secondary" style={styles.badgeItem}>Cornrows</Badge>
-            <Badge variant="secondary" style={styles.badgeItem}>Senegalese Twists</Badge>
-            <Badge variant="secondary" style={styles.badgeItem}>Knotless Braids</Badge>
-            <Badge variant="secondary" style={styles.badgeItem}>Passion Twists</Badge>
-            <Badge variant="secondary" style={styles.badgeItem}>Faux Locs</Badge>
+            {(Array.isArray(publicData?.specialties) && publicData.specialties.length > 0) ? (
+              publicData.specialties.slice(0, 6).map((s, idx) => (
+                <Badge key={`${s}-${idx}`} variant="secondary" style={styles.badgeItem}>{s}</Badge>
+              ))
+            ) : (
+              <Text style={{ color: colors.gray600 }}>Noch keine Spezialisierungen hinterlegt.</Text>
+            )}
           </View>
         </Card>
 
@@ -150,10 +303,9 @@ export function ProviderProfileScreen() {
             </Pressable>
           </View>
           <View style={styles.badgeWrap}>
+            {/* Placeholder until languages are part of the profile schema */}
             <Badge variant="outline" style={styles.badgeItem}>Deutsch</Badge>
             <Badge variant="outline" style={styles.badgeItem}>Englisch</Badge>
-            <Badge variant="outline" style={styles.badgeItem}>Französisch</Badge>
-            <Badge variant="outline" style={styles.badgeItem}>Twi</Badge>
           </View>
         </Card>
 
@@ -168,15 +320,15 @@ export function ProviderProfileScreen() {
           <View>
             <View style={[styles.infoRow, { marginBottom: spacing.sm }]}>
               <Ionicons name="globe-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>www.aishas-braiding.de</Text>
+              <Text style={styles.infoText}>—</Text>
             </View>
             <View style={[styles.infoRow, { marginBottom: spacing.sm }]}>
               <Ionicons name="logo-instagram" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>@aishas_braiding_studio</Text>
+              <Text style={styles.infoText}>—</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="logo-facebook" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>Aisha's Braiding Studio Berlin</Text>
+              <Text style={styles.infoText}>—</Text>
             </View>
           </View>
         </Card>
@@ -186,19 +338,19 @@ export function ProviderProfileScreen() {
           <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Statistiken</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>847</Text>
-              <Text style={styles.statLabel}>Termine</Text>
+              <Text style={styles.statValue}>{Array.isArray(dashboard?.todayAppointments) ? dashboard.todayAppointments.length : 0}</Text>
+              <Text style={styles.statLabel}>Termine heute</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>234</Text>
+              <Text style={styles.statValue}>{typeof dashboard?.stats?.reviewCount === 'number' ? dashboard.stats.reviewCount : 0}</Text>
               <Text style={styles.statLabel}>Bewertungen</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>98%</Text>
+              <Text style={styles.statValue}>—</Text>
               <Text style={styles.statLabel}>Annahmerate</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>2 Std.</Text>
+              <Text style={styles.statValue}>—</Text>
               <Text style={styles.statLabel}>Ø Reaktionszeit</Text>
             </View>
           </View>
@@ -214,12 +366,12 @@ export function ProviderProfileScreen() {
           </View>
           <View>
             <View style={{ marginBottom: spacing.sm }}>
-              <Text style={{ fontWeight: '600' }}>Professionelle Flechtfrisuren Ausbildung</Text>
-              <Text style={{ color: colors.gray600 }}>Braiding Academy Berlin, 2019</Text>
+              <Text style={{ fontWeight: '600' }}>—</Text>
+              <Text style={{ color: colors.gray600 }}>—</Text>
             </View>
             <View>
-              <Text style={{ fontWeight: '600' }}>Natürliche Haarpflege Spezialist</Text>
-              <Text style={{ color: colors.gray600 }}>Natural Hair Institute, 2020</Text>
+              <Text style={{ fontWeight: '600' }}>—</Text>
+              <Text style={{ color: colors.gray600 }}>—</Text>
             </View>
           </View>
         </Card>

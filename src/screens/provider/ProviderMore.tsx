@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,16 +7,21 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Platform,
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
 import { useNavigation } from '@react-navigation/native';
-// import { useAuth } from '../../auth/AuthContext'; // Assuming context is available
+import { useAuth } from '@/auth/AuthContext'; // Use shared auth context
+import { http } from '../../api/http';
+import { getProviderAppointments } from '../../api/appointments';
+import { PLATFORM_FEE_RATE } from '../../api/payments';
 import Card from '../../components/Card';
 import { Badge } from '../../components/badge';
 import Avatar, { AvatarImage } from '../../components/avatar';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import AlertModal from '@/components/AlertModal';
 
 // --- Menu Data (Icons adapted to string names for the custom Icon component) ---
 const menuSections = [
@@ -56,7 +61,7 @@ const menuSections = [
         icon: "dollar-sign",
         label: "Einnahmen & Auszahlungen",
         path: "TransactionsScreen",
-        badge: "€1,245",
+        badge: null,
       },
       {
         icon: "bar-chart",
@@ -110,7 +115,7 @@ const menuSections = [
 
 // --- Helper Component for Menu Item (Replaces Web Button + Div Structure) ---
 type MenuItemData = { icon: string; label: string; path: string; badge?: string | null };
-const MenuItem = ({ item, onPress }: { item: MenuItemData; onPress: (path: string) => void }) => (
+const MenuItem: React.FC<{ item: MenuItemData; onPress: (path: string) => void }> = ({ item, onPress }) => (
   <TouchableOpacity
     key={item.label}
     onPress={() => onPress(item.path)}
@@ -130,11 +135,67 @@ const MenuItem = ({ item, onPress }: { item: MenuItemData; onPress: (path: strin
 
 // --- Main Component ---
 export function ProviderMore() {
-  const navigation = useNavigation<any>();
-  // const { logout } = useAuth(); // Uncomment in a real app
+  const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
+  const { logout, user } = useAuth();
+  const [profile, setProfile] = useState<any | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState<boolean>(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [earningsBadge, setEarningsBadge] = useState<string | null>(null);
+  const [earningsError, setEarningsError] = useState<string | null>(null);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoadingProfile(true);
+    setProfileError(null);
+    http.get('/providers/me')
+      .then((res) => {
+        if (!cancelled) setProfile(res?.data ?? null);
+      })
+      .catch((err) => {
+        const msg = err?.response?.data?.message || err?.message || 'Profil konnte nicht geladen werden';
+        if (!cancelled) setProfileError(msg);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingProfile(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Fetch earnings summary (last 30 days, completed appointments)
+  useEffect(() => {
+    let cancelled = false;
+    setEarningsError(null);
+    const now = Date.now();
+    const sinceTs = now - 30 * 24 * 60 * 60 * 1000;
+    getProviderAppointments('completed')
+      .then((res) => {
+        const items = res?.items || [];
+        const total = items.reduce((sum, a) => {
+          const d = new Date((a.appointmentDate || '').trim() + 'T' + ((a.startTime || '').trim() || '00:00:00'));
+          const ts = d.getTime();
+          if (Number.isNaN(ts) || ts < sinceTs) return sum;
+          const gross = (a.totalPriceCents || 0) / 100;
+          const fee = Math.round(gross * PLATFORM_FEE_RATE * 100) / 100;
+          const net = Math.round((gross - fee) * 100) / 100;
+          return sum + net;
+        }, 0);
+        const formatted = `€${total.toLocaleString('de-DE', { maximumFractionDigits: 0 })}`;
+        if (!cancelled) setEarningsBadge(formatted);
+      })
+      .catch((err) => {
+        const msg = err?.response?.data?.message || err?.message || 'Einnahmen konnten nicht geladen werden';
+        if (!cancelled) setEarningsError(msg);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleLogout = () => {
-    // Replaces browser 'confirm' with native Alert
+    // Use platform-aware confirmation: modal on web, Alert on native
+    if (Platform.OS === 'web') {
+      setShowLogoutDialog(true);
+      return;
+    }
     Alert.alert(
       "Abmelden",
       "Möchtest du dich wirklich abmelden?",
@@ -146,8 +207,8 @@ export function ProviderMore() {
         {
           text: "Abmelden",
           onPress: () => {
-            // logout(); // Uncomment in a real app
-            navigation.navigate("LoginScreen"); // Navigate to login screen
+            // Perform real logout: clear tokens and auth bundle
+            Promise.resolve(logout());
           },
           style: "destructive",
         },
@@ -170,14 +231,14 @@ export function ProviderMore() {
             <Card style={styles.profileCard}>
               <View style={styles.profileSummary}>
                 <Avatar size={64}>
-                  <AvatarImage source={{ uri: "https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=100" }} />
+                  <AvatarImage source={{ uri: getAvatarUrl(user, profile) }} />
                 </Avatar>
                 <View style={styles.profileTextContainer}>
-                  <Text style={styles.profileName}>Aisha Mensah</Text>
-                  <Text style={styles.profileStudio}>Aisha's Braiding Studio</Text>
+                  <Text style={styles.profileName}>{[user?.firstName, user?.lastName].filter(Boolean).join(' ') || profile?.user?.firstName || 'Profil'}</Text>
+                  <Text style={styles.profileStudio}>{profile?.businessName || 'Studio'}</Text>
                   <View style={styles.profileBadgeRow}>
-                    <Badge title="Pro" color="amber" />
-                    <Badge title="Verifiziert" variant="outline" />
+                    {profile?.isVerified ? <Badge title="Verifiziert" variant="outline" /> : null}
+                    {profile?.acceptsSameDayBooking ? <Badge title="Same-Day" variant="outline" /> : null}
                   </View>
                 </View>
                 <Icon name="chevron-right" size={20} color={COLORS.border} />
@@ -194,12 +255,18 @@ export function ProviderMore() {
                 {section.title}
               </Text>
               <Card style={styles.cardContainer}>
-                {section.items.map((item, itemIndex) => (
-                  <React.Fragment key={itemIndex}>
-                    <MenuItem item={item} onPress={(path) => navigation.navigate(path)} />
-                    {itemIndex < section.items.length - 1 && <View style={styles.divider} />}
-                  </React.Fragment>
-                ))}
+                {section.items.map((item, itemIndex) => {
+                  const displayItem =
+                    item.label === 'Einnahmen & Auszahlungen'
+                      ? { ...item, badge: earningsBadge ?? item.badge }
+                      : item;
+                  return (
+                    <React.Fragment key={itemIndex}>
+                      <MenuItem item={displayItem} onPress={(path) => navigation.navigate(path)} />
+                      {itemIndex < section.items.length - 1 && <View style={styles.divider} />}
+                    </React.Fragment>
+                  );
+                })}
               </Card>
             </View>
           ))}
@@ -224,9 +291,31 @@ export function ProviderMore() {
           <Text style={styles.versionText}>HairConnekt Provider v1.0.0</Text>
           <Text style={styles.versionText}>© 2025 HairConnekt GmbH</Text>
         </View>
+        {/* Logout confirmation (web) */}
+        <AlertModal
+          isVisible={showLogoutDialog}
+          onClose={() => setShowLogoutDialog(false)}
+          title={'Abmelden'}
+          description={'Möchtest du dich wirklich abmelden?'}
+          buttons={[
+            { title: 'Abbrechen', onPress: () => setShowLogoutDialog(false), variant: 'outline' },
+            { title: 'Abmelden', onPress: () => { setShowLogoutDialog(false); Promise.resolve(logout()); } },
+          ]}
+        />
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function getAvatarUrl(user: unknown, profile: unknown): string {
+  const u = (user ?? null) as Record<string, unknown> | null;
+  const p = (profile ?? null) as { user?: Record<string, unknown> } | null;
+  const candidates = [
+    u && typeof u.profilePictureUrl === 'string' ? (u.profilePictureUrl as string) : undefined,
+    p?.user && typeof p.user?.profilePictureUrl === 'string' ? (p.user.profilePictureUrl as string) : undefined,
+    u && typeof u.imageUrl === 'string' ? (u.imageUrl as string) : undefined,
+  ].filter((v): v is string => typeof v === 'string');
+  return candidates[0] || '';
 }
 
 

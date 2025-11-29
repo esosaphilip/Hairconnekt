@@ -1,70 +1,60 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewProps } from 'react-native';
-import type { StyleProp, ViewStyle, TextStyle } from 'react-native';
-import { colors, spacing, radii } from '../theme/tokens';
+import { View, Text, StyleSheet, StyleProp, ViewStyle, TextStyle } from 'react-native';
 
-export type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline';
+const PRESETS = {
+  green: { bg: '#ECFDF5', fg: '#065F46', border: '#A7F3D0' },
+  amber: { bg: '#FFFBEB', fg: '#78350F', border: '#FDE68A' },
+  red:   { bg: '#FEF2F2', fg: '#7F1D1D', border: '#FECACA' },
+  gray:  { bg: '#F3F4F6', fg: '#374151', border: '#E5E7EB' },
+} as const;
 
-export interface BadgeProps extends Omit<ViewProps, 'style'> {
-  children?: React.ReactNode;
+type PresetKey = keyof typeof PRESETS;
+
+export type BadgeProps = {
+  color?: PresetKey | string;
+  variant?: 'success' | 'danger' | 'secondary' | 'outline';
+  backgroundColor?: string;
+  textColor?: string;
+  borderColor?: string;
+  label?: string;
   title?: string;
-  variant?: BadgeVariant;
+  children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
-  color?: string; // optional text color override for compatibility
-  textColor?: string; // alias used by some screens
-}
+};
 
-export function Badge(props: BadgeProps = {}) {
-  const { children, title, variant: variantProp, style, textStyle, color, textColor, ...rest } = props ?? {};
-  const variant: BadgeVariant = variantProp ?? 'default';
-  const { containerStyle, labelStyle } = getStylesForVariant(variant);
+export function Badge(props: BadgeProps) {
+  const presetColor = props?.color ?? 'gray';
+  const basePreset = (typeof presetColor === 'string' && presetColor in PRESETS)
+    ? PRESETS[presetColor as PresetKey]
+    : PRESETS.gray;
+  const variant = props?.variant;
+  const mappedFromVariant: { bg: string; fg: string; border: string } | null =
+    variant === 'success' ? PRESETS.green :
+    variant === 'danger' ? PRESETS.red :
+    variant === 'secondary' ? PRESETS.gray :
+    variant === 'outline' ? { ...PRESETS.gray, bg: 'transparent' } : null;
+  const bg = props?.backgroundColor != null ? props.backgroundColor : (mappedFromVariant?.bg ?? basePreset.bg);
+  const fg = props?.textColor != null ? props.textColor : (mappedFromVariant?.fg ?? basePreset.fg);
+  const border = props?.borderColor != null ? props.borderColor : (mappedFromVariant?.border ?? basePreset.border);
+  const labelText = props?.label != null ? props.label : (props?.title != null ? props.title : props?.children);
   return (
-    <View {...rest} style={[styles.base, containerStyle, style]}>
-      {typeof children === 'string' ? (
-        <Text style={[styles.text, labelStyle, (textColor || color) ? { color: textColor || color } : null, textStyle]}>{children}</Text>
-      ) : title ? (
-        <Text style={[styles.text, labelStyle, (textColor || color) ? { color: textColor || color } : null, textStyle]}>{title}</Text>
-      ) : (
-        children
-      )}
+    <View style={[styles.container, { backgroundColor: bg, borderColor: border }, props?.style]}> 
+      <Text style={[styles.text, { color: fg }, props?.textStyle]}
+      >
+        {labelText}
+      </Text>
     </View>
   );
 }
 
-function getStylesForVariant(variant: BadgeVariant = 'default') {
-  switch (variant) {
-    case 'secondary':
-      return {
-        containerStyle: { backgroundColor: colors.gray100, borderColor: colors.gray300 },
-        labelStyle: { color: colors.gray700 },
-      };
-    case 'destructive':
-      return {
-        containerStyle: { backgroundColor: colors.error, borderColor: colors.error },
-        labelStyle: { color: colors.white },
-      };
-    case 'outline':
-      return {
-        containerStyle: { backgroundColor: colors.white, borderColor: colors.gray300 },
-        labelStyle: { color: colors.gray700 },
-      };
-    case 'default':
-    default:
-      return {
-        containerStyle: { backgroundColor: colors.primary, borderColor: colors.primary },
-        labelStyle: { color: colors.white },
-      };
-  }
-}
-
 const styles = StyleSheet.create({
-  base: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: radii.sm,
-    borderWidth: 1,
+  container: {
     alignSelf: 'flex-start',
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
   },
   text: {
     fontSize: 12,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, View, Text, ScrollView, Pressable, Platform } from 'react-native';
+import { SafeAreaView, View, Text, ScrollView, Pressable, Platform, StyleSheet } from 'react-native';
 import Button from '../../components/Button';
 import Icon from '../../components/Icon';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
@@ -29,35 +29,32 @@ export function ProviderWelcome() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: spacing.lg }}>
-        {/* Logo */}
-        <View style={{ alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.lg }}>
-          <Text style={[{ color: colors.primary, fontSize: 28, fontWeight: '800' }, { marginBottom: spacing.xs }]}>HairConnekt</Text>
-        <Text style={[typography.h2, { marginBottom: spacing.xs }]}>Werde Teil von HairConnekt</Text>
-          <Text style={{ color: colors.gray600, textAlign: 'center' }}>Erreiche neue Kunden und wachse dein Business</Text>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.header}>
+          <Text style={styles.brand}>HairConnekt</Text>
+          <Text style={styles.title}>Werde Teil von HairConnekt</Text>
+          <Text style={styles.subtitle}>Erreiche neue Kunden und wachse dein Business</Text>
         </View>
 
-        {/* Benefits */}
-        <View style={{ marginVertical: spacing.lg }}>
+        <View style={styles.benefitsContainer}>
           {benefits.map((benefit, index) => (
-            <View key={index} style={{ flexDirection: 'row', padding: spacing.md, borderRadius: radii.lg, backgroundColor: colors.gray50, alignItems: 'center', marginBottom: spacing.sm }}>
-              <View style={{ width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(139,69,19,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md }}>
+            <View key={index} style={styles.benefit}>
+              <View style={styles.benefitIconContainer}>
                 <Icon name={benefit.iconName} size={22} color={colors.primary} />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ fontWeight: '700', marginBottom: 2 }}>{benefit.title}</Text>
-                <Text style={{ fontSize: 14, color: colors.gray600 }}>{benefit.description}</Text>
+              <View style={styles.benefitTextContainer}>
+                <Text style={styles.benefitTitle}>{benefit.title}</Text>
+                <Text style={styles.benefitDescription}>{benefit.description}</Text>
               </View>
             </View>
           ))}
         </View>
 
-        {/* CTA Buttons */}
-        <View style={{ paddingBottom: spacing.lg }}>
-          <Button title="Als Anbieter anmelden" onPress={goLogin} style={{ height: 56, marginBottom: spacing.sm }} />
-          <Pressable onPress={goRegister} style={{ alignItems: 'center', padding: spacing.sm }} {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}>
-            <Text style={{ color: colors.gray600 }}>
+        <View style={styles.ctaContainer}>
+          <Button title="Als Anbieter anmelden" onPress={goLogin} style={styles.button} />
+          <Pressable onPress={goRegister} style={styles.registerButton} {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}>
+            <Text style={styles.registerText}>
               Neu bei HairConnekt? <Text style={{ color: colors.primary, textDecorationLine: 'underline' }}>Jetzt registrieren</Text>
             </Text>
           </Pressable>
@@ -66,3 +63,82 @@ export function ProviderWelcome() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.white,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    padding: spacing.lg,
+  },
+  header: {
+    alignItems: 'center',
+    marginTop: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  brand: {
+    color: colors.primary,
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: spacing.xs,
+  },
+  title: {
+    ...typography.h2,
+    marginBottom: spacing.xs,
+  },
+  subtitle: {
+    color: colors.gray600,
+    textAlign: 'center',
+  },
+  benefitsContainer: {
+    marginVertical: spacing.lg,
+  },
+  benefit: {
+    flexDirection: 'row',
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.gray50,
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  benefitIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(139,69,19,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  benefitTextContainer: {
+    flex: 1,
+  },
+  benefitTitle: {
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  benefitDescription: {
+    fontSize: 14,
+    color: colors.gray600,
+  },
+  ctaContainer: {
+    paddingBottom: spacing.lg,
+  },
+  button: {
+    height: 56,
+    marginBottom: spacing.sm,
+  },
+  registerButton: {
+    alignItems: 'center',
+    padding: spacing.sm,
+  },
+  registerText: {
+    color: colors.gray600,
+  },
+  registerLink: {
+    color: colors.primary,
+    textDecorationLine: 'underline',
+  },
+});

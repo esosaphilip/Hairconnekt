@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Modal } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { Switch } from '../../components/switch';
-import { Badge } from '../../components/badge';
+import { Switch } from 'react-native';
+import Badge from '../../components/badge';
 import Input from '../../components/Input';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
+import { http } from '../../api/http';
 
 // Types
 type DayKey =
@@ -33,10 +34,13 @@ const DAYS: { key: DayKey; label: string }[] = [
 ];
 
 export function AvailabilitySettingsScreen() {
+  const [availabilityId, setAvailabilityId] = useState<string | null>(null);
   const [bufferTime, setBufferTime] = useState<number>(15);
   const [advanceBookingDays, setAdvanceBookingDays] = useState<number>(30);
   const [sameDayBooking, setSameDayBooking] = useState<boolean>(true);
   const [minAdvanceHours, setMinAdvanceHours] = useState<number>(2);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [daysModalOpen, setDaysModalOpen] = useState<boolean>(false);
 
@@ -49,6 +53,42 @@ export function AvailabilitySettingsScreen() {
     saturday: { isWorkday: true, slots: [{ start: '10:00', end: '16:00' }] },
     sunday: { isWorkday: false, slots: [] },
   });
+
+  useEffect(() => {
+    // Fetch existing availability settings
+    const fetchAvailability = async () => {
+      setLoading(true);
+      try {
+        const response = await http.get('/availability');
+        const data: {
+          id: string;
+          bufferTime: number;
+          advanceBookingDays: number;
+          sameDayBooking: boolean;
+          minAdvanceHours: number;
+          slots: Array<{ day: DayKey; startTime: string; endTime: string }>;
+        } = response.data;
+        if (data) {
+          setAvailabilityId(data.id);
+          setBufferTime(data.bufferTime);
+          setAdvanceBookingDays(data.advanceBookingDays);
+          setSameDayBooking(data.sameDayBooking);
+          setMinAdvanceHours(data.minAdvanceHours);
+          // Transform slots to schedule
+          const newSchedule = { ...schedule };
+          data.slots.forEach((slot: { day: DayKey; startTime: string; endTime: string }) => {
+            newSchedule[slot.day].isWorkday = true;
+            newSchedule[slot.day].slots.push({ start: slot.startTime, end: slot.endTime });
+          });
+          setSchedule(newSchedule);
+        }
+      } catch (err) {
+        // Ignore if not found, it means we need to create one
+      }
+      setLoading(false);
+    };
+    fetchAvailability();
+  }, []);
 
   const toggleWorkday = (day: DayKey) => {
     setSchedule((prev) => ({
@@ -115,7 +155,7 @@ export function AvailabilitySettingsScreen() {
     setMessage('Zeiten auf alle Tage kopiert');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     let hasError = false;
     (Object.entries(schedule) as [DayKey, DaySchedule][]).forEach(([day, data]) => {
       if (data.isWorkday && data.slots.length === 0) {
@@ -134,7 +174,34 @@ export function AvailabilitySettingsScreen() {
       });
     });
 
-    if (!hasError) {
+    if (hasError) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    const slots = Object.entries(schedule).flatMap(([day, daySchedule]) => {
+      if (!daySchedule.isWorkday) {
+        return [];
+      }
+      return daySchedule.slots.map(slot => ({ day, startTime: slot.start, endTime: slot.end }));
+    });
+
+    const availabilityData = {
+      bufferTime,
+      advanceBookingDays,
+      sameDayBooking,
+      minAdvanceHours,
+      slots,
+    };
+
+    try {
+      if (availabilityId) {
+        await http.patch(`/availability/${availabilityId}`, availabilityData);
+      } else {
+        await http.post('/availability', availabilityData);
+      }
       setMessage('Verfügbarkeit erfolgreich gespeichert!');
       if (Platform.OS === 'web') {
         try {
@@ -142,6 +209,22 @@ export function AvailabilitySettingsScreen() {
           window.location.hash = '/provider/more';
         } catch {}
       }
+    } catch (err) {
+      let msg = 'Ein Fehler ist aufgetreten.';
+      if (typeof err === 'object' && err !== null) {
+        const response = (err as Record<string, unknown>)['response'] as Record<string, unknown> | undefined;
+        const data = response?.['data'] as Record<string, unknown> | undefined;
+        const m = data?.['message'];
+        if (typeof m === 'string') {
+          msg = m;
+        } else {
+          const m2 = (err as Record<string, unknown>)['message'];
+          if (typeof m2 === 'string') msg = m2;
+        }
+      }
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -167,7 +250,7 @@ export function AvailabilitySettingsScreen() {
           >
             <Ionicons name="chevron-back" size={24} color={colors.black} />
           </Pressable>
-          <View style={{ flex: 1 }}>
+          <View style={styles.headerContent}>
             <Text style={[styles.headerTitle, typography.h3]}>Verfügbarkeit festlegen</Text>
             <Text style={styles.headerSubtitle}>Lege deine Arbeitszeiten fest</Text>
           </View>
@@ -175,8 +258,9 @@ export function AvailabilitySettingsScreen() {
             onPress={handleSave}
             style={styles.saveBtn}
             {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}
+            disabled={loading}
           >
-            <Ionicons name="save-outline" size={18} color={colors.white} />
+            {loading ? <ActivityIndicator color={colors.white} /> : <Ionicons name="save-outline" size={18} color={colors.white} />}
             <Text style={styles.saveBtnText}>Speichern</Text>
           </Pressable>
         </View>
@@ -184,15 +268,15 @@ export function AvailabilitySettingsScreen() {
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Weekly Schedule */}
-        <Card style={{ padding: spacing.md, marginBottom: spacing.md }}>
+        <Card style={styles.cardPaddedSection}>
           <Text style={styles.sectionTitle}>Regelmäßige Arbeitszeiten</Text>
 
           {DAYS.map(({ key, label }, idx) => (
-            <View key={key} style={{ marginTop: spacing.md }}>
+            <View key={key} style={styles.mtMd}>
               <View style={styles.dayHeaderRow}>
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View style={styles.inlineRow}>
                   <Switch value={schedule[key].isWorkday} onValueChange={() => toggleWorkday(key)} />
-                  <Text style={{ marginLeft: spacing.sm, fontWeight: '600' }}>{label}</Text>
+                  <Text style={styles.dayLabel}>{label}</Text>
                 </View>
                 {schedule[key].isWorkday ? (
                   <Button
@@ -204,21 +288,21 @@ export function AvailabilitySettingsScreen() {
               </View>
 
               {schedule[key].isWorkday ? (
-                <View style={{ marginLeft: 44, marginTop: spacing.sm }}>
+                <View style={styles.indentBlock}>
                   {schedule[key].slots.map((slot, index) => (
                     <View key={index} style={styles.slotRow}>
                       <Input
                         value={slot.start}
                         onChangeText={(t) => updateTimeSlot(key, index, 'start', t)}
                         placeholder="HH:MM"
-                        style={{ flex: 1 }}
+                        style={styles.flex1}
                       />
-                      <Text style={{ color: colors.gray600, marginHorizontal: spacing.sm }}>bis</Text>
+                      <Text style={styles.slotSeparator}>bis</Text>
                       <Input
                         value={slot.end}
                         onChangeText={(t) => updateTimeSlot(key, index, 'end', t)}
                         placeholder="HH:MM"
-                        style={{ flex: 1 }}
+                        style={styles.flex1}
                       />
                       {schedule[key].slots.length > 1 ? (
                         <Pressable
@@ -226,7 +310,7 @@ export function AvailabilitySettingsScreen() {
                           style={styles.removeBtn}
                           {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}
                         >
-                          <Ionicons name="close-outline" size={18} color="#DC2626" />
+                          <Ionicons name="close-outline" size={18} color={colors.error} />
                         </Pressable>
                       ) : null}
                     </View>
@@ -235,12 +319,12 @@ export function AvailabilitySettingsScreen() {
                     variant="ghost"
                     onPress={() => addTimeSlot(key)}
                     title="Zeitslot hinzufügen"
-                    style={{ alignSelf: 'flex-start', marginTop: spacing.sm }}
+                    style={styles.addSlotBtn}
                   />
                 </View>
               ) : (
-                <View style={{ marginLeft: 44, marginTop: spacing.sm }}>
-                  <Badge variant="secondary">Geschlossen</Badge>
+                <View style={styles.indentBlock}>
+                  <Badge variant="secondary"><Text>Geschlossen</Text></Badge>
                 </View>
               )}
 
@@ -250,15 +334,15 @@ export function AvailabilitySettingsScreen() {
         </Card>
 
         {/* Buffer Time */}
-        <Card style={{ padding: spacing.md, marginBottom: spacing.md }}>
-          <View style={{ flexDirection: 'row' }}>
-            <Ionicons name="time-outline" size={20} color={colors.gray600} style={{ marginRight: spacing.sm, marginTop: 2 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.sectionTitle, { marginBottom: 2 }]}>Pufferzeit zwischen Terminen</Text>
+        <Card style={styles.cardPaddedSection}>
+          <View style={styles.row}>
+            <Ionicons name="time-outline" size={20} color={colors.gray600} style={styles.iconWithText} />
+            <View style={styles.flex1}>
+              <Text style={[styles.sectionTitle, styles.titleMarginBottom2]}>Pufferzeit zwischen Terminen</Text>
               <Text style={styles.mutedText}>Zeit zum Vorbereiten zwischen Kunden</Text>
               <View style={styles.inlineRow}>
                 <Button title="-" variant="ghost" onPress={() => setBufferTime((v) => increment(v, -5, 0, 60))} />
-                <Text style={{ marginHorizontal: spacing.md }}>{bufferTime} Min.</Text>
+                <Text style={styles.mxMd}>{bufferTime} Min.</Text>
                 <Button title="+" variant="ghost" onPress={() => setBufferTime((v) => increment(v, 5, 0, 60))} />
               </View>
             </View>
@@ -266,19 +350,19 @@ export function AvailabilitySettingsScreen() {
         </Card>
 
         {/* Booking Settings */}
-        <Card style={{ padding: spacing.md, marginBottom: spacing.md }}>
-          <View style={{ flexDirection: 'row', marginBottom: spacing.sm }}>
-            <Ionicons name="calendar-outline" size={20} color={colors.gray600} style={{ marginRight: spacing.sm, marginTop: 2 }} />
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.sectionTitle, { marginBottom: 2 }]}>Buchungseinstellungen</Text>
+        <Card style={styles.cardPaddedSection}>
+          <View style={styles.rowMbSm}>
+            <Ionicons name="calendar-outline" size={20} color={colors.gray600} style={styles.iconWithText} />
+            <View style={styles.flex1}>
+              <Text style={[styles.sectionTitle, styles.titleMarginBottom2]}>Buchungseinstellungen</Text>
               <Text style={styles.mutedText}>Wie weit im Voraus können Kunden buchen</Text>
             </View>
           </View>
 
-          <View style={{ marginTop: spacing.sm }}>
+          <View style={styles.mtSm}>
             <Text style={styles.label}>Vorlaufzeit für Buchungen</Text>
-        <Pressable onPress={() => setDaysModalOpen(true)} style={styles.selectTrigger} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
-              <Text style={{ color: colors.black }}>{advanceBookingDays} Tage</Text>
+            <Pressable onPress={() => setDaysModalOpen(true)} style={styles.selectTrigger} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
+              <Text style={styles.blackText}>{advanceBookingDays} Tage</Text>
               <Ionicons name="chevron-down" size={18} color={colors.gray500} />
             </Pressable>
             <Text style={styles.helperText}>Kunden können bis zu {advanceBookingDays} Tage im Voraus buchen</Text>
@@ -293,21 +377,21 @@ export function AvailabilitySettingsScreen() {
           </View>
 
           <View style={styles.blockRow}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <Text style={styles.label}>Mindestvorlauf (Stunden)</Text>
               <Text style={styles.mutedText}>Wie viele Stunden vorher muss gebucht werden</Text>
             </View>
             <View style={styles.inlineRow}>
               <Button title="-" variant="ghost" onPress={() => setMinAdvanceHours((v) => increment(v, -1, 0, 72))} />
-              <Text style={{ marginHorizontal: spacing.sm }}>{minAdvanceHours} Std.</Text>
+              <Text style={styles.mxSm}>{minAdvanceHours} Std.</Text>
               <Button title="+" variant="ghost" onPress={() => setMinAdvanceHours((v) => increment(v, 1, 0, 72))} />
             </View>
           </View>
         </Card>
 
         {/* Quick Actions */}
-        <View style={{ flexDirection: 'row' }}>
-          <View style={{ flex: 1, marginRight: spacing.sm }}>
+        <View style={styles.row}>
+          <View style={styles.quickActionLeft}>
             <Button
               variant="ghost"
               title="Urlaub/Auszeit planen"
@@ -318,7 +402,7 @@ export function AvailabilitySettingsScreen() {
               }}
             />
           </View>
-          <View style={{ flex: 1, marginLeft: spacing.sm }}>
+          <View style={styles.quickActionRight}>
             <Button
               variant="ghost"
               title="Kalender ansehen"
@@ -331,22 +415,21 @@ export function AvailabilitySettingsScreen() {
           </View>
         </View>
 
-        {message ? (
-          <Text style={{ color: colors.primary, marginTop: spacing.md }}>{message}</Text>
-        ) : null}
+        {message && <Text style={styles.messageText}>{message}</Text>}
+        {error && <Text style={styles.errorText}>{error}</Text>}
       </ScrollView>
 
       {/* Days Select Modal */}
       <Modal visible={daysModalOpen} transparent animationType="fade" onRequestClose={() => setDaysModalOpen(false)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
-            <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Vorlaufzeit wählen</Text>
+            <Text style={[styles.sectionTitle, styles.mbSm]}>Vorlaufzeit wählen</Text>
             {[7, 14, 30, 60, 90].map((d) => (
               <Pressable key={d} style={styles.modalItem} onPress={() => { setAdvanceBookingDays(d); setDaysModalOpen(false); }}>
-                <Text style={{ color: colors.black }}>{d} Tage</Text>
+                <Text style={styles.blackText}>{d} Tage</Text>
               </Pressable>
             ))}
-            <Button title="Abbrechen" variant="ghost" onPress={() => setDaysModalOpen(false)} style={{ marginTop: spacing.sm }} />
+            <Button title="Abbrechen" variant="ghost" onPress={() => setDaysModalOpen(false)} style={styles.mtSm} />
           </View>
         </View>
       </Modal>
@@ -355,129 +438,203 @@ export function AvailabilitySettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.gray50,
+  addSlotBtn: {
+    alignSelf: 'flex-start',
+    marginTop: spacing.sm,
   },
-  header: {
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
+  blackText: {
+    color: colors.black,
   },
-  headerRow: {
-    flexDirection: 'row',
+  blockRow: {
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: spacing.md,
   },
-  iconBtn: {
-    paddingRight: spacing.sm,
-    paddingVertical: spacing.xs,
+  cardPaddedSection: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
   },
-  headerTitle: {
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: colors.gray600,
-  },
-  saveBtn: {
-    backgroundColor: colors.primary,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radii.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  saveBtnText: {
-    color: colors.white,
-    marginLeft: 6,
-    fontWeight: '600',
+  container: {
+    backgroundColor: colors.gray50,
+    flex: 1,
   },
   content: {
     padding: spacing.md,
     paddingBottom: spacing.xl,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.black,
-  },
   dayHeaderRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  slotRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  removeBtn: {
-    padding: spacing.xs,
+  dayLabel: {
+    fontWeight: '600',
     marginLeft: spacing.sm,
   },
-  separator: {
-    height: 1,
-    backgroundColor: colors.gray200,
+  errorText: {
+    color: colors.error,
     marginTop: spacing.md,
   },
-  mutedText: {
-    fontSize: 12,
-    color: colors.gray600,
-    marginBottom: spacing.sm,
+  flex1: {
+    flex: 1,
   },
-  inlineRow: {
-    flexDirection: 'row',
+  header: {
+    backgroundColor: colors.white,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerRow: {
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
   },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.gray700,
-    marginBottom: 6,
+  headerSubtitle: {
+    color: colors.gray600,
+    fontSize: 12,
+  },
+  headerTitle: {
+    marginBottom: 2,
   },
   helperText: {
-    fontSize: 12,
     color: colors.gray600,
+    fontSize: 12,
     marginTop: 4,
   },
-  selectTrigger: {
-    borderWidth: 1,
-    borderColor: colors.gray300,
-    backgroundColor: colors.white,
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+  iconBtn: {
+    paddingRight: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  blockRow: {
-    marginTop: spacing.md,
-    flexDirection: 'row',
+  iconWithText: {
+    marginRight: spacing.sm,
+    marginTop: 2,
+  },
+  indentBlock: {
+    marginLeft: 44,
+    marginTop: spacing.sm,
+  },
+  inlineRow: {
     alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'row',
+  },
+  label: {
+    color: colors.gray700,
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  mbSm: {
+    marginBottom: spacing.sm,
+  },
+  messageText: {
+    color: colors.primary,
+    marginTop: spacing.md,
   },
   modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center',
+    backgroundColor: colors.overlay,
+    flex: 1,
     justifyContent: 'center',
     padding: spacing.md,
   },
   modalCard: {
-    width: '100%',
-    maxWidth: 420,
     backgroundColor: colors.white,
     borderRadius: radii.lg,
+    maxWidth: 420,
     padding: spacing.md,
+    width: '100%',
   },
   modalItem: {
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
     borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    paddingVertical: spacing.sm,
+  },
+  mtMd: {
+    marginTop: spacing.md,
+  },
+  mtSm: {
+    marginTop: spacing.sm,
+  },
+  mutedText: {
+    color: colors.gray600,
+    fontSize: 12,
+    marginBottom: spacing.sm,
+  },
+  mxMd: {
+    marginHorizontal: spacing.md,
+  },
+  mxSm: {
+    marginHorizontal: spacing.sm,
+  },
+  quickActionLeft: {
+    flex: 1,
+    marginRight: spacing.sm,
+  },
+  quickActionRight: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
+  removeBtn: {
+    marginLeft: spacing.sm,
+    padding: spacing.xs,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  rowMbSm: {
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
+  },
+  saveBtn: {
+    alignItems: 'center',
+    backgroundColor: colors.primary,
+    borderRadius: radii.md,
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  saveBtnText: {
+    color: colors.white,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  sectionTitle: {
+    color: colors.black,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  selectTrigger: {
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderColor: colors.gray300,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  separator: {
+    backgroundColor: colors.gray200,
+    height: 1,
+    marginTop: spacing.md,
+  },
+  slotRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
+  },
+  slotSeparator: {
+    color: colors.gray600,
+    marginHorizontal: spacing.sm,
+  },
+  titleMarginBottom2: {
+    marginBottom: 2,
   },
 });
 

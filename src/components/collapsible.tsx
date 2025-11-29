@@ -1,19 +1,18 @@
-import React, { useState, createContext, useContext } from 'react';
-import { View, Pressable } from 'react-native';
-import type { StyleProp, ViewStyle } from 'react-native';
+import React, { useState, createContext, useContext, ReactNode } from 'react';
+import { View, Pressable, Text, StyleProp, ViewStyle } from 'react-native';
 
-type CollapsibleCtx = { open: boolean; setOpen: (next: boolean) => void } | null;
-const Ctx = createContext<CollapsibleCtx>(null);
+type CollapsibleContextValue = { open: boolean; setOpen: (next: boolean) => void } | null;
+const Ctx = createContext<CollapsibleContextValue>(null);
 
 export interface CollapsibleProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (next: boolean) => void;
   style?: StyleProp<ViewStyle>;
 }
 
-export function Collapsible(props: CollapsibleProps = {}) {
+export function Collapsible(props: CollapsibleProps) {
   const { children, open, defaultOpen, onOpenChange, style } = props ?? {};
   const [internalOpen, setInternalOpen] = useState<boolean>(defaultOpen ?? false);
   const isControlled = typeof open === 'boolean';
@@ -24,37 +23,47 @@ export function Collapsible(props: CollapsibleProps = {}) {
   };
   return (
     <Ctx.Provider value={{ open: actualOpen, setOpen }}>
-      <View style={style}>{children}</View>
+      <View style={style}>
+        {typeof children === 'string' || typeof children === 'number' ? <Text>{children}</Text> : children}
+      </View>
     </Ctx.Provider>
   );
 }
 
 export interface CollapsibleTriggerProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   onPress?: () => void;
   style?: StyleProp<ViewStyle>;
 }
 
-export function CollapsibleTrigger(props: CollapsibleTriggerProps = {}) {
+export function CollapsibleTrigger(props: CollapsibleTriggerProps) {
   const { children, onPress, style } = props ?? {};
   const ctx = useContext(Ctx);
-  if (!ctx) return <View style={style}>{children}</View>;
+  if (!ctx) return (
+    <View style={style}>
+      {typeof children === 'string' || typeof children === 'number' ? <Text>{children}</Text> : children}
+    </View>
+  );
   return (
     <Pressable onPress={() => { ctx.setOpen(!ctx.open); onPress?.(); }} style={style}>
-      {children}
+      {typeof children === 'string' || typeof children === 'number' ? <Text>{children}</Text> : children}
     </Pressable>
   );
 }
 
 export interface CollapsibleContentProps {
-  children?: React.ReactNode;
+  children?: ReactNode;
   style?: StyleProp<ViewStyle>;
 }
 
-export function CollapsibleContent(props: CollapsibleContentProps = {}) {
+export function CollapsibleContent(props: CollapsibleContentProps) {
   const { children, style } = props ?? {};
   const ctx = useContext(Ctx);
   if (!ctx) return null;
   if (!ctx.open) return null;
-  return <View style={style}>{children}</View>;
+  return (
+    <View style={style}>
+      {typeof children === 'string' || typeof children === 'number' ? <Text>{children}</Text> : children}
+    </View>
+  );
 }

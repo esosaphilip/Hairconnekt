@@ -1,13 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, Pressable, Platform, Linking } from 'react-native';
+import { SafeAreaView, ScrollView, View, Text, Pressable, StyleSheet, Linking } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import Input from '../../components/Input';
-import { Badge } from '../../components/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
-import { http } from '../../api/http';
-import { colors, spacing } from '../../theme/tokens';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import Input from '@/components/Input';
+import { Badge } from '@/components/badge';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/avatar';
+import { http } from '@/api/http';
+import { colors, spacing, typography } from '@/theme/tokens';
+import { API_CONFIG } from '@/constants';
+import { MESSAGES } from '@/constants';
+import { showError } from '@/presentation/utils/errorHandler';
+import type { ProviderClientsStackScreenProps } from '@/navigation/types';
 
 type Client = {
   id: string;
@@ -43,6 +48,7 @@ function formatRelativeGerman(iso: string | Date | undefined | null): string {
 }
 
 export function ProviderClients() {
+  const navigation = useNavigation<ProviderClientsStackScreenProps<'ProviderClients'>['navigation']>();
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,13 +65,14 @@ export function ProviderClients() {
       setLoading(true);
       setError(null);
       try {
-        const res = await http.get('/providers/clients');
+        const res = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.CLIENTS);
         if (!mounted) return;
         setData(res?.data || null);
-      } catch (err) {
+      } catch (err: unknown) {
         if (!mounted) return;
-        const message = err instanceof Error ? err.message : 'Fehler beim Laden der Kunden';
+        const message = err instanceof Error ? err.message : MESSAGES.ERROR.LOAD_FAILED;
         setError(message);
+        showError(err);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -83,80 +90,74 @@ export function ProviderClients() {
   }, [data, searchQuery]);
 
   const goToAddClient = () => {
-    if (Platform.OS === 'web') {
-      try { window.location.hash = '/provider/add-client'; } catch {}
-    }
+    // TODO: Navigate to add client screen when implemented
+    // navigation.navigate('AddClient');
   };
+
   const goToClient = (id: string) => {
-    if (Platform.OS === 'web') {
-      try { window.location.hash = `/provider/clients/${id}`; } catch {}
-    }
+    navigation.navigate('ProviderClientDetail', { id });
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.gray50 }}>
+    <SafeAreaView style={styles.container}>
       <ScrollView>
         {/* Header */}
-        <View style={{ backgroundColor: colors.white, paddingHorizontal: spacing.md, paddingTop: spacing.md, paddingBottom: spacing.sm, borderBottomWidth: 1, borderColor: '#00000010' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-            <Text style={{ fontSize: 18, fontWeight: '700' }}>Meine Kunden</Text>
-            <Pressable onPress={goToAddClient} style={{ padding: 6 }} {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}>
+        <View style={styles.header}>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>Meine Kunden</Text>
+            <Pressable onPress={goToAddClient} style={styles.addButton} accessibilityRole="button">
               <Ionicons name="person-add-outline" size={20} color={colors.primary} />
             </Pressable>
           </View>
           {/* Search */}
-          <View style={{ position: 'relative' }}>
-            <Ionicons name="search-outline" size={18} color={colors.gray400} style={{ position: 'absolute', left: 10, top: 12 }} />
+          <View style={styles.searchContainer}>
+            <Ionicons name="search-outline" size={18} color={colors.gray400} style={styles.searchIcon} />
             <Input
               placeholder="Kunde suchen..."
               value={searchQuery}
               onChangeText={setSearchQuery}
-              style={{ paddingLeft: 36 }}
+              style={styles.searchInput}
             />
           </View>
         </View>
 
         {/* Stats Overview */}
-        <View style={{ paddingHorizontal: spacing.md, paddingVertical: spacing.md }}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-            <Card style={{ width: '32%', alignItems: 'center', paddingVertical: 12 }}>
-              <Text style={{ fontSize: 20, color: colors.primary, marginBottom: 4 }}>
-                {data?.totalClients ?? (loading ? '…' : 0)}
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>Kunden</Text>
+        <View style={styles.statsContainer}>
+          <View style={styles.statsRow}>
+            <Card style={styles.statCard}>
+              <Text style={styles.statNumber}>{data?.totalClients ?? (loading ? '…' : 0)}</Text>
+              <Text style={styles.statLabel}>Kunden</Text>
             </Card>
-            <Card style={{ width: '32%', alignItems: 'center', paddingVertical: 12 }}>
-              <Text style={{ fontSize: 20, color: colors.primary, marginBottom: 4 }}>
-                {data?.regularCustomers ?? (loading ? '…' : 0)}
-              </Text>
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>Stammkunden</Text>
+            <Card style={styles.statCard}>
+              <Text style={styles.statNumber}>{data?.regularCustomers ?? (loading ? '…' : 0)}</Text>
+              <Text style={styles.statLabel}>Stammkunden</Text>
             </Card>
-            <Card style={{ width: '32%', alignItems: 'center', paddingVertical: 12 }}>
-              <Text style={{ fontSize: 20, color: '#16A34A', marginBottom: 4 }}>
+            <Card style={styles.statCard}>
+              <Text style={[styles.statNumber, styles.statNumberGreen]}>
                 {typeof data?.newThisWeek === 'number' ? `+${data?.newThisWeek}` : (loading ? '…' : '+0')}
               </Text>
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>Diese Woche</Text>
+              <Text style={styles.statLabel}>Diese Woche</Text>
             </Card>
           </View>
 
           {/* Sort/Filter (placeholder chips) */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: spacing.sm }} contentContainerStyle={{ paddingRight: 8 }}>
-            <Button title="Neueste" variant="ghost" style={{ marginRight: 8 }} />
-            <Button title="A-Z" variant="ghost" style={{ marginRight: 8 }} />
-            <Button title="Häufigste" variant="ghost" style={{ marginRight: 8 }} />
-            <Button title="Stammkunden" variant="ghost" style={{ marginRight: 8 }} />
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll} contentContainerStyle={styles.filterContent}>
+            <Button title="Neueste" variant="ghost" style={styles.filterButton} />
+            <Button title="A-Z" variant="ghost" style={styles.filterButton} />
+            <Button title="Häufigste" variant="ghost" style={styles.filterButton} />
+            <Button title="Stammkunden" variant="ghost" style={styles.filterButton} />
           </ScrollView>
 
           {/* Clients List */}
           {error ? (
-            <Text style={{ textAlign: 'center', color: '#991B1B', marginBottom: 8 }}>{error}</Text>
+            <Text style={styles.errorText}>{error}</Text>
           ) : null}
 
           <View>
             {filteredClients.map((client: Client) => (
-              <Card key={client.id} style={{ marginBottom: 12 }}>
-                <Pressable onPress={() => goToClient(client.id)} style={{ flexDirection: 'row' }} {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}>
-                  <Avatar size={56} style={{ marginRight: 12 }}>
+              <Card key={client.id} style={styles.clientCard}>
+                <Pressable onPress={() => goToClient(client.id)} style={styles.clientRow} accessibilityRole="button">
+                  <Avatar size={56} style={styles.avatar}>
                     {client.image ? (
                       <AvatarImage uri={client.image} />
                     ) : (
@@ -164,33 +165,33 @@ export function ProviderClients() {
                     )}
                   </Avatar>
 
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                      <Text numberOfLines={1} style={{ fontSize: 16, fontWeight: '700' }}>{client.name}</Text>
+                  <View style={styles.clientInfo}>
+                    <View style={styles.clientHeader}>
+                      <Text numberOfLines={1} style={styles.clientName}>{client.name}</Text>
                       {client.isVIP ? (
-                        <Badge style={{ marginLeft: 8, backgroundColor: '#F59E0B', borderColor: '#F59E0B' }}>VIP</Badge>
+                        <Badge style={styles.vipBadge} title="VIP" />
                       ) : null}
                     </View>
                     {!!client.phone && (
-                      <Pressable onPress={(e) => { e?.stopPropagation?.(); Linking.openURL(`tel:${client.phone}`); }} style={{ marginBottom: 6 }}>
-                        <Text style={{ color: colors.gray600 }}>{client.phone}</Text>
+                      <Pressable onPress={(e) => { e?.stopPropagation?.(); Linking.openURL(`tel:${client.phone}`); }} style={styles.phoneContainer}>
+                        <Text style={styles.phoneText}>{client.phone}</Text>
                       </Pressable>
                     )}
-                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginRight: 16 }}>
+                    <View style={styles.clientMeta}>
+                      <View style={styles.metaItem}>
                         <Ionicons name="calendar-outline" size={12} color={colors.gray600} />
-                        <Text style={{ fontSize: 12, color: colors.gray600, marginLeft: 4 }}>{client.appointments} Termine</Text>
+                        <Text style={styles.metaText}>{client.appointments ?? 0} Termine</Text>
                       </View>
-                      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <View style={styles.metaItem}>
                         <Ionicons name="card-outline" size={12} color={colors.gray600} />
-                        <Text style={{ fontSize: 12, color: colors.gray600, marginLeft: 4 }}>€{(((client.totalSpentCents ?? 0) / 100)).toFixed(2)}</Text>
+                        <Text style={styles.metaText}>€{(((client.totalSpentCents ?? 0) / 100)).toFixed(2)}</Text>
                       </View>
                     </View>
-                    <Text style={{ fontSize: 12, color: colors.gray500, marginTop: 4 }}>Letzter Termin: {formatRelativeGerman(client.lastVisitIso)}</Text>
+                    <Text style={styles.lastVisitText}>Letzter Termin: {formatRelativeGerman(client.lastVisitIso)}</Text>
                   </View>
 
-                  <View style={{ alignSelf: 'center' }}>
-                    <Ionicons name="star" size={20} color={client.isVIP ? '#F59E0B' : colors.gray300} />
+                  <View style={styles.starContainer}>
+                    <Ionicons name="star" size={20} color={client.isVIP ? colors.amber600 : colors.gray300} />
                   </View>
                 </Pressable>
               </Card>
@@ -199,10 +200,10 @@ export function ProviderClients() {
 
           {/* Empty State */}
           {!loading && filteredClients.length === 0 && (
-            <View style={{ alignItems: 'center', paddingVertical: 24 }}>
-              <Text style={{ fontSize: 32, marginBottom: 8 }}>👥</Text>
-              <Text style={{ fontSize: 16, fontWeight: '700', marginBottom: 6 }}>Keine Kunden gefunden</Text>
-              <Text style={{ color: colors.gray600, marginBottom: 12 }}>
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyEmoji}>👥</Text>
+              <Text style={styles.emptyTitle}>Keine Kunden gefunden</Text>
+              <Text style={styles.emptyText}>
                 {searchQuery ? 'Versuche andere Suchbegriffe' : 'Kunden werden automatisch hinzugefügt'}
               </Text>
               {!!searchQuery && (
@@ -214,13 +215,13 @@ export function ProviderClients() {
           {loading && (
             <View>
               {Array.from({ length: 3 }).map((_, i) => (
-                <Card key={i} style={{ marginBottom: 12 }}>
-                  <View style={{ flexDirection: 'row' }}>
-                    <View style={{ width: 56, height: 56, borderRadius: 28, backgroundColor: colors.gray200, marginRight: 12 }} />
-                    <View style={{ flex: 1 }}>
-                      <View style={{ height: 16, backgroundColor: colors.gray200, width: '35%', marginBottom: 8, borderRadius: 4 }} />
-                      <View style={{ height: 12, backgroundColor: colors.gray200, width: '55%', marginBottom: 6, borderRadius: 4 }} />
-                      <View style={{ height: 12, backgroundColor: colors.gray200, width: '70%', borderRadius: 4 }} />
+                <Card key={i} style={styles.skeletonCard}>
+                  <View style={styles.skeletonRow}>
+                    <View style={styles.skeletonAvatar} />
+                    <View style={styles.skeletonContent}>
+                      <View style={[styles.skeletonLine, styles.skeletonLineShort]} />
+                      <View style={[styles.skeletonLine, styles.skeletonLineMedium]} />
+                      <View style={[styles.skeletonLine, styles.skeletonLineLong]} />
                     </View>
                   </View>
                 </Card>
@@ -232,5 +233,192 @@ export function ProviderClients() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  addButton: {
+    padding: spacing.xs,
+  },
+  avatar: {
+    marginRight: spacing.sm,
+  },
+  clientCard: {
+    marginBottom: spacing.sm,
+  },
+  clientHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: spacing.xs,
+  },
+  clientInfo: {
+    flex: 1,
+    minWidth: 0,
+  },
+  clientMeta: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  clientName: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+  },
+  clientRow: {
+    flexDirection: 'row',
+  },
+  container: {
+    backgroundColor: colors.gray50,
+    flex: 1,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.lg,
+  },
+  emptyEmoji: {
+    fontSize: 32,
+    marginBottom: spacing.sm,
+  },
+  emptyText: {
+    color: colors.gray600,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  emptyTitle: {
+    fontSize: typography.body.fontSize,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  errorText: {
+    color: colors.error,
+    marginBottom: spacing.sm,
+    textAlign: 'center',
+  },
+  filterButton: {
+    marginRight: spacing.sm,
+  },
+  filterContent: {
+    paddingRight: spacing.sm,
+  },
+  filterScroll: {
+    marginBottom: spacing.sm,
+  },
+  header: {
+    backgroundColor: colors.white,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  headerTitle: {
+    fontSize: typography.h3.fontSize,
+    fontWeight: typography.h3.fontWeight,
+  },
+  lastVisitText: {
+    color: colors.gray500,
+    fontSize: typography.small.fontSize,
+    marginTop: spacing.xs,
+  },
+  metaItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginRight: spacing.md,
+  },
+  metaText: {
+    color: colors.gray600,
+    fontSize: typography.small.fontSize,
+    marginLeft: spacing.xs,
+  },
+  phoneContainer: {
+    marginBottom: spacing.xs,
+  },
+  phoneText: {
+    color: colors.gray600,
+  },
+  searchContainer: {
+    position: 'relative',
+  },
+  searchIcon: {
+    left: spacing.sm,
+    position: 'absolute',
+    top: 12,
+  },
+  searchInput: {
+    paddingLeft: 36,
+  },
+  skeletonAvatar: {
+    backgroundColor: colors.gray200,
+    borderRadius: 28,
+    height: 56,
+    marginRight: spacing.sm,
+    width: 56,
+  },
+  skeletonCard: {
+    marginBottom: spacing.sm,
+  },
+  skeletonContent: {
+    flex: 1,
+  },
+  skeletonLine: {
+    backgroundColor: colors.gray200,
+    borderRadius: 4,
+    height: 12,
+    marginBottom: spacing.xs,
+  },
+  skeletonLineLong: {
+    width: '70%',
+  },
+  skeletonLineMedium: {
+    marginBottom: spacing.xs,
+    width: '55%',
+  },
+  skeletonLineShort: {
+    height: 16,
+    marginBottom: spacing.sm,
+    width: '35%',
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+  },
+  starContainer: {
+    alignSelf: 'center',
+  },
+  statCard: {
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+    width: '32%',
+  },
+  statLabel: {
+    color: colors.gray600,
+    fontSize: typography.small.fontSize,
+  },
+  statNumber: {
+    color: colors.primary,
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: spacing.xs,
+  },
+  statNumberGreen: {
+    color: colors.success,
+  },
+  statsContainer: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  vipBadge: {
+    backgroundColor: colors.amber600,
+    borderColor: colors.amber600,
+    marginLeft: spacing.sm,
+  },
+});
 
 export default ProviderClients;

@@ -62,11 +62,11 @@ const styles = StyleSheet.create({
     width: 280,
     maxWidth: "90%",
     backgroundColor: theme.colors.white,
-    borderRadius: theme.radii.md,
+    borderRadius: theme?.radii?.md ?? 0,
     borderWidth: 1,
     borderColor: theme.colors.gray200,
     padding: 16,
-    ...(theme.shadows.md || {}),
+    ...(theme.shadows?.md || {}),
   },
 });
 

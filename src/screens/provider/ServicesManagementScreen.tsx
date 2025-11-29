@@ -1,73 +1,26 @@
-import React from 'react';
-import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, Pressable, StyleSheet, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Button from '../../components/Button';
-import Card from '../../components/Card';
-import { Badge } from '../../components/badge';
-import { Switch } from '../../components/switch';
-import { colors, spacing, typography } from '../../theme/tokens';
-
-// Mock services data
-const mockServices = [
-  {
-    id: "1",
-    name: "Box Braids - Medium Length",
-    category: "Box Braids",
-    price: 120,
-    duration: 240,
-    isActive: true,
-    description: "Klassische Box Braids in mittlerer Länge",
-  },
-  {
-    id: "2",
-    name: "Knotless Braids - Long",
-    category: "Knotless Braids",
-    price: 180,
-    duration: 300,
-    isActive: true,
-    description: "Schonende Knotless Braids in langer Länge",
-  },
-  {
-    id: "3",
-    name: "Cornrows - Simple Pattern",
-    category: "Cornrows",
-    price: 60,
-    duration: 120,
-    isActive: true,
-    description: "Einfache Cornrows in verschiedenen Mustern",
-  },
-  {
-    id: "4",
-    name: "Senegalese Twists - Shoulder Length",
-    category: "Twists",
-    price: 140,
-    duration: 270,
-    isActive: true,
-    description: "Elegante Senegalese Twists",
-  },
-  {
-    id: "5",
-    name: "Passion Twists",
-    category: "Passion Twists",
-    price: 150,
-    duration: 240,
-    isActive: false,
-    description: "Moderne Passion Twists mit natürlichem Look",
-  },
-  {
-    id: "6",
-    name: "Starter Locs",
-    category: "Locs",
-    price: 100,
-    duration: 180,
-    isActive: true,
-    description: "Starter Locs für natürliches Haar",
-  },
-];
+import { useNavigation } from '@react-navigation/native';
+import { rootNavigationRef } from '@/navigation/rootNavigation';
+import Button from '@/components/Button';
+import Card from '@/components/Card';
+import { Badge } from '@/components/badge';
+import { Switch } from 'react-native';
+import { colors, spacing, typography } from '@/theme/tokens';
+import { useServices } from '@/presentation/hooks/useServices';
+import { showError, showSuccess } from '@/presentation/utils/errorHandler';
+import { MESSAGES } from '@/constants';
+import type { Service } from '@/domain/entities/Service';
 
 export function ServicesManagementScreen() {
+  const navigation = useNavigation();
+  const { services, loading, error, toggleServiceActive, deleteService } = useServices();
 
-  const formatDuration = (minutes: number) => {
+  const activeServices = useMemo(() => services.filter(s => s.isActive), [services]);
+  const inactiveServices = useMemo(() => services.filter(s => !s.isActive), [services]);
+
+  const formatDuration = (minutes: number): string => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     if (hours === 0) return `${mins} Min.`;
@@ -75,46 +28,51 @@ export function ServicesManagementScreen() {
     return `${hours} Std. ${mins} Min.`;
   };
 
-  const toggleServiceStatus = (id: string) => {
-    console.log('Service status toggled (placeholder):', id);
+  const formatPrice = (cents: number): string => {
+    return `${(cents / 100).toFixed(2)}€`;
   };
 
-  const handleDelete = (id: string) => {
-    console.log('Service deleted (placeholder):', id);
+  const handleToggleService = async (service: Service) => {
+    try {
+      await toggleServiceActive(service.id, !service.isActive);
+      showSuccess(MESSAGES.SUCCESS.SAVE);
+    } catch (err: unknown) {
+      showError(err);
+    }
   };
 
-  const activeServices = mockServices.filter(s => s.isActive);
-  const inactiveServices = mockServices.filter(s => !s.isActive);
+  const handleDeleteService = async (service: Service) => {
+    Alert.alert(
+      'Service löschen',
+      `Möchtest du "${service.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+      [
+        { text: 'Abbrechen', style: 'cancel' },
+        {
+          text: 'Löschen',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteService(service.id);
+              showSuccess(MESSAGES.SUCCESS.SERVICE_DELETE);
+            } catch (err: unknown) {
+              showError(err);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const onBack = () => {
-    if (Platform.OS === 'web') {
-      try { window.history.back(); } catch {}
-    }
+    navigation.goBack();
   };
 
   const onAddService = () => {
-    console.log('Navigate to /provider/services/add (placeholder)');
-    if (Platform.OS === 'web') {
-      try { window.location.hash = '/provider/services/add'; } catch {}
-    }
+    rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderServicesScreen', params: { mode: 'add' } });
   };
 
   const onEditService = (id: string) => {
-    console.log('Navigate to /provider/services/edit/' + id + ' (placeholder)');
-    if (Platform.OS === 'web') {
-      try { window.location.hash = `/provider/services/edit/${id}`; } catch {}
-    }
-  };
-
-  const onDeleteServicePress = (service: { id: string; name: string }) => {
-    if (Platform.OS === 'web') {
-      // Simple confirmation on web preview
-      if (confirm(`Service löschen?\n\nMöchtest du "${service.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) {
-        handleDelete(service.id);
-      }
-      return;
-    }
-    handleDelete(service.id);
+    rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderServicesScreen', params: { mode: 'edit', serviceId: id } });
   };
 
   return (
@@ -138,11 +96,11 @@ export function ServicesManagementScreen() {
       {/* Stats */}
       <View style={styles.statsBar}>
         <View style={styles.statBlock}>
-          <Text style={[styles.statNumber, { color: colors.primary }]}>{mockServices.length}</Text>
+          <Text style={[styles.statNumber, { color: colors.primary }]}>{services.length}</Text>
           <Text style={styles.statCaption}>Gesamt</Text>
         </View>
         <View style={styles.statBlock}>
-          <Text style={[styles.statNumber, { color: '#16A34A' }]}>{activeServices.length}</Text>
+          <Text style={[styles.statNumber, { color: colors.success }]}>{activeServices.length}</Text>
           <Text style={styles.statCaption}>Aktiv</Text>
         </View>
         <View style={styles.statBlock}>
@@ -163,27 +121,33 @@ export function ServicesManagementScreen() {
                     <View style={{ flex: 1 }}>
                       <View style={styles.titleRow}>
                         <Text style={styles.serviceName}>{service.name}</Text>
-                        <Badge variant="outline" style={{ marginLeft: spacing.sm }}>{service.category}</Badge>
+                        {service.category ? (
+                          <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
+                            {service.category.nameDe || service.category.nameEn}
+                          </Badge>
+                        ) : null}
                       </View>
-                      <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
+                      {!!service.description && (
+                        <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
+                      )}
                     </View>
-                    <Switch value={service.isActive} onValueChange={() => toggleServiceStatus(service.id)} />
+                    <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
                   </View>
 
                   <View style={styles.metaRow}>
                     <View style={styles.metaItem}>
                       <Ionicons name="logo-euro" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{service.price}€</Text>
+                      <Text style={styles.metaText}>{service.priceCents != null ? formatPrice(service.priceCents) : '-'}</Text>
                     </View>
                     <View style={styles.metaItem}>
                       <Ionicons name="time-outline" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{formatDuration(service.duration)}</Text>
+                      <Text style={styles.metaText}>{formatDuration(service.durationMinutes || 0)}</Text>
                     </View>
                   </View>
 
                   <View style={styles.actionsRow}>
                     <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
-                    <Button title="Löschen" variant="ghost" onPress={() => onDeleteServicePress(service)} style={{ marginLeft: spacing.sm }} />
+                    <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
                   </View>
                 </Card>
               ))}
@@ -197,32 +161,38 @@ export function ServicesManagementScreen() {
             <Text style={[styles.sectionTitle, { color: colors.gray600 }]}>Inaktive Services</Text>
             <View>
               {inactiveServices.map((service) => (
-                <Card key={service.id} style={[styles.card, { opacity: 0.6 }]}>
+                <Card key={service.id} style={[styles.card, { opacity: 0.6 }]}> 
                   <View style={styles.cardHeader}>
                     <View style={{ flex: 1 }}>
                       <View style={styles.titleRow}>
                         <Text style={styles.serviceName}>{service.name}</Text>
-                        <Badge variant="outline" style={{ marginLeft: spacing.sm }}>{service.category}</Badge>
+                        {service.category ? (
+                          <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
+                            {service.category.nameDe || service.category.nameEn}
+                          </Badge>
+                        ) : null}
                       </View>
-                      <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
+                      {!!service.description && (
+                        <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
+                      )}
                     </View>
-                    <Switch value={service.isActive} onValueChange={() => toggleServiceStatus(service.id)} />
+                    <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
                   </View>
 
                   <View style={styles.metaRow}>
                     <View style={styles.metaItem}>
                       <Ionicons name="logo-euro" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{service.price}€</Text>
+                      <Text style={styles.metaText}>{service.priceCents != null ? formatPrice(service.priceCents) : '-'}</Text>
                     </View>
                     <View style={styles.metaItem}>
                       <Ionicons name="time-outline" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{formatDuration(service.duration)}</Text>
+                      <Text style={styles.metaText}>{formatDuration(service.durationMinutes || 0)}</Text>
                     </View>
                   </View>
 
                   <View style={styles.actionsRow}>
                     <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
-                    <Button title="Löschen" variant="ghost" onPress={() => onDeleteServicePress(service)} style={{ marginLeft: spacing.sm }} />
+                    <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
                   </View>
                 </Card>
               ))}
@@ -231,7 +201,7 @@ export function ServicesManagementScreen() {
         )}
 
         {/* Empty State */}
-        {mockServices.length === 0 && (
+        {services.length === 0 && !loading && !error && (
           <View style={styles.emptyWrap}>
             <View style={styles.emptyIcon}>
               <Ionicons name="add" size={48} color={colors.gray400} />
@@ -242,6 +212,17 @@ export function ServicesManagementScreen() {
             </Text>
             <Button title="Service hinzufügen" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
           </View>
+        )}
+
+        {!!error && (
+          <Card style={{ padding: spacing.md }}>
+            <Text style={{ color: colors.error }}>{error}</Text>
+          </Card>
+        )}
+        {loading && (
+          <Card style={{ padding: spacing.md }}>
+            <Text style={{ color: colors.gray600 }}>Lade Services...</Text>
+          </Card>
         )}
       </View>
     </View>

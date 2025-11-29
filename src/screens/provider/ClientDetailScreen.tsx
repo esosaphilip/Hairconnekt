@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View, Text, ScrollView, Pressable, Image, TextInput, Platform, Alert } from 'react-native';
+import { SafeAreaView, View, Text, ScrollView, Pressable, Image, TextInput, Platform, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import Card from '../../components/Card';
-import Button from '../../components/Button';
-import { colors, spacing, radii, typography, COLORS } from '../../theme/tokens';
-import { http } from '../../api/http';
-import { getProviderAppointments } from '../../api/appointments';
-import type { AppointmentListItem as ApiAppointmentListItem, AppointmentServiceItem as ApiAppointmentServiceItem } from '../../api/appointments';
+import Card from '@/components/Card';
+import Button from '@/components/Button';
+import { colors, spacing, radii, typography, COLORS } from '@/theme/tokens';
+import { http } from '@/api/http';
+import { getProviderAppointments } from '@/api/appointments';
+import type { AppointmentListItem as ApiAppointmentListItem, AppointmentServiceItem as ApiAppointmentServiceItem } from '@/api/appointments';
+import { useNavigation } from '@react-navigation/native';
 
 // Types
 interface ProviderClientItem {
@@ -26,6 +27,7 @@ type AppointmentListItem = ApiAppointmentListItem;
 
 export function ClientDetailScreen() {
   // Derive client ID from the URL hash on web as a placeholder until React Navigation is wired
+  const navigation = useNavigation<any>();
   const [clientId, setClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,9 +69,9 @@ export function ClientDetailScreen() {
     async function loadAppointments() {
       try {
         const resCompleted = await getProviderAppointments('completed');
-        const comp = (resCompleted?.items || []).filter((a) => a.client?.id === clientId);
+        const comp = (resCompleted?.items || []).filter((a) => String(a.client?.name || '') === String(clientItem?.name || ''));
         const resUpcoming = await getProviderAppointments('upcoming');
-        const upc = (resUpcoming?.items || []).filter((a) => a.client?.id === clientId);
+        const upc = (resUpcoming?.items || []).filter((a) => String(a.client?.name || '') === String(clientItem?.name || ''));
         if (!cancelled) {
           setCompleted(comp);
           setUpcoming(upc);
@@ -103,7 +105,7 @@ export function ClientDetailScreen() {
     if (Platform.OS === 'web') {
       try { window.location.hash = `/provider/messages/${clientItem.id}`; } catch {}
     } else {
-      console.log('Navigate to provider messages', clientItem.id);
+      try { navigation.navigate('ChatScreen', { id: clientItem.id }); } catch {}
     }
   };
 
@@ -116,45 +118,45 @@ export function ClientDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.gray50 }}>
+    <SafeAreaView style={styles.safeArea}>
       {/* Header */}
-      <View style={{ backgroundColor: colors.white, paddingHorizontal: spacing.md, paddingVertical: spacing.md, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Pressable onPress={goBack} style={{ padding: spacing.xs }} {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}>
-        <Ionicons name={'chevron-back'} size={24} color={colors.gray700} />
+      <View style={styles.headerContainer}>
+        <View style={styles.headerRow}>
+          <Pressable onPress={goBack} style={styles.iconButton} {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}>
+            <Ionicons name={'chevron-back'} size={24} color={colors.gray700} />
           </Pressable>
-        <Text style={[typography.h3, { flex: 1 }]}>Kundendetails</Text>
-          <Pressable onPress={() => setIsFavorite(!isFavorite)} style={{ padding: spacing.xs }}>
-        <Ionicons name={'heart'} size={24} color={isFavorite ? '#FF6B6B' : colors.gray400} />
+          <Text style={[typography.h3, styles.flex1]}>Kundendetails</Text>
+          <Pressable onPress={() => setIsFavorite(!isFavorite)} style={styles.iconButton}>
+            <Ionicons name={'heart'} size={24} color={isFavorite ? colors.secondary : colors.gray400} />
           </Pressable>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: spacing.md }}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
         {loading && (
-          <Card style={{ padding: spacing.md }}>
-            <Text style={{ fontSize: 12, color: colors.gray600 }}>Lade Kundendaten...</Text>
+          <Card style={styles.cardPaddingMd}>
+            <Text style={styles.textSmallGray600}>Lade Kundendaten...</Text>
           </Card>
         )}
         {error && (
-          <Card style={{ padding: spacing.md }}>
-            <Text style={{ fontSize: 12, color: COLORS.red600 }}>{String(error)}</Text>
+          <Card style={styles.cardPaddingMd}>
+            <Text style={styles.textSmallRed600}>{String(error)}</Text>
           </Card>
         )}
 
         {/* Client Header */}
         {clientItem && (
-          <Card style={{ padding: spacing.lg }}>
-            <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
-              <View style={{ width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: spacing.sm, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' }}>
+          <Card style={styles.cardPaddingLg}>
+            <View style={styles.clientHeaderSection}>
+              <View style={styles.avatarWrapper}>
                 {clientItem.image ? (
-                  <Image source={{ uri: clientItem.image }} style={{ width: '100%', height: '100%' }} />
+                  <Image source={{ uri: clientItem.image }} style={styles.avatarImage} />
                 ) : (
-        <Ionicons name={'person-circle-outline'} size={64} color={colors.gray400} />
+                  <Ionicons name={'person-circle-outline'} size={64} color={colors.gray400} />
                 )}
               </View>
-        <Text style={[typography.h3, { marginBottom: spacing.xs }]}>{clientItem.name}</Text>
-              <Text style={{ color: colors.gray600, marginBottom: spacing.sm }}>
+              <Text style={[typography.h3, styles.titleMarginXs]}>{clientItem.name}</Text>
+              <Text style={styles.subtitleGray600}>
                 {(() => {
                   const all = [...completed, ...upcoming];
                   const dates = all.map((a: AppointmentListItem) => a.appointmentDate).sort();
@@ -164,23 +166,23 @@ export function ClientDetailScreen() {
                 })()}
               </Text>
               {clientItem.isVIP && (
-                <View style={{ paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radii.md, backgroundColor: '#f59e0b' }}>
-                  <Text style={{ color: colors.white, fontWeight: '600', fontSize: 12 }}>VIP</Text>
+                <View style={styles.vipBadge}>
+                  <Text style={styles.vipBadgeText}>VIP</Text>
                 </View>
               )}
             </View>
 
             {/* Contact Information */}
-            <View style={{ rowGap: spacing.xs }}>
+            <View style={styles.rowGapXs}>
               {clientItem.phone && (
-                <Pressable onPress={handleCall} style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radii.md }} {...(Platform.OS === 'web' ? { accessibilityRole: 'link' } : {})}>
-          <Ionicons name={'call-outline'} size={18} color={colors.primary} />
+                <Pressable onPress={handleCall} style={styles.contactRow} {...(Platform.OS === 'web' ? { accessibilityRole: 'link' } : {})}>
+                  <Ionicons name={'call-outline'} size={18} color={colors.primary} />
                   <Text>{clientItem.phone}</Text>
                 </Pressable>
               )}
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm }}>
-          <Ionicons name={'mail-outline'} size={18} color={colors.primary} />
-                <Text style={{ fontSize: 12, color: colors.gray600 }}>Nicht verfügbar</Text>
+              <View style={styles.contactRowNoRadius}>
+                  <Ionicons name={'mail-outline'} size={18} color={colors.primary} />
+                <Text style={styles.textSmallGray600}>Nicht verfügbar</Text>
               </View>
             </View>
           </Card>
@@ -188,65 +190,65 @@ export function ClientDetailScreen() {
 
         {/* Quick Stats */}
         {clientItem && (
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }}>
-            <Card style={{ flex: 1, minWidth: '45%', padding: spacing.md, alignItems: 'center' }}>
-              <Text style={{ color: colors.primary, fontSize: 18, fontWeight: '700', marginBottom: spacing.xs }}>{clientItem.appointments}</Text>
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>Termine</Text>
+          <View style={styles.quickStatsRow}>
+            <Card style={styles.cardStat}>
+              <Text style={styles.statNumber}>{clientItem.appointments}</Text>
+              <Text style={styles.statLabel}>Termine</Text>
             </Card>
-            <Card style={{ flex: 1, minWidth: '45%', padding: spacing.md, alignItems: 'center' }}>
-              <Text style={{ color: colors.primary, fontSize: 18, fontWeight: '700', marginBottom: spacing.xs }}>€{Math.round((clientItem.totalSpentCents || 0) / 100)}</Text>
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>Umsatz</Text>
+            <Card style={styles.cardStat}>
+              <Text style={styles.statNumber}>€{Math.round((clientItem.totalSpentCents || 0) / 100)}</Text>
+              <Text style={styles.statLabel}>Umsatz</Text>
             </Card>
-            <Card style={{ flex: 1, minWidth: '45%', padding: spacing.md, alignItems: 'center' }}>
-              <Text style={{ color: colors.primary, fontSize: 18, fontWeight: '700', marginBottom: spacing.xs }}>—</Text>
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>Bewertung</Text>
+            <Card style={styles.cardStat}>
+              <Text style={styles.statNumber}>—</Text>
+              <Text style={styles.statLabel}>Bewertung</Text>
             </Card>
-            <Card style={{ flex: 1, minWidth: '45%', padding: spacing.md, alignItems: 'center' }}>
-        <Ionicons name={'time-outline'} size={20} color={colors.primary} style={{ marginBottom: spacing.xs }} />
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>{clientItem.lastVisitIso ? new Date(clientItem.lastVisitIso).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</Text>
+            <Card style={styles.cardStat}>
+              <Ionicons name={'time-outline'} size={20} color={colors.primary} style={styles.iconTime} />
+              <Text style={styles.statLabel}>{clientItem.lastVisitIso ? new Date(clientItem.lastVisitIso).toLocaleDateString('de-DE', { day: 'numeric', month: 'long', year: 'numeric' }) : '—'}</Text>
             </Card>
           </View>
         )}
 
         {/* Quick Actions */}
-        <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+        <View style={styles.quickActionsRow}>
           {clientItem && (
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1Container}>
               <Button title="Termin" onPress={() => {
                 if (Platform.OS === 'web') {
                   try { window.location.hash = `/provider/appointments/create?clientId=${clientItem.id}`; } catch {}
                 } else {
                   console.log('Create appointment for', clientItem.id);
                 }
-              }} style={{ backgroundColor: colors.primary }} textStyle={{ color: colors.white }} />
+              }} style={styles.primaryButton} textStyle={styles.primaryButtonText} />
             </View>
           )}
-          <View style={{ flex: 1 }}>
+          <View style={styles.flex1Container}>
             <Button title="Nachricht" onPress={handleMessage} variant="ghost" />
           </View>
-          <View style={{ flex: 1 }}>
+          <View style={styles.flex1Container}>
             <Button title="Anrufen" onPress={handleCall} variant="ghost" />
           </View>
         </View>
 
         {/* Internal Notes */}
-        <Card style={{ padding: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
-          <Ionicons name={'pricetag-outline'} size={18} color={colors.gray600} />
-        <Text style={[typography.h3]}>Meine Notizen</Text>
-              <View style={{ paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.sm, backgroundColor: colors.gray100 }}>
-                <Text style={{ fontSize: 12, color: colors.gray700 }}>Privat</Text>
+        <Card style={styles.notesCard}>
+          <View style={styles.notesHeaderRow}>
+            <View style={styles.notesTitleRow}>
+              <Ionicons name={'pricetag-outline'} size={18} color={colors.gray600} />
+              <Text style={[typography.h3]}>Meine Notizen</Text>
+              <View style={styles.privateChip}>
+                <Text style={styles.privateChipText}>Privat</Text>
               </View>
             </View>
             {!isEditingNotes ? (
-              <Pressable onPress={() => setIsEditingNotes(true)} style={{ padding: spacing.xs }}>
-          <Ionicons name={'create-outline'} size={18} color={colors.primary} />
+              <Pressable onPress={() => setIsEditingNotes(true)} style={styles.iconButton}>
+                <Ionicons name={'create-outline'} size={18} color={colors.primary} />
               </Pressable>
             ) : (
-              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+              <View style={styles.notesEditActions}>
                 <Button title="Abbrechen" variant="ghost" onPress={() => setIsEditingNotes(false)} />
-                <Button title="Speichern" onPress={handleSaveNotes} style={{ backgroundColor: colors.primary }} textStyle={{ color: colors.white }} />
+                <Button title="Speichern" onPress={handleSaveNotes} style={styles.primaryButton} textStyle={styles.primaryButtonText} />
               </View>
             )}
           </View>
@@ -257,26 +259,26 @@ export function ClientDetailScreen() {
               onChangeText={setNotes}
               multiline
               numberOfLines={6}
-              style={{ width: '100%', paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, borderWidth: 1, borderColor: colors.gray200, borderRadius: radii.md, minHeight: 120 }}
+              style={styles.textInputNotes}
               placeholder="Notizen zu diesem Kunden..."
             />
           ) : (
             <View>
               {notes ? (
-                <Text style={{ fontSize: 14, color: colors.gray700, lineHeight: 20 }}>{notes}</Text>
+                <Text style={styles.notesText}>{notes}</Text>
               ) : (
-                <Text style={{ fontSize: 12, color: colors.gray400, fontStyle: 'italic' }}>Noch keine Notizen</Text>
+                <Text style={styles.notesTextEmpty}>Noch keine Notizen</Text>
               )}
             </View>
           )}
 
-          <Text style={{ fontSize: 12, color: colors.gray500, marginTop: spacing.sm }}>Letzte Änderung: vor 3 Tagen</Text>
+          <Text style={styles.notesUpdatedText}>Letzte Änderung: vor 3 Tagen</Text>
         </Card>
 
         {/* Appointment History */}
-        <Card style={{ padding: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
-        <Text style={[typography.h3]}>Terminhistorie ({completed.length + upcoming.length})</Text>
+        <Card style={styles.historyCard}>
+          <View style={styles.historyHeaderRow}>
+            <Text style={[typography.h3]}>Terminhistorie ({completed.length + upcoming.length})</Text>
             <Pressable onPress={() => {
               if (clientItem?.id) {
                 if (Platform.OS === 'web') {
@@ -286,11 +288,11 @@ export function ClientDetailScreen() {
                 }
               }
             }}>
-              <Text style={{ fontSize: 12, color: colors.primary }}>Alle anzeigen</Text>
+              <Text style={styles.linkText}>Alle anzeigen</Text>
             </Pressable>
           </View>
 
-          <View style={{ rowGap: spacing.sm }}>
+          <View style={styles.historyList}>
             {[...completed, ...upcoming]
               .sort((a: AppointmentListItem, b: AppointmentListItem) => (a.appointmentDate > b.appointmentDate ? -1 : a.appointmentDate < b.appointmentDate ? 1 : 0))
               .slice(0, 3)
@@ -305,56 +307,56 @@ export function ClientDetailScreen() {
                 const statusLabel = apt.status === 'COMPLETED' ? 'Abgeschlossen' : apt.status === 'CONFIRMED' ? 'Bestätigt' : apt.status === 'CANCELLED' ? 'Storniert' : 'Ausstehend';
                 return (
                   <View key={apt.id}>
-                    <View style={{ flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontWeight: '600' }}>{dateStr}</Text>
-                        <Text style={{ fontSize: 12, color: colors.gray600 }}>{serviceSummary}</Text>
+                    <View style={styles.aptRow}>
+                      <View style={styles.flex1Container}>
+                        <Text style={styles.aptTitle}>{dateStr}</Text>
+                        <Text style={styles.aptSummary}>{serviceSummary}</Text>
                       </View>
-                      <View style={{ alignItems: 'flex-end' }}>
-                        <Text style={{ fontWeight: '600', color: colors.primary }}>€{priceEuro}</Text>
-                        <View style={{ marginTop: 4, paddingHorizontal: spacing.sm, paddingVertical: 2, backgroundColor: colors.gray100, borderRadius: radii.sm }}>
-                          <Text style={{ fontSize: 12 }}>{statusLabel}</Text>
+                      <View style={styles.aptRight}>
+                        <Text style={styles.aptPrice}>€{priceEuro}</Text>
+                        <View style={styles.statusChip}>
+                          <Text style={styles.textSmall}>{statusLabel}</Text>
                         </View>
                       </View>
                     </View>
                     {apt.id !== arr[arr.length - 1]?.id && (
-                      <View style={{ height: 1, backgroundColor: colors.gray200, marginTop: spacing.sm }} />
+                      <View style={styles.divider} />
                     )}
                   </View>
                 );
               })}
           </View>
 
-          <View style={{ marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.gray200 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Text style={{ fontSize: 12, color: colors.gray600 }}>Gesamtumsatz:</Text>
-        <Text style={{ fontSize: 16, fontWeight: '700', color: colors.primary }}>€{Math.round(((clientItem?.totalSpentCents || 0) / 100))}</Text>
+          <View style={styles.historyFooter}>
+            <View style={styles.footerRow}>
+              <Text style={styles.totalLabel}>Gesamtumsatz:</Text>
+              <Text style={styles.totalValue}>€{Math.round(((clientItem?.totalSpentCents || 0) / 100))}</Text>
             </View>
           </View>
         </Card>
 
         {/* Additional Information */}
-        <Card style={{ padding: spacing.md }}>
-        <Text style={[typography.h3, { marginBottom: spacing.sm }]}>Zusätzliche Informationen</Text>
-          <View style={{ rowGap: spacing.xs }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ color: colors.gray600 }}>Bevorzugte Zahlungsmethode</Text>
+        <Card style={styles.additionalCard}>
+          <Text style={[typography.h3, styles.sectionTitle]}>Zusätzliche Informationen</Text>
+          <View style={styles.rowGapXs}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Bevorzugte Zahlungsmethode</Text>
               <Text>Bar</Text>
             </View>
-            <View style={{ height: 1, backgroundColor: colors.gray200 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ color: colors.gray600 }}>Durchschnittliche Dauer</Text>
+            <View style={styles.separatorThin} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Durchschnittliche Dauer</Text>
               <Text>4.5 Stunden</Text>
             </View>
-            <View style={{ height: 1, backgroundColor: colors.gray200 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ color: colors.gray600 }}>Lieblingsservice</Text>
+            <View style={styles.separatorThin} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Lieblingsservice</Text>
               <Text>Box Braids</Text>
             </View>
-            <View style={{ height: 1, backgroundColor: colors.gray200 }} />
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Text style={{ color: colors.gray600 }}>Stornierungsrate</Text>
-              <Text style={{ color: '#16a34a' }}>0% (sehr zuverlässig)</Text>
+            <View style={styles.separatorThin} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Stornierungsrate</Text>
+              <Text style={styles.cancelRateText}>0% (sehr zuverlässig)</Text>
             </View>
           </View>
         </Card>
@@ -362,3 +364,67 @@ export function ClientDetailScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: { flex: 1, backgroundColor: colors.gray50 },
+  headerContainer: { backgroundColor: colors.white, paddingHorizontal: spacing.md, paddingVertical: spacing.md, shadowColor: colors.black, shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  iconButton: { padding: spacing.xs },
+  flex1: { flex: 1 },
+  scrollContent: { padding: spacing.md },
+  cardPaddingMd: { padding: spacing.md },
+  cardPaddingLg: { padding: spacing.lg },
+  textSmallGray600: { fontSize: 12, color: colors.gray600 },
+  textSmallRed600: { fontSize: 12, color: COLORS.red600 },
+  clientHeaderSection: { alignItems: 'center', marginBottom: spacing.md },
+  avatarWrapper: { width: 96, height: 96, borderRadius: 48, overflow: 'hidden', marginBottom: spacing.sm, backgroundColor: colors.gray100, alignItems: 'center', justifyContent: 'center' },
+  avatarImage: { width: '100%', height: '100%' },
+  titleMarginXs: { marginBottom: spacing.xs },
+  subtitleGray600: { color: colors.gray600, marginBottom: spacing.sm },
+  vipBadge: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: radii.md, backgroundColor: colors.amber600 },
+  vipBadgeText: { color: colors.white, fontWeight: '600', fontSize: 12 },
+  rowGapXs: { rowGap: spacing.xs },
+  contactRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm, borderRadius: radii.md },
+  contactRowNoRadius: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, padding: spacing.sm },
+  quickStatsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  cardStat: { flex: 1, minWidth: '45%', padding: spacing.md, alignItems: 'center' },
+  statNumber: { color: colors.primary, fontSize: 18, fontWeight: '700', marginBottom: spacing.xs },
+  statLabel: { fontSize: 12, color: colors.gray600 },
+  iconTime: { marginBottom: spacing.xs },
+  quickActionsRow: { flexDirection: 'row', gap: spacing.sm },
+  flex1Container: { flex: 1 },
+  primaryButton: { backgroundColor: colors.primary },
+  primaryButtonText: { color: colors.white },
+  notesCard: { padding: spacing.md },
+  notesHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
+  notesTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  privateChip: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: radii.sm, backgroundColor: colors.gray100 },
+  privateChipText: { fontSize: 12, color: colors.gray700 },
+  notesEditActions: { flexDirection: 'row', gap: spacing.sm },
+  textInputNotes: { width: '100%', paddingHorizontal: spacing.sm, paddingVertical: spacing.sm, borderWidth: 1, borderColor: colors.gray200, borderRadius: radii.md, minHeight: 120 },
+  notesText: { fontSize: 14, color: colors.gray700, lineHeight: 20 },
+  notesTextEmpty: { fontSize: 12, color: colors.gray400, fontStyle: 'italic' },
+  notesUpdatedText: { fontSize: 12, color: colors.gray500, marginTop: spacing.sm },
+  historyCard: { padding: spacing.md },
+  historyHeaderRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm },
+  linkText: { fontSize: 12, color: colors.primary },
+  historyList: { rowGap: spacing.sm },
+  aptRow: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  aptTitle: { fontWeight: '600' },
+  aptSummary: { fontSize: 12, color: colors.gray600 },
+  aptRight: { alignItems: 'flex-end' },
+  aptPrice: { fontWeight: '600', color: colors.primary },
+  statusChip: { marginTop: 4, paddingHorizontal: spacing.sm, paddingVertical: 2, backgroundColor: colors.gray100, borderRadius: radii.sm },
+  textSmall: { fontSize: 12 },
+  divider: { height: 1, backgroundColor: colors.gray200, marginTop: spacing.sm },
+  historyFooter: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.gray200 },
+  footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalLabel: { fontSize: 12, color: colors.gray600 },
+  totalValue: { fontSize: 16, fontWeight: '700', color: colors.primary },
+  additionalCard: { padding: spacing.md },
+  sectionTitle: { marginBottom: spacing.sm },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  infoLabel: { color: colors.gray600 },
+  separatorThin: { height: 1, backgroundColor: colors.gray200 },
+  cancelRateText: { color: colors.green600 },
+});

@@ -5,7 +5,7 @@ import { colors, radii, spacing } from '../theme/tokens';
 import Icon from './Icon';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'outline' | 'default';
-export type ButtonSize = 'default' | 'small' | 'sm';
+export type ButtonSize = 'default' | 'small' | 'sm' | 'icon';
 
 export interface ButtonProps extends Omit<PressableProps, 'onPress' | 'style' | 'disabled'> {
   title?: string; // preferred text API
@@ -23,8 +23,8 @@ export interface ButtonProps extends Omit<PressableProps, 'onPress' | 'style' | 
 export function Button(props: ButtonProps = {}) {
   const { title, children, onPress, disabled, loading, variant = 'primary', size = 'default', style, textStyle, icon, ...rest } = props ?? {};
   const base: ViewStyle = {
-    paddingVertical: size === 'small' || size === 'sm' ? spacing.xs + 6 : spacing.sm + 4,
-    paddingHorizontal: size === 'small' || size === 'sm' ? spacing.md : spacing.lg,
+    paddingVertical: size === 'small' || size === 'sm' || size === 'icon' ? spacing.xs + 6 : spacing.sm + 4,
+    paddingHorizontal: size === 'small' || size === 'sm' || size === 'icon' ? spacing.md : spacing.lg,
     borderRadius: radii.md,
     alignItems: 'center',
     justifyContent: 'center',
@@ -38,9 +38,10 @@ export function Button(props: ButtonProps = {}) {
     default: { backgroundColor: disabled ? colors.gray400 : colors.black },
   };
   const label: TextStyle = {
-    color: variant === 'ghost' ? colors.black : colors.white,
+    // Ensure outline and ghost variants use a visible text color on light backgrounds
+    color: (variant === 'ghost' || variant === 'outline') ? colors.black : colors.white,
     fontWeight: '600',
-    fontSize: size === 'small' || size === 'sm' ? 14 : 16,
+    fontSize: size === 'small' || size === 'sm' || size === 'icon' ? 14 : 16,
   };
 
   return (
@@ -54,16 +55,38 @@ export function Button(props: ButtonProps = {}) {
         <ActivityIndicator color={label.color as string} />
       ) : (
         <>
-          {!!icon && (
-            typeof icon === 'string' ? (
-              <Icon name={icon} size={18} color={label.color as string} />
-            ) : (
-              <>{icon}</>
-            )
+          {/* If a textual title is provided OR children is a plain string, render it inside Text. */}
+          {( 
+            (typeof title === 'string' && title.length > 0) ||
+            typeof children === 'string'
+          ) ? (
+            <>
+              {!!icon && (
+                typeof icon === 'string' ? (
+                  <Icon name={icon} size={18} color={label.color as string} />
+                ) : (
+                  <>{icon}</>
+                )
+              )}
+              {(() => { const labelMargin: TextStyle = { marginLeft: icon ? 8 : 0 }; return (
+              <Text style={[label, labelMargin, textStyle]}>
+                {typeof title === 'string' && title.length > 0 ? title : (children as string)}
+              </Text>
+              ); })()}
+            </>
+          ) : (
+            /* Otherwise, render children as-is to allow complex content (icons + views). */
+            <>
+              {!!icon && (
+                typeof icon === 'string' ? (
+                  <Icon name={icon} size={18} color={label.color as string} />
+                ) : (
+                  <>{icon}</>
+                )
+              )}
+              {children}
+            </>
           )}
-          <Text style={[label, { marginLeft: icon ? 8 : 0 }, textStyle]}>
-            {typeof title === 'string' && title.length > 0 ? title : (children as any)}
-          </Text>
         </>
       )}
     </Pressable>

@@ -1,12 +1,13 @@
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
+import { colors } from '@/theme/tokens';
 
 export interface CheckboxProps {
   checked?: boolean;
   disabled?: boolean;
   onCheckedChange?: (next: boolean) => void;
   size?: number;
-  style?: any;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function Checkbox({ checked = false, disabled = false, onCheckedChange, size = 20, style }: CheckboxProps) {
@@ -14,7 +15,7 @@ export function Checkbox({ checked = false, disabled = false, onCheckedChange, s
     <TouchableOpacity
       onPress={() => !disabled && onCheckedChange?.(!checked)}
       activeOpacity={0.8}
-      style={[styles.box, { width: size, height: size, borderRadius: 4 }, style]}
+      style={[styles.box, styles.boxRadius, { width: size, height: size }, style]}
       disabled={disabled}
     >
       {checked ? <View style={[styles.inner, { width: size - 8, height: size - 8 }]} /> : null}
@@ -26,13 +27,16 @@ export default Checkbox;
 
 const styles = StyleSheet.create({
   box: {
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
     alignItems: 'center',
+    backgroundColor: colors.white,
+    borderColor: colors.gray300,
+    borderWidth: 1,
     justifyContent: 'center',
-    backgroundColor: '#fff',
+  },
+  boxRadius: {
+    borderRadius: 4,
   },
   inner: {
-    backgroundColor: '#8B4513',
+    backgroundColor: colors.primary,
   },
 });
