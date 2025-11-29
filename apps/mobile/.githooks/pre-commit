@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+echo "[pre-commit] Running typecheck and lint for apps/mobile"
+cd "$(dirname "$0")/.." || exit 1
+cd apps/mobile
+
+npm run typecheck
+npm run lint
+
+echo "[pre-commit] OK"

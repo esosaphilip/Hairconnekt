@@ -1,0 +1,286 @@
+# COMPLETE DEVELOPMENT STANDARDS FOR AI AGENT
+
+## **MANDATORY: SOLID PRINCIPLES, CLEAN ARCHITECTURE & DRY PRINCIPLE**
+
+---
+
+## **1. CLEAN ARCHITECTURE - 3 LAYERS ONLY**
+
+```
+domain/       → Business logic (NO React, NO Axios, NO AsyncStorage)
+data/         → API calls, storage (implements domain interfaces)
+presentation/ → UI only (uses domain via hooks)
+```
+
+**RULE:** `presentation → domain ← data` (domain NEVER imports from others)
+
+---
+
+## **2. SOLID PRINCIPLES - VALIDATE EACH FILE**
+
+**S - Single Responsibility:** One class/file = one reason to change
+- ❌ Screen makes API calls
+- ✅ Screen uses hook → hook uses UseCase → UseCase uses Repository
+
+**O - Open/Closed:** Extend behavior without modifying existing code
+- ✅ Use interfaces for extensibility
+
+**L - Liskov Substitution:** Interfaces are contracts
+- ✅ Any implementation must work where interface is expected
+
+**I - Interface Segregation:** Small focused interfaces
+- ❌ One interface with 10 methods
+- ✅ Multiple interfaces with 2-3 methods each
+
+**D - Dependency Inversion:** Always inject interfaces, never concrete classes
+- ❌ `new AxiosClient()`
+- ✅ `constructor(private api: IApiClient)`
+
+---
+
+## **3. DRY PRINCIPLE - SINGLE SOURCE OF TRUTH**
+
+### **CENTRALIZED CONSTANTS STRUCTURE:**
+
+```
+src/
+├── theme/
+│   ├── colors.ts       ← ALL colors here ONLY
+│   ├── spacing.ts      ← ALL spacing values ONLY
+│   ├── typography.ts   ← ALL font styles ONLY
+│   ├── borderRadius.ts ← ALL radius values ONLY
+│   └── index.ts
+├── constants/
+│   ├── api.ts          ← API endpoints, base URLs
+│   ├── storage.ts      ← AsyncStorage keys
+│   ├── config.ts       ← App configuration
+│   ├── validation.ts   ← Validation rules
+│   ├── messages.ts     ← Success/error messages
+│   ├── assets.ts       ← Image/icon imports
+│   └── strings/
+│       ├── de.ts       ← German strings
+│       └── en.ts       ← English strings
+```
+
+### **FORBIDDEN CODE:**
+```typescript
+// ❌ NEVER hardcode these:
+const color = '#8B4513';           // Use Colors.primary
+const padding = 16;                // Use Spacing.md
+const apiUrl = 'https://api...';   // Use API_CONFIG.BASE_URL
+const storageKey = '@app:token';   // Use STORAGE_KEYS.AUTH_TOKEN
+<Text>Login</Text>                 // Use strings.auth.login
+
+// ❌ NEVER in screens/components:
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+const data: any;
+
+// ❌ NEVER in domain layer:
+import { View } from 'react-native';
+import axios from 'axios';
+```
+
+### **REQUIRED CODE:**
+```typescript
+// ✅ ALWAYS import from centralized locations:
+import { Colors, Spacing, Typography } from '@/theme';
+import { API_CONFIG, STORAGE_KEYS, VALIDATION_RULES } from '@/constants';
+import { strings } from '@/constants/strings';
+import { Images, Icons } from '@/constants/assets';
+
+// ✅ Usage example:
+<View style={{ 
+  padding: Spacing.md,           // Not 16
+  backgroundColor: Colors.primary // Not '#8B4513'
+}}>
+  <Text style={Typography.titleLarge}>
+    {strings.auth.login}          // Not 'Login'
+  </Text>
+</View>
+```
+
+---
+
+## **4. MANDATORY PATTERNS**
+
+### **Repository Pattern (ALWAYS):**
+```
+domain/repositories/IProviderRepository.ts  (interface)
+data/repositories/ProviderRepositoryImpl.ts (implementation)
+```
+- Interface in domain
+- Implementation in data
+- Inject via constructor
+
+### **Use Cases (ALWAYS):**
+```
+domain/usecases/BookAppointmentUseCase.ts
+```
+- One class per action
+- Returns domain entities, not DTOs
+
+### **DTO Mapping (ALWAYS):**
+```
+data/dto/ProviderDTO.ts       (API response - snake_case)
+domain/entities/Provider.ts   (Domain model - camelCase)
+data/mappers/ProviderMapper.ts (Converts DTO → Entity)
+```
+
+### **Error Handling (ALWAYS):**
+```typescript
+try {
+  // operation
+} catch (error) {
+  if (error instanceof NetworkError) { /* specific handling */ }
+  else if (error instanceof ValidationError) { /* specific handling */ }
+  throw new DomainError('Specific message');
+}
+```
+
+---
+
+## **5. COMPLETE VERIFICATION CHECKLIST**
+
+### **Before committing ANY file, verify:**
+
+**SOLID Principles:**
+```
+□ Single responsibility? (One reason to change)
+□ Dependency injection used? (No 'new' for dependencies)
+□ Domain layer pure? (No external imports)
+□ Interfaces over implementations? (IRepository not Repository)
+□ Small focused interfaces? (Not bloated)
+```
+
+**Clean Architecture:**
+```
+□ Follows folder structure? (domain/data/presentation)
+□ Domain independent? (No React, Axios, AsyncStorage)
+□ Proper layer dependency? (presentation → domain ← data)
+```
+
+**DRY Principle:**
+```
+□ No color hex codes in component files?
+□ No hardcoded spacing values (4, 8, 16)?
+□ No hardcoded font sizes?
+□ No API URLs in files?
+□ No AsyncStorage keys hardcoded?
+□ No hardcoded strings?
+□ All imports from constants/ or theme/?
+□ No duplicate values across files?
+```
+
+**Error Prevention:**
+```
+□ Error handling with try-catch?
+□ Loading states for async operations?
+□ Null checks before accessing properties?
+□ No 'any' types? (Strict TypeScript)
+```
+
+---
+
+## **6. QUICK FIXES FOR COMMON ERRORS**
+
+**Error: "Cannot read property of undefined"**
+→ Add null check: `data?.property ?? defaultValue`
+
+**Error: "Network request failed"**
+→ Add try-catch with specific NetworkError handling
+
+**Error: "Circular dependency"**
+→ Check import cycles, use dependency injection
+
+**Error: Type 'any'**
+→ Define proper interface, no shortcuts
+
+**Error: "Magic numbers/strings everywhere"**
+→ Move to constants file immediately
+
+---
+
+## **7. AI AGENT ENFORCEMENT PROTOCOL**
+
+**On EVERY file creation/modification, AI agent MUST:**
+
+1. **State layer:** Which layer does this file belong to? (domain/data/presentation)
+2. **Check dependencies:** List all dependencies and confirm they're interfaces (if applicable)
+3. **Verify SOLID:** Confirm no SOLID principles violated
+4. **Check centralization:** Verify no hardcoded values (colors, spacing, strings, URLs)
+5. **Error handling:** Confirm try-catch for async operations
+6. **Validate imports:** Confirm no forbidden imports (axios in screens, React in domain)
+7. **Type safety:** Confirm no 'any' types used
+
+**If ANY violation found: STOP and REFACTOR before proceeding.**
+
+---
+
+## **8. GOLDEN RULES SUMMARY**
+
+```
+1. ONE class/file = ONE responsibility
+2. INJECT interfaces, never concrete classes
+3. CENTRALIZE all constants (colors, spacing, strings, URLs)
+4. NEVER hardcode values that appear more than once
+5. Domain layer is PURE (no external dependencies)
+6. presentation → domain ← data (dependency flow)
+7. Map DTOs to Entities (never use DTOs in domain/presentation)
+8. Error handling ALWAYS (try-catch with specific errors)
+9. Loading states ALWAYS (for async operations)
+10. Null checks ALWAYS (before accessing properties)
+```
+
+---
+
+## **REMEMBER:**
+
+**If you type the same value twice → It belongs in a constant file.**
+
+**If a class does two things → Split it into two classes.**
+
+**If domain imports React/Axios → Architecture is broken.**
+
+**These rules prevent 95% of bugs. They are NON-NEGOTIABLE.**
+
+---
+
+## **9. Mobile Coding Rules (Imports, Styles, Types, Lint)**
+
+### **Imports**
+- Use path alias `@/*` for all local modules: `@/components/*`, `@/screens/*`, `@/theme/tokens`, `@/api/*`, `@/services/*`, `@/auth/*`, `@/navigation/*`, `@/i18n`.
+- Do not use relative imports like `../` or `../../` from screens or components.
+- Match import form to export type (default for `export default`, named for `export const`/`export function`).
+
+### **Styles**
+- Do not use inline styles in JSX; define styles in `StyleSheet.create`.
+- Use theme tokens for all colors and spacing: `colors.*`, `spacing.*`, `radii.*`, `typography.*`.
+- Replace hex/rgba literals with token colors; prefer `opacity` for transparency.
+- Order style properties alphabetically within each style object.
+- Avoid duplicate keys inside `StyleSheet.create`.
+
+### **Components**
+- Reuse shared UI components from `@/components/*`; avoid duplicating UI logic.
+- Pass `style` props using StyleSheet references; avoid computed inline styles.
+
+### **Navigation**
+- Type navigation hooks: `useNavigation<NavigationProp<ParamListBase>>()` or specific stack types.
+- Type route params explicitly for screens that read them.
+
+### **TypeScript**
+- Avoid `any`; annotate callback parameters and props.
+- Use indexed access types when helpful (e.g., `Foo['items'][number]`).
+- Prefer `unknown` over `any` and refine via type guards.
+
+### **Lint hygiene**
+- Remove unused imports and variables immediately.
+- Keep import groups ordered: external deps → alias modules → local modules.
+
+### **API/Services**
+- Import API and services via alias: `@/api/*`, `@/services/*`.
+- Keep request/response types in the service layer; screens consume typed functions only.
+
+### **Verification**
+- After changes, run `npm run typecheck` and the lint command configured for the project.
+- Fix all reported issues before considering a task complete.

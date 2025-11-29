@@ -1,0 +1,40 @@
+import { Platform, NativeModules } from 'react-native';
+
+// Resolve a development host automatically when running in Expo/RN dev mode.
+// This helps physical devices connect to your local backend by using the LAN IP.
+function resolveDevHostFromRN(): string | null {
+  try {
+    const scriptURL: string | undefined = (NativeModules as any)?.SourceCode?.scriptURL;
+    // Examples:
+    //  - http://192.168.2.61:8083/index.bundle?platform=android...
+    //  - http://localhost:8083/index.bundle?platform=ios...
+    if (scriptURL) {
+      const match = scriptURL.match(/https?:\/\/([^:]+):\d+/);
+      const host = match?.[1];
+      if (host && /^(?:\d{1,3}\.){3}\d{1,3}$/.test(host)) {
+        return `http://${host}:3000`;
+      }
+    }
+  } catch {}
+  return null;
+}
+
+// Defaults for emulators/simulators when we cannot resolve a LAN IP
+const emulatorDefault = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'http://localhost:3000';
+
+// Allow overriding via environment variable (recommended in CI/production)
+const envUrl = process.env.EXPO_PUBLIC_API_URL;
+
+const base = (envUrl && envUrl.trim()) || resolveDevHostFromRN() || emulatorDefault;
+export const API_BASE_URL = `${base.replace(/\/$/, '')}/api/v1`;
+
+// Dev aid: log the resolved API base so we can quickly diagnose connectivity issues on devices
+// (e.g., LAN vs tunnel vs emulator fallback). This is harmless in production builds.
+// eslint-disable-next-line no-console
+if (typeof __DEV__ !== 'undefined' && __DEV__) {
+  try {
+    const scriptURL: string | undefined = (NativeModules as any)?.SourceCode?.scriptURL;
+    const host = scriptURL?.match(/https?:\/\/([^:]+):\d+/)?.[1] || 'unknown';
+    console.log(`[Hairconnekt] API_BASE_URL -> ${API_BASE_URL} (script host: ${host}; env: ${envUrl || 'n/a'})`);
+  } catch {}
+}

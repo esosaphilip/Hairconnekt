@@ -1,0 +1,251 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "actions": {
+      "login": "Login",
+      "goToLogin": "Go to Login",
+      "logIn": "Log in",
+      "retry": "Retry"
+    },
+    "provider": "Provider",
+    "successTitle": "Success",
+    "errorTitle": "Error",
+    "languages": {
+      "en": "English",
+      "de": "German"
+    }
+  },
+  "screens": {
+    "bookings": {
+      "title": "Appointments",
+      "detailTitle": "Appointment"
+    },
+    "profile": {
+      "title": "Profile",
+      "editProfile": "Edit Profile",
+      "loadError": "Failed to load profile",
+      "avatar": {
+        "uploadSuccess": "Profile picture updated",
+        "uploadError": "Upload failed",
+        "permissionTitle": "Permission required",
+        "permissionText": "We need access to your photos to upload a profile picture."
+      },
+      "verified": {
+        "email": "✓ Email verified",
+        "phone": "✓ Phone verified"
+      },
+      "memberSince": "Member since {{date}}",
+      "stats": {
+        "appointments": "Appointments",
+        "favorites": "Favorites",
+        "reviews": "Reviews"
+      },
+      "sections": {
+        "myProfile": "My Profile",
+        "myActivities": "My Activities",
+        "payments": "Payments",
+        "settings": "Settings",
+        "legal": "Legal",
+        "account": "Account"
+      },
+      "menu": {
+        "notifications": "Notifications",
+        "personalInfo": "Personal Information",
+        "addresses": "My Addresses",
+        "preferences": "Hair type & Preferences",
+        "favorites": "Favorites",
+        "myReviews": "My Reviews",
+        "bookingHistory": "Booking History",
+        "paymentMethods": "Payment Methods",
+        "vouchers": "Vouchers & Discounts",
+        "transactions": "Transaction History",
+        "language": "Language",
+        "privacy": "Privacy & Security",
+        "support": "Help & Support",
+        "terms": "Terms and Conditions",
+        "privacyPolicy": "Privacy Policy",
+        "imprint": "Imprint",
+        "logout": "Sign out",
+        "deleteAccount": "Delete Account",
+        "about": "About HairConnekt"
+      },
+      "logoutConfirmTitle": "Sign out",
+      "logoutConfirmText": "Do you really want to sign out?",
+      "logoutConfirmCancel": "Cancel",
+      "logoutConfirmConfirm": "Sign out"
+    },
+    "home": {
+      "hello": "Hello,",
+      "welcomeTo": "Welcome to",
+      "searchPlaceholder": "Search styles, braiders, salons…",
+      "location": {
+        "detecting": "Detecting location…",
+        "disabled": "Location disabled",
+        "permissionRequired": "Location permission required.",
+        "currentLocation": "My location"
+      },
+      "quickActions": {
+        "urgent": "Emergency appointment",
+        "mobileService": "Mobile Service",
+        "vouchers": "Vouchers",
+        "favorites": "Favorites",
+        "newBraiders": "New braiders"
+      },
+      "popularStylesTitle": "Popular Styles",
+      "popularStyles": {
+        "priceFrom": "From {{price}}"
+      },
+      "duration": {
+        "hoursRange": "{{hours}} hrs"
+      },
+      "seeAll": "See all",
+      "nearbyTitle": "Braiders near you",
+      "loadingNearby": "Loading nearby providers…",
+      "fetchError": "Could not load nearby providers",
+      "noNearbyFound": "No braiders near you found.",
+      "verification": {
+        "promptWithWhich": "Please verify your {{which}} to use all features.",
+        "email": "email",
+        "phone": "phone number",
+        "verifyNow": "Verify now"
+      }
+    },
+    "search": {
+      "searchPlaceholder": "Search for styles, braiders, salons...",
+      "recent": {
+        "title": "Recently searched",
+        "clearAll": "Clear all",
+        "empty": "No previous searches"
+      },
+      "filters": {
+        "advanced": "Advanced filters",
+        "alertTitle": "Filters",
+        "alertMessage": "Open advanced filters"
+      },
+      "chips": {
+        "salon": "Salon",
+        "individual": "Individual",
+        "mobile": "Mobile",
+        "today": "Today",
+        "nearby": "< 5 km"
+      },
+      "results": {
+        "searching": "Searching...",
+        "count": "{{count}} results"
+      },
+      "sort": {
+        "title": "Sort",
+        "message": "Choose sorting options (simulated)",
+        "recommended": "Recommended"
+      },
+      "activeFilters": {
+        "reset": "Reset filters"
+      },
+      "empty": {
+        "noResultsTitle": "No results",
+        "noResultsMessage": "Search will be available soon while we build our provider directory.",
+        "defaultTitle": "Find your perfect braider",
+        "defaultMessage": "Search for styles, braiders or salons"
+      },
+      "error": {
+        "unavailable": "Search currently unavailable"
+      }
+    },
+    "messages": {
+      "title": "Messages",
+      "searchPlaceholder": "Search by name...",
+      "empty": {
+        "title": "No conversations",
+        "subtitle": "Chats will appear here once our messaging feature goes live."
+      },
+      "unverified": {
+        "title": "Verification required",
+        "description": "Please verify your email or phone number to use messages.",
+        "button": "Verify now"
+      }
+    },
+    "personalInfo": {
+      "title": "Personal Information",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone number",
+      "dateOfBirth": "Date of birth",
+      "gender": "Gender",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "loading": "Loading…",
+      "successTitle": "Success",
+      "successMessage": "Personal information updated successfully!",
+      "errorTitle": "Error",
+      "errorMessage": "Update failed."
+    },
+    "language": {
+      "title": "Language",
+      "appLanguage": "App Language",
+      "info": "Choose the language you want the app to display.",
+      "noteTitle": "Note",
+      "noteText": "The language setting only affects the app interface. Provider profiles and content may be in different languages.",
+      "successTitle": "Success",
+      "errorTitle": "Error",
+      "changedTo": "App language changed to {{language}}.",
+      "changeFailed": "Language change failed"
+    },
+    "myReviews": {
+      "title": "My Reviews",
+      "loginPrompt": "Please log in to see your reviews.",
+      "average": "Average",
+      "countLabel": "Reviews",
+      "helpfulCount": "{{count}} people found this helpful",
+      "emptyTitle": "No reviews yet",
+      "emptySubtitle": "Book your first appointment and leave a review!",
+      "goToSearch": "Find a braider"
+    },
+    "bookingsList": {
+      "loginPrompt": "Please log in to view your bookings.",
+      "loginButton": "Go to Login",
+      "errorLogin": "Log in",
+      "status": {
+        "upcoming": "Upcoming",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      }
+    },
+    "favorites": {
+      "title": "Favorites",
+      "loading": "Loading favorites…",
+      "loadError": "Failed to load favorites",
+      "removedSuccess": "{{name}} removed from favorites.",
+      "removeError": "Failed to remove. Please try again.",
+      "empty": {
+        "title": "No favorites yet",
+        "subtitle": "Save your favorite braiders for quick access"
+      },
+      "discoverButton": "Find braiders",
+      "count": {
+        "one": "1 favorite",
+        "other": "{{count}} favorites"
+      },
+      "suggestions": {
+        "title": "More recommendations",
+        "seeAll": "See all",
+        "subtitle": "Discover similar braiders near you"
+      }
+    }
+  }
+  ,
+  "tabs": {
+    "home": "Home",
+    "search": "Search",
+    "appointments": "Appointments",
+    "messages": "Messages",
+    "profile": "Profile"
+  },
+  "providerTabs": {
+    "dashboard": "Dashboard",
+    "calendar": "Calendar",
+    "clients": "Clients",
+    "messages": "Messages",
+    "more": "More"
+  }
+}
