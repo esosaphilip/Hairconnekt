@@ -429,36 +429,36 @@ export function VouchersScreen() {
 const styles = StyleSheet.create({
   // Global Styles
   container: {
+    flexGrow: 1,
     paddingHorizontal: SPACING,
     paddingVertical: SPACING,
-    flexGrow: 1,
   },
   card: {
     backgroundColor: 'white',
     borderRadius: CARD_RADIUS,
+    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
   },
   button: {
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: CARD_RADIUS,
     alignItems: 'center',
+    borderRadius: CARD_RADIUS,
     justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   buttonText: {
     color: 'white',
-    fontWeight: '600',
     fontSize: 16,
+    fontWeight: '600',
   },
   badge: {
+    alignSelf: 'flex-start',
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    alignSelf: 'flex-start',
   },
   badgeText: {
     color: 'white',
@@ -468,37 +468,37 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'white',
+    borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING,
     paddingVertical: 12,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   backButton: {
-    width: 24,
-    height: 24,
     alignItems: 'center',
+    height: 24,
     justifyContent: 'center',
+    width: 24,
   },
   headerTitle: {
+    color: '#374151',
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
   },
 
   // Redeem Code Section
   redeemHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: SPACING / 2,
   },
   redeemTitle: {
+    color: '#374151',
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
     marginLeft: 8,
   },
   inputGroup: {
@@ -506,14 +506,14 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   input: {
-    flex: 1,
-    height: 44,
-    borderWidth: 1,
+    backgroundColor: 'white',
     borderColor: '#D1D5DB',
     borderRadius: CARD_RADIUS,
-    paddingHorizontal: 12,
+    borderWidth: 1,
+    flex: 1,
     fontSize: 16,
-    backgroundColor: 'white',
+    height: 44,
+    paddingHorizontal: 12,
   },
 
   // Tabs
@@ -525,19 +525,19 @@ const styles = StyleSheet.create({
     height: 44, // Fixed height for visual consistency
   },
   tabButton: {
-    flex: 1,
-    borderRadius: CARD_RADIUS,
     alignItems: 'center',
+    borderRadius: CARD_RADIUS,
+    flex: 1,
     justifyContent: 'center',
     margin: 4, // To create space between the buttons
   },
   tabButtonActive: {
     backgroundColor: 'white',
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 3,
   },
   tabButtonInactive: {
     backgroundColor: 'transparent',
@@ -558,20 +558,20 @@ const styles = StyleSheet.create({
     gap: SPACING / 2,
   },
   voucherHeader: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: SPACING / 2,
   },
   titleContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   voucherTitle: {
+    color: THEME_COLOR,
     fontSize: 18,
     fontWeight: '700',
-    color: THEME_COLOR,
     marginLeft: 8,
   },
   voucherDescription: {
@@ -581,43 +581,43 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   codeBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderWidth: 2,
-    borderStyle: 'dashed',
     borderColor: '#D1D5DB',
     borderRadius: CARD_RADIUS,
-    padding: SPACING / 2,
+    borderStyle: 'dashed',
+    borderWidth: 2,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: SPACING / 2,
+    padding: SPACING / 2,
   },
   codeLabel: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     marginBottom: 2,
   },
   codeText: {
+    color: '#1F2937',
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 18,
     fontWeight: '600',
-    letterSpacing: 1.5,
-    color: '#1F2937',
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', // Monospace font for code
+    letterSpacing: 1.5, // Monospace font for code
   },
   copyButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderColor: '#D1D5DB',
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    backgroundColor: '#F9FAFB',
     flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   copyText: {
+    color: '#4B5563',
     fontSize: 14,
     fontWeight: '600',
-    color: '#4B5563',
     marginLeft: 4,
   },
   copiedText: {
@@ -627,33 +627,33 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   detailItem: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   detailText: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
     marginLeft: 8,
   },
 
   // Used Voucher Item
   usedDetail: {
+    alignItems: 'center',
+    borderTopColor: '#E5E7EB',
+    borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
   },
   usedDateText: {
-    fontSize: 14,
     color: '#6B7280',
+    fontSize: 14,
   },
   savedAmountText: {
+    color: '#059669',
     fontSize: 14,
-    fontWeight: '600',
-    color: '#059669', // text-green-600
+    fontWeight: '600', // text-green-600
   },
 
   // Empty State
@@ -662,23 +662,23 @@ const styles = StyleSheet.create({
     paddingVertical: 48,
   },
   emptyStateIconWrapper: {
-    width: 80,
-    height: 80,
+    alignItems: 'center',
     backgroundColor: '#F3F4F6',
     borderRadius: 40,
-    alignItems: 'center',
+    height: 80,
     justifyContent: 'center',
     marginBottom: SPACING,
+    width: 80,
   },
   emptyStateTitle: {
+    color: '#374151',
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#374151',
   },
   emptyStateText: {
-    fontSize: 16,
     color: '#6B7280',
+    fontSize: 16,
     textAlign: 'center',
   },
 
@@ -690,11 +690,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   infoList: {
-    paddingLeft: 4,
     gap: 4,
+    paddingLeft: 4,
   },
   infoText: {
-    fontSize: 14,
-    color: '#3B82F6', // text-blue-800
+    color: '#3B82F6',
+    fontSize: 14, // text-blue-800
   },
 });

@@ -162,8 +162,8 @@ export function SignInPrompt({
 // --- Stylesheet ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
     backgroundColor: LIGHT_GRAY,
+    flex: 1,
   },
   container: {
     alignItems: 'center',
@@ -176,15 +176,15 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
     borderRadius: CARD_RADIUS,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
   },
   promptCard: {
-    padding: SPACING,
     maxWidth: Dimensions.get('window').width * 0.9,
+    padding: SPACING,
     width: '100%',
   },
 
@@ -202,11 +202,11 @@ const styles = StyleSheet.create({
 
   // Message
   title: {
+    color: TEXT_COLOR_DARK,
     fontSize: 20,
     fontWeight: '700',
-    textAlign: 'center',
-    color: TEXT_COLOR_DARK,
     marginBottom: 8,
+    textAlign: 'center',
   },
   message: {
     textAlign: 'center',
@@ -222,20 +222,20 @@ const styles = StyleSheet.create({
   
   // Button Base Styles
   buttonBase: {
-    paddingVertical: 12,
-    borderRadius: CARD_RADIUS,
     alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: CARD_RADIUS,
     flexDirection: 'row',
-    height: 48, // h-12
+    height: 48,
+    justifyContent: 'center',
+    paddingVertical: 12, // h-12
   },
   buttonPrimary: {
     backgroundColor: THEME_COLOR,
   },
   buttonOutline: {
     backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: '#E5E7EB', // border-gray-200
+    borderColor: '#E5E7EB',
+    borderWidth: 1, // border-gray-200
   },
   buttonText: {
     fontSize: 16,
@@ -256,14 +256,14 @@ const styles = StyleSheet.create({
 
   // Divider
   dividerContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginVertical: 24, // my-6
   },
   dividerLine: {
+    backgroundColor: '#E5E7EB',
     flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB', // border-gray-200
+    height: 1, // border-gray-200
   },
   dividerText: {
     paddingHorizontal: 16, // px-4

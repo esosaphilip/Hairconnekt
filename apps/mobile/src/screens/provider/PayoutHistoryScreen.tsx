@@ -426,31 +426,31 @@ export function PayoutHistoryScreen() {
 // --- Stylesheet for React Native ---
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: colors.background,
+    flex: 1,
   },
   // Header styles
   header: {
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   // ScrollView content
   scrollContent: {
@@ -468,8 +468,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   statRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   statLabel: {
@@ -477,13 +477,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   statValue: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   statSubText: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     marginTop: 4,
   },
   // CTA Card (Request New Payout)
@@ -496,37 +496,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   ctaContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   ctaTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 4,
   },
   ctaSubText: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
   },
   ctaButton: {
     backgroundColor: colors.primary,
+    borderRadius: 8,
     height: 38,
     paddingHorizontal: 16,
-    borderRadius: 8,
   },
   // Filters
   filterCard: {
-    padding: 16,
     marginBottom: 16,
+    padding: 16,
   },
   filterGrid: {
     flexDirection: 'row',
   },
   filterLabel: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
     marginBottom: 6,
   },
   // Payouts List
@@ -534,18 +534,18 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   listTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 4,
   },
   payoutCard: {
     padding: 16,
   },
   payoutHeader: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
   payoutLeft: {
     flex: 1,
@@ -555,83 +555,83 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   netAmountText: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   transactionCountText: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     marginTop: 2,
   },
   refText: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
   },
   separator: {
-    height: 1,
     backgroundColor: '#E5E7EB',
+    height: 1,
     marginVertical: 12,
   },
   // Details Section
   detailsSection: {
   },
   detailRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   detailLabel: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
   },
   detailValue: {
-    fontSize: 14,
     color: '#1F2937',
+    fontSize: 14,
   },
   detailLabelBold: {
+    color: '#1F2937',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   detailValueBold: {
+    color: '#1F2937',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   // Bank Account
   bankAccountRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 8,
   },
   bankNameText: {
-    fontSize: 14,
     color: '#1F2937',
+    fontSize: 14,
   },
   bankLast4Text: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
   },
   // Dates & Status Info
   datesSection: {
   },
   dateRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   dateText: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
   },
   processingInfo: {
-    fontSize: 12,
     color: colors.blue,
+    fontSize: 12,
     marginTop: 4,
   },
   failedInfo: {
-    fontSize: 12,
     color: colors.red,
+    fontSize: 12,
     marginTop: 4,
   },
   downloadButton: {
@@ -648,17 +648,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   infoTitle: {
+    alignItems: 'center',
+    color: '#1F2937',
+    flexDirection: 'row',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
   },
   infoList: {
   },
   infoListItem: {
-    fontSize: 12,
-    color: '#374151', // text-gray-700
+    color: '#374151',
+    fontSize: 12, // text-gray-700
   },
 });

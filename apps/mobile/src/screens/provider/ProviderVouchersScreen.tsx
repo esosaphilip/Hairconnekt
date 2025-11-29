@@ -386,8 +386,8 @@ export function ProviderVouchersScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   // --- Header Styles ---
   header: {
@@ -405,8 +405,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   headerTitle: {
@@ -429,14 +429,14 @@ const styles = StyleSheet.create({
     padding: SPACING.sm,
   },
   statRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.xs / 2,
   },
   statLabel: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
   },
   statValue: {
     fontSize: 20,
@@ -457,13 +457,13 @@ const styles = StyleSheet.create({
   },
   // --- Voucher Card Styles ---
   voucherCard: {
-    padding: SPACING.md,
     marginBottom: SPACING.sm,
+    padding: SPACING.md,
   },
   cardHeader: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: SPACING.sm,
   },
   cardInfo: {
@@ -471,8 +471,8 @@ const styles = StyleSheet.create({
     paddingRight: SPACING.md,
   },
   titleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.xs,
   },
@@ -481,8 +481,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   voucherDescription: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
     marginBottom: SPACING.sm,
   },
   discountBadge: {
@@ -504,10 +504,10 @@ const styles = StyleSheet.create({
   // --- Details ---
   detailGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: SPACING.md,
-    marginBottom: SPACING.md,
     fontSize: FONT_SIZES.body,
+    gap: SPACING.md,
+    justifyContent: 'space-between',
+    marginBottom: SPACING.md,
   },
   detailLabel: {
     color: COLORS.textSecondary || '#6B7280',
@@ -515,8 +515,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs / 2,
   },
   detailRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   detailValue: {
@@ -528,10 +528,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   usageTextRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    flexDirection: 'row',
     fontSize: FONT_SIZES.small || 12,
+    justifyContent: 'space-between',
     marginBottom: SPACING.xs / 2,
   },
   usageLabel: {
@@ -542,39 +542,39 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZES.small || 12,
   },
   progressBarBackground: {
-    width: '100%',
-    height: 8,
     backgroundColor: COLORS.border || '#E5E7EB',
     borderRadius: 4,
+    height: 8,
     overflow: 'hidden',
+    width: '100%',
   },
   progressBarFill: {
-    height: '100%',
     backgroundColor: COLORS.primary || '#8B4513',
+    height: '100%',
   },
   // --- Revenue & Footer Button ---
   revenueRow: {
+    alignItems: 'center',
+    borderTopColor: COLORS.border,
+    borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: SPACING.sm,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
     marginBottom: SPACING.sm,
+    paddingTop: SPACING.sm,
   },
   revenueLabel: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
   revenueValue: {
+    color: COLORS.success || '#10B981',
     fontSize: FONT_SIZES.body || 14,
     fontWeight: '600',
-    color: COLORS.success || '#10B981',
   },
   copyButton: {
-    width: '100%',
     height: 36,
     marginTop: SPACING.xs,
+    width: '100%',
   },
   // --- Info Card ---
   infoCard: {
@@ -592,14 +592,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   infoText: {
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.infoTextDark || '#374151', // blue-800
+    color: COLORS.infoTextDark || '#374151',
+    fontSize: FONT_SIZES.body || 14, // blue-800
   },
   // --- Empty State ---
   emptyContainer: {
-      paddingVertical: SPACING.xl * 2,
-      paddingHorizontal: SPACING.md,
       alignItems: 'center',
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xl * 2,
   },
   emptyIcon: {
       color: COLORS.border || '#D1D5DB',
@@ -611,8 +611,8 @@ const styles = StyleSheet.create({
       marginBottom: SPACING.xs,
   },
   emptySubtitle: {
-      fontSize: FONT_SIZES.body || 14,
       color: COLORS.textSecondary || '#6B7280',
+      fontSize: FONT_SIZES.body || 14,
       textAlign: 'center',
   },
 });

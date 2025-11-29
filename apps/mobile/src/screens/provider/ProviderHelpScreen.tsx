@@ -92,7 +92,7 @@ export function ProviderHelpScreen() {
           <Pressable onPress={goBack} style={{ padding: spacing.xs, marginRight: spacing.sm }} {...(Platform.OS === 'web' ? { accessibilityRole: 'button' } : {})}>
             <Icon name={'chevron-back'} size={24} color={colors.gray700} />
           </Pressable>
-          <Text style={[typography.h3]}>Hilfe & Support</Text>
+          <Text style={typography.h3}>Hilfe & Support</Text>
         </View>
 
         {/* Search */}

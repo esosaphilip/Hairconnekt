@@ -504,14 +504,14 @@ export function VouchersManagementScreen() {
 // --- Stylesheet for React Native ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
     backgroundColor: '#FAF9F6',
+    flex: 1,
   },
   // Header styles
   header: {
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
     zIndex: 10,
   },
   headerContent: {
@@ -519,34 +519,34 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   headerTitleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 12,
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   // ScrollView content
   scrollContent: {
+    gap: 16,
     paddingHorizontal: 16,
     paddingVertical: 24,
-    gap: 16,
   },
   // Stats
   statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 12,
+    justifyContent: 'space-between',
   },
   statCard: {
     flex: 1,
     padding: 12,
   },
   statRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
     marginBottom: 4,
   },
@@ -555,68 +555,68 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   statValue: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   // Create Button
   createButton: {
-    width: '100%',
-    height: 48,
     backgroundColor: colors.primary,
+    height: 48,
+    width: '100%',
   },
   // Tabs
   tabs: {
     marginBottom: 0,
   },
   tabChip: {
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 12,
     backgroundColor: '#F3F4F6',
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   tabChipActive: {
     backgroundColor: '#fff',
-    borderWidth: 1,
     borderColor: '#E5E7EB',
+    borderWidth: 1,
   },
   tabChipLabel: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
   },
   tabChipLabelActive: {
     color: '#1F2937',
     fontWeight: '600',
   },
   tabContent: {
-    marginTop: 16,
     gap: 12,
+    marginTop: 16,
   },
   // Empty State
   emptyCard: {
-    padding: 32,
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 16,
+    justifyContent: 'center',
+    padding: 32,
   },
   emptyIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 32,
+    height: 64,
     justifyContent: 'center',
     marginBottom: 8,
+    width: 64,
   },
   emptyTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 8,
   },
   emptySubtitle: {
-    fontSize: 14,
     color: colors.gray,
+    fontSize: 14,
     textAlign: 'center',
   },
   // Voucher List Items
@@ -627,10 +627,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   voucherHeader: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
-    justifyContent: 'space-between',
+    flexDirection: 'row',
     gap: 12,
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
   voucherCodeSection: {
@@ -638,15 +638,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   codeCopyRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
   voucherCodeText: {
-    fontSize: 18,
-    fontWeight: '600',
     color: '#1F2937',
     fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+    fontSize: 18,
+    fontWeight: '600',
   },
   copyButton: {
     padding: 4,
@@ -657,49 +657,49 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   discountText: {
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
-    color: colors.primary,
     marginBottom: 4,
   },
   voucherDetailText: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
   },
   dateRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 4,
     marginTop: 8,
   },
   dateText: {
-    fontSize: 12,
     color: colors.gray,
+    fontSize: 12,
   },
   moreButton: {
-    padding: 4,
-    width: 32,
+    alignItems: 'center',
     height: 32,
     justifyContent: 'center',
-    alignItems: 'center',
+    padding: 4,
+    width: 32,
   },
   // Usage Progress
   usageSection: {
     marginTop: 8,
   },
   usageRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 4,
   },
   usageLabel: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
   },
   usageCount: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
     fontWeight: '500',
   },
   progressBarBackground: {
@@ -710,30 +710,30 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   progressBarForeground: {
-    height: '100%',
     backgroundColor: colors.primary,
     borderRadius: 8,
+    height: '100%',
   },
   // Tips Card
   tipsCard: {
-    padding: 16,
     backgroundColor: colors.lightBlue,
     borderColor: '#BFDBFE',
     borderWidth: 1,
     gap: 12,
+    padding: 16,
   },
   tipsTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+    alignItems: 'center',
     color: '#1F2937',
     flexDirection: 'row',
-    alignItems: 'center',
+    fontSize: 14,
+    fontWeight: '600',
   },
   tipsList: {
     gap: 6,
   },
   tipsListItem: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
   }
 });

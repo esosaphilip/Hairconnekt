@@ -62,7 +62,7 @@ export function ProviderTypeSelection() {
             <Icon name={'chevron-back'} size={24} color={colors.black} />
           </Pressable>
           <View>
-            <Text style={[typography.h3]}>Welchen Service bietest du an?</Text>
+            <Text style={typography.h3}>Welchen Service bietest du an?</Text>
             <Text style={{ color: colors.gray600, fontSize: 12 }}>Mehrfachauswahl möglich</Text>
           </View>
         </View>

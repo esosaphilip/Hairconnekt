@@ -41,29 +41,29 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  label: {
-    fontSize: 12,
-    color: '#4B5563',
-    marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
-  },
-  inputContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
   icon: {
     marginRight: 8,
   },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  inputContent: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  label: {
+    color: '#4B5563',
+    fontSize: 12,
+    marginBottom: 6,
+  },
   valueText: {
-    fontSize: 14,
     color: '#1F2937',
+    fontSize: 14,
   },
 });

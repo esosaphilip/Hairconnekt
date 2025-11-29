@@ -230,125 +230,125 @@ export function ServicesManagementScreen() {
 }
 
 const styles = StyleSheet.create({
+  actionsRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  card: {
+    marginBottom: spacing.md,
+    padding: spacing.md,
+  },
+  cardHeader: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
   container: {
-    flex: 1,
     backgroundColor: colors.gray50,
-    paddingBottom: spacing.xl,
-  },
-  header: {
-    backgroundColor: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconBtn: {
-    paddingRight: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  headerTitle: {
-        ...typography.h3,
-    marginBottom: 2,
-  },
-  headerSubtitle: {
-    fontSize: 12,
-    color: colors.gray600,
-  },
-  statsBar: {
-    flexDirection: 'row',
-    backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    justifyContent: 'space-between',
-  },
-  statBlock: {
-    alignItems: 'center',
     flex: 1,
-  },
-  statNumber: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  statCaption: {
-    fontSize: 12,
-    color: colors.gray600,
+    paddingBottom: spacing.xl,
   },
   content: {
     padding: spacing.md,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: spacing.sm,
-    color: colors.black,
-  },
-  card: {
-    padding: spacing.md,
+  emptyIcon: {
+    alignItems: 'center',
+    backgroundColor: colors.gray100,
+    borderRadius: 48,
+    height: 96,
+    justifyContent: 'center',
     marginBottom: spacing.md,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  serviceName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.black,
-  },
-  serviceDesc: {
-    fontSize: 13,
-    color: colors.gray600,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  metaItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: spacing.lg,
-  },
-  metaText: {
-    marginLeft: 4,
-    color: colors.black,
-    fontSize: 13,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: 96,
   },
   emptyWrap: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.lg * 2,
   },
-  emptyIcon: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: colors.gray100,
+  header: {
+    backgroundColor: colors.white,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+  },
+  headerLeft: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.md,
+    flexDirection: 'row',
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  headerSubtitle: {
+    color: colors.gray600,
+    fontSize: 12,
+  },
+  headerTitle: {
+        ...typography.h3,
+    marginBottom: 2,
+  },
+  iconBtn: {
+    paddingRight: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  metaItem: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginRight: spacing.lg,
+  },
+  metaRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: spacing.sm,
+  },
+  metaText: {
+    color: colors.black,
+    fontSize: 13,
+    marginLeft: 4,
+  },
+  sectionTitle: {
+    color: colors.black,
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+  },
+  serviceDesc: {
+    color: colors.gray600,
+    fontSize: 13,
+  },
+  serviceName: {
+    color: colors.black,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  statBlock: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statCaption: {
+    color: colors.gray600,
+    fontSize: 12,
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  statsBar: {
+    backgroundColor: colors.white,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  titleRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginBottom: 4,
   },
 });

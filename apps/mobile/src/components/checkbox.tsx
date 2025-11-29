@@ -76,18 +76,18 @@ function Checkbox({
 
 const styles = StyleSheet.create({
   box: {
+    alignItems: "center",
     borderWidth: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  checkMarkContainer: {
-    alignItems: "center",
     justifyContent: "center",
   },
   checkMark: {
     color: theme.colors.white,
-    lineHeight: 16,
     fontWeight: "700",
+    lineHeight: 16,
+  },
+  checkMarkContainer: {
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

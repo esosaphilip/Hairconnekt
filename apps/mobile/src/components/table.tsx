@@ -65,38 +65,38 @@ function TableCaption({ children, style }) {
 }
 
 const styles = StyleSheet.create({
-  table: {
-    width: "100%",
-  },
-  header: {
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray200,
-    flexDirection: "row",
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.gray200,
-  },
-  row: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.gray100,
+  bodyText: {
+    color: theme.colors.black,
   },
   cell: {
-    paddingHorizontal: 8,
-    paddingVertical: 10,
     justifyContent: "center",
     minWidth: 80,
+    paddingHorizontal: 8,
+    paddingVertical: 10,
+  },
+  footer: {
+    borderTopColor: theme.colors.gray200,
+    borderTopWidth: 1,
   },
   headCell: {
     backgroundColor: theme.colors.gray50,
   },
   headText: {
+    color: theme.colors.black,
     fontWeight: "600",
-    color: theme.colors.black,
   },
-  bodyText: {
-    color: theme.colors.black,
+  header: {
+    borderBottomColor: theme.colors.gray200,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+  },
+  row: {
+    borderBottomColor: theme.colors.gray100,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+  },
+  table: {
+    width: "100%",
   },
 });
 

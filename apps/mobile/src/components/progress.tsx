@@ -17,15 +17,15 @@ export function Progress({ value = 0, style }: ProgressProps) {
 }
 
 const styles = StyleSheet.create({
+  bar: {
+    backgroundColor: colors.primary,
+    height: '100%',
+  },
   container: {
-    height: 6,
-    width: '100%',
     backgroundColor: colors.gray200,
     borderRadius: radii.full,
+    height: 6,
     overflow: 'hidden',
-  },
-  bar: {
-    height: '100%',
-    backgroundColor: colors.primary,
+    width: '100%',
   },
 });

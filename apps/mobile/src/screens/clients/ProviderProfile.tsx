@@ -334,7 +334,7 @@ export default function ProviderProfile() {
           <View style={styles.rowBetween}>
             <TouchableOpacity style={[styles.btn, styles.btnOutline]} onPress={() => Alert.alert('Nachricht')}>
               <Ionicons name="chatbubble-ellipses-outline" size={16} color="#374151" style={{ marginRight: 6 }} />
-              <Text style={[styles.btnText]}>Nachricht</Text>
+              <Text style={styles.btnText}>Nachricht</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => navigation.navigate('Booking', { id: providerData.id })}>
               <Text style={[styles.btnText, styles.btnTextPrimary]}>Termin buchen</Text>
@@ -350,9 +350,119 @@ export default function ProviderProfile() {
 const THEME = '#8B4513';
 
 const styles = StyleSheet.create({
-  safeArea: {
+  avatarImage: {
+    borderColor: '#fff',
+    borderRadius: 36,
+    borderWidth: 3,
+    height: 72,
+    width: 72,
+  },
+  avatarWrapper: {
+    bottom: -24,
+    height: 72,
+    left: 16,
+    position: 'absolute',
+    width: 72,
+  },
+  badge: {
+    backgroundColor: THEME,
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  badgeOutline: {
+    backgroundColor: '#fff',
+    borderColor: '#D1D5DB',
+    borderWidth: 1,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  boldText: {
+    color: '#111827',
+    fontWeight: '600',
+  },
+  bottomBar: {
+    marginTop: 20,
+  },
+  btn: {
+    alignItems: 'center',
+    borderRadius: 8,
+    flexDirection: 'row',
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  btnOutline: {
+    backgroundColor: '#fff',
+    borderColor: '#D1D5DB',
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  btnPrimary: {
+    backgroundColor: THEME,
+    marginLeft: 8,
+  },
+  btnText: {
+    color: '#374151',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  btnTextPrimary: {
+    color: '#fff',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    elevation: 2,
+    marginTop: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  cardText: {
+    color: '#374151',
+    fontSize: 13,
+  },
+  cardTitle: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  closedText: {
+    color: '#EF4444',
+    fontWeight: '600',
+  },
+  distanceRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 6,
+  },
+  distanceText: {
+    color: '#6B7280',
+    fontSize: 13,
+  },
+  galleryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  galleryImage: {
+    aspectRatio: 1,
+    borderRadius: 8,
+    width: '31%',
   },
   header: {
     alignItems: 'center',
@@ -364,293 +474,183 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
   headerActions: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
   headerIconButton: {
     padding: 6,
   },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 24,
+  headerTitle: {
+    color: '#111827',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  heroImage: {
+    borderRadius: 12,
+    height: 180,
+    width: '100%',
   },
   heroWrapper: {
     marginBottom: 16,
   },
-  heroImage: {
-    width: '100%',
-    height: 180,
-    borderRadius: 12,
+  priceBig: {
+    color: THEME,
+    fontSize: 22,
+    fontWeight: '700',
+    marginLeft: 6,
   },
-  avatarWrapper: {
-    position: 'absolute',
-    bottom: -24,
-    left: 16,
-    width: 72,
-    height: 72,
+  ratingBig: {
+    color: THEME,
+    fontSize: 28,
+    fontWeight: '800',
+    marginRight: 6,
   },
-  avatarImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 3,
-    borderColor: '#fff',
-  },
-  verifiedBadge: {
-    position: 'absolute',
-    right: -4,
-    bottom: -4,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#3B82F6',
+  ratingRow: {
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
+    flexDirection: 'row',
+    marginTop: 8,
+  },
+  ratingText: {
+    color: '#111827',
+    fontSize: 14,
+    marginLeft: 6,
+    marginRight: 6,
+  },
+  reviewCard: {
+    marginTop: 10,
+  },
+  reviewsText: {
+    color: '#6B7280',
+    fontSize: 12,
+  },
+  rowBetween: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 4,
+  },
+  rowWithIcon: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 4,
+  },
+  safeArea: {
+    backgroundColor: '#F9FAFB',
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 24,
   },
   section: {
     marginTop: 24,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  subtitle: {
-    fontSize: 14,
+  serviceDescription: {
     color: '#6B7280',
+    fontSize: 12,
     marginTop: 4,
   },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: '#111827',
-    marginLeft: 6,
-    marginRight: 6,
-  },
-  reviewsText: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  distanceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-    gap: 6,
-  },
-  distanceText: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  badgesRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 8,
-  },
-  badge: {
-    backgroundColor: THEME,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
-  },
-  badgeOutline: {
+  serviceItem: {
     backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    borderWidth: 2,
+    marginBottom: 8,
+    padding: 10,
   },
-  badgeText: {
+  serviceItemActive: {
+    backgroundColor: '#F8F1EC',
+    borderColor: THEME,
+  },
+  serviceMeta: {
+    color: '#6B7280',
     fontSize: 12,
-    color: '#fff',
+  },
+  serviceName: {
+    color: '#111827',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  servicePrice: {
+    color: THEME,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  statCard: {
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 1,
+    justifyContent: 'center',
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    width: '23%',
+  },
+  statLabel: {
+    color: '#6B7280',
+    fontSize: 11,
+  },
+  statValue: {
+    color: THEME,
+    fontSize: 16,
+    fontWeight: '700',
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
   },
-  statCard: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '23%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  statValue: {
-    fontSize: 16,
-    color: THEME,
-    fontWeight: '700',
-  },
-  statLabel: {
-    fontSize: 11,
+  subtitle: {
     color: '#6B7280',
-  },
-  tabsList: {
-    flexDirection: 'row',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
-    padding: 4,
-    marginTop: 20,
+    fontSize: 14,
+    marginTop: 4,
   },
   tabButton: {
+    alignItems: 'center',
+    borderRadius: 6,
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 6,
-    alignItems: 'center',
   },
   tabButtonActive: {
     backgroundColor: '#fff',
   },
   tabButtonText: {
-    fontSize: 13,
     color: '#6B7280',
+    fontSize: 13,
     fontWeight: '600',
   },
   tabButtonTextActive: {
     color: '#111827',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 12,
-    marginTop: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  cardText: {
-    fontSize: 13,
-    color: '#374151',
-  },
-  rowWithIcon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
-  },
-  rowBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginTop: 4,
-  },
-  boldText: {
-    fontWeight: '600',
-    color: '#111827',
-  },
-  closedText: {
-    fontWeight: '600',
-    color: '#EF4444',
-  },
-  serviceItem: {
-    borderWidth: 2,
-    borderColor: '#E5E7EB',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 8,
-    backgroundColor: '#fff',
-  },
-  serviceItemActive: {
-    borderColor: THEME,
-    backgroundColor: '#F8F1EC',
-  },
-  serviceName: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  servicePrice: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: THEME,
-  },
-  serviceDescription: {
-    fontSize: 12,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  serviceMeta: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  galleryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  galleryImage: {
-    width: '31%',
-    aspectRatio: 1,
+  tabsList: {
+    backgroundColor: '#E5E7EB',
     borderRadius: 8,
-  },
-  ratingBig: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: THEME,
-    marginRight: 6,
-  },
-  reviewCard: {
-    marginTop: 10,
-  },
-  bottomBar: {
+    flexDirection: 'row',
     marginTop: 20,
+    padding: 4,
   },
-  btn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    flex: 1,
-  },
-  btnOutline: {
-    backgroundColor: '#fff',
-    borderWidth: 1,
-    borderColor: '#D1D5DB',
-    marginRight: 8,
-  },
-  btnPrimary: {
-    backgroundColor: THEME,
-    marginLeft: 8,
-  },
-  btnText: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '600',
-  },
-  btnTextPrimary: {
-    color: '#fff',
-  },
-  priceBig: {
+  title: {
+    color: '#111827',
     fontSize: 22,
     fontWeight: '700',
-    color: THEME,
-    marginLeft: 6,
+  },
+  verifiedBadge: {
+    alignItems: 'center',
+    backgroundColor: '#3B82F6',
+    borderColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 2,
+    bottom: -4,
+    height: 20,
+    justifyContent: 'center',
+    position: 'absolute',
+    right: -4,
+    width: 20,
   },
 });

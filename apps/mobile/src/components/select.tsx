@@ -36,16 +36,16 @@ function SelectScrollDownButton() { return <View />; }
 
 const styles = StyleSheet.create({
   container: { width: '100%' },
-  itemsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  trigger: { borderWidth: 1, borderColor: '#E5E7EB', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 },
-  content: { borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 8, marginTop: 6 },
-  label: { fontSize: 12, color: '#6B7280' },
-  item: { paddingVertical: 8, paddingHorizontal: 12 },
-  separator: { height: 1, backgroundColor: '#E5E7EB' },
-  itemChip: { paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#F9FAFB' },
-  itemChipActive: { borderColor: '#2563EB', backgroundColor: '#EFF6FF' },
+  content: { borderColor: '#E5E7EB', borderRadius: 8, borderWidth: 1, marginTop: 6 },
+  item: { paddingHorizontal: 12, paddingVertical: 8 },
+  itemChip: { backgroundColor: '#F9FAFB', borderColor: '#E5E7EB', borderRadius: 8, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 },
+  itemChipActive: { backgroundColor: '#EFF6FF', borderColor: '#2563EB' },
   itemChipText: { color: '#374151', fontSize: 13 },
   itemChipTextActive: { color: '#1D4ED8' },
+  itemsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  label: { color: '#6B7280', fontSize: 12 },
+  separator: { backgroundColor: '#E5E7EB', height: 1 },
+  trigger: { borderColor: '#E5E7EB', borderRadius: 8, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 8 },
 });
 
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue };

@@ -195,31 +195,31 @@ export function PortfolioManagementScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   // --- Header Styles ---
   header: {
     backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    elevation: 2,
     paddingHorizontal: SPACING.md || 16,
     paddingVertical: SPACING.md || 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.sm || 8,
   },
   headerTitle: {
@@ -227,8 +227,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
   addButton: {
     backgroundColor: COLORS.primary || '#8B4513',
@@ -236,26 +236,26 @@ const styles = StyleSheet.create({
   // --- Stats Styles ---
   statsContainer: {
     backgroundColor: COLORS.white,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
   },
   statItem: {
     alignItems: 'center',
     flex: 1,
   },
   statValue: {
+    color: COLORS.primary || '#8B4513',
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.primary || '#8B4513',
     marginBottom: SPACING.xs / 2,
   },
   statLabel: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
   },
   // --- Portfolio Grid Styles ---
   listContent: {
@@ -269,9 +269,9 @@ const styles = StyleSheet.create({
     width: cardWidth,
   },
   portfolioCard: {
+    backgroundColor: COLORS.white,
     borderRadius: 8,
     overflow: 'hidden',
-    backgroundColor: COLORS.white,
   },
   imageContainer: {
     width: '100%',
@@ -279,15 +279,15 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   portfolioImage: {
-    width: '100%',
     height: '100%',
+    width: '100%',
   },
   imageOverlayButtons: {
-    position: 'absolute',
-    top: SPACING.xs,
-    right: SPACING.xs,
     flexDirection: 'row',
     gap: SPACING.xs,
+    position: 'absolute',
+    right: SPACING.xs,
+    top: SPACING.xs,
   },
   deleteButton: {
     width: 32,
@@ -315,40 +315,40 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   itemStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary,
+    flexDirection: 'row',
+    fontSize: FONT_SIZES.small || 12,
+    justifyContent: 'space-between',
   },
   statRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   statText: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
   },
   heartIcon: {
     fontSize: FONT_SIZES.small || 12,
   },
   // --- Empty State Styles ---
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
+    flex: 1,
     justifyContent: 'center',
     padding: SPACING.lg,
     paddingTop: SPACING.xl * 2,
   },
   emptyIconCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: COLORS.border || '#F3F4F6',
     alignItems: 'center',
+    backgroundColor: COLORS.border || '#F3F4F6',
+    borderRadius: 48,
+    height: 96,
     justifyContent: 'center',
     marginBottom: SPACING.md,
+    width: 96,
   },
   emptyTitle: {
     fontSize: FONT_SIZES.h4 || 18,
@@ -356,10 +356,10 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   emptySubtitle: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
-    textAlign: 'center',
+    fontSize: FONT_SIZES.body || 14,
     marginBottom: SPACING.lg,
+    textAlign: 'center',
   },
   uploadButton: {
     backgroundColor: COLORS.primary || '#8B4513',

@@ -361,32 +361,32 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   contentContainer: {
-    padding: SPACING,
     gap: SPACING,
+    padding: SPACING,
   },
 
   // Header
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'white',
+    elevation: 2,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING,
     paddingVertical: 12,
-    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
     zIndex: 10,
   },
   backButton: {
     paddingRight: 8,
   },
   headerTitle: {
+    color: TEXT_COLOR_DARK,
     fontSize: 18,
     fontWeight: '600',
-    color: TEXT_COLOR_DARK,
   },
   emptySpace: {
     width: 24,
@@ -396,59 +396,59 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
     borderRadius: CARD_RADIUS,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 3,
   },
 
   // Quick Contact Options
   contactOptionsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     gap: 8,
+    justifyContent: 'space-between',
   },
   contactOptionButton: {
-    flex: 1,
     alignItems: 'center',
-    padding: SPACING / 2,
     backgroundColor: 'white',
+    borderColor: '#E5E7EB',
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    elevation: 1,
+    flex: 1,
+    padding: SPACING / 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
   },
   contactIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
     alignItems: 'center',
+    borderRadius: 24,
+    height: 48,
     justifyContent: 'center',
     marginBottom: 8,
+    width: 48,
   },
   contactOptionTitle: {
-    fontSize: 12,
-    textAlign: 'center',
-    fontWeight: '500',
     color: TEXT_COLOR_DARK,
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
   },
 
   // General Section Styles
   sectionHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
     marginBottom: SPACING,
   },
   sectionTitle: {
+    color: TEXT_COLOR_DARK,
     fontSize: 16,
     fontWeight: '600',
-    color: TEXT_COLOR_DARK,
   },
 
   // FAQ Section
@@ -456,32 +456,32 @@ const styles = StyleSheet.create({
     padding: SPACING,
   },
   accordionContainer: {
-    borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
+    borderTopWidth: 1,
   },
   faqItem: {
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
   },
   faqTrigger: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingVertical: 12,
   },
   faqQuestion: {
+    color: TEXT_COLOR_DARK,
+    flexShrink: 1,
     fontSize: 14,
     fontWeight: '500',
-    flexShrink: 1,
     paddingRight: 10,
-    color: TEXT_COLOR_DARK,
   },
   faqContent: {
     paddingVertical: 8,
   },
   faqAnswer: {
-    fontSize: 14,
     color: TEXT_COLOR_MUTED,
+    fontSize: 14,
     lineHeight: 20,
   },
 
@@ -493,10 +493,10 @@ const styles = StyleSheet.create({
     gap: SPACING,
   },
   label: {
+    color: TEXT_COLOR_DARK,
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 4,
-    color: TEXT_COLOR_DARK,
   },
   input: {
     backgroundColor: '#F3F4F6', // Lighter background for input
@@ -513,10 +513,10 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   buttonBase: {
-    paddingVertical: 12,
-    borderRadius: CARD_RADIUS,
     alignItems: 'center',
+    borderRadius: CARD_RADIUS,
     justifyContent: 'center',
+    paddingVertical: 12,
   },
   buttonPrimary: {
     backgroundColor: THEME_COLOR,
@@ -524,8 +524,8 @@ const styles = StyleSheet.create({
   // Outline button style used when variant === 'outline'
   buttonOutline: {
     backgroundColor: 'white',
-    borderWidth: 1,
     borderColor: THEME_COLOR,
+    borderWidth: 1,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -556,17 +556,17 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   resourceItem: {
-    width: '100%',
-    padding: 12,
     backgroundColor: 'white',
+    borderColor: '#E5E7EB',
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    padding: 12,
+    width: '100%',
   },
   resourceItemText: {
+    color: TEXT_COLOR_DARK,
     fontSize: 14,
     fontWeight: '500',
-    color: TEXT_COLOR_DARK,
   },
 
   // Support Hours
@@ -593,8 +593,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   hoursListItem: {
-    fontSize: 14,
-    color: '#1E40AF', // text-blue-800
+    color: '#1E40AF',
+    fontSize: 14, // text-blue-800
   },
   hoursFooter: {
     fontSize: 12,

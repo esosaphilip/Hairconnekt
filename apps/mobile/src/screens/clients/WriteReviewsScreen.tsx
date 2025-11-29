@@ -409,39 +409,39 @@ export default function WriteReviewScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#F9FAFB',
+    flex: 1,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    padding: 16,
     paddingTop: Platform.OS === 'android' ? 40 : 16,
   },
   backButton: {
-    padding: 8,
     marginRight: 16,
+    padding: 8,
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   flexRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
   },
   flexBetween: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   textCenter: {
     alignItems: 'center',
@@ -451,27 +451,27 @@ const styles = StyleSheet.create({
   },
   // --- Appointment Info ---
   appointmentCard: {
-    padding: 16,
     borderRadius: 8,
     marginBottom: 16,
+    padding: 16,
   },
   avatar: {
-    width: 64,
-    height: 64,
     borderRadius: 32,
+    height: 64,
     marginRight: 16,
+    width: 64,
   },
   appointmentDetails: {
     flex: 1,
   },
   providerName: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   businessName: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
     marginBottom: 4,
   },
   appointmentService: {
@@ -480,32 +480,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   serviceText: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
   },
   separator: {
-    fontSize: 14,
     color: '#D1D5DB',
+    fontSize: 14,
   },
   // --- Overall Rating ---
   overallRatingCard: {
-    padding: 24,
     borderRadius: 8,
     marginBottom: 16,
+    padding: 24,
   },
   overallRatingLabel: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 16,
   },
   ratingStarsContainer: {
     marginBottom: 8,
   },
   ratingText: {
+    color: PRIMARY_COLOR,
     fontSize: 16,
     fontWeight: '500',
-    color: PRIMARY_COLOR,
     minHeight: 24, // min-h-6 equivalent
   },
   starRatingContainer: {
@@ -518,31 +518,31 @@ const styles = StyleSheet.create({
   },
   // --- Category Ratings ---
   categoryRatingsCard: {
-    padding: 16,
     borderRadius: 8,
     marginBottom: 16,
+    padding: 16,
   },
   categoryLabel: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 12,
   },
   categoryItem: {
     paddingVertical: 8,
   },
   categoryItemLabel: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
   },
   // --- Comment ---
   commentSection: {
     marginBottom: 16,
   },
   commentLabel: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 8,
   },
   commentMeta: {
@@ -551,35 +551,35 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   commentMinLength: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
   },
   commentCount: {
-    fontSize: 12,
     color: '#9CA3AF',
+    fontSize: 12,
   },
   commentCountWarning: {
     color: '#EA580C', // text-orange-600
   },
   // --- Photo Upload ---
   photoUploadCard: {
-    padding: 16,
     borderRadius: 8,
-    marginBottom: 16,
     gap: 12,
+    marginBottom: 16,
+    padding: 16,
   },
   photoUploadLabel: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   photoCount: {
-    fontSize: 14,
     color: '#6B7280',
+    fontSize: 14,
   },
   photoHelpText: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
     marginBottom: 8,
   },
   imageGrid: {
@@ -594,8 +594,8 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   imagePreview: {
-    flex: 1,
     borderRadius: 8,
+    flex: 1,
     resizeMode: 'cover',
   },
   removeImageButton: {
@@ -625,13 +625,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   uploadText: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
     marginTop: 8,
   },
   uploadHint: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     marginTop: 4,
   },
   // --- Guidelines ---
@@ -644,9 +644,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   guidelinesTitle: {
+    color: '#1E40AF',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1E40AF',
   },
   guidelineList: {
     gap: 4,
@@ -662,8 +662,8 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: PRIMARY_COLOR,
-    height: 48,
     borderRadius: 8,
+    height: 48,
   },
   cancelButton: {
     backgroundColor: '#FFFFFF',
@@ -671,9 +671,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   privacyNote: {
-    fontSize: 12,
-    textAlign: 'center',
     color: '#4B5563',
+    fontSize: 12,
     marginTop: 16,
+    textAlign: 'center',
   },
 });

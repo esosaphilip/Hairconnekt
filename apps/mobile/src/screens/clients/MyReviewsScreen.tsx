@@ -305,8 +305,8 @@ export function MyReviewsScreen() {
 // --- Stylesheet for RN ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#F9FAFB', // bg-gray-50
+    backgroundColor: '#F9FAFB',
+    flex: 1, // bg-gray-50
   },
   scrollView: {
     flex: 1,
@@ -330,15 +330,15 @@ const styles = StyleSheet.create({
     }),
   },
   headerBar: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   backButton: {
-    padding: spacing.xs,
     marginLeft: -spacing.xs,
+    padding: spacing.xs,
   },
   screenTitle: {
     fontSize: 20,
@@ -369,8 +369,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs / 2,
   },
   statLabel: {
-    fontSize: 14,
     color: GRAY_TEXT,
+    fontSize: 14,
   },
   statDivider: {
     height: 64, // h-16
@@ -384,9 +384,9 @@ const styles = StyleSheet.create({
 
   // Reviews List
   reviewsList: {
+    gap: spacing.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.sm, // space-y-3
+    paddingVertical: spacing.md, // space-y-3
   },
   reviewCard: {
     padding: spacing.md,
@@ -405,9 +405,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   avatarImage: {
-    width: '100%',
     height: '100%',
     resizeMode: 'cover',
+    width: '100%',
   },
   providerText: {
     flex: 1,
@@ -417,14 +417,14 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   providerBusiness: {
-    fontSize: 14,
     color: '#6B7280',
+    fontSize: 14,
   },
 
   // Rating and Date
   ratingRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.xs,
   },
@@ -433,13 +433,13 @@ const styles = StyleSheet.create({
     gap: spacing.xs / 2,
   },
   dateContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: spacing.xs / 2,
   },
   dateText: {
-    fontSize: 14,
     color: '#6B7280',
+    fontSize: 14,
   },
 
   // Review Text and Helpful
@@ -452,13 +452,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   helpfulContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: spacing.xs / 2,
   },
   helpfulText: {
-    fontSize: 14,
     color: '#6B7280',
+    fontSize: 14,
   },
 
   // Empty State
@@ -468,13 +468,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyIconContainer: {
-    width: 80,
-    height: 80,
+    alignItems: 'center',
     backgroundColor: '#F3F4F6',
     borderRadius: 40,
-    alignItems: 'center',
+    height: 80,
     justifyContent: 'center',
     marginBottom: spacing.md,
+    width: 80,
   },
   emptyTitle: {
     fontSize: 18,
@@ -483,8 +483,8 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     color: GRAY_TEXT,
-    textAlign: 'center',
     marginBottom: spacing.lg,
+    textAlign: 'center',
   },
   emptyButton: {
     backgroundColor: PRIMARY_COLOR,

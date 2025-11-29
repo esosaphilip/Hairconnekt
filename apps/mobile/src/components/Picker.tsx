@@ -45,42 +45,42 @@ export default function Picker({ selectedValue, onValueChange, items, placeholde
 }
 
 const styles = StyleSheet.create({
+  backdrop: {
+    alignItems: 'center',
+    backgroundColor: '#00000055',
+    flex: 1,
+    justifyContent: 'center',
+    padding: spacing.md,
+  },
+  cancel: {
+    borderBottomWidth: 0,
+  },
+  option: {
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  optionText: {
+    color: colors.black,
+    fontSize: 16,
+  },
+  sheet: {
+    backgroundColor: colors.white,
+    borderRadius: radii.lg,
+    overflow: 'hidden',
+    width: '100%',
+  },
   trigger: {
-    borderWidth: 1,
+    backgroundColor: colors.white,
     borderColor: colors.gray300,
     borderRadius: radii.md,
+    borderWidth: 1,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm + 4,
-    backgroundColor: colors.white,
   },
   triggerText: {
     color: colors.gray700,
     fontSize: 16,
-  },
-  backdrop: {
-    flex: 1,
-    backgroundColor: '#00000055',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.md,
-  },
-  sheet: {
-    width: '100%',
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    overflow: 'hidden',
-  },
-  option: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
-  },
-  optionText: {
-    fontSize: 16,
-    color: colors.black,
-  },
-  cancel: {
-    borderBottomWidth: 0,
   },
 });

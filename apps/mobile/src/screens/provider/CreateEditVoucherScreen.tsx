@@ -62,40 +62,40 @@ export function CreateEditVoucherScreen() {
 }
 
 const styles = StyleSheet.create({
+  actionsRow: {
+    flexDirection: 'row',
+    marginTop: SPACING.lg,
+  },
+  card: {
+    padding: SPACING.md,
+  },
+  content: {
+    padding: SPACING.md,
+  },
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   header: {
     backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   headerTitle: {
     fontSize: FONT_SIZES.h4 || 18,
     fontWeight: 'bold',
   },
-  content: {
-    padding: SPACING.md,
-  },
-  card: {
-    padding: SPACING.md,
-  },
   label: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
     marginBottom: SPACING.xs,
-  },
-  actionsRow: {
-    flexDirection: 'row',
-    marginTop: SPACING.lg,
   },
 });
 

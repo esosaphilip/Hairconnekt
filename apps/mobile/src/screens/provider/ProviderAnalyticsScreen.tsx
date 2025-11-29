@@ -380,6 +380,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING.xs,
   },
+  activeButton: {
+    backgroundColor: COLORS.primary || '#8B4513',
+    borderColor: COLORS.primary || '#8B4513',
+  },
   periodSelectorContainer: {
     backgroundColor: COLORS.white,
     borderBottomColor: COLORS.border,
@@ -387,13 +391,9 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.sm,
     paddingHorizontal: SPACING.md,
   },
-  activeButton: {
-    backgroundColor: COLORS.primary || '#8B4513',
-    borderColor: COLORS.primary || '#8B4513',
-  },
   inactiveButton: {
-    borderColor: COLORS.border || '#E5E7EB',
     backgroundColor: COLORS.white,
+    borderColor: COLORS.border || '#E5E7EB',
   },
   // --- Scroll Content & Metrics Grid ---
   scrollContent: {
@@ -407,8 +407,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.md,
   },
   metricCard: {
-    width: (screenWidth - SPACING.md * 2 - SPACING.sm) / 2,
     padding: SPACING.md,
+    width: (screenWidth - SPACING.md * 2 - SPACING.sm) / 2,
   },
   metricRow: {
     alignItems: 'center',
@@ -417,8 +417,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   metricLabel: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body || 14,
   },
   metricValue: {
     fontSize: 24,
@@ -431,21 +431,21 @@ const styles = StyleSheet.create({
     gap: SPACING.xs / 2,
   },
   trendTextSuccess: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.success,
+    fontSize: FONT_SIZES.small || 12,
   },
   trendTextNeutral: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
   },
   trendTextDanger: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.danger,
+    fontSize: FONT_SIZES.small || 12,
   },
   // --- Chart Cards ---
   chartCard: {
-    padding: SPACING.md,
     marginBottom: SPACING.md,
+    padding: SPACING.md,
   },
   cardTitle: {
     fontSize: FONT_SIZES.h5 || 16,
@@ -475,17 +475,17 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   barLabel: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
     marginTop: SPACING.xs,
   },
   trendSummary: {
+    alignItems: 'center',
+    borderTopColor: COLORS.border,
+    borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     paddingTop: SPACING.sm,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
   },
   trendStat: {
     // Left stat container
@@ -494,13 +494,13 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   trendLabel: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body || 14,
   },
   trendValueSuccess: {
+    color: COLORS.success,
     fontSize: FONT_SIZES.h5 || 16,
     fontWeight: 'bold',
-    color: COLORS.success,
   },
   trendRow: {
     alignItems: 'center',
@@ -515,17 +515,17 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
   },
   serviceDetails: {
+      alignItems: 'flex-start',
       flexDirection: 'row',
       justifyContent: 'space-between',
-      alignItems: 'flex-start',
   },
   serviceNameRow: {
       // Left side (name and bookings)
       flex: 1,
   },
   serviceBookings: {
-      fontSize: FONT_SIZES.small || 12,
       color: COLORS.textSecondary,
+      fontSize: FONT_SIZES.small || 12,
   },
   serviceRevenueRow: {
       // Right side (revenue and trend)
@@ -536,24 +536,24 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   serviceRevenue: {
+    color: COLORS.primary,
     fontSize: FONT_SIZES.h5 || 16,
     fontWeight: '600',
-    color: COLORS.primary,
   },
   trendRowSuccess: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   trendRowDanger: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
   },
   progressBarBackground: {
     backgroundColor: COLORS.border,
-    height: 8,
     borderRadius: 4,
+    height: 8,
     overflow: 'hidden',
     width: '100%',
   },
@@ -576,15 +576,15 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   peakHourLabel: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.body || 14,
     width: 60,
   },
   peakHourBarBackground: {
     backgroundColor: COLORS.border,
+    borderRadius: 4,
     flex: 1,
     height: 32,
-    borderRadius: 4,
     overflow: 'hidden',
   },
   peakHourBarFill: {
@@ -595,8 +595,8 @@ const styles = StyleSheet.create({
     paddingRight: SPACING.xs,
   },
   peakHourCount: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.white,
+    fontSize: FONT_SIZES.small || 12,
     fontWeight: '500',
   },
   // --- KPI & Demographics List ---
@@ -610,12 +610,12 @@ const styles = StyleSheet.create({
     paddingBottom: SPACING.sm,
   },
   kpiSeparator: {
-    borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
+    borderBottomWidth: 1,
   },
   kpiLabel: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
   kpiValueContainer: {
     alignItems: 'flex-end',

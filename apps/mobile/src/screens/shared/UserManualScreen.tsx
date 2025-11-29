@@ -250,8 +250,8 @@ export function LoginScreen({
 const PRIMARY_COLOR = '#8B4513'; // Saddle Brown
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
     backgroundColor: '#fff',
+    flex: 1,
   },
   keyboardAvoiding: {
     flex: 1,
@@ -281,8 +281,8 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   welcomeSubtitle: {
-    fontSize: 16,
-    color: '#6b7280', // text-gray-600
+    color: '#6b7280',
+    fontSize: 16, // text-gray-600
   },
 
   // Form
@@ -291,9 +291,9 @@ const styles = StyleSheet.create({
     gap: 16, // space-y-4
   },
   label: {
+    color: '#374151',
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
     marginBottom: 4,
   },
   input: {
@@ -341,18 +341,18 @@ const styles = StyleSheet.create({
 
   // Checkbox
   checkboxWrapper: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8, // space-x-2
   },
   checkbox: {
-    width: 20,
-    height: 20,
+    alignItems: 'center',
+    borderColor: '#d1d5db',
     borderRadius: 4,
     borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
+    height: 20,
     justifyContent: 'center',
+    width: 20,
   },
   checkboxChecked: {
     backgroundColor: PRIMARY_COLOR,
@@ -386,14 +386,14 @@ const styles = StyleSheet.create({
 
   // Separator
   separatorContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginVertical: 24, // my-6
   },
   separatorLine: {
+    backgroundColor: '#e5e7eb',
     flex: 1,
-    height: 1,
-    backgroundColor: '#e5e7eb', // border-gray-200
+    height: 1, // border-gray-200
   },
   separatorText: {
     paddingHorizontal: 16, // px-4
@@ -412,9 +412,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   outlineButtonText: {
+    color: '#333',
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
   },
   blackButton: {
     backgroundColor: 'black',
@@ -437,8 +437,8 @@ const styles = StyleSheet.create({
     marginTop: 'auto', // Push to the bottom
   },
   signupText: {
-    fontSize: 16,
-    color: '#6b7280', // text-gray-600
+    color: '#6b7280',
+    fontSize: 16, // text-gray-600
   },
   signupLink: {
     color: PRIMARY_COLOR,

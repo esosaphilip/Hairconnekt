@@ -448,27 +448,27 @@ export function TransactionsScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   // --- Header Styles ---
   header: {
     backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    elevation: 2,
+    paddingBottom: SPACING.sm || 8,
     paddingHorizontal: SPACING.md || 16,
     paddingTop: SPACING.md || 16,
-    paddingBottom: SPACING.sm || 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerTopRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: SPACING.md,
   },
@@ -486,14 +486,14 @@ const styles = StyleSheet.create({
     borderColor: COLORS.primary || '#8B4513',
   },
   inactiveButton: {
-    borderColor: COLORS.border || '#E5E7EB',
     backgroundColor: COLORS.white,
+    borderColor: COLORS.border || '#E5E7EB',
   },
   // --- List & Summary Styles ---
   listContent: {
-    paddingTop: 0,
     paddingBottom: SPACING.md,
     paddingHorizontal: SPACING.md,
+    paddingTop: 0,
   },
   summaryGrid: {
     flexDirection: 'row',
@@ -505,39 +505,39 @@ const styles = StyleSheet.create({
     padding: SPACING.md,
   },
   summaryIconRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: SPACING.xs,
   },
   summaryLabel: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
   summaryHint: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
   },
   incomeValue: {
-    fontSize: 24,
     color: COLORS.success || '#10B981',
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: SPACING.xs / 2,
   },
   payoutValue: {
-    fontSize: 24,
     color: COLORS.danger || '#EF4444',
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: SPACING.xs / 2,
   },
   // --- Transaction Item Styles ---
   transactionCard: {
-    padding: SPACING.md,
     marginBottom: SPACING.sm,
+    padding: SPACING.md,
   },
   rowHeader: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
     marginBottom: SPACING.sm,
   },
   clientName: {
@@ -545,8 +545,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   serviceName: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.body || 14,
   },
   detailsBlock: {
     marginBottom: SPACING.sm,
@@ -565,12 +565,12 @@ const styles = StyleSheet.create({
     color: COLORS.danger || '#EF4444',
   },
   totalRow: {
+    borderTopColor: COLORS.border,
+    borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
-    paddingTop: SPACING.xs,
     marginTop: SPACING.xs,
+    paddingTop: SPACING.xs,
   },
   totalLabel: {
     color: COLORS.text || '#1F2937',
@@ -587,24 +587,24 @@ const styles = StyleSheet.create({
     color: COLORS.danger || '#EF4444',
   },
   dateRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   dateText: {
-      fontSize: FONT_SIZES.small || 12,
       color: COLORS.textSecondary || '#6B7280',
+      fontSize: FONT_SIZES.small || 12,
       marginLeft: SPACING.xs / 2,
   },
   payoutAmount: {
-    fontSize: 18,
     color: COLORS.danger || '#EF4444',
+    fontSize: 18,
     fontWeight: 'bold',
   },
   // --- Empty State Styles ---
   emptyContainer: {
-      paddingVertical: SPACING.xl * 2,
-      paddingHorizontal: SPACING.md,
       alignItems: 'center',
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xl * 2,
   },
   emptyIcon: {
       color: COLORS.border || '#D1D5DB',
@@ -616,22 +616,22 @@ const styles = StyleSheet.create({
       marginBottom: SPACING.xs,
   },
   emptySubtitle: {
-      fontSize: FONT_SIZES.body || 14,
       color: COLORS.textSecondary || '#6B7280',
+      fontSize: FONT_SIZES.body || 14,
       textAlign: 'center',
   },
   // --- Export Footer Styles (Simulating fixed position at the bottom of the scroll view) ---
   exportFooter: {
+      backgroundColor: COLORS.white,
+      borderTopColor: COLORS.border,
+      borderTopWidth: 1,
+      elevation: 5,
       paddingHorizontal: SPACING.md,
       paddingVertical: SPACING.md,
-      borderTopWidth: 1,
-      borderTopColor: COLORS.border,
-      backgroundColor: COLORS.white,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: -2 },
       shadowOpacity: 0.05,
       shadowRadius: 3,
-      elevation: 5,
   },
   exportCard: {
       padding: 0, // Card is used as a simple container here
@@ -642,24 +642,24 @@ const styles = StyleSheet.create({
       marginBottom: SPACING.xs,
   },
   exportSubtitle: {
-      fontSize: FONT_SIZES.body || 14,
       color: COLORS.textSecondary || '#6B7280',
+      fontSize: FONT_SIZES.body || 14,
       marginBottom: SPACING.sm,
   },
   // Added button styles used in auth/role gating actions
   exportButton: {
-      flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: COLORS.primary || '#8B4513',
-      paddingVertical: SPACING.sm,
-      paddingHorizontal: SPACING.md,
-      borderRadius: 8,
       alignSelf: 'flex-start',
+      backgroundColor: COLORS.primary || '#8B4513',
+      borderRadius: 8,
+      flexDirection: 'row',
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.sm,
   },
   exportButtonText: {
       color: COLORS.white || '#FFFFFF',
-      fontWeight: '600',
       fontSize: FONT_SIZES.body || 14,
+      fontWeight: '600',
       marginLeft: SPACING.xs,
   },
 });

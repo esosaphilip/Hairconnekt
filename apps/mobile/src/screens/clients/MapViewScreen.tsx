@@ -435,14 +435,14 @@ export function MapViewScreen() {
 // --- Stylesheet for React Native ---
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: '#FAF9F6', // bg-[#FAF9F6]
+    backgroundColor: '#FAF9F6',
+    flex: 1, // bg-[#FAF9F6]
   },
   // --- 1. Header Styles ---
   header: {
     backgroundColor: colors.white,
-    borderBottomWidth: 1,
     borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
     zIndex: 20,
     // RN shadow for sticky header feel
     ...Platform.select({
@@ -462,26 +462,26 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   headerTitleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 12,
   },
   headerTitle: {
+    color: colors.gray800,
     fontSize: 16,
     fontWeight: '600',
-    color: colors.gray800,
     marginLeft: 8,
   },
   // Search Bar
   searchBarWrapper: {
-    flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
+    flexDirection: 'row',
     height: 40,
+    position: 'relative',
   },
   searchIcon: {
-    position: 'absolute',
     left: 12,
+    position: 'absolute',
     zIndex: 1,
   },
   searchInput: {
@@ -491,9 +491,9 @@ const styles = StyleSheet.create({
     height: 40,
   },
   searchButtons: {
+    flexDirection: 'row',
     position: 'absolute',
     right: 8,
-    flexDirection: 'row',
   },
   filterButton: {
     height: 32, // h-8
@@ -514,23 +514,23 @@ const styles = StyleSheet.create({
     backgroundColor: colors.blue200, 
   },
   resultsBadge: {
-    position: 'absolute',
-    top: 16,
     alignSelf: 'center',
     backgroundColor: colors.white,
+    borderRadius: 20,
+    elevation: 5,
     paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: 20,
+    position: 'absolute',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 5,
+    top: 16,
     zIndex: 10,
   },
   resultsText: {
-    fontSize: 14,
     color: colors.gray700,
+    fontSize: 14,
   },
   mapMarker: {
     position: 'absolute',
@@ -541,16 +541,16 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   mapMarkerInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 20,
+    elevation: 6,
+    height: 40,
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 6,
+    width: 40,
   },
   markerAvailable: {
     backgroundColor: colors.primary,
@@ -559,39 +559,39 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray400,
   },
   pulseDot: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 12,
-    height: 12,
-    borderRadius: 6,
     backgroundColor: colors.error,
+    borderRadius: 6,
+    height: 12,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    width: 12,
     // RN doesn't support easy pulse animation in CSS, would need Animated API
   },
   centerLocationButton: {
-    position: 'absolute',
-    bottom: 24,
-    right: 16,
-    width: 48,
-    height: 48,
+    alignItems: 'center',
     backgroundColor: colors.white,
     borderRadius: 24,
+    bottom: 24,
+    elevation: 8,
+    height: 48,
     justifyContent: 'center',
-    alignItems: 'center',
+    position: 'absolute',
+    right: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
-    elevation: 8,
+    width: 48,
     zIndex: 10,
   },
   // --- 3. Selected Provider Card (Bottom Overlay) ---
   providerCardWrapper: {
-    position: 'absolute',
     bottom: 0,
     left: 0,
-    right: 0,
     padding: 16,
+    position: 'absolute',
+    right: 0,
     zIndex: 20,
   },
   providerCard: {
@@ -604,24 +604,24 @@ const styles = StyleSheet.create({
   },
   providerDetails: {
     flex: 1,
-    minWidth: 0,
     marginLeft: 12,
+    minWidth: 0,
   },
   nameBadgeRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 4,
   },
   providerNameText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: colors.gray800,
     flexShrink: 1,
+    fontSize: 16,
+    fontWeight: '600',
   },
   ratingDistanceRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   starIcon: {
@@ -632,32 +632,32 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   separatorText: {
-    fontSize: 14,
     color: colors.gray400,
+    fontSize: 14,
     marginLeft: 4,
   },
   distanceText: {
-    fontSize: 14,
     color: colors.gray700,
+    fontSize: 14,
     marginLeft: 4,
   },
   specialtyText: {
-    fontSize: 14,
     color: colors.gray700,
+    fontSize: 14,
     marginBottom: 4,
   },
   priceText: {
-    fontSize: 14,
     color: colors.primary,
+    fontSize: 14,
   },
   addressRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginTop: 8,
   },
   addressText: {
-    fontSize: 12,
     color: colors.gray600,
+    fontSize: 12,
     marginLeft: 6,
   },
   actionButtonsRow: {
@@ -670,9 +670,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   actionIconButton: {
+    borderColor: colors.gray300,
     height: 36,
     width: 36,
-    borderColor: colors.gray300,
   },
   // --- 4. List View Overlay ---
   listOverlay: {
@@ -681,30 +681,30 @@ const styles = StyleSheet.create({
     zIndex: 30,
   },
   listHeader: {
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
   },
   listTitleRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 8,
   },
   listHeaderTitle: {
+    color: colors.gray800,
     fontSize: 18,
     fontWeight: '600',
-    color: colors.gray800,
   },
   listResultsText: {
-    fontSize: 14,
     color: colors.gray700,
+    fontSize: 14,
   },
   listScrollViewContent: {
+    paddingBottom: 32,
     paddingHorizontal: 16,
     paddingTop: 16,
-    paddingBottom: 32,
   },
   listItemCard: {
     padding: 16,
@@ -714,24 +714,24 @@ const styles = StyleSheet.create({
   },
   listItemDetails: {
     flex: 1,
-    minWidth: 0,
     marginLeft: 12,
+    minWidth: 0,
   },
   listItemName: {
+    color: colors.gray800,
     fontSize: 16,
     fontWeight: '600',
-    color: colors.gray800,
   },
   listItemBadge: {
     fontSize: 12,
   },
   listItemSmallText: {
-    fontSize: 12,
     color: colors.gray700,
+    fontSize: 12,
     marginBottom: 2,
   },
   listItemPriceText: {
-    fontSize: 12,
     color: colors.primary,
+    fontSize: 12,
   }
 });

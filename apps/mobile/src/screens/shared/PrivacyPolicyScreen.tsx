@@ -313,8 +313,8 @@ export function PrivacyPolicyScreen() {
 // --- Stylesheet for RN ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#F9FAFB', // bg-gray-50
+    backgroundColor: '#F9FAFB',
+    flex: 1, // bg-gray-50
   },
   scrollView: {
     flex: 1,
@@ -339,50 +339,50 @@ const styles = StyleSheet.create({
     }),
   },
   headerBar: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   backButton: {
-    padding: spacing.xs,
     marginLeft: -spacing.xs,
+    padding: spacing.xs,
   },
   screenTitle: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   placeholderView: {
     width: 24,
   },
   // Cards
   introCard: {
-    padding: spacing.md,
     backgroundColor: PRIMARY_COLOR,
     marginBottom: spacing.md,
+    padding: spacing.md,
   },
   introContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: spacing.sm,
   },
   introTitle: {
+    color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    color: '#fff',
   },
   introDate: {
-    fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
   },
   gdprCard: {
-    padding: spacing.md,
     backgroundColor: INFO_BG,
     borderColor: INFO_BORDER,
     borderWidth: 1,
     marginBottom: spacing.md,
+    padding: spacing.md,
   },
   gdprTitle: {
     fontSize: 16,
@@ -391,8 +391,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   gdprDescription: {
-    fontSize: 14,
-    color: '#1E40AF', // text-blue-800
+    color: '#1E40AF',
+    fontSize: 14, // text-blue-800
   },
   buttonRow: {
     flexDirection: 'row',
@@ -400,8 +400,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   flexButton: {
-    flex: 1,
     borderColor: '#D1D5DB',
+    flex: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing.sm,
   },
@@ -409,8 +409,8 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
   },
   contentCard: {
-    padding: spacing.lg,
     marginBottom: spacing.md,
+    padding: spacing.lg,
   },
   policyContent: {
     // Styling for the container of all sections
@@ -441,24 +441,24 @@ const styles = StyleSheet.create({
   },
   // Bullet List Styling
   bulletList: {
-    paddingLeft: spacing.sm,
-    marginTop: spacing.xs,
-    marginBottom: spacing.sm,
     gap: spacing.xs,
+    marginBottom: spacing.sm,
+    marginTop: spacing.xs,
+    paddingLeft: spacing.sm,
   },
   bulletContainer: {
     flexDirection: 'row',
   },
   bulletIcon: {
-    fontSize: 14,
-    width: 15,
-    marginRight: spacing.xs,
     color: '#4B5563',
+    fontSize: 14,
+    marginRight: spacing.xs,
+    width: 15,
   },
   bulletText: {
+    color: '#4B5563',
     flex: 1,
     fontSize: 14,
-    color: '#4B5563',
     lineHeight: 20,
   },
   // Contact Card
@@ -468,42 +468,42 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   contactTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+    alignItems: 'center',
     color: '#1F2937',
     flexDirection: 'row',
-    alignItems: 'center',
+    fontSize: 16,
+    fontWeight: '700',
     gap: spacing.xs,
     marginBottom: spacing.xs,
   },
   contactDescription: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
     marginBottom: spacing.sm,
   },
   fullWidthButton: {
-    width: '100%',
     borderColor: '#D1D5DB',
+    width: '100%',
   },
   // Download Your Data Card
   downloadCard: {
-    padding: spacing.md,
     backgroundColor: PRIMARY_COLOR,
+    padding: spacing.md,
   },
   downloadTitle: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '700',
-    color: '#fff',
     marginBottom: spacing.xs,
   },
   downloadDescription: {
-    fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 14,
     marginBottom: spacing.sm,
   },
   downloadButton: {
-    width: '100%',
     backgroundColor: '#fff',
+    width: '100%',
   },
   downloadButtonText: {
     color: PRIMARY_COLOR,

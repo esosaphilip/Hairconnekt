@@ -113,7 +113,7 @@ export function BlockTimeScreen() {
             <Ionicons name={'chevron-back'} size={24} color={colors.gray700} />
           </Pressable>
           <View style={{ flex: 1 }}>
-            <Text style={[typography.h3]}>Zeit blockieren</Text>
+            <Text style={typography.h3}>Zeit blockieren</Text>
             <Text style={{ fontSize: 12, color: colors.gray600 }}>Blockiere Zeiten für Pausen oder Urlaub</Text>
           </View>
         </View>

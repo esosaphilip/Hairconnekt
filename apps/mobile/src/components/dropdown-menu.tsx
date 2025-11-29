@@ -164,43 +164,43 @@ function DropdownMenuSubContent({ children }) {
 }
 
 const styles = StyleSheet.create({
-  modalRoot: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",
   },
-  menuCard: {
-    maxHeight: "70%",
-    minWidth: 200,
-    width: "80%",
-    backgroundColor: theme.colors.white,
-    borderRadius: theme?.radii?.md ?? 0,
-    borderWidth: 1,
-    borderColor: theme.colors.gray200,
-    paddingVertical: 4,
-    ...(theme.shadows?.md || {}),
-  },
   item: {
-    paddingVertical: 10,
     paddingHorizontal: 12,
+    paddingVertical: 10,
   },
   itemText: {
-    fontSize: 14,
     color: theme.colors.black,
+    fontSize: 14,
+  },
+  menuCard: {
+    backgroundColor: theme.colors.white,
+    borderColor: theme.colors.gray200,
+    borderRadius: theme?.radii?.md ?? 0,
+    borderWidth: 1,
+    maxHeight: "70%",
+    minWidth: 200,
+    paddingVertical: 4,
+    width: "80%",
+    ...(theme.shadows?.md || {}),
+  },
+  modalRoot: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
   },
   separator: {
-    height: 1,
     backgroundColor: theme.colors.gray200,
+    height: 1,
     marginVertical: 4,
   },
   shortcut: {
-    marginLeft: "auto",
     color: theme.colors.gray500,
     fontSize: 12,
+    marginLeft: "auto",
   },
 });
 

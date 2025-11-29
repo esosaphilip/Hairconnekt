@@ -49,24 +49,24 @@ function PopoverAnchor({ children }) {
 }
 
 const styles = StyleSheet.create({
-  centerWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.4)",
   },
   card: {
-    width: 280,
-    maxWidth: "90%",
     backgroundColor: theme.colors.white,
+    borderColor: theme.colors.gray200,
     borderRadius: theme?.radii?.md ?? 0,
     borderWidth: 1,
-    borderColor: theme.colors.gray200,
+    maxWidth: "90%",
     padding: 16,
+    width: 280,
     ...(theme.shadows?.md || {}),
+  },
+  centerWrap: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
   },
 });
 

@@ -262,8 +262,8 @@ export function PersonalInfoScreen() {
 // Cast styles to any to temporarily allow web-only properties like `gap`.
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#F9FAFB', // bg-gray-50
+    backgroundColor: '#F9FAFB',
+    flex: 1, // bg-gray-50
   },
   scrollView: {
     flex: 1,
@@ -288,20 +288,20 @@ const styles = StyleSheet.create({
     }),
   },
   headerBar: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   backButton: {
-    padding: spacing.xs,
     marginLeft: -spacing.xs,
+    padding: spacing.xs,
   },
   screenTitle: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   placeholderView: {
     width: 24,
@@ -329,11 +329,11 @@ const styles = StyleSheet.create({
 
   // Info Card
   infoCard: {
-    padding: spacing.md,
-    marginTop: spacing.md,
     backgroundColor: INFO_BG,
     borderColor: INFO_BORDER,
     borderWidth: 1,
+    marginTop: spacing.md,
+    padding: spacing.md,
   },
   infoTitle: {
     fontSize: 16,
@@ -342,34 +342,34 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   infoDescription: {
-    fontSize: 14,
-    color: '#1E40AF', // text-blue-800
+    color: '#1E40AF',
+    fontSize: 14, // text-blue-800
   },
   // Add missing picker style used by @react-native-picker/picker
   picker: {
-    height: 44,
-    borderWidth: 1,
+    backgroundColor: '#fff',
     borderColor: '#D1D5DB',
     borderRadius: 6,
-    backgroundColor: '#fff',
+    borderWidth: 1,
+    height: 44,
     marginTop: spacing.xs,
   },
 
   // Save Button
   saveButton: {
-    width: '100%',
+    backgroundColor: PRIMARY_COLOR,
     marginTop: spacing.lg,
-    backgroundColor: PRIMARY_COLOR, // bg-[#8B4513]
+    width: '100%', // bg-[#8B4513]
     // The Button component should handle the hover/pressed state
   },
   saveButtonContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'center',
   },
   saveButtonLoading: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'center',
     paddingVertical: spacing.sm,
   },

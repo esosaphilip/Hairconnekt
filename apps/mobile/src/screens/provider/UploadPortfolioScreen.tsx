@@ -241,25 +241,25 @@ export function UploadPortfolioScreen() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   // --- Header Styles ---
   header: {
     backgroundColor: COLORS.white || '#FFFFFF',
-    padding: SPACING.md || 16,
-    borderBottomWidth: 1,
     borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    elevation: 2,
+    padding: SPACING.md || 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.sm || 8,
   },
   headerTitle: {
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
   },
   // --- Scroll Content & Form ---
   scrollContent: {
@@ -281,8 +281,8 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   hintText: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
     marginTop: SPACING.xs,
   },
   formSection: {
@@ -294,14 +294,14 @@ const styles = StyleSheet.create({
   },
   // --- Image Upload Styles ---
   uploadContainer: {
-    borderWidth: 2,
-    borderStyle: 'dashed',
-    borderColor: COLORS.border || '#D1D5DB',
-    borderRadius: 8,
-    padding: SPACING.xl,
     alignItems: 'center',
     backgroundColor: COLORS.white,
+    borderColor: COLORS.border || '#D1D5DB',
+    borderRadius: 8,
+    borderStyle: 'dashed',
+    borderWidth: 2,
     marginTop: SPACING.xs,
+    padding: SPACING.xl,
   },
   uploadIcon: {
     marginBottom: SPACING.sm,
@@ -312,8 +312,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   uploadHintText: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
     marginBottom: SPACING.md,
   },
   selectButton: {
@@ -322,10 +322,10 @@ const styles = StyleSheet.create({
   },
   // --- Image Preview Styles ---
   previewGrid: {
-    marginTop: SPACING.md,
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: SPACING.sm,
+    marginTop: SPACING.md,
   },
   previewItem: {
     width: '31%', // Simulate grid-cols-3 with gap
@@ -335,8 +335,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   previewImage: {
-    width: '100%',
     height: '100%',
+    width: '100%',
   },
   removeButton: {
     position: 'absolute',
@@ -374,14 +374,14 @@ const styles = StyleSheet.create({
     gap: SPACING.xs / 2,
   },
   tipsItem: {
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.infoTextDark || '#374151', // blue-800
+    color: COLORS.infoTextDark || '#374151',
+    fontSize: FONT_SIZES.body || 14, // blue-800
   },
   // --- Submit Button ---
   submitButton: {
-    width: '100%',
     height: 48,
-    marginTop: SPACING.lg,
     marginBottom: SPACING.md,
+    marginTop: SPACING.lg,
+    width: '100%',
   },
 });

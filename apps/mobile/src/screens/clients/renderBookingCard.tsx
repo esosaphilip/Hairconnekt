@@ -9,25 +9,19 @@ import { colors } from "@/theme/tokens";
 type NavigateFn = (route: string, params: Record<string, unknown>) => void;
 
 const local = StyleSheet.create({
-  badgeCompleted: { backgroundColor: colors.success },
   badgeCancelled: { backgroundColor: colors.error },
+  badgeCompleted: { backgroundColor: colors.success },
   badgeTextWhite: { color: colors.white, fontSize: 12 },
 });
 
 const sx = StyleSheet.create({
   bookingCard: { marginBottom: 12, padding: 16 },
-  providerInfo: { flexDirection: 'row', marginBottom: 12 },
-  providerAvatar: { flexShrink: 0, height: 64, marginRight: 12, width: 64 },
-  providerImage: { height: '100%', resizeMode: 'cover', width: '100%' },
-  detailsWrapper: { flex: 1, minWidth: 0 },
-  nameStatusRow: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  nameBusinessWrapper: { flex: 1, minWidth: 0 },
-  providerName: { color: colors.gray800, fontSize: 16, fontWeight: 'bold' },
-  providerBusiness: { color: colors.gray500, fontSize: 14 },
-  serviceBadge: { alignSelf: 'flex-start', marginTop: 4 },
   bookingDetails: {},
+  cancelStatus: {},
+  cancelText: { color: colors.gray500, fontSize: 14 },
   detailRow: { alignItems: 'center', flexDirection: 'row', marginBottom: 8 },
   detailText: { color: colors.gray600, fontSize: 14, marginLeft: 8 },
+  detailsWrapper: { flex: 1, minWidth: 0 },
   footer: {
     alignItems: 'center',
     borderTopColor: colors.gray200,
@@ -37,11 +31,17 @@ const sx = StyleSheet.create({
     marginTop: 16,
     paddingTop: 16,
   },
+  nameBusinessWrapper: { flex: 1, minWidth: 0 },
+  nameStatusRow: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
   priceText: { color: colors.primary, fontWeight: '600' },
+  providerAvatar: { flexShrink: 0, height: 64, marginRight: 12, width: 64 },
+  providerBusiness: { color: colors.gray500, fontSize: 14 },
+  providerImage: { height: '100%', resizeMode: 'cover', width: '100%' },
+  providerInfo: { flexDirection: 'row', marginBottom: 12 },
+  providerName: { color: colors.gray800, fontSize: 16, fontWeight: 'bold' },
   reviewStatus: { alignItems: 'center', flexDirection: 'row' },
   reviewText: { fontSize: 14, marginLeft: 4 },
-  cancelStatus: {},
-  cancelText: { color: colors.gray500, fontSize: 14 },
+  serviceBadge: { alignSelf: 'flex-start', marginTop: 4 },
 });
 
 export function renderBookingCard(

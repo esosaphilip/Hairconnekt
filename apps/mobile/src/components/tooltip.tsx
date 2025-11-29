@@ -62,18 +62,18 @@ function TooltipContent({ children, style }) {
 }
 
 const styles = StyleSheet.create({
-  centerWrap: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "transparent",
-  },
   bubble: {
     backgroundColor: theme.colors.primary,
+    borderRadius: theme?.radii?.md ?? 0,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: theme?.radii?.md ?? 0,
     ...(theme.shadows?.sm || {}),
+  },
+  centerWrap: {
+    alignItems: "center",
+    backgroundColor: "transparent",
+    flex: 1,
+    justifyContent: "center",
   },
   text: {
     color: theme.colors.white,

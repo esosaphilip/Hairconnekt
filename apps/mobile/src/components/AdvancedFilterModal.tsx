@@ -188,10 +188,24 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ visible, onCl
 };
 
 const styles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
+  footer: {
+    borderTopColor: '#E5E7EB',
+    borderTopWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 16,
+  },
+  header: {
+    alignItems: 'center',
+    borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
   },
   modalContent: {
     backgroundColor: 'white',
@@ -200,47 +214,18 @@ const styles = StyleSheet.create({
     height: '80%',
     padding: 16,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    paddingBottom: 16,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  scrollViewContent: {
-    paddingVertical: 16,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  optionGroup: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  modalOverlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   optionButton: {
     backgroundColor: '#F3F4F6',
     borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginRight: 12,
     marginBottom: 12,
+    marginRight: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
   optionButtonSelected: {
     backgroundColor: THEME_COLOR,
@@ -251,6 +236,21 @@ const styles = StyleSheet.create({
   },
   optionButtonTextSelected: {
     color: 'white',
+  },
+  optionGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  scrollViewContent: {
+    paddingVertical: 16,
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
   },
 });
 

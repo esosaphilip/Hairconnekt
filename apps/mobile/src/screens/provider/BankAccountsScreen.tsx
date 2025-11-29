@@ -328,8 +328,8 @@ export function BankAccountsScreen() {
 // --- Stylesheet for React Native ---
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: colors.background,
+    flex: 1,
   },
   // Header styles
   header: {
@@ -340,20 +340,20 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   // ScrollView content
   scrollContent: {
@@ -362,36 +362,36 @@ const styles = StyleSheet.create({
   },
   // Add Account Button
   addButton: {
-    width: '100%',
-    height: 48,
     backgroundColor: colors.primary,
+    height: 48,
+    width: '100%',
   },
   // Empty State
   emptyCard: {
-    padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 32,
   },
   emptyIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.grayBackground,
     alignItems: 'center',
+    backgroundColor: colors.grayBackground,
+    borderRadius: 32,
+    height: 64,
     justifyContent: 'center',
     marginBottom: 16,
+    width: 64,
   },
   emptyTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 8,
   },
   emptySubtitle: {
-    fontSize: 14,
     color: colors.gray,
-    textAlign: 'center',
+    fontSize: 14,
     marginBottom: 16,
+    textAlign: 'center',
   },
   emptyCtaButton: {
     backgroundColor: colors.primary,
@@ -400,22 +400,22 @@ const styles = StyleSheet.create({
   listSection: {
   },
   listTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   // Account Card
   accountCard: {
     padding: 16,
   },
   accountHeaderRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   accountDetailsLeft: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     flex: 1,
   },
   bankIconContainer: {
@@ -432,34 +432,34 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   bankNameRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   bankNameText: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#1F2937',
-    flexShrink: 1, // Allows truncation
+    flexShrink: 1,
+    fontSize: 16,
+    fontWeight: '600', // Allows truncation
   },
   accountHolderText: {
-    fontSize: 14,
     color: colors.gray,
+    fontSize: 14,
     marginBottom: 2,
   },
   ibanText: {
-    fontSize: 14,
     color: '#6B7280',
-    fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', // Mono font simulation
+    fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+    fontSize: 14, // Mono font simulation
   },
   addedDateText: {
-    fontSize: 12,
     color: '#9CA3AF',
+    fontSize: 12,
     marginTop: 8,
   },
   moreButton: {
-    padding: 8,
-    marginRight: -8, // Pulls the button slightly off the edge for better touch area
+    marginRight: -8,
+    padding: 8, // Pulls the button slightly off the edge for better touch area
   },
   // BIC Info Row
   bicInfoRow: {
@@ -474,34 +474,34 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   bicLabel: {
-    fontSize: 12,
     color: colors.gray,
+    fontSize: 12,
     marginBottom: 2,
   },
   bicValue: {
-    fontSize: 14,
     color: '#1F2937',
-    fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace', // Mono font simulation
+    fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
+    fontSize: 14, // Mono font simulation
   },
   // Info Cards
   infoCard: {
     padding: 16,
   },
   infoTitleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   infoTitleText: {
+    color: '#1F2937',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   infoList: {
   },
   infoListItem: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
   },
   securityCard: {
     backgroundColor: colors.lightBlue,

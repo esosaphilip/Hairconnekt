@@ -371,32 +371,32 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   contentContainer: {
-    padding: SPACING,
     gap: SPACING,
+    padding: SPACING,
   },
 
   // Header
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'white',
+    elevation: 2,
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING,
     paddingVertical: 12,
-    backgroundColor: 'white',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 2,
     zIndex: 10,
   },
   backButton: {
     paddingRight: 8,
   },
   headerTitle: {
+    color: '#374151',
     fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
   },
   emptySpace: {
     width: 24, // To balance the back button
@@ -406,31 +406,31 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
     borderRadius: CARD_RADIUS,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 3,
   },
 
   // Updated Card
   updatedCard: {
-    padding: SPACING,
     backgroundColor: THEME_COLOR,
+    padding: SPACING,
   },
   updatedCardContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING,
   },
   updatedCardTitle: {
+    color: 'white',
     fontSize: 16,
     fontWeight: '600',
-    color: 'white',
   },
   updatedCardDate: {
-    fontSize: 12,
     color: 'rgba(255, 255, 255, 0.9)',
+    fontSize: 12,
   },
 
   // Action Buttons
@@ -439,13 +439,13 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buttonBase: {
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
     borderRadius: CARD_RADIUS,
     borderWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   buttonOutline: {
     backgroundColor: 'white',
@@ -474,22 +474,22 @@ const styles = StyleSheet.create({
     gap: SPACING,
   },
   separator: {
-    height: 1,
     backgroundColor: '#E5E7EB',
+    height: 1,
     marginVertical: 4,
   },
   section: {
     gap: 8,
   },
   sectionTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 4,
   },
   p: {
-    fontSize: 14,
     color: TEXT_COLOR,
+    fontSize: 14,
     lineHeight: 20,
     marginBottom: 8,
   },
@@ -497,29 +497,29 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   listContainer: {
-    marginLeft: 8,
     gap: 4,
+    marginLeft: 8,
   },
   listItem: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     paddingRight: 10,
   },
   listItemBullet: {
-    fontSize: 14,
     color: TEXT_COLOR,
+    fontSize: 14,
     marginRight: 8,
   },
   listItemText: {
-    fontSize: 14,
     color: TEXT_COLOR,
     flexShrink: 1,
+    fontSize: 14,
     lineHeight: 20,
   },
   linkText: {
     color: THEME_COLOR,
-    textDecorationLine: 'underline',
     fontSize: 14,
+    textDecorationLine: 'underline',
   },
 
   // Contact Card
@@ -534,8 +534,8 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   contactText: {
-    fontSize: 14,
     color: TEXT_COLOR,
+    fontSize: 14,
     marginBottom: 12,
   },
   contactButton: {

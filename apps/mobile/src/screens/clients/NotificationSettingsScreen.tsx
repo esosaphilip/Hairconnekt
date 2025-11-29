@@ -135,7 +135,7 @@ export default function NotificationSettingsScreen() {
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <ArrowLeft size={24} color="#374151" />
+          <ArrowLeft size={24} color={colors.gray700} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Benachrichtigungen</Text>
       </View>
@@ -148,7 +148,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.switchRow}>
             <View style={styles.switchRowContent}>
-              <Bell size={20} color="#4B5563" />
+              <Bell size={20} color={colors.gray600} />
               <View>
                 <Text style={styles.switchText}>Push-Benachrichtigungen</Text>
                 <Text style={styles.switchSubText}>Auf diesem Gerät</Text>
@@ -163,7 +163,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.switchRow}>
             <View style={styles.switchRowContent}>
-              <Mail size={20} color="#4B5563" />
+              <Mail size={20} color={colors.gray600} />
               <View>
                 <Text style={styles.switchText}>E-Mail-Benachrichtigungen</Text>
                 <Text style={styles.switchSubText}>An Ihre E-Mail-Adresse</Text>
@@ -178,7 +178,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.switchRow}>
             <View style={styles.switchRowContent}>
-              <MessageSquare size={20} color="#4B5563" />
+              <MessageSquare size={20} color={colors.gray600} />
               <View>
                 <Text style={styles.switchText}>SMS-Benachrichtigungen</Text>
                 <Text style={styles.switchSubText}>Nur für wichtige Updates</Text>
@@ -201,7 +201,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.switchRow}>
             <View style={styles.switchRowContent}>
-              <Volume2 size={20} color="#4B5563" />
+              <Volume2 size={20} color={colors.gray600} />
               <Text style={styles.switchText}>Benachrichtigungston</Text>
             </View>
             <Switch
@@ -228,7 +228,7 @@ export default function NotificationSettingsScreen() {
 
           <View style={styles.switchRow}>
             <View style={styles.switchRowContent}>
-              <Vibrate size={20} color="#4B5563" />
+              <Vibrate size={20} color={colors.gray600} />
               <Text style={styles.switchText}>Vibration</Text>
             </View>
             <Switch
@@ -262,14 +262,14 @@ export default function NotificationSettingsScreen() {
                     label="Von" 
                     value={quietHoursStart} 
                     onChange={setQuietHoursStart}
-                    icon={<Clock size={20} color="#4B5563" />}
+                    icon={<Clock size={20} color={colors.gray600} />}
                     style={styles.flex1}
                 />
                 <CustomTimePicker 
                     label="Bis" 
                     value={quietHoursEnd} 
                     onChange={setQuietHoursEnd} 
-                    icon={<Clock size={20} color="#4B5563" />}
+                    icon={<Clock size={20} color={colors.gray600} />}
                     style={styles.flex1}
                 />
               </View>
@@ -368,6 +368,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.gray50,
     flex: 1,
   },
+  backButton: {
+    marginRight: 16,
+    padding: 8,
+  },
   header: {
     alignItems: 'center',
     backgroundColor: colors.white,
@@ -377,14 +381,10 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingTop: Platform.OS === 'android' ? 40 : 16,
   },
-  backButton: {
-    padding: 8,
-    marginRight: 16,
-  },
   headerTitle: {
+    color: colors.gray800,
     fontSize: 20,
     fontWeight: '600',
-    color: colors.gray800,
   },
   scrollContent: {
     padding: 16,
@@ -398,15 +398,15 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   cardLabel: {
+    color: colors.gray800,
     fontSize: 16,
     fontWeight: '600',
-    color: colors.gray800,
     marginBottom: 8,
   },
   flexBetween: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   // --- Master & Channel Switches ---
   switchRow: {
@@ -426,13 +426,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   switchText: {
-    fontSize: 14,
     color: colors.gray800,
+    fontSize: 14,
     fontWeight: '500',
   },
   switchSubText: {
-    fontSize: 12,
     color: colors.gray600,
+    fontSize: 12,
   },
   // --- Sound & Vibration ---
   policyText: {
@@ -448,8 +448,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   soundLabel: {
-    fontSize: 14,
     color: colors.gray600,
+    fontSize: 14,
   },
   soundValueContainer: {
     backgroundColor: colors.gray100,
@@ -458,8 +458,8 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   soundValue: {
-    fontSize: 14,
     color: colors.gray800,
+    fontSize: 14,
   },
   // --- Quiet Hours ---
   quietHoursContent: {
@@ -467,8 +467,8 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   quietHoursText: {
-    fontSize: 14,
     color: colors.gray600,
+    fontSize: 14,
   },
   timePickerContainer: {
     flexDirection: 'row',
@@ -482,8 +482,8 @@ const styles = StyleSheet.create({
   },
   // --- Categories ---
   categorySection: {
-    marginBottom: 16,
     gap: 16,
+    marginBottom: 16,
   },
   categoryCard: {
     backgroundColor: colors.white,
@@ -500,22 +500,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   categoryTitle: {
-    fontSize: 14,
     color: colors.gray800,
+    fontSize: 14,
     fontWeight: '500',
   },
   categoryDescription: {
-    fontSize: 12,
     color: colors.gray600,
+    fontSize: 12,
   },
   channelSwitches: {
-    paddingLeft: 32, // ml-8 equivalent
     gap: 8,
+    paddingLeft: 32, // ml-8 equivalent
   },
   channelRow: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
   channelLabel: {
     color: colors.slate,
@@ -535,8 +535,8 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     backgroundColor: colors.primary,
-    height: 48,
     borderRadius: 8,
+    height: 48,
   },
   testButton: {
     borderColor: colors.primary,

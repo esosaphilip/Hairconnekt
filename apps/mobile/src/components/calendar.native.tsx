@@ -111,26 +111,54 @@ export function Calendar(props: CalendarProps) {
 }
 
 const styles = StyleSheet.create({
+  blank: {
+    backgroundColor: 'transparent',
+  },
   container: {
     padding: 12,
   },
-  header: {
-    flexDirection: 'row',
+  dayCell: {
     alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 6,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  dayDisabled: {
+    opacity: 0.4,
+  },
+  daySelected: {
+    backgroundColor: '#8B4513',
+  },
+  dayText: {
+    color: '#1F2937',
+    fontSize: 14,
+  },
+  dayTextDisabled: {
+    color: '#6B7280',
+  },
+  dayTextSelected: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
-  },
-  navBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  navText: {
-    fontSize: 18,
   },
   monthLabel: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  navBtn: {
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  navText: {
+    fontSize: 18,
   },
   weekHeader: {
     flexDirection: 'row',
@@ -138,46 +166,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     paddingHorizontal: 6,
   },
-  weekday: {
-    width: 32,
-    textAlign: 'center',
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  weeks: {
-    gap: 6,
-  },
   weekRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  dayCell: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#F3F4F6',
-  },
-  blank: {
-    backgroundColor: 'transparent',
-  },
-  daySelected: {
-    backgroundColor: '#8B4513',
-  },
-  dayDisabled: {
-    opacity: 0.4,
-  },
-  dayText: {
-    fontSize: 14,
-    color: '#1F2937',
-  },
-  dayTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-  dayTextDisabled: {
+  weekday: {
     color: '#6B7280',
+    fontSize: 12,
+    textAlign: 'center',
+    width: 32,
+  },
+  weeks: {
+    gap: 6,
   },
 });
 

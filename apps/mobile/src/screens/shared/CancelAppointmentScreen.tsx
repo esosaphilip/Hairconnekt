@@ -344,27 +344,27 @@ export default function CancelAppointmentScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: colors.gray50,
+    flex: 1,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
     backgroundColor: colors.white,
-    borderBottomWidth: 1,
     borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    padding: 16,
     paddingTop: Platform.OS === 'android' ? 40 : 16, // Simple SafeArea
   },
   backButton: {
-    padding: 8,
     marginRight: 16,
+    padding: 8,
     // Add a circular ripple effect for Android/iOS with platform-specific code if needed
   },
   headerTitle: {
+    color: colors.gray800,
     fontSize: 20,
     fontWeight: '600',
-    color: colors.gray800,
   },
   scrollContent: {
     padding: 16,
@@ -380,8 +380,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   flexRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
   },
   warningTitle: {
     color: colors.red900,
@@ -401,8 +401,8 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   providerInfo: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 16,
   },
   providerName: {
@@ -420,18 +420,18 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   detailItem: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 12,
   },
   iconContainer: {
-    height: 36,
-    borderRadius: 18,
     alignItems: 'center',
     backgroundColor: colors.gray100,
+    borderRadius: 18,
+    height: 36,
     justifyContent: 'center',
-    width: 36,
     marginRight: 12,
+    width: 36,
   },
   detailLabel: {
     color: colors.gray600,
@@ -508,55 +508,55 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   reasonLabel: {
+    color: colors.gray800,
     fontSize: 16,
     fontWeight: '600',
-    color: colors.gray800,
     marginBottom: 12,
   },
   required: {
     color: colors.error,
   },
   radioButtonItem: {
-    padding: 16,
-    marginBottom: 8,
-    borderRadius: 8,
     backgroundColor: colors.white,
-    borderWidth: 1,
     borderColor: colors.gray200,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
+    padding: 16,
   },
   // --- Alternative Card ---
   alternativeCard: {
-    padding: 16,
     backgroundColor: COLORS.infoBg,
     borderColor: COLORS.infoBorder,
-    borderWidth: 1,
     borderRadius: 8,
+    borderWidth: 1,
     marginBottom: 20,
+    padding: 16,
   },
   alternativeTitle: {
-    fontSize: 14,
     color: COLORS.infoText,
+    fontSize: 14,
     marginBottom: 12,
   },
   alternativeTitleBold: {
     fontWeight: '600',
   },
   rescheduleButton: {
-    borderColor: colors.blue200,
     backgroundColor: 'transparent',
+    borderColor: colors.blue200,
     // The button component would handle hover/press state for hover:bg-blue-100
   },
   // --- Fixed Footer ---
   footer: {
-    position: 'absolute',
+    backgroundColor: colors.white,
+    borderTopColor: colors.gray200,
+    borderTopWidth: 1,
     bottom: 0,
     left: 0,
-    right: 0,
     padding: 16,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.gray200,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16, // Add padding for iPhone safe area
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+    position: 'absolute',
+    right: 0, // Add padding for iPhone safe area
   },
   cancelButton: {
     backgroundColor: colors.error,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
   },
   alertIcon: { marginRight: 12, marginTop: 2 },
   flexOne: { flex: 1 },
-  radioItemRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  radioItemRow: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
   radioItemLabel: { color: colors.gray800 },
   textareaMargin: { marginTop: 12 },
 });

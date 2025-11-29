@@ -769,27 +769,27 @@ export function ProviderRegistrationFlow() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: colors.gray50,
+    flex: 1,
   },
   // --- Header Styles ---
   header: {
     backgroundColor: colors.white,
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
+    elevation: 2,
+    paddingBottom: spacing.sm,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
-    paddingBottom: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: spacing.sm,
     marginBottom: spacing.xs,
   },
@@ -801,8 +801,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   headerSubtitle: {
-    fontSize: typography.small.fontSize,
     color: colors.gray500,
+    fontSize: typography.small.fontSize,
   },
   progressBar: {
     height: 8,
@@ -821,8 +821,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   stepSubtitle: {
-    fontSize: typography.small.fontSize,
     color: colors.gray500,
+    fontSize: typography.small.fontSize,
   },
   cardSectionTitle: {
     fontSize: 16,
@@ -849,13 +849,13 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   hintText: {
-    fontSize: typography.small.fontSize,
     color: colors.gray500,
+    fontSize: typography.small.fontSize,
     marginTop: spacing.xs / 2,
   },
   errorText: {
-    fontSize: typography.small.fontSize,
     color: colors.error,
+    fontSize: typography.small.fontSize,
     marginTop: spacing.xs / 2,
   },
   phoneInputRow: {
@@ -870,34 +870,34 @@ const styles = StyleSheet.create({
   },
   // --- Password Strength ---
   progress: {
-    marginTop: spacing.xs,
     height: 4,
+    marginTop: spacing.xs,
   },
   passwordRules: {
-    marginTop: spacing.xs,
     gap: spacing.xs / 2,
+    marginTop: spacing.xs,
   },
   ruleValid: {
-    fontSize: typography.small.fontSize,
     color: colors.success,
+    fontSize: typography.small.fontSize,
   },
   ruleInvalid: {
-    fontSize: typography.small.fontSize,
     color: colors.gray500,
+    fontSize: typography.small.fontSize,
   },
   // --- Checkbox Styles ---
   checkboxGroup: {
     gap: spacing.sm,
   },
   checkboxRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     gap: spacing.xs,
   },
   checkboxLabel: {
+    flexShrink: 1,
     fontSize: typography.body.fontSize,
     lineHeight: 20,
-    flexShrink: 1,
   },
   linkText: {
     color: colors.primary,
@@ -909,46 +909,46 @@ const styles = StyleSheet.create({
   },
   // --- Upload Styles ---
   infoCard: {
-    padding: spacing.md,
     backgroundColor: '#EFF6FF',
     borderColor: '#DBEAFE',
     borderWidth: 1,
+    padding: spacing.md,
   },
   infoText: {
-    fontSize: typography.body.fontSize,
     color: '#1E40AF',
+    fontSize: typography.body.fontSize,
   },
   uploadBox: {
-    borderWidth: 2,
-    borderStyle: 'dashed',
+    alignItems: 'center',
     borderColor: colors.gray300,
     borderRadius: 8,
-    padding: spacing.lg,
-    alignItems: 'center',
+    borderStyle: 'dashed',
+    borderWidth: 2,
     gap: spacing.xs,
+    padding: spacing.lg,
   },
   uploadText: {
-    fontSize: typography.body.fontSize,
     color: colors.gray500,
+    fontSize: typography.body.fontSize,
   },
   uploadedText: {
-    fontSize: typography.small.fontSize,
     color: colors.success,
+    fontSize: typography.small.fontSize,
     marginTop: spacing.xs,
   },
   // --- Summary Styles ---
   summaryCard: {
-    padding: spacing.md,
     gap: spacing.sm,
+    padding: spacing.md,
   },
   summaryHeader: {
+    alignItems: 'center',
+    borderBottomColor: colors.gray200,
+    borderBottomWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.gray200,
-    paddingBottom: spacing.xs,
     marginBottom: spacing.xs,
+    paddingBottom: spacing.xs,
   },
   summarySectionTitle: {
     fontSize: 16,
@@ -962,38 +962,38 @@ const styles = StyleSheet.create({
     gap: spacing.xs / 2,
   },
   summaryText: {
-    fontSize: typography.body.fontSize,
     color: colors.gray500,
+    fontSize: typography.body.fontSize,
   },
   summaryTextSecondary: {
-      fontSize: typography.body.fontSize,
       color: '#6B7280AA',
+      fontSize: typography.body.fontSize,
   },
   checkRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: spacing.xs,
   },
   checkIconBackground: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: colors.success,
     alignItems: 'center',
+    backgroundColor: colors.success,
+    borderRadius: 8,
+    height: 16,
     justifyContent: 'center',
+    width: 16,
   },
   checkIconBorder: {
-    width: 16,
-    height: 16,
+    borderColor: colors.gray300,
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: colors.gray300,
+    height: 16,
+    width: 16,
   },
   nextStepsCard: {
-    padding: spacing.md,
     backgroundColor: '#EFF6FF',
     borderColor: '#DBEAFE',
     borderWidth: 1,
+    padding: spacing.md,
   },
   nextStepsList: {
     gap: spacing.xs,
@@ -1001,23 +1001,23 @@ const styles = StyleSheet.create({
   },
   // --- Bottom Fixed Bar ---
   bottomBar: {
-    position: 'absolute',
+    backgroundColor: colors.white,
+    borderTopColor: colors.gray200,
+    borderTopWidth: 1,
     bottom: 0,
     left: 0,
-    right: 0,
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: colors.gray200,
     padding: spacing.md,
+    position: 'absolute',
+    right: 0,
     zIndex: 20,
   },
   nextButton: {
-    width: '100%',
-    height: 48,
     backgroundColor: colors.primary,
+    height: 48,
+    width: '100%',
   },
   backButton: {
-    width: '100%',
     marginTop: spacing.xs,
+    width: '100%',
   },
 });

@@ -122,46 +122,46 @@ function DialogClose(props: { children?: ReactNode } = {}) {
 }
 
 const styles = StyleSheet.create({
-  modalRoot: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.5)",
   },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.5)",
+  closeButton: {
+    padding: 8,
+    position: "absolute",
+    right: 8,
+    top: 8,
+    zIndex: 1,
+  },
+  closeIcon: {
+    color: theme.colors.gray600,
+    fontSize: 20,
   },
   content: {
-    width: "88%",
     backgroundColor: theme.colors.white,
-    borderRadius: theme?.radii?.lg ?? 0,
-    padding: 16,
-    borderWidth: 1,
     borderColor: theme.colors.gray200,
+    borderRadius: theme?.radii?.lg ?? 0,
+    borderWidth: 1,
+    padding: 16,
+    width: "88%",
     ...(theme.shadows && theme.shadows.lg ? theme.shadows.lg : {}),
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    marginTop: 16,
   },
   header: {
     marginBottom: 8,
   },
-  footer: {
-    marginTop: 16,
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  modalRoot: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
   },
-  closeButton: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    zIndex: 1,
-    padding: 8,
-  },
-  closeIcon: {
-    fontSize: 20,
-    color: theme.colors.gray600,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.5)",
   },
 });
 

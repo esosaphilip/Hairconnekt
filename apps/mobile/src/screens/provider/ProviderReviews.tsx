@@ -403,26 +403,26 @@ export function ProviderReviews() {
 // --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
-    flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
+    flex: 1,
   },
   // --- Fixed Header Styles ---
   fixedHeader: {
     backgroundColor: COLORS.white || '#FFFFFF',
+    borderBottomColor: COLORS.border || '#E5E7EB',
+    borderBottomWidth: 1,
+    elevation: 2,
     paddingHorizontal: SPACING.md || 16,
     paddingVertical: SPACING.sm || 8,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border || '#E5E7EB',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 1,
-    elevation: 2,
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   headerTitle: {
@@ -436,20 +436,20 @@ const styles = StyleSheet.create({
   },
   // --- Overall Rating Card ---
   overallRatingCard: {
-    padding: SPACING.md,
-    marginTop: SPACING.md,
     marginBottom: SPACING.md,
+    marginTop: SPACING.md,
+    padding: SPACING.md,
   },
   overallRatingContent: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     gap: SPACING.md,
   },
   ratingSummary: {
     alignItems: 'center',
-    paddingRight: SPACING.sm,
-    borderRightWidth: 1,
     borderRightColor: COLORS.border,
+    borderRightWidth: 1,
+    paddingRight: SPACING.sm,
   },
   averageRating: {
     fontSize: 36,
@@ -457,60 +457,60 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs / 2,
   },
   reviewCount: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
     marginTop: SPACING.xs / 2,
   },
   ratingDistribution: {
     flex: 1,
   },
   distributionRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.xs / 2,
   },
   distributionStars: {
     fontSize: FONT_SIZES.small || 12,
-    width: 25,
     textAlign: 'right',
+    width: 25,
   },
   progressBarBackground: {
-    flex: 1,
-    height: 8,
     backgroundColor: COLORS.border || '#E5E7EB',
     borderRadius: 4,
+    flex: 1,
+    height: 8,
     overflow: 'hidden',
   },
   progressBarFill: {
-    height: '100%',
     backgroundColor: COLORS.amber || '#FBBF24',
+    height: '100%',
   },
   distributionPercent: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
-    width: 35,
+    fontSize: FONT_SIZES.small || 12,
     textAlign: 'right',
+    width: 35,
   },
   trendingRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderTopColor: COLORS.border,
+    borderTopWidth: 1,
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginTop: SPACING.sm,
     paddingTop: SPACING.sm,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
   },
   trendingText: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.success || '#10B981',
+    fontSize: FONT_SIZES.body || 14,
     fontWeight: '500',
   },
   // --- Filter Chips ---
   filterChipsContainer: {
-    paddingTop: SPACING.xs,
-    paddingBottom: SPACING.sm,
     gap: SPACING.xs,
+    paddingBottom: SPACING.sm,
+    paddingTop: SPACING.xs,
   },
   activeButton: {
     backgroundColor: COLORS.primary || '#8B4513',
@@ -524,13 +524,13 @@ const styles = StyleSheet.create({
   },
   // --- Review Item Styles ---
   reviewCard: {
-    padding: SPACING.md,
     marginBottom: SPACING.md,
-    marginHorizontal: SPACING.md, // Add horizontal margin to align with header padding
+    marginHorizontal: SPACING.md,
+    padding: SPACING.md, // Add horizontal margin to align with header padding
   },
   clientInfoRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     gap: SPACING.sm,
     marginBottom: SPACING.sm,
   },
@@ -538,8 +538,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   nameBadgeRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
   },
   clientName: {
@@ -547,8 +547,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   ratingDateRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs / 2,
     marginTop: SPACING.xs / 2,
   },
@@ -557,27 +557,27 @@ const styles = StyleSheet.create({
     gap: SPACING.xs / 2,
   },
   dateText: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
   },
   serviceBadge: {
     alignSelf: 'flex-start',
     marginBottom: SPACING.sm,
   },
   reviewText: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.text || '#1F2937',
+    fontSize: FONT_SIZES.body || 14,
     marginBottom: SPACING.sm,
   },
   helpfulRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.sm,
   },
   helpfulText: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary,
+    fontSize: FONT_SIZES.small || 12,
   },
   // --- Provider Response Styles ---
   providerResponseContainer: {
@@ -589,31 +589,31 @@ const styles = StyleSheet.create({
     borderLeftColor: COLORS.primary,
   },
   responseHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: SPACING.xs,
     marginBottom: SPACING.xs,
   },
   responseTitle: {
+    color: COLORS.primary,
     fontSize: FONT_SIZES.body || 14,
     fontWeight: '500',
-    color: COLORS.primary,
   },
   responseText: {
-    fontSize: FONT_SIZES.body || 14,
     color: COLORS.text || '#1F2937',
+    fontSize: FONT_SIZES.body || 14,
     marginBottom: SPACING.xs,
   },
   responseDate: {
-    fontSize: FONT_SIZES.small || 12,
     color: COLORS.textSecondary || '#6B7280',
+    fontSize: FONT_SIZES.small || 12,
   },
   // --- Response Form Styles ---
   responseForm: {
-    marginTop: SPACING.sm,
-    padding: SPACING.sm,
     backgroundColor: COLORS.background || '#F9FAFB',
     borderRadius: 8,
+    marginTop: SPACING.sm,
+    padding: SPACING.sm,
   },
   responseInput: {
     marginBottom: SPACING.sm,
@@ -625,17 +625,17 @@ const styles = StyleSheet.create({
   },
   replyButton: {
     alignSelf: 'flex-start',
-    marginTop: SPACING.xs,
     borderColor: COLORS.primary,
+    marginTop: SPACING.xs,
   },
   submitButton: {
     backgroundColor: COLORS.primary,
   },
   // --- Empty State Styles ---
   emptyContainer: {
-      paddingVertical: SPACING.xl * 2,
-      paddingHorizontal: SPACING.md,
       alignItems: 'center',
+      paddingHorizontal: SPACING.md,
+      paddingVertical: SPACING.xl * 2,
   },
   emptyIcon: {
       color: COLORS.border || '#D1D5DB',
@@ -647,8 +647,8 @@ const styles = StyleSheet.create({
       marginBottom: SPACING.xs,
   },
   emptySubtitle: {
-      fontSize: FONT_SIZES.body || 14,
       color: COLORS.textSecondary || '#6B7280',
+      fontSize: FONT_SIZES.body || 14,
       textAlign: 'center',
   },
 });

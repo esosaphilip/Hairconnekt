@@ -439,54 +439,54 @@ export default function RescheduleAppointmentScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#F9FAFB',
+    flex: 1,
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
     backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    padding: 16,
     paddingTop: Platform.OS === 'android' ? 40 : 16,
   },
   backButton: {
-    padding: 8,
     marginRight: 16,
+    padding: 8,
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '600',
-    color: '#1F2937',
   },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
   },
   flexRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
   },
   flexRowSmall: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
   // --- Progress Steps ---
   progressBarContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'center',
     marginBottom: 24,
   },
   stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
     alignItems: 'center',
+    backgroundColor: '#E5E7EB',
+    borderRadius: 16,
+    height: 32,
     justifyContent: 'center',
-    backgroundColor: '#E5E7EB', // bg-gray-200
+    width: 32, // bg-gray-200
   },
   stepCircleActive: {
     backgroundColor: PRIMARY_COLOR, // bg-[#8B4513]
@@ -513,60 +513,60 @@ const styles = StyleSheet.create({
     backgroundColor: '#10B981', // bg-green-500
   },
   stepTitle: {
+    color: '#1F2937',
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 16,
     textAlign: 'center',
   },
   // --- Appointment Info ---
   appointmentCard: {
-    padding: 16,
     borderRadius: 8,
     marginBottom: 16,
+    padding: 16,
   },
   avatar: {
-    width: 64,
-    height: 64,
     borderRadius: 32,
+    height: 64,
     marginRight: 16,
+    width: 64,
   },
   appointmentDetails: {
     flex: 1,
   },
   providerName: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   businessName: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
     marginBottom: 4,
   },
   serviceName: {
-    fontSize: 14,
     color: '#1F2937',
+    fontSize: 14,
     marginTop: 4,
   },
   currentInfo: {
+    borderTopColor: '#E5E7EB',
+    borderTopWidth: 1,
     marginTop: 16,
     paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
   },
   currentInfoLabel: {
+    color: '#1F2937',
     fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
   },
   currentInfoText: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
   },
   separator: {
-    fontSize: 14,
     color: '#D1D5DB',
+    fontSize: 14,
   },
   // --- Policy Card ---
   policyCard: {
@@ -578,34 +578,34 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   policyTitle: {
-    fontSize: 14,
-    color: '#78350F', // text-amber-900
+    color: '#78350F',
+    fontSize: 14, // text-amber-900
   },
   policyList: {
     gap: 4,
   },
   policyItem: {
-    fontSize: 14,
-    color: '#92400E', // text-amber-800
+    color: '#92400E',
+    fontSize: 14, // text-amber-800
   },
   // --- Step Content ---
   stepContent: {
     gap: 16,
   },
   calendarCard: {
-    padding: 8,
     borderRadius: 8,
+    padding: 8,
   },
   timeDateText: {
-    fontSize: 16,
     color: '#4B5563',
+    fontSize: 16,
     textAlign: 'center',
   },
   timeSlotGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    gap: 8, // Adjust gap for spacing between items
+    gap: 8,
+    justifyContent: 'space-between', // Adjust gap for spacing between items
   },
   timeSlotButton: {
     width: '32%', // Approximate 1/3 width (grid-cols-3)
@@ -618,54 +618,54 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   timeSlotButtonActive: {
-    borderColor: PRIMARY_COLOR,
-    backgroundColor: `${PRIMARY_COLOR}0D`, // 0D is approx 5% opacity for #8B4513
+    backgroundColor: `${PRIMARY_COLOR}0D`,
+    borderColor: PRIMARY_COLOR, // 0D is approx 5% opacity for #8B4513
   },
   timeSlotText: {
-    fontSize: 14,
     color: '#1F2937',
+    fontSize: 14,
   },
   continueButton: {
     backgroundColor: PRIMARY_COLOR,
-    height: 48,
     borderRadius: 8,
+    height: 48,
   },
   // --- Confirmation ---
   confirmationCard: {
-    padding: 16,
     borderRadius: 8,
     gap: 16,
+    padding: 16,
   },
   confirmationTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   confirmationDetail: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     gap: 12,
-    alignItems: 'flex-start',
   },
   confirmationLabel: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
   },
   confirmationValue: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '500',
-    color: '#1F2937',
   },
   reasonSection: {
     gap: 8,
   },
   reasonLabel: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   reasonCount: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     textAlign: 'right',
   },
   submitSection: {
@@ -673,8 +673,8 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: PRIMARY_COLOR,
-    height: 48,
     borderRadius: 8,
+    height: 48,
   },
   cancelButton: {
     backgroundColor: '#FFFFFF',
@@ -682,9 +682,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   privacyNote: {
-    fontSize: 12,
-    textAlign: 'center',
     color: '#4B5563',
+    fontSize: 12,
     marginTop: 8,
+    textAlign: 'center',
   },
 });

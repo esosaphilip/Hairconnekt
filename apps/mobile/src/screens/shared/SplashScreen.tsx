@@ -203,8 +203,8 @@ export function SplashScreen() {
 // --- Stylesheet ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
     backgroundColor: THEME_COLOR_MEDIUM,
+    flex: 1,
   },
   // Background simulates the gradient from-[#8B4513] via-[#A0522D]
   background: {
@@ -216,10 +216,10 @@ const styles = StyleSheet.create({
     // Note: A true gradient would require expo-linear-gradient
   },
   contentWrapper: {
-    width: '100%',
-    maxWidth: 400,
     alignItems: 'center',
     justifyContent: 'center',
+    maxWidth: 400,
+    width: '100%',
   },
   logoContainer: {
     alignItems: 'center',
@@ -243,19 +243,19 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   loadingDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
     backgroundColor: 'white',
+    borderRadius: 6,
+    height: 12,
+    width: 12,
   },
 
   // Bottom Tagline
   taglineWrapper: {
-    position: 'absolute',
-    bottom: 48,
-    width: '100%',
-    paddingHorizontal: 24,
     alignItems: 'center',
+    bottom: 48,
+    paddingHorizontal: 24,
+    position: 'absolute',
+    width: '100%',
   },
   tagline: {
     color: 'rgba(255, 255, 255, 0.6)',

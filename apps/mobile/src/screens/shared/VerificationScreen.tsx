@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { SafeAreaView, View, Alert } from 'react-native';
+import { SafeAreaView, View, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '@/auth/AuthContext';
@@ -34,7 +34,7 @@ export function VerificationScreen() {
     setUser: (u: PublicUser) => Promise<void>;
   };
   const user: PublicUser | null = auth?.user || null;
-  const setUser = (auth?.setUser || (async (_u: PublicUser) => {})) as (u: PublicUser) => Promise<void>;
+  const setUser = (auth?.setUser || (async () => {})) as (u: PublicUser) => Promise<void>;
   const navigation = useNavigation();
   const [emailCode, setEmailCode] = useState('');
   const [phoneCode, setPhoneCode] = useState('');
@@ -127,44 +127,44 @@ export function VerificationScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.gray50, padding: spacing.md }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md }}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.headerRow}>
         <Text variant="h3">Verifizierung</Text>
         <Button variant="ghost" title="Zurück" onPress={() => (typeof navigation.goBack === 'function' ? navigation.goBack() : undefined)} />
       </View>
 
       {allVerified ? (
-        <Card style={{ padding: spacing.md }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <Card style={styles.card}>
+          <View style={styles.rowCenter12}>
             <Ionicons name="shield-checkmark" size={24} color={colors.success} />
-            <View style={{ flex: 1 }}>
+            <View style={styles.flex1}>
               <Text variant="h3">Alles verifiziert</Text>
-              <Text style={{ color: colors.gray600 }}>Dein Konto ist vollständig verifiziert.</Text>
+              <Text style={styles.mutedText}>Dein Konto ist vollständig verifiziert.</Text>
             </View>
           </View>
         </Card>
       ) : (
-        <View style={{ gap: spacing.md }}>
+        <View style={styles.sectionContainer}>
           {needsEmail && (
-            <Card style={{ padding: spacing.md }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.sm }}>
+            <Card style={styles.card}>
+              <View style={styles.sectionHeaderSmall}>
                 <Ionicons name="mail" size={20} color={colors.gray700} />
                 <Text variant="h3">E-Mail verifizieren</Text>
               </View>
-              <Text style={{ color: colors.gray600, marginBottom: spacing.sm }}>
+              <Text style={styles.mutedTextSm}>
                 Bitte gib den 6-stelligen Code ein, der an {user?.email} gesendet wurde.
               </Text>
-              <Input value={user?.email || ''} editable={false} style={{ marginBottom: spacing.sm }} />
+              <Input value={user?.email || ''} editable={false} style={styles.mbSm} />
               <Input
                 placeholder="Code"
                 keyboardType="number-pad"
                 maxLength={6}
                 value={emailCode}
                 onChangeText={setEmailCode}
-                style={{ marginBottom: spacing.md }}
+                style={styles.mbMd}
               />
-              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                <View style={{ flex: 1 }}>
+              <View style={styles.rowGapSm}>
+                <View style={styles.flex1}>
                   <Button
                     title={loadingEmail ? 'Wird verifiziert…' : 'E-Mail bestätigen'}
                     onPress={handleVerifyEmail}
@@ -180,7 +180,7 @@ export function VerificationScreen() {
                 />
               </View>
               {__DEV__ && (
-                <View style={{ marginTop: spacing.sm }}>
+                <View style={styles.mtSm}>
                   <Button
                     variant="secondary"
                     title="Dev: Auto-verifizieren (000000)"
@@ -196,25 +196,25 @@ export function VerificationScreen() {
           )}
 
           {needsPhone && (
-            <Card style={{ padding: spacing.md }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: spacing.sm }}>
+            <Card style={styles.card}>
+              <View style={styles.sectionHeaderSmall}>
                 <Ionicons name="call" size={20} color={colors.gray700} />
                 <Text variant="h3">Telefonnummer verifizieren</Text>
               </View>
-              <Text style={{ color: colors.gray600, marginBottom: spacing.sm }}>
+              <Text style={styles.mutedTextSm}>
                 Bitte gib den 6-stelligen Code ein, der an {user?.phone} gesendet wurde.
               </Text>
-              <Input value={user?.phone || ''} editable={false} style={{ marginBottom: spacing.sm }} />
+              <Input value={user?.phone || ''} editable={false} style={styles.mbSm} />
               <Input
                 placeholder="Code"
                 keyboardType="number-pad"
                 maxLength={6}
                 value={phoneCode}
                 onChangeText={setPhoneCode}
-                style={{ marginBottom: spacing.md }}
+                style={styles.mbMd}
               />
-              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                <View style={{ flex: 1 }}>
+              <View style={styles.rowGapSm}>
+                <View style={styles.flex1}>
                   <Button
                     title={loadingPhone ? 'Wird verifiziert…' : 'Telefon bestätigen'}
                     onPress={handleVerifyPhone}
@@ -230,7 +230,7 @@ export function VerificationScreen() {
                 />
               </View>
               {__DEV__ && (
-                <View style={{ marginTop: spacing.sm }}>
+                <View style={styles.mtSm}>
                   <Button
                     variant="secondary"
                     title="Dev: Auto-verifizieren (000000)"
@@ -249,3 +249,57 @@ export function VerificationScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    padding: spacing.md,
+  },
+  flex1: {
+    flex: 1,
+  },
+  headerRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  mbMd: {
+    marginBottom: spacing.md,
+  },
+  mbSm: {
+    marginBottom: spacing.sm,
+  },
+  mtSm: {
+    marginTop: spacing.sm,
+  },
+  mutedText: {
+    color: colors.gray600,
+  },
+  mutedTextSm: {
+    color: colors.gray600,
+    marginBottom: spacing.sm,
+  },
+  rowCenter12: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 12,
+  },
+  rowGapSm: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  safeArea: {
+    backgroundColor: colors.gray50,
+    flex: 1,
+    padding: spacing.md,
+  },
+  sectionContainer: {
+    gap: spacing.md,
+  },
+  sectionHeaderSmall: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: spacing.sm,
+  },
+});

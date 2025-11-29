@@ -65,52 +65,26 @@ export function ProviderWelcome() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.white,
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    padding: spacing.lg,
-  },
-  header: {
-    alignItems: 'center',
-    marginTop: spacing.xl,
-    marginBottom: spacing.lg,
-  },
-  brand: {
-    color: colors.primary,
-    fontSize: 28,
-    fontWeight: '800',
-    marginBottom: spacing.xs,
-  },
-  title: {
-    ...typography.h2,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    color: colors.gray600,
-    textAlign: 'center',
-  },
-  benefitsContainer: {
-    marginVertical: spacing.lg,
-  },
   benefit: {
-    flexDirection: 'row',
-    padding: spacing.md,
-    borderRadius: radii.lg,
-    backgroundColor: colors.gray50,
     alignItems: 'center',
+    backgroundColor: colors.gray50,
+    borderRadius: radii.lg,
+    flexDirection: 'row',
     marginBottom: spacing.sm,
+    padding: spacing.md,
+  },
+  benefitDescription: {
+    color: colors.gray600,
+    fontSize: 14,
   },
   benefitIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(139,69,19,0.1)',
     alignItems: 'center',
+    backgroundColor: 'rgba(139,69,19,0.1)',
+    borderRadius: 24,
+    height: 48,
     justifyContent: 'center',
     marginRight: spacing.md,
+    width: 48,
   },
   benefitTextContainer: {
     flex: 1,
@@ -119,26 +93,52 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 2,
   },
-  benefitDescription: {
-    fontSize: 14,
-    color: colors.gray600,
+  benefitsContainer: {
+    marginVertical: spacing.lg,
   },
-  ctaContainer: {
-    paddingBottom: spacing.lg,
+  brand: {
+    color: colors.primary,
+    fontSize: 28,
+    fontWeight: '800',
+    marginBottom: spacing.xs,
   },
   button: {
     height: 56,
     marginBottom: spacing.sm,
   },
+  container: {
+    backgroundColor: colors.white,
+    flex: 1,
+  },
+  ctaContainer: {
+    paddingBottom: spacing.lg,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    marginTop: spacing.xl,
+  },
   registerButton: {
     alignItems: 'center',
     padding: spacing.sm,
   },
-  registerText: {
-    color: colors.gray600,
-  },
   registerLink: {
     color: colors.primary,
     textDecorationLine: 'underline',
+  },
+  registerText: {
+    color: colors.gray600,
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    padding: spacing.lg,
+  },
+  subtitle: {
+    color: colors.gray600,
+    textAlign: 'center',
+  },
+  title: {
+    ...typography.h2,
+    marginBottom: spacing.xs,
   },
 });

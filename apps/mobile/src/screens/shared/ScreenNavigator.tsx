@@ -215,8 +215,8 @@ export function ScreenNavigator() {
 // --- Stylesheet ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#F9FAFB', // from-gray-50
+    backgroundColor: '#F9FAFB',
+    flex: 1, // from-gray-50
   },
   container: {
     alignSelf: 'center', // mx-auto equivalent
@@ -231,28 +231,28 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   headerIconWrapper: {
-    width: 80,
-    height: 80,
+    alignItems: 'center',
     backgroundColor: THEME_COLOR,
     borderRadius: 16,
+    elevation: 8,
+    height: 80,
     justifyContent: 'center',
-    alignItems: 'center',
     marginBottom: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 5,
-    elevation: 8,
+    width: 80,
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 8,
   },
   headerSubtitle: {
-    fontSize: 16,
     color: '#6B7280',
+    fontSize: 16,
     textAlign: 'center',
   },
 
@@ -260,42 +260,42 @@ const styles = StyleSheet.create({
   cardBase: {
     backgroundColor: CARD_BG,
     borderRadius: 12,
+    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 4,
   },
 
   // Reset Button/Card
   resetCard: {
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 2,
-    borderStyle: 'dashed',
     borderColor: '#D1D5DB',
+    borderStyle: 'dashed',
+    borderWidth: 2,
+    marginBottom: 24,
+    padding: 16,
   },
   resetContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   resetTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 4,
   },
   resetSubtitle: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
   },
   resetButton: {
     backgroundColor: RESET_COLOR,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
     borderRadius: 8,
     minHeight: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
 
   // Sections Container
@@ -306,29 +306,29 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   sectionHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
+    borderBottomColor: '#F3F4F6',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
     gap: 12,
     marginBottom: 16,
     paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
   },
   sectionIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 8,
-    justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 8,
+    height: 48,
+    justifyContent: 'center',
+    width: 48,
   },
   sectionTitle: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
   },
   sectionSubtitle: {
-    fontSize: 14,
     color: '#6B7280',
+    fontSize: 14,
   },
 
   // Screen List
@@ -345,15 +345,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   screenListName: {
-    fontSize: 16,
     color: '#4B5563',
+    fontSize: 16,
   },
 
   // Footer Stats
   footerCard: {
+    backgroundColor: THEME_COLOR,
     marginTop: 32,
     padding: 24,
-    backgroundColor: THEME_COLOR,
   },
   footerStats: {
     flexDirection: 'row',
@@ -364,24 +364,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statNumber: {
+    color: 'white',
     fontSize: 30,
     fontWeight: 'bold',
-    color: 'white',
     marginBottom: 4,
   },
   statLabel: {
-    fontSize: 12,
     color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
   },
   
   // Custom Button Styles
   buttonBase: {
+    alignItems: 'center',
     backgroundColor: THEME_COLOR,
+    borderRadius: 8,
+    justifyContent: 'center',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   buttonText: {
     color: 'white',

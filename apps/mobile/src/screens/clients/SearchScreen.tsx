@@ -428,121 +428,10 @@ const CustomButton = ({ title, onPress, variant = 'primary', icon, style, textSt
 
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.gray50,
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingTop: 0,
-  },
-  header: {
-    backgroundColor: colors.white,
-    borderBottomColor: colors.gray100,
-    borderBottomWidth: 1,
-    elevation: 2,
-    paddingBottom: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 1,
-    zIndex: 10,
-  },
-  searchInputWrapper: {
-    alignItems: 'center',
-    backgroundColor: colors.gray100,
-    borderRadius: radii.lg,
-    flexDirection: 'row',
-    height: 48,
-    marginBottom: spacing.xs,
-    paddingHorizontal: spacing.sm,
-  },
-  searchIcon: {
-    marginRight: spacing.sm,
-  },
-  searchInput: {
-    color: colors.gray800,
-    flex: 1,
-    fontSize: typography.body.fontSize,
-    height: '100%',
-  },
-  clearButton: {
-    padding: spacing.xs,
-  },
-  recentSearchSection: {
-    marginBottom: spacing.md,
-  },
-  recentSearchHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  recentSearchTitle: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
-  },
-  clearAllText: {
-    color: colors.primary,
-    fontSize: typography.small.fontSize,
-  },
-  recentChipsContainer: {
+  activeFiltersContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  recentSearchChip: {
-    backgroundColor: colors.gray100,
-    borderColor: colors.gray200,
-    borderRadius: radii.xl,
-    borderWidth: 1,
-    marginBottom: spacing.sm,
-    marginRight: spacing.sm,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.xs,
-  },
-  recentSearchChipText: {
-    color: colors.gray800,
-    fontSize: typography.small.fontSize,
-  },
-  recentEmptyText: {
-    color: colors.gray400,
-    fontSize: 13,
-  },
-  chipScrollView: {
-    paddingVertical: spacing.xs,
-  },
-  buttonBase: {
-    alignItems: 'center',
-    borderRadius: 20,
-    flexDirection: 'row',
-    height: 36,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.sm,
-    paddingVertical: spacing.sm,
-  },
-  buttonPrimary: {
-    backgroundColor: colors.primary,
-  },
-  buttonOutline: {
-    backgroundColor: colors.white,
-    borderColor: colors.gray200,
-    borderWidth: 1,
-  },
-  buttonText: {
-    color: colors.gray800,
-    fontSize: typography.small.fontSize,
-    fontWeight: '600',
-  },
-  buttonTextPrimary: {
-    color: colors.white,
-  },
-  buttonTextOutline: {
-    color: colors.gray800,
-  },
-  buttonIcon: {
-    marginRight: spacing.sm,
+    marginTop: spacing.sm,
   },
   advancedFilterButton: {
     backgroundColor: colors.white,
@@ -559,6 +448,33 @@ const styles = StyleSheet.create({
     fontSize: typography.small.fontSize,
     fontWeight: 'normal',
   },
+  avatar: {
+    alignItems: 'center',
+    backgroundColor: colors.gray100,
+    borderRadius: radii.md,
+    height: 64,
+    justifyContent: 'center',
+    width: 64,
+  },
+  avatarContainer: {
+    flexShrink: 0,
+    height: 64,
+    marginRight: spacing.sm,
+    position: 'relative',
+    width: 64,
+  },
+  avatarText: {
+    color: colors.gray600,
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  badgeAvailable: {
+    backgroundColor: colors.green500,
+    borderRadius: radii.sm,
+    height: 24,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+  },
   badgeBase: {
     alignItems: 'center',
     borderRadius: radii.xl,
@@ -569,29 +485,231 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
   },
-  badgePrimary: {
-    backgroundColor: colors.primary,
-  },
   badgeOutline: {
     backgroundColor: colors.gray100,
     borderColor: colors.gray200,
     borderWidth: 1,
   },
+  badgePrimary: {
+    backgroundColor: colors.primary,
+  },
   badgeText: {
     fontSize: typography.small.fontSize,
-  },
-  badgeTextPrimary: {
-    color: colors.white,
   },
   badgeTextOutline: {
     color: colors.gray800,
   },
-  badgeAvailable: {
-    backgroundColor: colors.green500,
-    borderRadius: radii.sm,
-    height: 24,
+  badgeTextPrimary: {
+    color: colors.white,
+  },
+  braiderName: {
+    color: colors.gray800,
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  businessName: {
+    color: colors.gray600,
+    fontSize: typography.small.fontSize,
+    marginBottom: spacing.xs,
+  },
+  buttonBase: {
+    alignItems: 'center',
+    borderRadius: 20,
+    flexDirection: 'row',
+    height: 36,
+    justifyContent: 'center',
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+    paddingVertical: spacing.sm,
+  },
+  buttonIcon: {
+    marginRight: spacing.sm,
+  },
+  buttonOutline: {
+    backgroundColor: colors.white,
+    borderColor: colors.gray200,
+    borderWidth: 1,
+  },
+  buttonPrimary: {
+    backgroundColor: colors.primary,
+  },
+  buttonText: {
+    color: colors.gray800,
+    fontSize: typography.small.fontSize,
+    fontWeight: '600',
+  },
+  buttonTextOutline: {
+    color: colors.gray800,
+  },
+  buttonTextPrimary: {
+    color: colors.white,
+  },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radii.lg,
+    elevation: 3,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+    position: 'relative',
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+  },
+  chipScrollView: {
+    paddingVertical: spacing.xs,
+  },
+  clearAllText: {
+    color: colors.primary,
+    fontSize: typography.small.fontSize,
+  },
+  clearButton: {
+    padding: spacing.xs,
+  },
+  closeIconSpacing: {
+    marginLeft: spacing.xs,
+  },
+  content: {
+    flex: 1,
+    paddingTop: 0,
+  },
+  detailsContainer: {
+    flex: 1,
+    minWidth: 0,
+  },
+  distanceRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: spacing.xs,
+  },
+  distanceText: {
+    color: colors.gray600,
+    fontSize: typography.small.fontSize,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xl * 2,
+  },
+  emptyStateMessage: {
+    color: colors.gray600,
+    fontSize: typography.body.fontSize,
+    textAlign: 'center',
+  },
+  emptyStateTitle: {
+    color: colors.gray800,
+    fontSize: typography.h3.fontSize,
+    fontWeight: '700',
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: spacing.sm, // text-red-500
+  },
+  favoriteButton: {
+    padding: spacing.xs,
+    position: 'absolute',
+    right: spacing.sm,
+    top: spacing.sm,
+    zIndex: 10,
+  },
+  favoriteIconFilled: {},
+  favoriteIconOutline: {},
+  header: {
+    backgroundColor: colors.white,
+    borderBottomColor: colors.gray100,
+    borderBottomWidth: 1,
+    elevation: 2,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    zIndex: 10,
+  },
+  listItemContent: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl * 2,
+  },
+  loadingText: {
+    color: colors.primary,
+    fontSize: typography.body.fontSize,
+    marginTop: spacing.sm,
+  },
+  priceAvailableRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: spacing.sm,
+  },
+  priceText: {
+    color: colors.primary,
+    fontSize: typography.body.fontSize,
+    fontWeight: '600',
+  },
+  ratingRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    marginTop: spacing.xs,
+  },
+  ratingText: {
+    color: colors.gray800,
+    fontSize: typography.small.fontSize,
+  },
+  recentChipsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  recentEmptyText: {
+    color: colors.gray400,
+    fontSize: 13,
+  },
+  recentSearchChip: {
+    backgroundColor: colors.gray100,
+    borderColor: colors.gray200,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    marginBottom: spacing.sm,
+    marginRight: spacing.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
+  recentSearchChipText: {
+    color: colors.gray800,
+    fontSize: typography.small.fontSize,
+  },
+  recentSearchHeader: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  recentSearchSection: {
+    marginBottom: spacing.md,
+  },
+  recentSearchTitle: {
+    color: colors.gray600,
+    fontSize: typography.small.fontSize,
+  },
+  resetFilterText: {
+    alignSelf: 'center',
+    color: colors.primary,
+    fontSize: typography.small.fontSize,
+  },
+  resultsBody: {
+    padding: spacing.md,
+  },
+  resultsCountText: {
+    color: colors.gray800,
+    fontSize: typography.small.fontSize,
   },
   resultsHeader: {
     backgroundColor: colors.white,
@@ -606,22 +724,32 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.sm,
   },
-  resultsCountText: {
-    color: colors.gray800,
+  resultsList: {},
+  reviewsText: {
+    color: colors.gray400,
     fontSize: typography.small.fontSize,
   },
-  viewModeButtons: {
+  safeArea: {
+    backgroundColor: colors.gray50,
+    flex: 1,
+  },
+  searchIcon: {
+    marginRight: spacing.sm,
+  },
+  searchInput: {
+    color: colors.gray800,
+    flex: 1,
+    fontSize: typography.body.fontSize,
+    height: '100%',
+  },
+  searchInputWrapper: {
+    alignItems: 'center',
+    backgroundColor: colors.gray100,
+    borderRadius: radii.lg,
     flexDirection: 'row',
-  },
-  viewModeButtonBase: {
-    borderRadius: radii.sm,
-    padding: spacing.xs,
-  },
-  viewModeButtonActive: {
-    backgroundColor: colors.primaryLight,
-  },
-  viewModeButtonSpacing: {
-    marginLeft: spacing.sm,
+    height: 48,
+    marginBottom: spacing.xs,
+    paddingHorizontal: spacing.sm,
   },
   sortDropdown: {
     alignItems: 'center',
@@ -637,67 +765,10 @@ const styles = StyleSheet.create({
     color: colors.gray800,
     fontSize: typography.small.fontSize,
   },
-  activeFiltersContainer: {
+  specialtyContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: spacing.sm,
-  },
-  resetFilterText: {
-    alignSelf: 'center',
-    color: colors.primary,
-    fontSize: typography.small.fontSize,
-  },
-  closeIconSpacing: {
-    marginLeft: spacing.xs,
-  },
-  resultsBody: {
-    padding: spacing.md,
-  },
-  resultsList: {},
-  card: {
-    backgroundColor: colors.white,
-    borderRadius: radii.lg,
-    elevation: 3,
-    marginBottom: spacing.md,
-    padding: spacing.md,
-    position: 'relative',
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-  },
-  listItemContent: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-  },
-  favoriteButton: {
-    padding: spacing.xs,
-    position: 'absolute',
-    right: spacing.sm,
-    top: spacing.sm,
-    zIndex: 10,
-  },
-  favoriteIconFilled: {},
-  favoriteIconOutline: {},
-  avatarContainer: {
-    flexShrink: 0,
-    height: 64,
-    marginRight: spacing.sm,
-    position: 'relative',
-    width: 64,
-  },
-  avatar: {
-    alignItems: 'center',
-    backgroundColor: colors.gray100,
-    borderRadius: radii.md,
-    height: 64,
-    justifyContent: 'center',
-    width: 64,
-  },
-  avatarText: {
-    color: colors.gray600,
-    fontSize: 24,
-    fontWeight: 'bold',
   },
   verifiedBadge: {
     alignItems: 'center',
@@ -712,88 +783,17 @@ const styles = StyleSheet.create({
     right: -spacing.xs,
     width: 20,
   },
-  detailsContainer: {
-    flex: 1,
-    minWidth: 0,
+  viewModeButtonActive: {
+    backgroundColor: colors.primaryLight,
   },
-  braiderName: {
-    color: colors.gray800,
-    fontSize: typography.body.fontSize,
-    fontWeight: '600',
-    marginBottom: 2,
+  viewModeButtonBase: {
+    borderRadius: radii.sm,
+    padding: spacing.xs,
   },
-  businessName: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
-    marginBottom: spacing.xs,
+  viewModeButtonSpacing: {
+    marginLeft: spacing.sm,
   },
-  ratingRow: {
-    alignItems: 'center',
+  viewModeButtons: {
     flexDirection: 'row',
-    marginTop: spacing.xs,
-  },
-  ratingText: {
-    color: colors.gray800,
-    fontSize: typography.small.fontSize,
-  },
-  reviewsText: {
-    color: colors.gray400,
-    fontSize: typography.small.fontSize,
-  },
-  distanceRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginTop: spacing.xs,
-  },
-  distanceText: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
-  },
-  specialtyContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: spacing.sm,
-  },
-  priceAvailableRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: spacing.sm,
-  },
-  priceText: {
-    color: colors.primary,
-    fontSize: typography.body.fontSize,
-    fontWeight: '600',
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl * 2,
-  },
-  loadingText: {
-    color: colors.primary,
-    fontSize: typography.body.fontSize,
-    marginTop: spacing.sm,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xl * 2,
-  },
-  emptyStateTitle: {
-    color: colors.gray800,
-    fontSize: typography.h3.fontSize,
-    fontWeight: '700',
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  emptyStateMessage: {
-    color: colors.gray600,
-    fontSize: typography.body.fontSize,
-    textAlign: 'center',
-  },
-  errorText: {
-    marginTop: spacing.sm,
-    fontSize: 12,
-    color: '#EF4444', // text-red-500
   }
 });

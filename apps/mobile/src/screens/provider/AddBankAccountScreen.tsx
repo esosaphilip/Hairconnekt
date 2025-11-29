@@ -358,30 +358,30 @@ export function AddBankAccountScreen() {
 // --- Stylesheet for React Native ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: colors.background, // Assuming background is defined elsewhere
+    backgroundColor: colors.background,
+    flex: 1, // Assuming background is defined elsewhere
   },
   container: {
-    flex: 1,
     backgroundColor: '#FAF9F6',
+    flex: 1,
   },
   // Header styles
   header: {
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
     marginLeft: 12,
   },
   // ScrollView content
@@ -396,35 +396,35 @@ const styles = StyleSheet.create({
     // Use margins between child elements instead of unsupported gap
   },
   cardTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   separator: {
-    height: 1,
     backgroundColor: '#E5E7EB',
+    height: 1,
   },
   // Input field styles
   inputGroup: {
     // Spacing handled by individual elements' marginTop
   },
   label: {
+    color: '#1F2937',
     fontSize: 14,
     fontWeight: '500',
-    color: '#1F2937',
   },
   required: {
     color: '#EF4444', // red-500
   },
   inputWrapper: {
-    flexDirection: 'row',
     alignItems: 'center',
-    position: 'relative',
+    flexDirection: 'row',
     marginTop: 6,
+    position: 'relative',
   },
   inputIcon: {
-    position: 'absolute',
     left: 12,
+    position: 'absolute',
     zIndex: 1,
   },
   inputField: {
@@ -432,8 +432,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   inputHint: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     marginTop: 6,
   },
   monoFont: {
@@ -441,8 +441,8 @@ const styles = StyleSheet.create({
   },
   // Checkbox styles
   checkboxRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     // Use marginLeft on the text container instead of unsupported gap
   },
   checkboxShrink: {
@@ -454,19 +454,19 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   checkboxLabel: {
-    fontSize: 14,
     color: '#1F2937',
+    fontSize: 14,
     fontWeight: '500',
   },
   checkboxHint: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     marginTop: 4,
   },
   // Alerts / Info Cards
   alertText: {
-    fontSize: 14,
     color: colors.gray,
+    fontSize: 14,
   },
   infoAlert: {
     borderWidth: 1,
@@ -475,9 +475,9 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   infoTitle: {
+    color: '#1F2937',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   infoBox: {
     alignItems: 'flex-start',
@@ -495,19 +495,19 @@ const styles = StyleSheet.create({
     // Use margins on list items instead of unsupported gap
   },
   infoListItem: {
-    fontSize: 12,
     color: colors.gray,
+    fontSize: 12,
     marginTop: 6,
   },
   // Submit Button
   submitButton: {
-    width: '100%',
-    height: 48,
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: colors.primary,
     borderRadius: 8,
+    flexDirection: 'row',
+    height: 48,
+    justifyContent: 'center',
+    width: '100%',
   },
   submitButtonText: {
     color: '#fff',
@@ -520,8 +520,8 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   privacyText: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
     textAlign: 'center',
   },
   privacyLink: {

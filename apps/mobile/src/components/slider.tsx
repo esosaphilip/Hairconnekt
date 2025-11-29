@@ -61,31 +61,31 @@ export function Slider({ value, onValueChange, min = 0, max = 100, step = 1 }: S
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
     paddingVertical: 8,
-  },
-  track: {
-    height: 4,
     width: '100%',
-    backgroundColor: colors.gray200,
-    borderRadius: radii.full,
   },
   range: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
     backgroundColor: colors.primary,
     borderRadius: radii.full,
+    bottom: 0,
+    left: 0,
+    position: 'absolute',
+    top: 0,
   },
   thumb: {
+    backgroundColor: colors.white,
+    borderColor: colors.primary,
+    borderRadius: 7,
+    borderWidth: 2,
+    height: 14,
     position: 'absolute',
     top: -6,
     width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: colors.primary,
+  },
+  track: {
+    backgroundColor: colors.gray200,
+    borderRadius: radii.full,
+    height: 4,
+    width: '100%',
   },
 });

@@ -453,8 +453,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   placeholder24: {
-    width: 24,
     height: 24,
+    width: 24,
   },
   // --- Scroll Content & Titles ---
   loadingCard: {
@@ -506,8 +506,8 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   currentPlanStatsGrid: {
-    gap: SPACING.sm,
     flexDirection: 'row',
+    gap: SPACING.sm,
     marginBottom: SPACING.md,
   },
   planStatItem: {
@@ -519,8 +519,8 @@ const styles = StyleSheet.create({
   planStatLabel: {
     color: COLORS.white,
     fontSize: FONT_SIZES.small,
-    opacity: 0.75,
     marginBottom: SPACING.xs / 2,
+    opacity: 0.75,
   },
   planStatValue: {
     color: COLORS.white,

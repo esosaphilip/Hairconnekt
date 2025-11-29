@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   loadingText: {
-    marginTop: 10,
-    color: '#6B7280', // Corresponds to 'text-gray-600'
+    color: '#6B7280',
+    marginTop: 10, // Corresponds to 'text-gray-600'
   },
 });

@@ -421,8 +421,8 @@ export function TransactionHistoryScreen() {
 // --- Stylesheet for React Native ---
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: '#FAF9F6',
+    flex: 1,
   },
   // Header styles
   header: {
@@ -433,21 +433,21 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   headerContent: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     // gap not supported in RN types; use margins on children instead
   },
   headerTitle: {
+    color: '#1F2937',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
     marginLeft: 8,
   },
   // ScrollView content
@@ -466,8 +466,8 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   statRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 4,
   },
   statLabel: {
@@ -475,18 +475,18 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   statValue: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
   },
   // Search
   searchContainer: {
-    position: 'relative',
     marginBottom: 16,
+    position: 'relative',
   },
   searchIcon: {
-    position: 'absolute',
     left: 12,
+    position: 'absolute',
     top: 12,
     zIndex: 1,
   },
@@ -495,73 +495,73 @@ const styles = StyleSheet.create({
   },
   // Filters
   filterCard: {
-    padding: 16,
     marginBottom: 16,
+    padding: 16,
   },
   filterHeader: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 12,
   },
   filterGrid: {
     flexDirection: 'row',
   },
   filterLabel: {
-    fontSize: 12,
     color: '#4B5563',
+    fontSize: 12,
     marginBottom: 6,
   },
   // Transactions List
   listSection: {
   },
   listTitle: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   transactionCard: {
     padding: 16,
   },
   transactionRow: {
+    alignItems: 'flex-start',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
   },
   transactionDetails: {
     flex: 1,
     minWidth: 0,
   },
   descriptionText: {
+    color: '#1F2937',
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
     marginBottom: 2,
   },
   clientText: {
-    fontSize: 14,
     color: '#4B5563',
+    fontSize: 14,
     marginBottom: 4,
   },
   dateRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: 6,
   },
   dateTimeText: {
-    fontSize: 12,
     color: '#6B7280',
+    fontSize: 12,
   },
   statusTypeRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   typeText: {
     fontSize: 12,
     fontWeight: '500',
   },
   refText: {
-    fontSize: 12,
     color: '#9CA3AF',
+    fontSize: 12,
     marginTop: 8,
   },
   amountContainer: {
@@ -574,19 +574,19 @@ const styles = StyleSheet.create({
   },
   // No Results
   noResultsCard: {
-    padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 16,
+    padding: 32,
   },
   noResultsIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#F3F4F6',
     alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 24,
+    height: 48,
     justifyContent: 'center',
     marginBottom: 12,
+    width: 48,
   },
   noResultsText: {
     color: '#6B7280',

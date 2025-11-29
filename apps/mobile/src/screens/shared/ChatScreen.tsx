@@ -365,17 +365,17 @@ export function ChatScreen() {
 
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
     backgroundColor: '#fff',
+    flex: 1,
   },
   container: {
-    flex: 1,
     backgroundColor: '#fff',
+    flex: 1,
   },
   notFoundContainer: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
     padding: 24,
   },
   notFoundTitle: {
@@ -385,32 +385,32 @@ const styles = StyleSheet.create({
   },
   // --- Header ---
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#fff',
+    borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#fff',
   },
   backButton: {
     paddingRight: 12,
   },
   userInfoContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     flex: 1,
     paddingHorizontal: 8,
   },
   avatarWrapper: {
-    position: 'relative',
     marginRight: 8,
+    position: 'relative',
   },
   avatarImage: {
-    width: '100%',
+    borderRadius: 9999,
     height: '100%',
     resizeMode: 'cover',
-    borderRadius: 9999, // fully round
+    width: '100%', // fully round
   },
   onlineIndicator: {
     position: 'absolute',
@@ -427,22 +427,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   userName: {
+    color: '#1F2937',
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   userStatus: {
-    fontSize: 12,
-    color: '#6B7280', // gray-500
+    color: '#6B7280',
+    fontSize: 12, // gray-500
   },
   headerActions: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
   actionButton: {
-    padding: 8,
     borderRadius: 9999,
+    padding: 8,
   },
   // --- Message List ---
   messagesList: {
@@ -460,8 +460,8 @@ const styles = StyleSheet.create({
     borderRadius: 9999,
   },
   dateDividerText: {
-    fontSize: 12,
-    color: '#4B5563', // gray-600
+    color: '#4B5563',
+    fontSize: 12, // gray-600
   },
   messageRow: {
     flexDirection: 'row',
@@ -474,9 +474,9 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   messageContent: {
+    alignItems: 'flex-end',
     flexDirection: 'row',
     maxWidth: '75%',
-    alignItems: 'flex-end',
   },
   messageContentThem: {
     gap: 8,
@@ -490,9 +490,9 @@ const styles = StyleSheet.create({
   },
   bubble: {
     borderRadius: 16,
+    maxWidth: '100%',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    maxWidth: '100%',
   },
   bubbleThem: {
     backgroundColor: '#F3F4F6', // gray-100
@@ -511,10 +511,10 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   timeStatusContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
+    flexDirection: 'row',
     gap: 4,
+    marginTop: 4,
   },
   timeStatusContainerThem: {
     justifyContent: 'flex-start',
@@ -523,31 +523,31 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   timeText: {
-    fontSize: 12,
-    color: '#6B7280', // gray-500
+    color: '#6B7280',
+    fontSize: 12, // gray-500
   },
   statusIcon: {
-    fontSize: 12,
-    color: '#6B7280', // gray-500
+    color: '#6B7280',
+    fontSize: 12, // gray-500
   },
   statusRead: {
     color: '#3B82F6', // blue-500
   },
   // --- Input Area ---
   inputArea: {
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
     backgroundColor: '#fff',
+    borderTopColor: '#E5E7EB',
+    borderTopWidth: 1,
     padding: 16,
   },
   inputContainer: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: 8,
   },
   inputIconButton: {
-    padding: 8,
     borderRadius: 9999,
+    padding: 8,
   },
   textInput: {
     flex: 1,
@@ -559,12 +559,12 @@ const styles = StyleSheet.create({
     color: '#1F2937',
   },
   sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#8B4513',
     alignItems: 'center',
+    backgroundColor: '#8B4513',
+    borderRadius: 20,
+    height: 40,
     justifyContent: 'center',
+    width: 40,
   },
   sendButtonDisabled: {
     backgroundColor: '#D1D5DB', // gray-300
@@ -578,8 +578,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   actionSheetItem: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     paddingHorizontal: 20,
     paddingVertical: 15,
   },
@@ -587,8 +587,8 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   actionSheetText: {
-    fontSize: 16,
     color: '#1F2937',
+    fontSize: 16,
   },
   actionSheetTextDanger: {
     color: '#DC2626', // red-600

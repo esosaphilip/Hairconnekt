@@ -88,44 +88,24 @@ export function BottomNavigation() {
 // --- Stylesheet for React Native ---
 
 const styles = StyleSheet.create({
-  navContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    height: 64,
-    justifyContent: 'space-around',
-    paddingHorizontal: 8,
-  },
-  safeArea: {
-    backgroundColor: colors.white,
-    borderTopColor: colors.gray200,
-    borderTopWidth: 1,
-    zIndex: 50,
-  },
-  navItem: {
-    alignItems: 'center',
-    flex: 1,
-    height: '100%',
-    justifyContent: 'center',
-    paddingVertical: 4,
-  },
-  iconWrapper: {
-    position: 'relative',
-  },
   badge: {
+    alignItems: 'center',
+    backgroundColor: colors.secondary,
+    borderRadius: 8,
+    height: 16,
+    justifyContent: 'center',
     position: 'absolute',
     right: -4,
     top: -4,
-    backgroundColor: colors.secondary,
-    borderRadius: 8,
     width: 16,
-    height: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   badgeText: {
     color: colors.white,
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  iconWrapper: {
+    position: 'relative',
   },
   labelText: {
     fontSize: 12,
@@ -138,5 +118,25 @@ const styles = StyleSheet.create({
   },
   labelTextInactive: {
     color: colors.gray400,
+  },
+  navContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    height: 64,
+    justifyContent: 'space-around',
+    paddingHorizontal: 8,
+  },
+  navItem: {
+    alignItems: 'center',
+    flex: 1,
+    height: '100%',
+    justifyContent: 'center',
+    paddingVertical: 4,
+  },
+  safeArea: {
+    backgroundColor: colors.white,
+    borderTopColor: colors.gray200,
+    borderTopWidth: 1,
+    zIndex: 50,
   },
 });

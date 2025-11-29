@@ -31,16 +31,16 @@ const Textarea = forwardRef<TextInput, TextareaProps>(function Textarea(_props: 
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 64,
-    width: "100%",
-    borderWidth: 1,
-    borderColor: theme.colors.gray300,
     backgroundColor: theme.colors.gray50,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderColor: theme.colors.gray300,
     borderRadius: theme?.radii?.md ?? 0,
+    borderWidth: 1,
     color: theme.colors.black,
     fontSize: 16,
+    minHeight: 64,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    width: "100%",
   },
   invalid: {
     borderColor: theme.colors.error,

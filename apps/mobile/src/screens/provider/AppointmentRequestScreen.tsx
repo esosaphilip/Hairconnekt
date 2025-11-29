@@ -381,65 +381,65 @@ export function AppointmentRequestScreen() {
 // --- Stylesheet for React Native ---
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: backgroundColor,
+    flex: 1,
   },
   // Header styles (replaces sticky header div)
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    borderBottomWidth: 1,
+    flexDirection: 'row',
+    padding: spacing.md,
   },
   backButton: {
     paddingRight: spacing.sm,
   },
   headerSubtitle: {
-    fontSize: 12,
-    color: '#6b7280', // text-gray-500
+    color: '#6b7280',
+    fontSize: 12, // text-gray-500
   },
   // ScrollView content
   scrollContent: {
+    paddingBottom: 150,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    paddingBottom: 150, // Space for fixed action buttons
+    paddingVertical: spacing.md, // Space for fixed action buttons
   },
   // Card styles
   card: {
-    padding: spacing.md,
-    marginBottom: spacing.md,
-    borderRadius: 8,
     backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 2,
+    marginBottom: spacing.md,
+    padding: spacing.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
-    elevation: 2,
   },
   // Status Badge row
   statusRow: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     marginBottom: spacing.md,
   },
   statusText: {
-    fontSize: 12,
     color: '#6b7280',
+    fontSize: 12,
     marginLeft: spacing.sm,
   },
   // Client Info
   clientInfo: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
   },
   clientDetails: {
     flex: 1,
   },
   clientStats: {
-    fontSize: 12,
     color: '#6b7280',
+    fontSize: 12,
     marginTop: 2,
   },
   clientActions: {
@@ -459,24 +459,24 @@ const styles = StyleSheet.create({
   },
   // Detail Row
   detailRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     marginBottom: spacing.md,
   },
   detailIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
+    borderRadius: 8,
     flexShrink: 0,
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
   },
   detailTextContainer: {
     flex: 1,
   },
   detailTitle: {
-    fontSize: 12,
     color: '#6b7280',
+    fontSize: 12,
   },
   detailValue: {
     fontSize: 14,
@@ -484,39 +484,39 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   detailSubValue: {
-    fontSize: 12,
     color: '#6b7280',
+    fontSize: 12,
     marginTop: 2,
   },
   subtitle: {
-    fontSize: 14,
     color: '#6b7280',
+    fontSize: 14,
   },
   // Alternative Dates
   alternativeDatesList: {
     marginTop: spacing.sm,
   },
   alternativeDateItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: spacing.sm,
+    borderColor: '#e5e7eb',
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: spacing.sm / 2,
+    padding: spacing.sm,
   },
   alternativeDateItemSelected: {
-    borderColor: primaryColor,
-    backgroundColor: `${primaryColor}0D`, // 5% opacity
+    backgroundColor: `${primaryColor}0D`,
+    borderColor: primaryColor, // 5% opacity
   },
   alternativeDateText: {
-    fontSize: 14,
     color: '#1f2937',
+    fontSize: 14,
   },
   alternativeDateSubText: {
-    fontSize: 12,
     color: '#6b7280',
+    fontSize: 12,
   },
   // Notes
   notesText: {
@@ -536,28 +536,28 @@ const styles = StyleSheet.create({
     borderTopColor: '#e5e7eb',
   },
   fullWidthButton: {
-    width: '100%',
     height: 48,
+    width: '100%',
   },
   // Decline Dialog specific styles
   declineReasonItem: {
-    padding: spacing.sm,
+    borderColor: '#e5e7eb',
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
     marginBottom: spacing.sm / 2,
+    padding: spacing.sm,
   },
   declineReasonItemSelected: {
-    borderColor: primaryColor,
     backgroundColor: `${primaryColor}0D`,
+    borderColor: primaryColor,
   },
   declineReasonText: {
-    fontSize: 14,
     color: '#1f2937',
+    fontSize: 14,
   },
   label: {
+    color: '#374151',
     fontSize: 12,
     fontWeight: '500',
-    color: '#374151',
   }
 });

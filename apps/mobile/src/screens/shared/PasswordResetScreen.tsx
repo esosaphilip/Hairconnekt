@@ -144,7 +144,7 @@ export function PasswordResetScreen() {
   const handleOtpChange = (index: number, value: string) => {
     if (!/^\d*$/.test(value)) return; // Only allow digits
 
-    let newOtp = [...otp];
+    const newOtp = [...otp];
     newOtp[index] = value.slice(-1); // Take only last character
     setOtp(newOtp);
 
@@ -419,8 +419,8 @@ export function PasswordResetScreen() {
 // --- Stylesheet for RN ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
     backgroundColor: '#fff',
+    flex: 1,
   },
   scrollContent: {
     padding: spacing.md,
@@ -428,11 +428,11 @@ const styles = StyleSheet.create({
   },
   // Back Button
   backButton: {
-    flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
     gap: spacing.xs,
     marginBottom: spacing.lg,
-    alignSelf: 'flex-start',
   },
   backButtonText: {
     color: GRAY_TEXT,
@@ -440,13 +440,13 @@ const styles = StyleSheet.create({
   },
   // Header
   headerContainer: {
-    marginBottom: spacing.xl,
-    alignItems: 'center', // Center text for a mobile form look
+    alignItems: 'center',
+    marginBottom: spacing.xl, // Center text for a mobile form look
   },
   appTitle: {
+    color: PRIMARY_COLOR,
     fontSize: 24,
     fontWeight: '700',
-    color: PRIMARY_COLOR,
     marginBottom: spacing.xs,
   },
   mainTitle: {
@@ -456,9 +456,9 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     color: GRAY_TEXT,
-    textAlign: 'center',
     fontSize: 14,
     paddingHorizontal: spacing.lg,
+    textAlign: 'center',
   },
 
   // Form
@@ -480,11 +480,11 @@ const styles = StyleSheet.create({
     height: 48,
   },
   primaryButton: {
-    width: '100%',
     backgroundColor: PRIMARY_COLOR,
-    height: 48,
     borderRadius: 8,
+    height: 48,
     marginTop: spacing.md,
+    width: '100%',
   },
 
   // OTP
@@ -495,10 +495,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   otpInput: {
-    width: 48,
+    fontSize: 20,
     height: 56,
     textAlign: 'center',
-    fontSize: 20,
+    width: 48,
   },
   resendContainer: {
     alignItems: 'center',
@@ -520,34 +520,34 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   progressBar: {
-    height: 4,
     borderRadius: 2,
+    height: 4,
   },
   passwordRequirements: {
-    marginTop: spacing.xs,
-    gap: spacing.xs / 2, // space-y-1
+    gap: spacing.xs / 2,
+    marginTop: spacing.xs, // space-y-1
   },
   requirementItem: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     gap: spacing.xs,
   },
   dot: {
-    width: 4,
-    height: 4,
     borderRadius: 2,
+    height: 4,
+    width: 4,
   },
   passwordErrorText: {
-    fontSize: 12,
     color: ERROR_COLOR,
+    fontSize: 12,
     marginTop: spacing.xs,
   },
 
   // Success
   successContainer: {
     alignItems: 'center',
-    paddingTop: spacing.xxl,
-    gap: spacing.lg, // space-y-6
+    gap: spacing.lg,
+    paddingTop: spacing.xxl, // space-y-6
   },
   successIconWrapper: {
     justifyContent: 'center',

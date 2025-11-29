@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, View, Pressable, StyleSheet, Image } from 'react-native';
+import { SafeAreaView, View, Pressable, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
@@ -15,21 +15,18 @@ const Logo = () => (
 );
 
 export default function WelcomeScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation() as { navigate: (route: string, params?: unknown) => void; goBack?: () => void };
 
   const goLogin = () => {
-    // @ts-ignore
     navigation.navigate('Login');
   };
 
   const goAccountType = () => {
-    // @ts-ignore
     navigation.navigate('AccountType');
   };
 
   const goProviderLogin = () => {
     // When the user chooses provider login, pass an expectedUserType flag.
-    // @ts-ignore
     navigation.navigate('Login', { expectedUserType: 'provider', returnUrl: '/provider/dashboard' });
   };
 
@@ -49,7 +46,7 @@ export default function WelcomeScreen() {
           <Button title="Als Kunde anmelden" onPress={goLogin} style={styles.button} />
           <Button title="Als Anbieter anmelden" onPress={goProviderLogin} variant="secondary" style={styles.button} />
           <Pressable onPress={goAccountType} style={styles.registerButton}>
-            <Text color={colors.white}>Noch kein Konto? <Text style={{ fontWeight: 'bold' }}>Registrieren</Text></Text>
+            <Text color={colors.white}>Noch kein Konto? <Text style={styles.bold}>Registrieren</Text></Text>
           </Pressable>
         </View>
 
@@ -62,64 +59,65 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.primary,
-  },
-  content: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing.lg,
-  },
-  header: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    textAlign: 'center',
-  },
-  logoContainer: {
-    width: 128,
-    height: 128,
-    borderRadius: 24,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.lg,
-  },
-  logo: {
-    width: 80,
-    height: 80,
-  },
-  title: {
-    color: colors.white,
-    marginBottom: spacing.sm,
-  },
-  subtitle: {
-    fontSize: 18,
-    color: colors.white,
-    marginBottom: spacing.xs,
-  },
-  description: {
-    color: 'rgba(255,255,255,0.8)',
-    maxWidth: 320,
-    textAlign: 'center',
-  },
   actions: {
     width: '100%',
+  },
+  bold: {
+    fontWeight: 'bold',
   },
   button: {
     marginBottom: spacing.md,
   },
-  registerButton: {
+  container: {
+    backgroundColor: colors.primary,
+    flex: 1,
+  },
+  content: {
     alignItems: 'center',
-    marginTop: spacing.md,
+    flex: 1,
+    justifyContent: 'space-between',
+    padding: spacing.lg,
+  },
+  description: {
+    color: colors.white,
+    maxWidth: 320,
+    opacity: 0.8,
+    textAlign: 'center',
   },
   footer: {
     marginTop: spacing.lg,
   },
   footerText: {
+    color: colors.white,
     fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
+    opacity: 0.6,
+  },
+  header: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    textAlign: 'center',
+  },
+  logoContainer: {
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 24,
+    height: 128,
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+    width: 128,
+  },
+  registerButton: {
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
+  subtitle: {
+    color: colors.white,
+    fontSize: 18,
+    marginBottom: spacing.xs,
+  },
+  title: {
+    color: colors.white,
+    marginBottom: spacing.sm,
   },
 });

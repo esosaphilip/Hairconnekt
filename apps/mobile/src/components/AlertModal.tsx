@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
   buttonOutline: { borderColor: colors.gray200, borderWidth: 1 },
   buttonPrimary: { backgroundColor: colors.primary },
   buttonsRow: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 16 },
-  card: { backgroundColor: colors.white, borderRadius: 12, padding: 16, width: '90%', maxWidth: 480 },
+  card: { backgroundColor: colors.white, borderRadius: 12, maxWidth: 480, padding: 16, width: '90%' },
   customContent: { marginTop: 12 },
   description: { color: colors.gray600, fontSize: 14, marginTop: 6 },
   title: { color: colors.black, fontSize: 16, fontWeight: '700' },

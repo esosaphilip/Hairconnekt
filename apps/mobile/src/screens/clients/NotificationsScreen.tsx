@@ -371,8 +371,8 @@ export function NotificationsScreen() {
 // --- Stylesheet for RN ---
 const styles = StyleSheet.create({
   safeArea: {
-    flex: 1,
-    backgroundColor: '#F9FAFB', // bg-gray-50
+    backgroundColor: '#F9FAFB',
+    flex: 1, // bg-gray-50
   },
   scrollView: {
     flex: 1,
@@ -380,8 +380,8 @@ const styles = StyleSheet.create({
   // Header
   header: {
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB', // border-b
+    borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1, // border-b
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -395,19 +395,19 @@ const styles = StyleSheet.create({
     }),
   },
   headerBar: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
   },
   headerLeft: {
-    flexDirection: 'row',
     alignItems: 'center',
+    flexDirection: 'row',
   },
   backButton: {
-    padding: spacing.xs,
     marginLeft: -spacing.xs,
+    padding: spacing.xs,
   },
   screenTitle: {
     fontSize: 20,
@@ -429,19 +429,19 @@ const styles = StyleSheet.create({
   // Tabs
   tabsWrapper: {
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
     paddingHorizontal: spacing.md,
   },
   tabsList: {
-    flexDirection: 'row',
-    alignSelf: 'flex-start', // justify-start
+    alignSelf: 'flex-start',
+    flexDirection: 'row', // justify-start
   },
   tabsTrigger: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    marginRight: spacing.md,
     borderBottomWidth: 2,
+    marginRight: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
   tabsTriggerActive: {
     borderBottomColor: PRIMARY_COLOR,
@@ -467,13 +467,13 @@ const styles = StyleSheet.create({
     borderTopColor: '#E5E7EB',
   },
   notificationItem: {
-    padding: spacing.md,
-    borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    borderBottomWidth: 1,
+    padding: spacing.md,
   },
   notificationUnread: {
-    borderLeftWidth: 4,
     borderLeftColor: PRIMARY_COLOR,
+    borderLeftWidth: 4,
     paddingLeft: spacing.md - 4, // Adjust padding for border
   },
   notificationInner: {
@@ -489,26 +489,26 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   avatarImage: {
-    width: '100%',
     height: '100%',
     resizeMode: 'cover',
+    width: '100%',
   },
   iconWrapper: {
-    width: 48,
-    height: 48,
+    alignItems: 'center',
     borderRadius: 24,
     flexShrink: 0,
-    alignItems: 'center',
+    height: 48,
     justifyContent: 'center',
     marginRight: spacing.sm,
+    width: 48,
   },
   notificationTextContainer: {
     flex: 1,
     minWidth: 0,
   },
   titleRow: {
-    flexDirection: 'row',
     alignItems: 'flex-start',
+    flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: spacing.xs / 2,
   },
@@ -517,21 +517,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   unreadDot: {
-    width: 8,
-    height: 8,
     backgroundColor: PRIMARY_COLOR,
     borderRadius: 4,
     flexShrink: 0,
+    height: 8,
     marginTop: 2,
+    width: 8,
   },
   notificationMessage: {
-    fontSize: 14,
     color: GRAY_TEXT,
+    fontSize: 14,
     marginBottom: spacing.xs / 2,
   },
   notificationTime: {
-    fontSize: 12,
-    color: '#9CA3AF', // text-gray-500
+    color: '#9CA3AF',
+    fontSize: 12, // text-gray-500
   },
 
   // Empty/Loading
@@ -558,8 +558,8 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     color: GRAY_TEXT,
-    textAlign: 'center',
     fontSize: 14,
+    textAlign: 'center',
   },
   loadingText: {
       color: GRAY_TEXT,
@@ -568,11 +568,11 @@ const styles = StyleSheet.create({
 
   // Footer
   clearAllContainer: {
-    padding: spacing.md,
     backgroundColor: '#fff',
-    borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
-    marginTop: spacing.md, // mt-4
+    borderTopWidth: 1,
+    marginTop: spacing.md,
+    padding: spacing.md, // mt-4
   },
   clearAllButton: {
     width: '100%',

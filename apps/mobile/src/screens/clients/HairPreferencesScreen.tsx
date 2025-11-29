@@ -403,9 +403,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: 12,
   },
-  radioSelected: {
-    borderColor: colors.primary,
-  },
   radioContainer: {
     alignItems: 'center',
     borderColor: colors.gray300,
@@ -440,6 +437,9 @@ const styles = StyleSheet.create({
   },
   radioOptionSelected: {
     backgroundColor: colors.gray50,
+    borderColor: colors.primary,
+  },
+  radioSelected: {
     borderColor: colors.primary,
   },
   safeArea: {
