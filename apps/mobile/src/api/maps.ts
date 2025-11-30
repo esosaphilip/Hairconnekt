@@ -1,9 +1,31 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import { GOOGLE_MAPS_API_KEY } from '../config';
 
-export async function autocompletePlaces(input: string, opts?: { language?: string; country?: string; location?: { lat: number; lng: number } }) {
+type AutocompletePrediction = {
+  description: string;
+  place_id: string;
+  structured_formatting?: { main_text: string; secondary_text?: string };
+  terms?: Array<{ offset: number; value: string }>;
+  types?: string[];
+};
+
+type AutocompleteResponse = { predictions: AutocompletePrediction[]; status: string };
+
+type GeocodeResult = {
+  formatted_address: string;
+  place_id?: string;
+  types?: string[];
+  geometry?: { location: { lat: number; lng: number } };
+};
+
+type GeocodeResponse = { results: GeocodeResult[]; status: string };
+
+export async function autocompletePlaces(
+  input: string,
+  opts?: { language?: string; country?: string; location?: { lat: number; lng: number } }
+) {
   if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY not set');
-  const params: any = {
+  const params: Record<string, string | number> = {
     input,
     key: GOOGLE_MAPS_API_KEY,
   };
@@ -14,13 +36,15 @@ export async function autocompletePlaces(input: string, opts?: { language?: stri
     params.radius = 20000;
   }
   const url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json';
-  const res = await axios.get(url, { params });
-  return res.data?.predictions || [];
+  const res: AxiosResponse<AutocompleteResponse> = await axios.get(url, { params });
+  return res.data?.predictions ?? [];
 }
 
 export async function geocodeAddress(address: string) {
   if (!GOOGLE_MAPS_API_KEY) throw new Error('GOOGLE_MAPS_API_KEY not set');
   const url = 'https://maps.googleapis.com/maps/api/geocode/json';
-  const res = await axios.get(url, { params: { address, key: GOOGLE_MAPS_API_KEY } });
-  return res.data?.results || [];
+  const res: AxiosResponse<GeocodeResponse> = await axios.get(url, {
+    params: { address, key: GOOGLE_MAPS_API_KEY },
+  });
+  return res.data?.results ?? [];
 }

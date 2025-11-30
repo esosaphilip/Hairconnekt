@@ -1,9 +1,9 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
-import { API_BASE_URL } from '../config';
+import { API_BASE_URL, API_TIMEOUT } from '../config';
 import { getAccessToken, getRefreshToken, saveTokens, getAuthBundle, getPreferredLanguageSetting } from '../auth/tokenStorage';
 
 // Axios instance with sensible defaults to avoid hanging requests
-export const http = axios.create({ baseURL: API_BASE_URL, timeout: 15000 });
+export const http = axios.create({ baseURL: API_BASE_URL, timeout: API_TIMEOUT });
 // eslint-disable-next-line no-console
 if (typeof __DEV__ !== 'undefined' && __DEV__) {
   console.log('[HTTP] axios baseURL =', API_BASE_URL);

@@ -24,9 +24,11 @@ const emulatorDefault = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'ht
 
 // Allow overriding via environment variable (recommended in CI/production)
 const envUrl = process.env.EXPO_PUBLIC_API_URL;
+const envTimeout = process.env.EXPO_PUBLIC_API_TIMEOUT;
 
 const base = (envUrl && envUrl.trim()) || resolveDevHostFromRN() || emulatorDefault;
 export const API_BASE_URL = `${base.replace(/\/$/, '')}/api/v1`;
+export const API_TIMEOUT = envTimeout ? Number(envTimeout) : 15000;
 export const GOOGLE_MAPS_API_KEY = (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '').trim();
 
 // Dev aid: log the resolved API base so we can quickly diagnose connectivity issues on devices
@@ -37,6 +39,7 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
     const scriptURL: string | undefined = (NativeModules as any)?.SourceCode?.scriptURL;
     const host = scriptURL?.match(/https?:\/\/([^:]+):\d+/)?.[1] || 'unknown';
     console.log(`[Hairconnekt] API_BASE_URL -> ${API_BASE_URL} (script host: ${host}; env: ${envUrl || 'n/a'})`);
+    console.log(`[Hairconnekt] API_TIMEOUT -> ${API_TIMEOUT}`);
     if (GOOGLE_MAPS_API_KEY) {
       console.log('[Hairconnekt] Google Maps key is set');
     } else {
