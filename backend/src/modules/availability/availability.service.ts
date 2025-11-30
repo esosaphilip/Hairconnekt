@@ -72,4 +72,11 @@ export class AvailabilityService {
 
     return this.availabilityRepository.save(availability);
   }
+
+  async findByProvider(providerId: string): Promise<Availability | null> {
+    const provider = await this.providerProfileRepository.findOne({ where: { id: providerId } });
+    if (!provider) return null;
+    const availability = await this.availabilityRepository.findOne({ where: { provider: { id: providerId } }, relations: ['slots'] });
+    return availability ?? null;
+  }
 }

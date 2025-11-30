@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Patch, UseGuards, Req, Param } from '@nestjs/common';
+import { Body, Controller, Post, Patch, UseGuards, Req, Param, Get } from '@nestjs/common';
 import { AvailabilityService } from './availability.service';
 import { CreateAvailabilityDto } from './dto/create-availability.dto';
 import { UpdateAvailabilityDto } from './dto/update-availability.dto';
@@ -19,5 +19,12 @@ export class AvailabilityController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAvailabilityDto: UpdateAvailabilityDto) {
     return this.availabilityService.update(id, updateAvailabilityDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  getForProvider(@Req() req) {
+    const providerId = req.user.providerId;
+    return this.availabilityService.findByProvider(providerId);
   }
 }
