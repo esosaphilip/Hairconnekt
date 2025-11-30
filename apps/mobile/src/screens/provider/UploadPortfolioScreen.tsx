@@ -41,6 +41,8 @@ const categories = [
 
 // --- Custom Tokens (Imported from a central theme file) ---
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { http } from '../../api/http';
+import { getAuthBundle } from '../../auth/tokenStorage';
 
 // --- Mock Image Picker Implementation ---
 // In RN, images are objects containing 'uri', 'fileName', 'fileSize', etc.
@@ -100,7 +102,7 @@ export function UploadPortfolioScreen() {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (images.length === 0) {
       Alert.alert("Fehler", "Bitte mindestens ein Bild auswählen");
       return;
@@ -109,16 +111,28 @@ export function UploadPortfolioScreen() {
       Alert.alert("Fehler", "Bitte eine Kategorie auswählen");
       return;
     }
-    
-    // In a real app, this is where you'd upload the images to a server
-    
-    Alert.alert("Upload gestartet", "Portfolio-Bilder werden hochgeladen...");
-    
-    // Mock success after a delay
-    setTimeout(() => {
+    try {
+      Alert.alert("Upload gestartet", "Portfolio-Bilder werden hochgeladen...");
+      const bundle = await getAuthBundle();
+      const providerId = bundle?.user?.id || '';
+      if (!providerId) {
+        Alert.alert("Fehler", "Kein Benutzer gefunden – bitte erneut anmelden");
+        return;
+      }
+      // Use the first image URL to create a portfolio entry via backend
+      const first = images[0];
+      const caption = formData.title || `Kategorie: ${formData.category}`;
+      await http.post('/portfolio/upload', {
+        providerId,
+        imageUrl: first.uri,
+        caption,
+      });
       Alert.alert("Erfolg", "Portfolio erfolgreich aktualisiert!");
-      navigation.navigate("ProviderPortfolioScreen"); // Assuming a route name
-    }, 1500);
+      navigation.navigate("ProviderPortfolioScreen");
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Upload fehlgeschlagen';
+      Alert.alert("Fehler", String(msg));
+    }
   };
 
   const isSubmitDisabled = images.length === 0 || !formData.category;
