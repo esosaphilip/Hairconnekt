@@ -33,6 +33,25 @@ export class ServicesService {
         throw new NotFoundException(`ServiceCategory with ID "${categoryId}" not found`);
       }
       category = found;
+    } else {
+      // Attach a default category; if missing, create it to satisfy potential NOT NULL FKs
+      try {
+        let def = await this.serviceCategoryRepository.findOne({ where: { slug: 'default' } });
+        if (!def) {
+          def = this.serviceCategoryRepository.create({
+            nameDe: 'Allgemein',
+            nameEn: 'General',
+            slug: 'default',
+            description: 'Standardkategorie',
+            displayOrder: 0,
+            isActive: true,
+          });
+          def = await this.serviceCategoryRepository.save(def);
+        }
+        category = def;
+      } catch {
+        category = undefined;
+      }
     }
 
     const service: Service = this.serviceRepository.create({

@@ -1,5 +1,5 @@
 import React, { forwardRef } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet } from 'react-native';
 import type { StyleProp, TextInputProps, TextInput as RNTextInput, TextStyle } from 'react-native';
 import { colors, radii } from '../theme/tokens';
 
@@ -19,10 +19,16 @@ export interface InputProps extends Omit<TextInputProps, 'style'> {
 export const Input = forwardRef<RNTextInput, InputProps>(function Input(props: InputProps = {}, ref) {
   const { leftIcon, icon, style, ...rest } = props ?? {};
   const iconNode = leftIcon ?? icon;
-  const hasIcon = !!iconNode;
+  const hasIcon = iconNode != null && iconNode !== false;
   return (
     <View style={styles.container}>
-      {hasIcon && <View style={styles.icon}>{iconNode}</View>}
+      {hasIcon && (
+        <View style={styles.icon}>
+          {typeof iconNode === 'string' || typeof iconNode === 'number'
+            ? <Text style={styles.iconText}>{String(iconNode)}</Text>
+            : (iconNode as React.ReactNode)}
+        </View>
+      )}
       <TextInput
         ref={ref}
         {...rest}
@@ -43,6 +49,9 @@ const styles = StyleSheet.create({
     left: 8,
     position: 'absolute',
     zIndex: 1,
+  },
+  iconText: {
+    fontSize: 16,
   },
   input: {
     backgroundColor: colors.white,

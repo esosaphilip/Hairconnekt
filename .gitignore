@@ -5,6 +5,21 @@
 Thumbs.db
 *.log
 logs/
+node_modules/
+**/node_modules/
+.trae/
+**/.eslintcache
+
+# Common build & cache folders across packages
+**/dist/
+**/build/
+**/.expo/
+**/web-build/
+**/.metro-health-check*
+**/*.tsbuildinfo
+**/npm-debug.*
+**/yarn-debug.*
+**/yarn-error.*
 
 # Env files
 .env
@@ -30,3 +45,6 @@ apps/mobile/iosApp/Pods/
 .idea/
 .vscode/
 **/.swp
+
+# Local dev databases
+backend/dev-db*.sqlite

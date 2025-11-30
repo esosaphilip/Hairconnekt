@@ -13,6 +13,7 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { VerifyPhoneDto } from './dto/verify-phone.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { ProviderProfile, BusinessType } from '../providers/entities/provider-profile.entity';
 import { jwtConfig } from '../../config/jwt.config';
 import crypto from 'crypto';
 import argon2 from 'argon2';
@@ -164,6 +165,30 @@ export class AuthService {
         lastLogin: new Date(),
       });
       const saved = await userRepo.save(user);
+      if (saved.userType === UserType.PROVIDER || saved.userType === UserType.BOTH) {
+        const ppRepo = queryRunner.manager.getRepository(ProviderProfile);
+        const existing = await ppRepo.findOne({ where: { user: { id: saved.id } } });
+        if (!existing) {
+          const profile = ppRepo.create({
+            user: { id: saved.id } as any,
+            businessName: null,
+            businessType: BusinessType.INDIVIDUAL,
+            bio: '',
+            yearsOfExperience: 0,
+            coverPhotoUrl: null,
+            isVerified: false,
+            isMobileService: false,
+            serviceRadiusKm: null,
+            acceptsSameDayBooking: false,
+            advanceBookingDays: 30,
+            bufferTimeMinutes: 15,
+            cancellationPolicy: '',
+            verificationSubmittedAt: null,
+            verifiedAt: null,
+          });
+          await ppRepo.save(profile);
+        }
+      }
 
       const { accessToken, refreshToken } = this.signTokens(saved);
       // persist refresh token (rotation support) within the same transaction

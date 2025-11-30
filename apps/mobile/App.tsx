@@ -123,9 +123,12 @@ function Tabs() {
         component={ClientProfileStackScreen}
         options={{ headerShown: false }}
         listeners={({ navigation }) => ({
-          // Ensure selecting the Profile tab always shows the root Profile screen,
-          // and not the last visited sub-screen (e.g., Favorites)
-          tabPress: () => {
+          tabPress: (e) => {
+            try {
+              if (e && typeof (e as any).preventDefault === 'function') {
+                (e as any).preventDefault();
+              }
+            } catch {}
             try {
               navigation.navigate('Profile', { screen: 'Profile' });
             } catch {}

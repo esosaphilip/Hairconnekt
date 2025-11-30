@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Star, Filter, TrendingUp, MessageCircle, ThumbsUp } from "lucide-react";
+import { Star, Filter, TrendingUp, MessageCircle, ThumbsUp, User } from "lucide-react";
 import { Card } from "../ui/card";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar } from "../ui/avatar";
 import { ImageWithFallback } from "../figma/ImageWithFallback";
 import { Textarea } from "../ui/textarea";
+import { useNavigate } from "react-router-dom";
 
 const reviews = [
   {
@@ -67,7 +68,7 @@ export function ProviderReviews() {
   const [filter, setFilter] = useState("all");
   const [respondingTo, setRespondingTo] = useState<number | null>(null);
   const [responseText, setResponseText] = useState("");
-  // Removed unused navigate to satisfy lint rule
+  const navigate = useNavigate();
 
   const filteredReviews = reviews.filter(review => {
     if (filter === "unresponded") return !review.hasResponse;
@@ -89,9 +90,18 @@ export function ProviderReviews() {
       <div className="bg-white px-4 pt-6 pb-4 sticky top-0 z-10 shadow-sm">
         <div className="flex justify-between items-center mb-4">
           <h3>Bewertungen</h3>
-          <button>
-            <Filter className="w-5 h-5 text-gray-700" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button aria-label="Filter">
+              <Filter className="w-5 h-5 text-gray-700" />
+            </button>
+            <button
+              aria-label="Profil öffnen"
+              onClick={() => navigate("/provider/more/profile")}
+              className="p-1 rounded focus:outline-none focus:ring-2 focus:ring-[#8B4513]"
+            >
+              <User className="w-5 h-5 text-gray-700" />
+            </button>
+          </div>
         </div>
 
         {/* Overall Rating Card */}

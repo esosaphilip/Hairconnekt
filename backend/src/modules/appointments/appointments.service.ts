@@ -47,15 +47,24 @@ export class AppointmentsService {
     }
 
     const totalDurationMinutes = services.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+    const startDt = new Date(startTime);
+    const endDt = new Date(endTime);
+    const toDateStr = (d: Date) => d.toISOString().split('T')[0];
+    const toTimeStr = (d: Date) => {
+      const h = String(d.getHours()).padStart(2, '0');
+      const m = String(d.getMinutes()).padStart(2, '0');
+      const s = String(d.getSeconds()).padStart(2, '0');
+      return `${h}:${m}:${s}`;
+    };
     const appointment = this.appointmentRepo.create({
       provider,
       client,
-      startTime,
-      endTime,
+      startTime: toTimeStr(startDt),
+      endTime: toTimeStr(endDt),
       // Map generic notes to clientNotes for now
       clientNotes: notes,
       status: AppointmentStatus.PENDING,
-      appointmentDate: new Date().toISOString().split('T')[0],
+      appointmentDate: toDateStr(startDt),
       totalDurationMinutes,
     });
 
@@ -66,6 +75,7 @@ export class AppointmentsService {
     const appointmentServices = services.map(service => {
       return this.appointmentServiceRepo.create({
         appointment: savedAppointment,
+        service,
         serviceName: service.name,
         durationMinutes: service.durationMinutes,
         priceCents: service.priceCents,

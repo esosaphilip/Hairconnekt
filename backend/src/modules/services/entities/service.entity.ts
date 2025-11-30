@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   Index,
+  JoinColumn,
 } from 'typeorm';
 import { ProviderProfile } from '../../providers/entities/provider-profile.entity';
 import { ServiceCategory } from './service-category.entity';
@@ -22,11 +23,17 @@ export class Service {
   id: string;
 
   @ManyToOne(() => ProviderProfile, (provider) => provider.services, { onDelete: 'CASCADE' })
+  @Index()
+  // Align with existing DB schema (snake_case)
+  // provider_id references provider_profiles.id
+  @JoinColumn({ name: 'provider_id' })
   provider: ProviderProfile;
 
   // Make category optional to match CreateServiceDto where categoryId is optional
   // Note: DB constraint may still be NOT NULL; creation without category should be avoided
   @ManyToOne(() => ServiceCategory, { onDelete: 'RESTRICT', nullable: true })
+  @Index()
+  @JoinColumn({ name: 'category_id' })
   category?: ServiceCategory | null;
 
   @Index()

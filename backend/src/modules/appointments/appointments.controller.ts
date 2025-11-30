@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards, NotFoundException } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
@@ -8,10 +8,16 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
 import { Request } from 'express';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    @InjectRepository(ProviderProfile) private readonly providersRepo: Repository<ProviderProfile>,
+  ) {}
 
   // Client side listings
   @Get('client')
@@ -34,9 +40,10 @@ export class AppointmentsController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createAppointmentDto: CreateAppointmentDto, @Req() req: Request) {
-    // In NestJS with Passport, req.user is appended at runtime but not typed on Express Request
-    const providerId = (req as any)?.user?.providerId; // Assuming providerId is on the user object
-    return this.appointmentsService.create({ ...createAppointmentDto, providerId });
+    const userId = (req as any)?.user?.sub;
+    if (!userId) throw new NotFoundException('Authenticated user not found');
+    // Treat caller as client; enforce clientId from auth context and honor providerId from DTO
+    return this.appointmentsService.create({ ...createAppointmentDto, clientId: userId });
   }
 
   @Patch()

@@ -22,31 +22,9 @@ import { providersApi } from '../../services/providers';
 // Screen width for responsive layout
 const screenWidth = Dimensions.get('window').width;
 
-// --- Mock Data (Replicated) ---
-const monthlyData = [
-  { month: "Jan", revenue: 2800, appointments: 32, newClients: 8 },
-  { month: "Feb", revenue: 3200, appointments: 38, newClients: 12 },
-  { month: "Mar", revenue: 2950, appointments: 35, newClients: 10 },
-  { month: "Apr", revenue: 3400, appointments: 42, newClients: 15 },
-  { month: "Mai", revenue: 3800, appointments: 48, newClients: 18 },
-  { month: "Jun", revenue: 4100, appointments: 52, newClients: 20 },
-];
-
-const topServices = [
-  { name: "Box Braids", bookings: 156, revenue: 14820, growth: 12 },
-  { name: "Knotless Braids", bookings: 98, revenue: 10290, growth: 8 },
-  { name: "Cornrows", bookings: 87, revenue: 5655, growth: -3 },
-  { name: "Senegalese Twists", bookings: 72, revenue: 7920, growth: 15 },
-];
-
-const peakHours = [
-  { hour: "9-11", bookings: 12 },
-  { hour: "11-13", bookings: 18 },
-  { hour: "13-15", bookings: 24 },
-  { hour: "15-17", bookings: 32 },
-  { hour: "17-19", bookings: 28 },
-  { hour: "19-21", bookings: 15 },
-];
+type AnalyticsMonthlyItem = { month: string; revenueCents: number; appointments: number; newClients: number };
+type AnalyticsTopServiceItem = { name: string; bookings: number; revenueCents: number; growthPercent: number };
+type AnalyticsPeakHourItem = { hour: string; bookings: number };
 
 // --- Main Component ---
 export function ProviderAnalyticsScreen() {
@@ -55,14 +33,54 @@ export function ProviderAnalyticsScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   type DashboardStats = { weekEarningsCents?: number; todayCount?: number; reviewCount?: number; ratingAverage?: number };
-  type Dashboard = { stats?: DashboardStats } | null;
+  type Dashboard = {
+    stats?: DashboardStats;
+    monthly?: AnalyticsMonthlyItem[];
+    topServices?: AnalyticsTopServiceItem[];
+    peakHours?: AnalyticsPeakHourItem[];
+  } | null;
   const [dashboard, setDashboard] = useState<Dashboard>(null);
+  const monthlyData = useMemo(() => {
+    const fallback: AnalyticsMonthlyItem[] = [
+      { month: 'Jan', revenueCents: 280000, appointments: 32, newClients: 8 },
+      { month: 'Feb', revenueCents: 320000, appointments: 38, newClients: 12 },
+      { month: 'Mar', revenueCents: 295000, appointments: 35, newClients: 10 },
+      { month: 'Apr', revenueCents: 340000, appointments: 42, newClients: 15 },
+      { month: 'Mai', revenueCents: 380000, appointments: 48, newClients: 18 },
+      { month: 'Jun', revenueCents: 410000, appointments: 52, newClients: 20 },
+    ];
+    const items = dashboard?.monthly && Array.isArray(dashboard.monthly) && dashboard.monthly.length ? dashboard.monthly : fallback;
+    return items;
+  }, [dashboard]);
+  const topServices = useMemo(() => {
+    const fallback: AnalyticsTopServiceItem[] = [
+      { name: 'Box Braids', bookings: 156, revenueCents: 1482000, growthPercent: 12 },
+      { name: 'Knotless Braids', bookings: 98, revenueCents: 1029000, growthPercent: 8 },
+      { name: 'Cornrows', bookings: 87, revenueCents: 565500, growthPercent: -3 },
+      { name: 'Senegalese Twists', bookings: 72, revenueCents: 792000, growthPercent: 15 },
+    ];
+    const items = dashboard?.topServices && Array.isArray(dashboard.topServices) && dashboard.topServices.length ? dashboard.topServices : fallback;
+    return items;
+  }, [dashboard]);
+  const peakHours = useMemo(() => {
+    const fallback: AnalyticsPeakHourItem[] = [
+      { hour: '9-11', bookings: 12 },
+      { hour: '11-13', bookings: 18 },
+      { hour: '13-15', bookings: 24 },
+      { hour: '15-17', bookings: 32 },
+      { hour: '17-19', bookings: 28 },
+      { hour: '19-21', bookings: 15 },
+    ];
+    const items = dashboard?.peakHours && Array.isArray(dashboard.peakHours) && dashboard.peakHours.length ? dashboard.peakHours : fallback;
+    return items;
+  }, [dashboard]);
 
-  const maxRevenue = Math.max(...monthlyData.map(d => d.revenue));
+  const maxRevenue = Math.max(...monthlyData.map(d => (d.revenueCents || 0) / 100));
   const maxBookings = Math.max(...peakHours.map(d => d.bookings));
-  
-  // Max revenue for top services is assumed to be the highest revenue item (14820)
-  const maxServiceRevenue = 14820; 
+  const maxServiceRevenue = useMemo(() => {
+    const euros = topServices.map(s => (s.revenueCents || 0) / 100);
+    return euros.length ? Math.max(...euros) : 1;
+  }, [topServices]);
 
   const handleDownload = () => {
       Alert.alert("Download", "Bericht-Download - Funktion in Entwicklung");
@@ -204,9 +222,9 @@ export function ProviderAnalyticsScreen() {
                 <TouchableOpacity
                     style={[
                       styles.bar,
-                      { height: `${(data.revenue / maxRevenue) * 100}%` },
+                      { height: `${(((data.revenueCents || 0) / 100) / maxRevenue) * 100}%` },
                     ]}
-                    onPress={() => Alert.alert("Monatsdetails", `Umsatz im ${data.month}: €${data.revenue}\nTermine: ${data.appointments}\nNeue Kunden: ${data.newClients}`)}
+                    onPress={() => Alert.alert("Monatsdetails", `Umsatz im ${data.month}: ${formatCurrency.format((data.revenueCents || 0) / 100)}\nTermine: ${data.appointments}\nNeue Kunden: ${data.newClients}`)}
                 />
                 <Text style={styles.barLabel}>{data.month}</Text>
               </View>
@@ -241,13 +259,13 @@ export function ProviderAnalyticsScreen() {
                       <Text style={styles.serviceBookings}>{service.bookings} Buchungen</Text>
                   </View>
                   <View style={styles.serviceRevenueRow}>
-                    <Text style={styles.serviceRevenue}>€{service.revenue.toLocaleString('de-DE')}</Text>
+                    <Text style={styles.serviceRevenue}>{formatCurrency.format((service.revenueCents || 0) / 100)}</Text>
                     <View
-                      style={service.growth >= 0 ? styles.trendRowSuccess : styles.trendRowDanger}
+                      style={(service.growthPercent || 0) >= 0 ? styles.trendRowSuccess : styles.trendRowDanger}
                     >
-                      <Icon name={service.growth >= 0 ? "trending-up" : "trending-down"} size={12} color={service.growth >= 0 ? COLORS.success : COLORS.danger} />
-                      <Text style={service.growth >= 0 ? styles.trendTextSuccess : styles.trendTextDanger}>
-                          {Math.abs(service.growth)}%
+                      <Icon name={(service.growthPercent || 0) >= 0 ? "trending-up" : "trending-down"} size={12} color={(service.growthPercent || 0) >= 0 ? COLORS.success : COLORS.danger} />
+                      <Text style={(service.growthPercent || 0) >= 0 ? styles.trendTextSuccess : styles.trendTextDanger}>
+                          {Math.abs(Math.round(service.growthPercent || 0))}%
                       </Text>
                     </View>
                   </View>
@@ -257,7 +275,7 @@ export function ProviderAnalyticsScreen() {
                   <View
                     style={[
                       styles.progressBarFill,
-                      { width: `${(service.revenue / maxServiceRevenue) * 100}%` },
+                      { width: `${((((service.revenueCents || 0) / 100) / maxServiceRevenue)) * 100}%` },
                     ]}
                   />
                 </View>

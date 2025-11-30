@@ -15,6 +15,8 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AppCacheModule } from './modules/cache/cache.module';
 import { ServicesModule } from './modules/services/services.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
+import { AvailabilityModule } from './modules/availability/availability.module';
+import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
 
 @Module({
   imports: [
@@ -26,7 +28,7 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
       url: process.env.DATABASE_URL,
       ssl: process.env.DATABASE_SSL ? { rejectUnauthorized: false } : false,
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: process.env.TYPEORM_SYNC === '1' || process.env.TYPEORM_SYNC === 'true',
     }),
     // Global cache module (Redis) for caching interceptors and services
     AppCacheModule,
@@ -42,6 +44,10 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
     ServicesModule,
     // Register appointments API routes (client/provider listings, create, etc.)
     AppointmentsModule,
+    // Provider availability management (create/update slots)
+    AvailabilityModule,
+    // Provider blocked time (vacations, breaks)
+    BlockedTimeModule,
   ],
   controllers: [],
   providers: [],

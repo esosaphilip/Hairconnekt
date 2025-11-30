@@ -201,7 +201,6 @@ export class ProvidersService {
       .getRawOne<{ totalCents: string }>();
     const weekEarningsCents = earningsRows?.totalCents ? parseInt(earningsRows.totalCents, 10) : 0;
 
-    // Recent reviews (last 5)
     const recent = await this.reviewsRepo.find({
       where: { provider: { id: provider.id } },
       relations: ['client'],
@@ -219,6 +218,125 @@ export class ProvidersService {
       hasResponse: !!r.providerResponse,
     }));
 
+    const deMonths = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    const monthly: Array<{ month: string; revenueCents: number; appointments: number; newClients: number }> = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i, 1);
+      d.setHours(0, 0, 0, 0);
+      const start = new Date(d.getFullYear(), d.getMonth(), 1);
+      const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      const startStr = this.formatDate(start);
+      const endStr = this.formatDate(end);
+      const revenueRow = await this.appointmentsRepo
+        .createQueryBuilder('a')
+        .leftJoin('a.appointmentServices', 'as')
+        .select('COALESCE(SUM(as.price_cents), 0)', 'total')
+        .where('a.provider_id = :pid', { pid: provider.id })
+        .andWhere('a.status = :st', { st: 'COMPLETED' })
+        .andWhere('a.appointment_date BETWEEN :s AND :e', { s: startStr, e: endStr })
+        .getRawOne<{ total: string }>();
+      const apptCount = await this.appointmentsRepo
+        .createQueryBuilder('a')
+        .select('COUNT(a.id)', 'cnt')
+        .where('a.provider_id = :pid', { pid: provider.id })
+        .andWhere('a.status = :st', { st: 'COMPLETED' })
+        .andWhere('a.appointment_date BETWEEN :s AND :e', { s: startStr, e: endStr })
+        .getRawOne<{ cnt: string }>();
+      const clientsRow = await this.appointmentsRepo
+        .createQueryBuilder('a')
+        .select('COUNT(DISTINCT a.client_id)', 'clients')
+        .where('a.provider_id = :pid', { pid: provider.id })
+        .andWhere('a.status = :st', { st: 'COMPLETED' })
+        .andWhere('a.appointment_date BETWEEN :s AND :e', { s: startStr, e: endStr })
+        .getRawOne<{ clients: string }>();
+      monthly.push({
+        month: deMonths[start.getMonth()],
+        revenueCents: revenueRow?.total ? parseInt(revenueRow.total, 10) : 0,
+        appointments: apptCount?.cnt ? parseInt(apptCount.cnt, 10) : 0,
+        newClients: clientsRow?.clients ? parseInt(clientsRow.clients, 10) : 0,
+      });
+    }
+
+    const nowDt = new Date();
+    const currentStart = new Date(nowDt);
+    currentStart.setDate(currentStart.getDate() - 90);
+    const prevStart = new Date(nowDt);
+    prevStart.setDate(prevStart.getDate() - 180);
+    const prevEnd = new Date(nowDt);
+    prevEnd.setDate(prevEnd.getDate() - 91);
+    const currentRows: Array<{ service_name: string; bookings: string; revenue_cents: string }> = await this.appointmentsRepo
+      .createQueryBuilder('a')
+      .leftJoin('a.appointmentServices', 'as')
+      .select('as.service_name', 'service_name')
+      .addSelect('COUNT(as.id)', 'bookings')
+      .addSelect('COALESCE(SUM(as.price_cents), 0)', 'revenue_cents')
+      .where('a.provider_id = :pid', { pid: provider.id })
+      .andWhere('a.status = :st', { st: 'COMPLETED' })
+      .andWhere('a.appointment_date BETWEEN :s AND :e', { s: this.formatDate(currentStart), e: this.formatDate(nowDt) })
+      .groupBy('as.service_name')
+      .orderBy('bookings', 'DESC')
+      .limit(10)
+      .getRawMany();
+    const prevRows: Array<{ service_name: string; bookings: string; revenue_cents: string }> = await this.appointmentsRepo
+      .createQueryBuilder('a')
+      .leftJoin('a.appointmentServices', 'as')
+      .select('as.service_name', 'service_name')
+      .addSelect('COUNT(as.id)', 'bookings')
+      .addSelect('COALESCE(SUM(as.price_cents), 0)', 'revenue_cents')
+      .where('a.provider_id = :pid', { pid: provider.id })
+      .andWhere('a.status = :st', { st: 'COMPLETED' })
+      .andWhere('a.appointment_date BETWEEN :s AND :e', { s: this.formatDate(prevStart), e: this.formatDate(prevEnd) })
+      .groupBy('as.service_name')
+      .getRawMany();
+    const prevMap = new Map<string, { bookings: number; revenue: number }>();
+    for (const r of prevRows) {
+      prevMap.set(r.service_name, { bookings: parseInt(r.bookings, 10) || 0, revenue: parseInt(r.revenue_cents, 10) || 0 });
+    }
+    const topServices = currentRows
+      .map((r) => {
+        const prev = prevMap.get(r.service_name) || { bookings: 0, revenue: 0 };
+        const currRev = parseInt(r.revenue_cents, 10) || 0;
+        const growth = prev.revenue > 0 ? ((currRev - prev.revenue) / prev.revenue) * 100 : 100;
+        return {
+          name: r.service_name,
+          bookings: parseInt(r.bookings, 10) || 0,
+          revenueCents: currRev,
+          growthPercent: Math.round(growth),
+        };
+      })
+      .slice(0, 4);
+
+    const days30 = new Date();
+    days30.setDate(days30.getDate() - 30);
+    const appts30 = await this.appointmentsRepo.find({
+      where: { provider: { id: provider.id } },
+      order: { appointmentDate: 'DESC' },
+    });
+    const buckets = [
+      { label: '9-11', start: 9, end: 11 },
+      { label: '11-13', start: 11, end: 13 },
+      { label: '13-15', start: 13, end: 15 },
+      { label: '15-17', start: 15, end: 17 },
+      { label: '17-19', start: 17, end: 19 },
+      { label: '19-21', start: 19, end: 21 },
+    ];
+    const peakCounts = new Map<string, number>();
+    for (const b of buckets) peakCounts.set(b.label, 0);
+    for (const a of appts30) {
+      const dstr = a.appointmentDate;
+      if (dstr < this.formatDate(days30)) continue;
+      const hh = (a.startTime || '').slice(0, 2);
+      const h = parseInt(hh, 10);
+      for (const b of buckets) {
+        if (h >= b.start && h < b.end) {
+          peakCounts.set(b.label, (peakCounts.get(b.label) || 0) + 1);
+          break;
+        }
+      }
+    }
+    const peakHours = buckets.map((b) => ({ hour: b.label, bookings: peakCounts.get(b.label) || 0 }));
+
     return {
       stats: {
         todayCount: todayAppointments.length,
@@ -231,6 +349,9 @@ export class ProvidersService {
       },
       todayAppointments,
       recentReviews,
+      monthly,
+      topServices,
+      peakHours,
     };
   }
 

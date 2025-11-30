@@ -77,20 +77,17 @@ export function BlockTimeScreen() {
         customReason: reason === 'other' ? customReason : undefined,
         startDate,
         endDate: endDate || startDate,
-        startTime: allDay ? null : startTime,
-        endTime: allDay ? null : endTime,
+        startTime: allDay ? undefined : startTime,
+        endTime: allDay ? undefined : endTime,
         allDay,
-        repeat: repeat
-          ? {
-              frequency: repeatFrequency,
-              days: repeatFrequency === 'weekly' ? repeatDays : [],
-              endType: repeatEndType,
-              endDate: repeatEndType === 'date' ? repeatEndDate : null,
-              count: repeatEndType === 'count' ? repeatCount : null,
-            }
-          : null,
+        repeat,
+        repeatFrequency: repeat ? repeatFrequency : undefined,
+        repeatDays: repeat && repeatFrequency === 'weekly' ? repeatDays : undefined,
+        repeatEndType: repeat ? repeatEndType : undefined,
+        repeatEndDate: repeat && repeatEndType === 'date' ? repeatEndDate : undefined,
+        repeatCount: repeat && repeatEndType === 'count' ? repeatCount : undefined,
         notes,
-      };
+      } as any;
 
       await http.post('/blocked-time', payload);
       Alert.alert('Erfolg', 'Zeit wurde erfolgreich blockiert.');

@@ -44,7 +44,7 @@ export class AvailabilityService {
 
     await this.availabilitySlotRepository.save(slotEntities);
 
-    return this.availabilityRepository.findOne({ where: { id: savedAvailability.id }, relations: ['slots'] });
+    return this.availabilityRepository.findOneOrFail({ where: { id: savedAvailability.id }, relations: ['slots'] });
   }
 
   async update(id: string, updateAvailabilityDto: UpdateAvailabilityDto): Promise<Availability> {

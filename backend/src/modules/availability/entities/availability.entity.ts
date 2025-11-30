@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { ProviderProfile } from '../providers/entities/provider-profile.entity';
+import { ProviderProfile } from '../../providers/entities/provider-profile.entity';
 import { AvailabilitySlot } from './availability-slot.entity';
 
 @Entity('availabilities')
@@ -7,7 +7,7 @@ export class Availability {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => ProviderProfile, (provider) => provider.availabilities, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ProviderProfile, (provider) => provider.availability, { onDelete: 'CASCADE' })
   provider: ProviderProfile;
 
   @Column({ type: 'int', default: 15 })
