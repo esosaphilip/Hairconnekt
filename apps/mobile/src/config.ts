@@ -27,6 +27,7 @@ const envUrl = process.env.EXPO_PUBLIC_API_URL;
 
 const base = (envUrl && envUrl.trim()) || resolveDevHostFromRN() || emulatorDefault;
 export const API_BASE_URL = `${base.replace(/\/$/, '')}/api/v1`;
+export const GOOGLE_MAPS_API_KEY = (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '').trim();
 
 // Dev aid: log the resolved API base so we can quickly diagnose connectivity issues on devices
 // (e.g., LAN vs tunnel vs emulator fallback). This is harmless in production builds.
@@ -36,5 +37,10 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
     const scriptURL: string | undefined = (NativeModules as any)?.SourceCode?.scriptURL;
     const host = scriptURL?.match(/https?:\/\/([^:]+):\d+/)?.[1] || 'unknown';
     console.log(`[Hairconnekt] API_BASE_URL -> ${API_BASE_URL} (script host: ${host}; env: ${envUrl || 'n/a'})`);
+    if (GOOGLE_MAPS_API_KEY) {
+      console.log('[Hairconnekt] Google Maps key is set');
+    } else {
+      console.log('[Hairconnekt] Google Maps key is NOT set');
+    }
   } catch {}
 }
