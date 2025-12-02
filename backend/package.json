@@ -9,6 +9,7 @@
     "start:dev": "nest start --watch",
     "lint": "eslint \"src/**/*.ts\"",
     "typeorm": "node --require ts-node/register ./node_modules/typeorm/cli.js -d src/database/data-source.ts",
+    "typeorm:migrate": "node dist/scripts/run-migrations.js",
     "test": "jest --passWithNoTests",
     "test:int": "RUN_INT_TESTS=true jest src/modules/payments/payments.int.spec.ts --runInBand --detectOpenHandles --verbose",
     "test:watch": "jest --watch"
@@ -35,6 +36,7 @@
     "ioredis": "^5.3.2",
     "joi": "^18.0.1",
     "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^7.0.11",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
@@ -53,6 +55,7 @@
     "@nestjs/testing": "^10.4.20",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.10.0",
+    "@types/nodemailer": "^7.0.4",
     "@types/passport-jwt": "^3.0.9",
     "@types/passport-local": "^1.0.38",
     "@types/ws": "^8.5.9",
