@@ -3,7 +3,7 @@ import { DataSource } from 'typeorm';
 
 // Keep DataSource config aligned with AppModule so scripts use the same DB
 const useSqlite = process.env.USE_SQLITE === 'true';
-const url = process.env.DATABASE_URL;
+const url = process.env.DATABASE_URL || process.env.NEON_DB_STRING;
 const sslEnabled = process.env.DATABASE_SSL === 'true';
 
 export const AppDataSource = new DataSource(
