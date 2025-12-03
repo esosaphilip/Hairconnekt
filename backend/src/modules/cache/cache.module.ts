@@ -11,19 +11,23 @@ import { AppCacheInterceptor } from './app-cache.interceptor';
       isGlobal: true,
       useFactory: async () => {
         const url = process.env.REDIS_URL || '';
-        const isRediss = url.startsWith('rediss://');
-        const store = await redisStore({
-          url,
-          // Enable TLS for Upstash when using rediss://
-          tls: isRediss ? {} : undefined,
-        } as any);
-        return {
-          store: store as any,
-          // Default TTL in seconds for cached responses
+        const enable = (process.env.ENABLE_REDIS || '').toLowerCase() === 'true';
+        const base = {
           ttl: Number(process.env.CACHE_TTL ?? 60),
-          // Max entries (primarily effective for in-memory store; harmless here)
           max: Number(process.env.CACHE_MAX ?? 100),
-        };
+        } as any;
+        // Only attempt Redis if explicitly enabled and a URL is provided
+        if (enable && url) {
+          try {
+            const isRediss = url.startsWith('rediss://');
+            const store = await redisStore({ url, tls: isRediss ? {} : undefined } as any);
+            return { ...base, store: store as any };
+          } catch (e) {
+            console.warn('Redis Connection Error: ', e);
+            return base;
+          }
+        }
+        return base;
       },
     }),
   ],
