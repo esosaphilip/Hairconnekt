@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
-import { View, Text, Pressable, StyleSheet, Platform, Alert } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, Platform, Alert, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
+import Input from '@/components/Input';
+import Textarea from '@/components/textarea';
 import { Badge } from '@/components/badge';
 import { Switch } from 'react-native';
 import { colors, spacing, typography } from '@/theme/tokens';
@@ -15,7 +17,14 @@ import type { Service } from '@/domain/entities/Service';
 
 export function ServicesManagementScreen() {
   const navigation = useNavigation();
-  const { services, loading, error, toggleServiceActive, deleteService } = useServices();
+  const { services, loading, error, toggleServiceActive, deleteService, createService } = useServices();
+  const [adding, setAdding] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [name, setName] = useState('');
+  const [price, setPrice] = useState('');
+  const [duration, setDuration] = useState('60');
+  const [description, setDescription] = useState('');
+  const [active, setActive] = useState(true);
 
   const activeServices = useMemo(() => services.filter(s => s.isActive), [services]);
   const inactiveServices = useMemo(() => services.filter(s => !s.isActive), [services]);
@@ -68,7 +77,7 @@ export function ServicesManagementScreen() {
   };
 
   const onAddService = () => {
-    rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderServicesScreen', params: { mode: 'add' } });
+    setAdding(true);
   };
 
   const onEditService = (id: string) => {
@@ -89,7 +98,7 @@ export function ServicesManagementScreen() {
               <Text style={styles.headerSubtitle}>{activeServices.length} aktive Services</Text>
             </View>
           </View>
-          <Button title="Neu" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
+          <Button title={adding ? 'Abbrechen' : 'Neu'} onPress={() => (adding ? setAdding(false) : onAddService())} style={{ backgroundColor: colors.primary }} />
         </View>
       </View>
 
@@ -109,7 +118,74 @@ export function ServicesManagementScreen() {
         </View>
       </View>
 
-      <View style={styles.content}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex1}>
+      <ScrollView contentContainerStyle={styles.contentScrollContainer}>
+        {adding && (
+          <Card style={styles.card}>
+            <Text style={styles.sectionTitle}>Neuen Service hinzufügen</Text>
+            <View style={{ gap: spacing.sm }}>
+              <View>
+                <Text style={styles.label}>Name *</Text>
+                <Input value={name} onChangeText={setName} placeholder="z. B. Box Braids" />
+              </View>
+              <View>
+                <Text style={styles.label}>Preis (in €) *</Text>
+                <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={price} onChangeText={setPrice} placeholder="z. B. 55" />
+              </View>
+              <View>
+                <Text style={styles.label}>Dauer (Minuten) *</Text>
+                <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={duration} onChangeText={setDuration} placeholder="z. B. 60" />
+              </View>
+              <View>
+                <Text style={styles.label}>Beschreibung (optional)</Text>
+                <Textarea value={description} onChangeText={setDescription} placeholder="Kurzbeschreibung" numberOfLines={3} />
+              </View>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={styles.label}>Aktiv</Text>
+                <Switch value={active} onValueChange={setActive} />
+              </View>
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <Button
+                  title="Speichern"
+                  onPress={async () => {
+                    if (!name.trim()) {
+                      Alert.alert('Fehler', 'Bitte einen Namen eingeben');
+                      return;
+                    }
+                    const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100) || 0;
+                    const durationMinutes = parseInt(duration, 10) || 60;
+                    if (priceCents <= 0) {
+                      Alert.alert('Fehler', 'Bitte einen gültigen Preis eingeben');
+                      return;
+                    }
+                    if (durationMinutes <= 0) {
+                      Alert.alert('Fehler', 'Bitte eine gültige Dauer eingeben');
+                      return;
+                    }
+                    try {
+                      setSaving(true);
+                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active });
+                      setAdding(false);
+                      setName('');
+                      setPrice('');
+                      setDuration('60');
+                      setDescription('');
+                      setActive(true);
+                      showSuccess(MESSAGES.SUCCESS.SAVE);
+                    } catch (err) {
+                      showError(err);
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                  style={{ backgroundColor: colors.primary, flex: 1 }}
+                />
+                <Button title="Abbrechen" variant="outline" onPress={() => setAdding(false)} style={{ flex: 1 }} />
+              </View>
+              {saving ? <Text style={{ color: colors.gray600 }}>Speichern...</Text> : null}
+            </View>
+          </Card>
+        )}
         {/* Active Services */}
         {activeServices.length > 0 && (
           <View style={{ marginBottom: spacing.lg }}>
@@ -224,7 +300,8 @@ export function ServicesManagementScreen() {
             <Text style={{ color: colors.gray600 }}>Lade Services...</Text>
           </Card>
         )}
-      </View>
+      </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 }
@@ -285,13 +362,23 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.gray600,
   },
-  content: {
+  contentScrollContainer: {
     padding: spacing.md,
+    paddingBottom: spacing.xl * 2,
+  },
+  flex1: {
+    flex: 1,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
     marginBottom: spacing.sm,
+    color: colors.black,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: spacing.xs,
     color: colors.black,
   },
   card: {
