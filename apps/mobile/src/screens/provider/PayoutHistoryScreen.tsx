@@ -11,7 +11,7 @@ import Text from '../../components/Text';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Badge from '../../components/badge';
-import { Select } from '../../components/Select';
+import { Select } from '@/components/select';
 import Icon from '../../components/Icon';
 
 // Mock React Navigation hook
