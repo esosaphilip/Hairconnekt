@@ -5,6 +5,29 @@ import { DataSource } from 'typeorm';
 const useSqlite = process.env.USE_SQLITE === 'true';
 const url = process.env.DATABASE_URL || process.env.NEON_DB_STRING;
 const sslEnabled = process.env.DATABASE_SSL === 'true';
+const isDist = __dirname.includes('dist');
+
+const entityGlobs = isDist
+  ? [
+      'dist/modules/users/entities/*.entity.js',
+      'dist/modules/providers/entities/*.entity.js',
+      'dist/modules/services/entities/*.entity.js',
+      'dist/modules/appointments/entities/*.entity.js',
+      'dist/modules/reviews/entities/*.entity.js',
+      'dist/modules/portfolio/entities/*.entity.js',
+    ]
+  : [
+      'src/modules/users/entities/*.entity{.ts,.js}',
+      'src/modules/providers/entities/*.entity{.ts,.js}',
+      'src/modules/services/entities/*.entity{.ts,.js}',
+      'src/modules/appointments/entities/*.entity{.ts,.js}',
+      'src/modules/reviews/entities/*.entity{.ts,.js}',
+      'src/modules/portfolio/entities/*.entity{.ts,.js}',
+    ];
+
+const migrationGlobs = isDist
+  ? ['dist/database/migrations/*.js']
+  : ['src/database/migrations/*{.ts,.js}'];
 
 export const AppDataSource = new DataSource(
   useSqlite
@@ -14,15 +37,8 @@ export const AppDataSource = new DataSource(
         synchronize: false,
         logging: false,
         // Limit entities to core modules to avoid compile-time errors from excluded modules during seeding/dev
-        entities: [
-          'src/modules/users/entities/*.entity{.ts,.js}',
-          'src/modules/providers/entities/*.entity{.ts,.js}',
-          'src/modules/services/entities/*.entity{.ts,.js}',
-          'src/modules/appointments/entities/*.entity{.ts,.js}',
-          'src/modules/reviews/entities/*.entity{.ts,.js}',
-          'src/modules/portfolio/entities/*.entity{.ts,.js}',
-        ],
-        migrations: ['src/database/migrations/*{.ts,.js}'],
+        entities: entityGlobs,
+        migrations: migrationGlobs,
       }
     : url
     ? {
@@ -31,15 +47,8 @@ export const AppDataSource = new DataSource(
         ssl: sslEnabled ? { rejectUnauthorized: false } : false,
         synchronize: false,
         logging: false,
-        entities: [
-          'src/modules/users/entities/*.entity{.ts,.js}',
-          'src/modules/providers/entities/*.entity{.ts,.js}',
-          'src/modules/services/entities/*.entity{.ts,.js}',
-          'src/modules/appointments/entities/*.entity{.ts,.js}',
-          'src/modules/reviews/entities/*.entity{.ts,.js}',
-          'src/modules/portfolio/entities/*.entity{.ts,.js}',
-        ],
-        migrations: ['src/database/migrations/*{.ts,.js}'],
+        entities: entityGlobs,
+        migrations: migrationGlobs,
       }
     : {
         type: 'postgres',
@@ -51,14 +60,7 @@ export const AppDataSource = new DataSource(
         ssl: sslEnabled ? { rejectUnauthorized: false } : false,
         synchronize: false,
         logging: false,
-        entities: [
-          'src/modules/users/entities/*.entity{.ts,.js}',
-          'src/modules/providers/entities/*.entity{.ts,.js}',
-          'src/modules/services/entities/*.entity{.ts,.js}',
-          'src/modules/appointments/entities/*.entity{.ts,.js}',
-          'src/modules/reviews/entities/*.entity{.ts,.js}',
-          'src/modules/portfolio/entities/*.entity{.ts,.js}',
-        ],
-        migrations: ['src/database/migrations/*{.ts,.js}'],
+        entities: entityGlobs,
+        migrations: migrationGlobs,
       },
 );
