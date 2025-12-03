@@ -9,6 +9,8 @@ export default ({ config }: any) => ({
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
     newArchEnabled: true,
+    runtimeVersion: { policy: 'appVersion' },
+    updates: { enabled: true, checkAutomatically: 'ON_LOAD' },
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',

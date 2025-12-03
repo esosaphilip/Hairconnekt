@@ -1,0 +1,14 @@
+{
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "channel": "dev",
+      "android": { "buildType": "apk" }
+    },
+    "production": {
+      "channel": "prod",
+      "android": { "buildType": "app-bundle" }
+    }
+  },
+  "cli": { "version": ">= 4.0.0" }
+}
