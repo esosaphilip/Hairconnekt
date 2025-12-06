@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '@/components/Button';
@@ -35,7 +35,16 @@ const durationOptions = [
   { value: 300, label: '5 Std.' },
   { value: 360, label: '6 Std.' },
 ];
+import { useRoute } from '@react-navigation/native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ProviderMoreStackParamList } from '@/navigation/types';
+
+type RouteParams = NativeStackScreenProps<ProviderMoreStackParamList, 'AddEditServiceScreen'>['route']['params'];
+
 export function AddEditServiceScreen() {
+  const route = useRoute();
+  const params = (route?.params as RouteParams) || {};
+  const serviceId = (params as any)?.serviceId as string | undefined;
   // Best-effort detection: if running on web and URL contains 'edit', treat as editing
   const isEditing = useMemo(() => {
     if (Platform.OS === 'web') {
@@ -43,7 +52,7 @@ export function AddEditServiceScreen() {
         return typeof window !== 'undefined' && window.location.hash.includes('/provider/services/edit');
       } catch {}
     }
-    return false;
+    return !!serviceId;
   }, []);
 
   const [formData, setFormData] = useState({
@@ -71,6 +80,30 @@ export function AddEditServiceScreen() {
     }
   };
 
+  useEffect(() => {
+    (async () => {
+      if (!serviceId) return;
+      try {
+        const res = await http.get('/services/provider');
+        const items: any[] = Array.isArray(res.data) ? res.data : (res.data?.items ?? []);
+        const found = items.find((s) => String(s.id) === String(serviceId));
+        if (found) {
+          setFormData({
+            name: String(found.name || ''),
+            category: found?.category?.nameDe || found?.category?.nameEn || '',
+            description: found?.description || '',
+            price: typeof found.priceCents === 'number' ? Math.round(found.priceCents / 100) : (typeof found.price_cents === 'number' ? Math.round(found.price_cents / 100) : 100),
+            duration: typeof found.durationMinutes === 'number' ? found.durationMinutes : (typeof found.duration_minutes === 'number' ? found.duration_minutes : 180),
+            deposit: 20,
+            isActive: !!(found.isActive ?? found.is_active),
+            allowOnlineBooking: true,
+            requiresConsultation: false,
+          });
+        }
+      } catch {}
+    })();
+  }, [serviceId]);
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       setMessage('Bitte einen Service-Namen eingeben');
@@ -91,8 +124,8 @@ export function AddEditServiceScreen() {
     // Kategorie aktuell optional und ohne Backend-IDs: keine categoryId senden
 
     try {
-      if (isEditing) {
-        // await http.patch('/services', serviceData);
+      if (isEditing && serviceId) {
+        await http.patch(`/services/${serviceId}` as any, serviceDataBase);
         setMessage('Service aktualisiert!');
       } else {
         const profile: any = await providersApi.getMyProfile();
