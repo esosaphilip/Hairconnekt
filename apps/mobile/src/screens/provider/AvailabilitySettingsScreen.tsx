@@ -56,35 +56,27 @@ export function AvailabilitySettingsScreen() {
   });
 
   useEffect(() => {
-    // Fetch existing availability settings
+    // Fetch existing availability via provider profile
     const fetchAvailability = async () => {
       setLoading(true);
       try {
-        const response = await http.get('/availability');
+        const response = await http.get('/providers/me');
         const data: {
           id: string;
-          bufferTime: number;
-          advanceBookingDays: number;
-          sameDayBooking: boolean;
-          minAdvanceHours: number;
-          slots: Array<{ day: DayKey; startTime: string; endTime: string }>;
-        } = response.data;
-        if (data) {
-          setAvailabilityId(data.id);
-          setBufferTime(data.bufferTime);
-          setAdvanceBookingDays(data.advanceBookingDays);
-          setSameDayBooking(data.sameDayBooking);
-          setMinAdvanceHours(data.minAdvanceHours);
-          // Transform slots to schedule
-          const newSchedule = { ...schedule };
-          data.slots.forEach((slot: { day: DayKey; startTime: string; endTime: string }) => {
-            newSchedule[slot.day].isWorkday = true;
-            newSchedule[slot.day].slots.push({ start: slot.startTime, end: slot.endTime });
-          });
-          setSchedule(newSchedule);
-        }
+          availability?: Array<{ weekday: DayKey; start: string; end: string }>;
+        } = response.data || {};
+        const slots = Array.isArray(data.availability) ? data.availability : [];
+        const newSchedule = { ...schedule };
+        slots.forEach((slot) => {
+          const day = slot.weekday as DayKey;
+          if (newSchedule[day]) {
+            newSchedule[day].isWorkday = true;
+            newSchedule[day].slots.push({ start: slot.start, end: slot.end });
+          }
+        });
+        setSchedule(newSchedule);
       } catch (err) {
-        // Ignore if not found, it means we need to create one
+        // Ignore if not found; user may be new provider
       }
       setLoading(false);
     };
@@ -183,26 +175,13 @@ export function AvailabilitySettingsScreen() {
     setError(null);
 
     const slots = Object.entries(schedule).flatMap(([day, daySchedule]) => {
-      if (!daySchedule.isWorkday) {
-        return [];
-      }
-      return daySchedule.slots.map(slot => ({ day, startTime: slot.start, endTime: slot.end }));
+      if (!daySchedule.isWorkday) return [] as Array<{ weekday: string; start: string; end: string }>;
+      return daySchedule.slots.map((slot) => ({ weekday: day, start: slot.start, end: slot.end }));
     });
 
-    const availabilityData = {
-      bufferTime,
-      advanceBookingDays,
-      sameDayBooking,
-      minAdvanceHours,
-      slots,
-    };
-
     try {
-      if (availabilityId) {
-        await http.patch(`/availability/${availabilityId}`, availabilityData);
-      } else {
-        await http.post('/availability', availabilityData);
-      }
+      // Backend expects providers availability under /providers/availability
+      await http.post('/providers/availability', { slots });
       setMessage('Verfügbarkeit erfolgreich gespeichert!');
       if (Platform.OS === 'web') {
         try {
