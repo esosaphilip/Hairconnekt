@@ -81,7 +81,7 @@ export function ServicesManagementScreen() {
   };
 
   const onEditService = (id: string) => {
-    rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderServicesScreen', params: { mode: 'edit', serviceId: id } });
+    rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: id } });
   };
 
   return (
