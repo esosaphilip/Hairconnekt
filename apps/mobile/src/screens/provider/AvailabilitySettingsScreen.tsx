@@ -8,6 +8,7 @@ import Badge from '../../components/badge';
 import Input from '../../components/Input';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
 import { http } from '../../api/http';
+import { rootNavigationRef } from '@/navigation/rootNavigation';
 
 // Types
 type DayKey =
@@ -231,7 +232,11 @@ export function AvailabilitySettingsScreen() {
   const onOpenMore = () => {
     if (Platform.OS === 'web') {
       try { window.location.hash = '/provider/more'; } catch {}
+      return;
     }
+    try {
+      rootNavigationRef.current?.navigate('ProviderTabs', { screen: 'Mehr', params: { screen: 'ProviderMore' } });
+    } catch {}
   };
 
   const increment = (value: number, delta: number, min: number, max: number) => {
