@@ -8,6 +8,7 @@ import { Textarea } from '@/components/textarea';
 import { Switch } from 'react-native';
 import { colors, spacing, radii, typography } from '@/theme/tokens';
 import { http } from '@/api/http';
+import { providersApi } from '@/services/providers';
 import { logger } from '@/services/logger';
 import { API_CONFIG, MESSAGES } from '@/constants';
 
@@ -80,13 +81,12 @@ export function AddEditServiceScreen() {
     setLoading(true);
     setError(null);
 
-    const serviceData = {
+    const serviceDataBase = {
       name: formData.name,
       description: formData.description,
       priceCents: Math.round(Number(formData.price || 0) * 100),
       durationMinutes: Number(formData.duration || 0),
       isActive: !!formData.isActive,
-      // deposit, allowOnlineBooking, requiresConsultation are not in the backend DTO yet
     };
     // Kategorie aktuell optional und ohne Backend-IDs: keine categoryId senden
 
@@ -95,7 +95,12 @@ export function AddEditServiceScreen() {
         // await http.patch('/services', serviceData);
         setMessage('Service aktualisiert!');
       } else {
-        await http.post('/services', serviceData);
+        const profile: any = await providersApi.getMyProfile();
+        const providerId = profile?.id || profile?.provider?.id;
+        if (!providerId) {
+          throw new Error('Provider-ID fehlt. Bitte Profil prüfen.');
+        }
+        await http.post('/services', { providerId: String(providerId), ...serviceDataBase });
         setMessage('Service erstellt!');
       }
 

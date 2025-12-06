@@ -7,16 +7,28 @@ import type { IServiceRepository } from '@/domain/repositories/IServiceRepositor
 import type { Service } from '@/domain/entities/Service';
 import { http } from '@/api/http';
 import { API_CONFIG } from '@/constants';
-import { mapServiceDTOToEntity, mapServiceEntityToDTO } from '../mappers/ServiceMapper';
-import type { ServiceDTO } from '../dto/ServiceDTO';
 import { NetworkError, NotFoundError } from '@/domain/errors/DomainError';
+import { providersApi } from '@/services/providers';
 
 export class ServiceRepositoryImpl implements IServiceRepository {
   async list(): Promise<Service[]> {
     try {
-      const res = await http.get<{ items: ServiceDTO[] } | ServiceDTO[]>(API_CONFIG.ENDPOINTS.SERVICES.LIST);
-      const items = Array.isArray(res.data) ? res.data : (res.data?.items ?? []);
-      return items.map(mapServiceDTOToEntity);
+      const res = await http.get(API_CONFIG.ENDPOINTS.SERVICES.LIST);
+      const raw = Array.isArray(res.data) ? res.data : (res.data?.items ?? []);
+      const items: Service[] = (raw as any[]).map((s) => ({
+        id: String(s.id),
+        name: String(s.name || ''),
+        description: s.description ?? null,
+        category: s.category
+          ? { id: String(s.category.id), nameDe: s.category.nameDe ?? s.category.name_de, nameEn: s.category.nameEn ?? s.category.name_en }
+          : null,
+        priceCents: typeof s.priceCents === 'number' ? s.priceCents : (typeof s.price_cents === 'number' ? s.price_cents : 0),
+        durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : (typeof s.duration_minutes === 'number' ? s.duration_minutes : 60),
+        isActive: !!(s.isActive ?? s.is_active),
+        createdAt: s.createdAt ? new Date(s.createdAt) : (s.created_at ? new Date(s.created_at) : new Date()),
+        updatedAt: s.updatedAt ? new Date(s.updatedAt) : (s.updated_at ? new Date(s.updated_at) : new Date()),
+      }));
+      return items;
     } catch (error: unknown) {
       throw new NetworkError('Failed to fetch services', { originalError: error });
     }
@@ -25,7 +37,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
   async getById(id: string): Promise<Service | null> {
     try {
       const services = await this.list();
-      return services.find(s => s.id === id) ?? null;
+      return services.find((s) => s.id === id) ?? null;
     } catch (error: unknown) {
       throw new NetworkError('Failed to fetch service', { originalError: error });
     }
@@ -33,9 +45,32 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
   async create(service: Service): Promise<Service> {
     try {
-      const dto = mapServiceEntityToDTO(service);
-      const res = await http.post<ServiceDTO>(API_CONFIG.ENDPOINTS.SERVICES.CREATE, dto);
-      return mapServiceDTOToEntity(res.data);
+      const profile: any = await providersApi.getMyProfile();
+      const providerId = profile?.id || profile?.provider?.id;
+      const payload = {
+        providerId: String(providerId || ''),
+        name: service.name,
+        description: service.description ?? undefined,
+        priceCents: service.priceCents,
+        durationMinutes: service.durationMinutes,
+        isActive: service.isActive,
+      };
+      const res = await http.post(API_CONFIG.ENDPOINTS.SERVICES.CREATE, payload);
+      const s = res.data as any;
+      const mapped: Service = {
+        id: String(s.id),
+        name: String(s.name || ''),
+        description: s.description ?? null,
+        category: s.category
+          ? { id: String(s.category.id), nameDe: s.category.nameDe ?? s.category.name_de, nameEn: s.category.nameEn ?? s.category.name_en }
+          : null,
+        priceCents: typeof s.priceCents === 'number' ? s.priceCents : (typeof s.price_cents === 'number' ? s.price_cents : 0),
+        durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : (typeof s.duration_minutes === 'number' ? s.duration_minutes : 60),
+        isActive: !!(s.isActive ?? s.is_active),
+        createdAt: s.createdAt ? new Date(s.createdAt) : (s.created_at ? new Date(s.created_at) : new Date()),
+        updatedAt: s.updatedAt ? new Date(s.updatedAt) : (s.updated_at ? new Date(s.updated_at) : new Date()),
+      };
+      return mapped;
     } catch (error: unknown) {
       throw new NetworkError('Failed to create service', { originalError: error });
     }
@@ -47,11 +82,29 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       if (!existing) {
         throw new NotFoundError('Service', id);
       }
-
-      const updated: Service = { ...existing, ...service, updatedAt: new Date() };
-      const dto = mapServiceEntityToDTO(updated);
-      const res = await http.patch<ServiceDTO>(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), dto);
-      return mapServiceDTOToEntity(res.data);
+      const patch: any = {
+        name: service.name,
+        description: service.description,
+        priceCents: service.priceCents,
+        durationMinutes: service.durationMinutes,
+        isActive: service.isActive,
+      };
+      const res = await http.patch(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
+      const s = res.data as any;
+      const mapped: Service = {
+        id: String(s.id),
+        name: String(s.name || ''),
+        description: s.description ?? null,
+        category: s.category
+          ? { id: String(s.category.id), nameDe: s.category.nameDe ?? s.category.name_de, nameEn: s.category.nameEn ?? s.category.name_en }
+          : null,
+        priceCents: typeof s.priceCents === 'number' ? s.priceCents : (typeof s.price_cents === 'number' ? s.price_cents : 0),
+        durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : (typeof s.duration_minutes === 'number' ? s.duration_minutes : 60),
+        isActive: !!(s.isActive ?? s.is_active),
+        createdAt: s.createdAt ? new Date(s.createdAt) : (s.created_at ? new Date(s.created_at) : new Date()),
+        updatedAt: s.updatedAt ? new Date(s.updatedAt) : (s.updated_at ? new Date(s.updated_at) : new Date()),
+      };
+      return mapped;
     } catch (error: unknown) {
       if (error instanceof NotFoundError) throw error;
       throw new NetworkError('Failed to update service', { originalError: error });
@@ -70,4 +123,3 @@ export class ServiceRepositoryImpl implements IServiceRepository {
     return this.update(id, { isActive });
   }
 }
-

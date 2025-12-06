@@ -1,6 +1,7 @@
 import axios, { InternalAxiosRequestConfig } from 'axios';
 import { API_BASE_URL, API_TIMEOUT } from '../config';
-import { getAccessToken, getRefreshToken, saveTokens, getAuthBundle, getPreferredLanguageSetting } from '../auth/tokenStorage';
+import { getAccessToken, getRefreshToken, saveTokens, getAuthBundle, getPreferredLanguageSetting, clearTokens, clearAuthBundle } from '../auth/tokenStorage';
+import { emit } from '../services/eventBus';
 
 // Axios instance with sensible defaults to avoid hanging requests
 export const http = axios.create({ baseURL: API_BASE_URL, timeout: API_TIMEOUT });
@@ -74,6 +75,12 @@ async function refreshTokenFlow() {
     return newAccess;
   } catch (err) {
     pendingQueue.forEach((p) => p.reject(err));
+    try {
+      await clearTokens();
+      await clearAuthBundle();
+    } catch {}
+    setAuthDisabled(true);
+    emit('session_expired');
     return null;
   } finally {
     pendingQueue = [];
@@ -107,7 +114,12 @@ http.interceptors.response.use(
       (config as any)._retry = true;
       try {
         const newToken = await refreshTokenFlow();
-        if (!newToken) throw error;
+        if (!newToken) {
+          // Standardize session expiry error
+          const e = new Error('SESSION_EXPIRED');
+          (e as any).original = error;
+          throw e;
+        }
         const headers = (config.headers && typeof config.headers === 'object') ? (config.headers as any) : {};
         headers['Authorization'] = `Bearer ${newToken}`;
         config.headers = headers;

@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState, PropsWithChildren } from 'react';
 import { http, setAuthDisabled, abortAuthRefresh } from '../api/http';
+import { on } from '../services/eventBus';
 import { clearAuthBundle, clearTokens, getAuthBundle, getRefreshToken, saveAuthBundle, saveTokens } from './tokenStorage';
 import type { AuthBundle, Tokens, PublicUser } from './tokenStorage';
 import type { AuthContextValue } from './types';
@@ -31,6 +32,17 @@ export function AuthProvider({ children }: PropsWithChildren) {
       // eslint-disable-next-line no-console
       if (typeof __DEV__ !== 'undefined' && __DEV__) console.log('[Auth] Boot: done. user =', bundle?.user ? bundle.user.userType : 'null', `(timeout ${timeoutMs}ms)`);
     })();
+  }, []);
+
+  useEffect(() => {
+    const off = on('session_expired', async () => {
+      try {
+        await clearTokens();
+        await clearAuthBundle();
+      } catch {}
+      setState({ user: null, tokens: null, loading: false, error: 'Session abgelaufen' });
+    });
+    return off;
   }, []);
 
   const login = useCallback(async (emailOrPhone: string, password: string): Promise<{ user: PublicUser | null; tokens: Tokens }> => {

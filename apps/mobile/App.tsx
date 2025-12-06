@@ -3,6 +3,7 @@ import { NavigationContainer, CommonActions } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaView, Text, Platform, StyleSheet } from 'react-native';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
 import { I18nProvider, useI18n } from '@/i18n';
@@ -308,6 +309,8 @@ function ClientProfileStackScreen() {
 
 function ProviderTabs() {
   const { t } = useI18n();
+  const { status, checked } = useProviderGate();
+  const gateResolved = checked && status !== 'error';
   const getProviderTabKey = (name: string) => (
     name === 'Dashboard' ? 'dashboard' :
     name === 'Kalender' ? 'calendar' :
@@ -315,6 +318,19 @@ function ProviderTabs() {
     name === 'Nachrichten' ? 'messages' :
     'more'
   );
+  if (!gateResolved) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Laden…</Text>
+      </SafeAreaView>
+    );
+  }
+  if (status === 'pending') {
+    return <PendingApprovalScreen />;
+  }
+  if (status === 'not_provider') {
+    return <ProviderRegistrationFlow />;
+  }
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -550,7 +566,9 @@ export default function App() {
   return (
     <AuthProvider>
       <I18nProvider>
-        <RootNavigator />
+        <ErrorBoundary>
+          <RootNavigator />
+        </ErrorBoundary>
       </I18nProvider>
     </AuthProvider>
   );
@@ -578,7 +596,8 @@ function LoginRoute({ route, navigation }: RootStackScreenProps<'Login'>) {
       }}
       onForgotPasswordPress={() => {}}
       onLoginSuccess={() => {
-        navigation.navigate('Home');
+        // No-op: the RootNavigator will re-render to the authenticated stack
+        // based on the updated auth context.
       }}
     />
   );

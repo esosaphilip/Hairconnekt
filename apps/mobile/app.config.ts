@@ -8,9 +8,9 @@ export default ({ config }: any) => ({
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
-    newArchEnabled: true,
+    newArchEnabled: false,
     runtimeVersion: { policy: 'appVersion' },
-    updates: { enabled: true, checkAutomatically: 'ON_LOAD' },
+    updates: { enabled: true, checkAutomatically: 'ON_LOAD', url: 'https://u.expo.dev/14bc003c-cd0f-4834-90e2-b4f6c64bdf7e' },
     splash: {
       image: './assets/splash-icon.png',
       resizeMode: 'contain',
@@ -24,12 +24,14 @@ export default ({ config }: any) => ({
       },
       edgeToEdgeEnabled: true,
       predictiveBackGestureEnabled: false,
+      package: 'de.hairconnekt.app',
     },
     web: { favicon: './assets/favicon.png' },
     extra: {
       // Expose public envs for debugging if needed
       EXPO_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY,
       EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
+      eas: { projectId: '14bc003c-cd0f-4834-90e2-b4f6c64bdf7e' },
     },
   },
 });

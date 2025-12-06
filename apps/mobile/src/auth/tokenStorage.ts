@@ -62,13 +62,15 @@ export async function getAccessToken(): Promise<string | null> {
     memoryAccessToken = memoryAuthBundle.tokens.accessToken;
     return memoryAccessToken;
   }
-  try {
-    const v = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
-    if (v) {
-      memoryAccessToken = v;
-      return memoryAccessToken;
-    }
-  } catch {}
+  if (!SECURE_DISABLED) {
+    try {
+      const v = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+      if (v) {
+        memoryAccessToken = v;
+        return memoryAccessToken;
+      }
+    } catch {}
+  }
   // Web fallback: localStorage
   const ls = lsGetItem(ACCESS_TOKEN_KEY);
   if (ls) {
@@ -85,13 +87,15 @@ export async function getRefreshToken(): Promise<string | null> {
     memoryRefreshToken = memoryAuthBundle.tokens.refreshToken || null;
     if (memoryRefreshToken) return memoryRefreshToken;
   }
-  try {
-    const v = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
-    if (v) {
-      memoryRefreshToken = v;
-      return memoryRefreshToken;
-    }
-  } catch {}
+  if (!SECURE_DISABLED) {
+    try {
+      const v = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+      if (v) {
+        memoryRefreshToken = v;
+        return memoryRefreshToken;
+      }
+    } catch {}
+  }
   // Web fallback: localStorage
   const ls = lsGetItem(REFRESH_TOKEN_KEY);
   if (ls) {
@@ -104,10 +108,12 @@ export async function getRefreshToken(): Promise<string | null> {
 export async function saveTokens(tokens: Tokens): Promise<void> {
   memoryAccessToken = tokens.accessToken || null;
   memoryRefreshToken = tokens.refreshToken || null;
-  try {
-    if (tokens.accessToken) await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, tokens.accessToken);
-    if (tokens.refreshToken) await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken);
-  } catch {}
+  if (!SECURE_DISABLED) {
+    try {
+      if (tokens.accessToken) await SecureStore.setItemAsync(ACCESS_TOKEN_KEY, tokens.accessToken);
+      if (tokens.refreshToken) await SecureStore.setItemAsync(REFRESH_TOKEN_KEY, tokens.refreshToken);
+    } catch {}
+  }
   // Web fallback: persist to localStorage so tokens survive HMR reloads
   try {
     if (tokens.accessToken) lsSetItem(ACCESS_TOKEN_KEY, tokens.accessToken);
@@ -118,10 +124,12 @@ export async function saveTokens(tokens: Tokens): Promise<void> {
 export async function clearTokens(): Promise<void> {
   memoryAccessToken = null;
   memoryRefreshToken = null;
-  try {
-    await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
-    await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
-  } catch {}
+  if (!SECURE_DISABLED) {
+    try {
+      await SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY);
+      await SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY);
+    } catch {}
+  }
   // Web fallback
   lsRemoveItem(ACCESS_TOKEN_KEY);
   lsRemoveItem(REFRESH_TOKEN_KEY);
@@ -129,14 +137,16 @@ export async function clearTokens(): Promise<void> {
 
 export async function getAuthBundle(): Promise<AuthBundle | null> {
   if (memoryAuthBundle) return memoryAuthBundle;
-  try {
-    const raw = await SecureStore.getItemAsync(AUTH_BUNDLE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw) as AuthBundle;
-      memoryAuthBundle = parsed;
-      return parsed;
-    }
-  } catch {}
+  if (!SECURE_DISABLED) {
+    try {
+      const raw = await SecureStore.getItemAsync(AUTH_BUNDLE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as AuthBundle;
+        memoryAuthBundle = parsed;
+        return parsed;
+      }
+    } catch {}
+  }
   // Web fallback
   const ls = lsGetItem(AUTH_BUNDLE_KEY);
   if (ls) {
@@ -151,12 +161,14 @@ export async function getAuthBundle(): Promise<AuthBundle | null> {
 
 export async function saveAuthBundle(bundle: AuthBundle): Promise<void> {
   memoryAuthBundle = bundle;
-  try {
-    await SecureStore.setItemAsync(AUTH_BUNDLE_KEY, JSON.stringify(bundle));
-    // Also keep tokens keys up to date
-    const tokens = bundle?.tokens || null;
-    if (tokens) await saveTokens(tokens);
-  } catch {}
+  if (!SECURE_DISABLED) {
+    try {
+      await SecureStore.setItemAsync(AUTH_BUNDLE_KEY, JSON.stringify(bundle));
+      // Also keep tokens keys up to date
+      const tokens = bundle?.tokens || null;
+      if (tokens) await saveTokens(tokens);
+    } catch {}
+  }
   // Web fallback
   try {
     lsSetItem(AUTH_BUNDLE_KEY, JSON.stringify(bundle));
@@ -165,9 +177,11 @@ export async function saveAuthBundle(bundle: AuthBundle): Promise<void> {
 
 export async function clearAuthBundle(): Promise<void> {
   memoryAuthBundle = null;
-  try {
-    await SecureStore.deleteItemAsync(AUTH_BUNDLE_KEY);
-  } catch {}
+  if (!SECURE_DISABLED) {
+    try {
+      await SecureStore.deleteItemAsync(AUTH_BUNDLE_KEY);
+    } catch {}
+  }
   // Web fallback
   lsRemoveItem(AUTH_BUNDLE_KEY);
 }
@@ -216,3 +230,4 @@ export async function getOnboardingComplete(): Promise<boolean> {
   if (ls) return ls === 'true';
   return false;
 }
+const SECURE_DISABLED = (process.env.EXPO_PUBLIC_DISABLE_SECURE_STORE || '').toLowerCase() === 'true';
