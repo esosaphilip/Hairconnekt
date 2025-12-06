@@ -59,23 +59,25 @@ export function ProviderClients() {
     newThisWeek?: number;
   } | null>(null);
 
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.CLIENTS);
+      setData(res?.data || null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : MESSAGES.ERROR.LOAD_FAILED;
+      setError(message);
+      showError(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.CLIENTS);
-        if (!mounted) return;
-        setData(res?.data || null);
-      } catch (err: unknown) {
-        if (!mounted) return;
-        const message = err instanceof Error ? err.message : MESSAGES.ERROR.LOAD_FAILED;
-        setError(message);
-        showError(err);
-      } finally {
-        if (mounted) setLoading(false);
-      }
+      await load();
     })();
     return () => {
       mounted = false;
@@ -150,7 +152,10 @@ export function ProviderClients() {
 
           {/* Clients List */}
           {error ? (
-            <Text style={styles.errorText}>{error}</Text>
+            <View style={{ alignItems: 'center', marginBottom: spacing.sm }}>
+              <Text style={styles.errorText}>{error}</Text>
+              <Button title="Erneut versuchen" onPress={load} />
+            </View>
           ) : null}
 
           <View>
