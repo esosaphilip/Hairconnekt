@@ -69,7 +69,7 @@ export function LoginScreen({
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false); // Added state for checkbox
   
-  const { login, loading } = useAuth();
+  const { login, loading, error } = useAuth();
   
   // Get return URL and user type from initial props/state
   const returnUrl = initialState.returnUrl || "/home";
@@ -80,12 +80,13 @@ export function LoginScreen({
     if (loading) return; // Prevent double submission
     
     try {
-      await login(email, password);
+      const { user } = await login(email, password);
       showToast("Erfolgreich angemeldet", 'success');
 
       // Replaced navigate() with onLoginSuccess() prop
-      if (userType === "provider") {
-        onLoginSuccess("provider", "/provider/dashboard"); // Assuming the prop handles dashboard route
+      const resolvedType = (user?.userType as any) || userType;
+      if (resolvedType === "provider" || resolvedType === "both") {
+        onLoginSuccess("provider", "/provider/dashboard");
       } else {
         onLoginSuccess("client", returnUrl);
       }
@@ -104,6 +105,11 @@ export function LoginScreen({
       >
         {/* ScrollView is necessary for content that might exceed screen height */}
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          {error ? (
+            <View style={{ backgroundColor: '#fee2e2', borderColor: '#ef4444', borderWidth: 1, borderRadius: 8, padding: 12, marginBottom: 12 }}>
+              <Text style={{ color: '#b91c1c', fontSize: 14 }}>Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.</Text>
+            </View>
+          ) : null}
           
           {/* Logo / Header */}
           <View style={styles.headerContainer}>
@@ -134,15 +140,16 @@ export function LoginScreen({
             <View>
               <Text style={styles.label}>Passwort</Text>
               <View style={styles.passwordContainer}>
-                <TextInput
-                  style={styles.passwordInput}
-                  placeholder="••••••••"
-                  secureTextEntry={!showPassword}
-                  value={password}
-                  onChangeText={setPassword}
-                  autoCapitalize="none"
-                  placeholderTextColor="#9ca3af"
-                />
+              <TextInput
+                style={styles.passwordInput}
+                placeholder="••••••••"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
+                onSubmitEditing={handleLogin}
+                autoCapitalize="none"
+                placeholderTextColor="#9ca3af"
+              />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.passwordToggle}
