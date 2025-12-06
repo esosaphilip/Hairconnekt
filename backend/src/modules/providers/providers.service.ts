@@ -42,6 +42,18 @@ export class ProvidersService {
     if (typeof dto.bio !== 'undefined') {
       provider.bio = dto.bio || '';
     }
+    if (typeof dto.acceptsSameDayBooking !== 'undefined') {
+      provider.acceptsSameDayBooking = !!dto.acceptsSameDayBooking;
+    }
+    if (typeof dto.advanceBookingDays !== 'undefined') {
+      provider.advanceBookingDays = Math.max(0, dto.advanceBookingDays || 0);
+    }
+    if (typeof dto.bufferTimeMinutes !== 'undefined') {
+      provider.bufferTimeMinutes = Math.max(0, dto.bufferTimeMinutes || 0);
+    }
+    if (typeof dto.minAdvanceHours !== 'undefined') {
+      provider.minAdvanceHours = Math.max(0, dto.minAdvanceHours || 0);
+    }
 
     const saved = await this.providersRepo.save(provider);
     // Invalidate public profile and nearby caches, as well as per-user dashboard/me caches
