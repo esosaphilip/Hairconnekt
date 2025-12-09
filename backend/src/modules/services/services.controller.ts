@@ -7,10 +7,16 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators';
 import { UserType } from '../users/entities/user.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 
 @Controller('services')
 export class ServicesController {
-  constructor(private readonly servicesService: ServicesService) {}
+  constructor(
+    private readonly servicesService: ServicesService,
+    @InjectRepository(ProviderProfile) private readonly providersRepo: Repository<ProviderProfile>,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -18,8 +24,21 @@ export class ServicesController {
     @Body() createServiceDto: CreateServiceDto,
     @Req() req: Request & { user: any },
   ) {
-    const providerId = req.user.providerId; // Assuming providerId is on the user object
-    return this.servicesService.create({ ...createServiceDto, providerId });
+    const providerIdFromToken = req.user?.providerId;
+    const userId = req.user?.sub || req.user?.id;
+    const providerId = providerIdFromToken || undefined;
+    const withProvider = async () => {
+      if (providerId) return providerId;
+      if (userId) {
+        const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+        return provider?.id;
+      }
+      return undefined;
+    };
+    return (async () => {
+      const pid = await withProvider();
+      return this.servicesService.create({ ...createServiceDto, providerId: String(pid || '') });
+    })();
   }
 
   /**
@@ -29,8 +48,16 @@ export class ServicesController {
   @Roles(UserType.PROVIDER, UserType.BOTH)
   @Get('provider')
   listForProvider(@Req() req: Request & { user: any }) {
-    const providerId = req.user.providerId;
-    return this.servicesService.listForProvider(providerId);
+    const providerIdFromToken = req.user?.providerId;
+    const userId = req.user?.sub || req.user?.id;
+    return (async () => {
+      let pid = providerIdFromToken;
+      if (!pid && userId) {
+        const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+        pid = provider?.id;
+      }
+      return this.servicesService.listForProvider(String(pid || ''));
+    })();
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

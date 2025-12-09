@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -19,19 +19,13 @@ import Icon from '@/components/Icon';
 import { colors, spacing, typography, COLORS, SPACING, FONT_SIZES } from '@/theme/tokens';
 import { logger } from '@/services/logger';
 import { MESSAGES } from '@/constants';
+import { http } from '@/api/http';
+import { API_CONFIG } from '@/constants';
+import { providersApi } from '@/services/providers';
+import type { Service } from '@/domain/entities/Service';
+import { rootNavigationRef } from '@/navigation/rootNavigation';
 
-const mockServices = [
-  { id: '1', name: 'Box Braids', duration: '4-6 Std.', price: '€85-€120' },
-  { id: '2', name: 'Cornrows', duration: '2-3 Std.', price: '€45-€65' },
-  { id: '3', name: 'Knotless Braids', duration: '5-7 Std.', price: '€95-€135' },
-  { id: '4', name: 'Twists', duration: '3-4 Std.', price: '€65-€85' },
-];
-
-const mockClients = [
-  { id: '1', name: 'Sarah Müller', phone: '+49 151 9876 5432' },
-  { id: '2', name: 'Maria Klein', phone: '+49 151 1234 5678' },
-  { id: '3', name: 'Anna Schmidt', phone: '+49 151 8765 4321' },
-];
+type Client = { id: string; name: string; phone?: string | null };
 
 type Nav = { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
 type CreateAppointmentParams = { clientId?: string };
@@ -57,23 +51,64 @@ export function CreateAppointmentScreen() {
   const [notes, setNotes] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [providerId, setProviderId] = useState<string>('');
+  const [clients, setClients] = useState<Client[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
 
-  const filteredClients = mockClients.filter((client) => client.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredClients = useMemo(() => {
+    const q = (searchQuery || '').toLowerCase();
+    return clients.filter((c) => (c.name || '').toLowerCase().includes(q));
+  }, [clients, searchQuery]);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const profile: any = await providersApi.getMyProfile();
+        const pid = profile?.id || profile?.provider?.id || '';
+        if (mounted) setProviderId(pid || '');
+      } catch (_) {
+        if (mounted) setProviderId('');
+      }
+      try {
+        const res = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.CLIENTS);
+        const items: any[] = (res?.data?.items ?? res?.data ?? []) as any[];
+        const mapped = items.map((c) => ({ id: String(c.id), name: String(c.name || ''), phone: c.phone ?? null }));
+        if (mounted) setClients(mapped);
+      } catch (e) {
+        logger.error('Failed to load clients', e);
+      }
+      try {
+        const svcRes = await http.get(API_CONFIG.ENDPOINTS.SERVICES.LIST);
+        const svcItems: any[] = (Array.isArray(svcRes.data) ? svcRes.data : (svcRes?.data?.items ?? [])) as any[];
+        const mapped = svcItems.map((s) => ({
+          id: String(s.id),
+          name: String(s.name || ''),
+          description: s.description ?? null,
+          priceCents: typeof s.priceCents === 'number' ? s.priceCents : 0,
+          durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : 60,
+          isActive: !!s.isActive,
+          createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
+          updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
+        })) as Service[];
+        if (mounted) setServices(mapped);
+      } catch (e) {
+        logger.error('Failed to load services', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const toggleService = (serviceId: string) => {
     setSelectedServices((prev) => (prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     try {
       setLoading(true);
       setError(null);
       if (clientMode === 'existing' && !selectedClient) {
         Alert.alert('Fehler', 'Bitte wähle einen Kunden aus');
-        return;
-      }
-      if (clientMode === 'new' && (!newClient.name || !newClient.phone)) {
-        Alert.alert('Fehler', 'Bitte fülle Name und Telefonnummer aus');
         return;
       }
       if (!date || !time) {
@@ -84,8 +119,38 @@ export function CreateAppointmentScreen() {
         Alert.alert('Fehler', 'Bitte wähle mindestens einen Service');
         return;
       }
-      if (location === 'mobile' && !mobileAddress) {
-        Alert.alert('Fehler', 'Bitte gib eine Adresse für den mobilen Service ein');
+      if (!providerId) {
+        Alert.alert('Fehler', 'Anbieterprofil konnte nicht geladen werden');
+        return;
+      }
+      const start = `${time}:00`;
+      const totalDuration = selectedServices.reduce((sum, id) => {
+        const svc = services.find((s) => s.id === id);
+        return sum + (svc?.durationMinutes || 60);
+      }, 0);
+      const [hh, mm] = time.split(':').map((t) => parseInt(t, 10));
+      const endDateObj = new Date(2000, 0, 1, hh || 0, mm || 0, 0);
+      endDateObj.setMinutes(endDateObj.getMinutes() + totalDuration);
+      const endH = String(endDateObj.getHours()).padStart(2, '0');
+      const endM = String(endDateObj.getMinutes()).padStart(2, '0');
+      const end = `${endH}:${endM}:00`;
+
+      const payload = {
+        providerId,
+        clientId: selectedClient,
+        serviceIds: selectedServices,
+        appointmentDate: date,
+        startTime: start,
+        endTime: end,
+        notes,
+      } as any;
+
+      try {
+        await http.post(API_CONFIG.ENDPOINTS.APPOINTMENTS.CREATE, payload);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Termin konnte nicht erstellt werden';
+        setError(msg);
+        Alert.alert('Fehler', msg);
         return;
       }
 
@@ -125,7 +190,7 @@ export function CreateAppointmentScreen() {
                 {filteredClients.map((client) => (
                   <TouchableOpacity key={client.id} onPress={() => setSelectedClient(client.id)} style={[styles.clientItem, selectedClient === client.id && styles.clientItemSelected]}>
                     <Text style={styles.clientName}>{client.name}</Text>
-                    <Text style={styles.clientPhone}>{client.phone}</Text>
+                    {!!client.phone && <Text style={styles.clientPhone}>{client.phone}</Text>}
                   </TouchableOpacity>
                 ))}
               </View>
@@ -164,21 +229,31 @@ export function CreateAppointmentScreen() {
 
         <Card style={styles.card}>
           <Text style={styles.cardTitle}>Services auswählen</Text>
-          <View style={styles.serviceList}>
-            {mockServices.map((service) => (
-              <TouchableOpacity key={service.id} onPress={() => toggleService(service.id)} style={[styles.serviceItem, selectedServices.includes(service.id) && styles.clientItemSelected]}>
-                <View style={styles.serviceItemContent}>
-                  <View style={styles.serviceTextContainer}>
-                    <Text style={styles.serviceName}>{service.name}</Text>
-                    <Text style={styles.serviceDetails}>{service.duration} • {service.price}</Text>
+          {services.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>Keine Services gefunden</Text>
+              <Button
+                title="Services hinzufügen"
+                onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderServicesScreen' })}
+              />
+            </View>
+          ) : (
+            <View style={styles.serviceList}>
+              {services.map((service) => (
+                <TouchableOpacity key={service.id} onPress={() => toggleService(service.id)} style={[styles.serviceItem, selectedServices.includes(service.id) && styles.clientItemSelected]}>
+                  <View style={styles.serviceItemContent}>
+                    <View style={styles.serviceTextContainer}>
+                      <Text style={styles.serviceName}>{service.name}</Text>
+                      <Text style={styles.serviceDetails}>{Math.max(30, service.durationMinutes)} Min • €{Math.round((service.priceCents || 0)/100)}</Text>
+                    </View>
+                    <View style={selectedServices.includes(service.id) ? styles.checkboxChecked : styles.checkboxUnchecked}>
+                      {selectedServices.includes(service.id) && <Icon name="check" size={12} color={COLORS.white} />}
+                    </View>
                   </View>
-                  <View style={selectedServices.includes(service.id) ? styles.checkboxChecked : styles.checkboxUnchecked}>
-                    {selectedServices.includes(service.id) && <Icon name="check" size={12} color={COLORS.white} />}
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </Card>
 
         <Card style={styles.card}>
@@ -282,4 +357,6 @@ const styles = StyleSheet.create({
   serviceList: { gap: SPACING.xs },
   serviceName: { fontSize: FONT_SIZES.body || 14, fontWeight: '500' },
   serviceTextContainer: { flex: 1 },
+  emptyState: { gap: SPACING.sm },
+  emptyText: { color: COLORS.textSecondary, fontSize: FONT_SIZES.body || 14 },
 });

@@ -8,6 +8,13 @@ export function useProviderGate() {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
+    let done = false;
+    const watchdog = setTimeout(() => {
+      if (!done) {
+        setStatus('error');
+        setChecked(true);
+      }
+    }, 6000);
     (async () => {
       try {
         const profile: any = await providersApi.getMyProfile();
@@ -19,11 +26,16 @@ export function useProviderGate() {
       } catch {
         setStatus('error');
       } finally {
+        done = true;
+        clearTimeout(watchdog);
         setChecked(true);
       }
     })();
+    
+    return () => {
+      try { clearTimeout(watchdog); } catch {}
+    };
   }, []);
 
   return { status, checked };
 }
-

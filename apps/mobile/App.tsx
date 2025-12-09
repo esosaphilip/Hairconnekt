@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { NavigationContainer, CommonActions } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -57,6 +57,7 @@ import { ProviderReviews } from '@/screens/provider/ProviderReviews';
 import { TransactionsScreen } from '@/screens/provider/TransactionsScreen';
 import { BookingFlow } from '@/screens/clients/BookingFlow';
 import { ChatScreen } from '@/screens/shared/ChatScreen';
+import { providersApi } from '@/services/providers';
 // Client utility screens
 import { MapViewScreen } from '@/screens/clients/MapViewScreen';
 import { SettingsScreen } from '@/screens/clients/SettingsScreen';
@@ -311,8 +312,37 @@ function ClientProfileStackScreen() {
 
 function ProviderTabs() {
   const { t } = useI18n();
-  const { status, checked } = useProviderGate();
-  const gateResolved = checked && status !== 'error';
+  const [status, setStatus] = useState<'ok' | 'pending' | 'not_provider' | 'error'>('ok');
+  const [checked, setChecked] = useState(false);
+  useEffect(() => {
+    let done = false;
+    const watchdog = setTimeout(() => {
+      if (!done) {
+        setStatus('error');
+        setChecked(true);
+      }
+    }, 6000);
+    (async () => {
+      try {
+        const profile: any = await providersApi.getMyProfile();
+        const isProvider = !!(profile?.id || profile?.provider?.id);
+        const pending = String(profile?.status || '').toLowerCase() === 'pending';
+        if (!isProvider) setStatus('not_provider');
+        else if (pending) setStatus('pending');
+        else setStatus('ok');
+      } catch {
+        setStatus('error');
+      } finally {
+        done = true;
+        clearTimeout(watchdog);
+        setChecked(true);
+      }
+    })();
+    return () => {
+      try { clearTimeout(watchdog); } catch {}
+    };
+  }, []);
+  const gateResolved = checked;
   const getProviderTabKey = (name: string) => (
     name === 'Dashboard' ? 'dashboard' :
     name === 'Kalender' ? 'calendar' :

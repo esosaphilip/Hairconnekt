@@ -20,6 +20,7 @@ import Card from '../../components/Card';
 import { Badge } from '../../components/badge';
 import Avatar, { AvatarImage } from '../../components/avatar';
 import Icon from '../../components/Icon';
+import { checkAndReloadUpdates } from '@/services/updates';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import AlertModal from '@/components/AlertModal';
 
@@ -226,6 +227,15 @@ export function ProviderMore() {
     );
   };
 
+  const handleCheckUpdates = async () => {
+    const res = await checkAndReloadUpdates();
+    if (Platform.OS === 'web') {
+      Alert.alert('Aktualisierung', res.message);
+    } else {
+      Alert.alert('Aktualisierung', res.message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.flexContainer}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -317,6 +327,12 @@ export function ProviderMore() {
         <View style={styles.versionContainer}>
           <Text style={styles.versionText}>HairConnekt Provider v1.0.0</Text>
           <Text style={styles.versionText}>© 2025 HairConnekt GmbH</Text>
+          <TouchableOpacity onPress={handleCheckUpdates} style={styles.updateButton} activeOpacity={0.8}>
+            <View style={styles.updateIconCircle}>
+              <Icon name="refresh-cw" size={18} color={COLORS.textSecondary} />
+            </View>
+            <Text style={styles.updateLabel}>App aktualisieren</Text>
+          </TouchableOpacity>
         </View>
         {/* Logout confirmation (web) */}
         <AlertModal
@@ -477,5 +493,23 @@ const styles = StyleSheet.create({
   versionText: {
     color: COLORS.textSecondary || '#6B7280',
     fontSize: FONT_SIZES.small || 12,
+  },
+  updateButton: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: SPACING.sm,
+    marginTop: SPACING.md,
+  },
+  updateIconCircle: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: COLORS.border || '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  updateLabel: {
+    color: COLORS.text || '#1F2937',
+    fontSize: FONT_SIZES.body || 14,
   },
 });

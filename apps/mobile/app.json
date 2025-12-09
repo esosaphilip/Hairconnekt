@@ -25,6 +25,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "EXPO_PUBLIC_API_URL": "https://api.hairconnekt.de",
+      "eas": {
+        "projectId": "14bc003c-cd0f-4834-90e2-b4f6c64bdf7e"
+      }
     }
   }
 }

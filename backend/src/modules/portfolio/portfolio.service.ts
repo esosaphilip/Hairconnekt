@@ -388,7 +388,7 @@ export class PortfolioService {
     location?: string; // "lat,lon" currently unused
   }) {
     const page = Math.max(1, options.page ?? 1);
-    const limit = Math.min(100, Math.max(1, options.limit ?? 20));
+    const limit = Math.min(50, Math.max(1, options.limit ?? 20));
     const qb = this.imagesRepo
       .createQueryBuilder('img')
       .leftJoinAndSelect('img.category', 'category')
@@ -404,8 +404,8 @@ export class PortfolioService {
     }
 
     qb.orderBy('img.isFeatured', 'DESC')
-      .addOrderBy('img.likeCount', 'DESC')
-      .addOrderBy('img.uploadedAt', 'DESC');
+      .addOrderBy('img.uploadedAt', 'DESC')
+      .addOrderBy('img.likeCount', 'DESC');
 
     const [items, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
     return { page, limit, total, items };

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
@@ -35,6 +36,7 @@ const DAYS: { key: DayKey; label: string }[] = [
 ];
 
 export function AvailabilitySettingsScreen() {
+  const navigation = useNavigation();
   const [availabilityId, setAvailabilityId] = useState<string | null>(null);
   const [bufferTime, setBufferTime] = useState<number>(15);
   const [advanceBookingDays, setAdvanceBookingDays] = useState<number>(30);
@@ -180,7 +182,11 @@ export function AvailabilitySettingsScreen() {
     });
 
     try {
-      // Backend expects providers availability under /providers/availability
+      await http.patch('/providers', {
+        bufferTimeMinutes: bufferTime,
+        advanceBookingDays,
+        acceptsSameDayBooking: sameDayBooking,
+      });
       await http.post('/providers/availability', { slots });
       setMessage('Verfügbarkeit erfolgreich gespeichert!');
       if (Platform.OS === 'web') {
@@ -214,7 +220,16 @@ export function AvailabilitySettingsScreen() {
       return;
     }
     try {
-      rootNavigationRef.current?.navigate('ProviderTabs', { screen: 'Mehr', params: { screen: 'ProviderMore' } });
+      // Prefer stack goBack; fallback to explicit navigation
+      // goBack ensures consistent behavior even if screen was opened from settings or dashboard
+      // If there's no back history, navigate to Mehr
+      // @ts-ignore
+      if (navigation.canGoBack && navigation.canGoBack()) {
+        // @ts-ignore
+        navigation.goBack();
+      } else {
+        rootNavigationRef.current?.navigate('ProviderTabs', { screen: 'Mehr', params: { screen: 'ProviderMore' } });
+      }
     } catch {}
   };
 

@@ -7,6 +7,7 @@ import Input from '../../components/Input';
 import { Switch } from 'react-native';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
 import { http } from '../../api/http';
+import { providersApi } from '@/services/providers';
 
 const BLOCK_REASONS: { value: BlockReason; label: string }[] = [
   { value: 'pause', label: 'Pause' },
@@ -49,6 +50,21 @@ export function BlockTimeScreen() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [providerId, setProviderId] = useState<string>('');
+
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const profile: any = await providersApi.getMyProfile();
+        const pid = profile?.id || profile?.provider?.id || '';
+        if (mounted) setProviderId(pid || '');
+      } catch (_) {
+        if (mounted) setProviderId('');
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const toggleRepeatDay = (day: DayValue) => {
     setRepeatDays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]));
@@ -73,26 +89,31 @@ export function BlockTimeScreen() {
       }
 
       const payload = {
+        providerId,
         reason,
         customReason: reason === 'other' ? customReason : undefined,
         startDate,
         endDate: endDate || startDate,
-        startTime: allDay ? null : startTime,
-        endTime: allDay ? null : endTime,
+        startTime: allDay ? undefined : startTime,
+        endTime: allDay ? undefined : endTime,
         allDay,
-        repeat: repeat
-          ? {
-              frequency: repeatFrequency,
-              days: repeatFrequency === 'weekly' ? repeatDays : [],
-              endType: repeatEndType,
-              endDate: repeatEndType === 'date' ? repeatEndDate : null,
-              count: repeatEndType === 'count' ? repeatCount : null,
-            }
-          : null,
+        repeat,
+        repeatFrequency: repeat ? repeatFrequency : undefined,
+        repeatDays: repeat && repeatFrequency === 'weekly' ? repeatDays : undefined,
+        repeatEndType: repeat ? repeatEndType : undefined,
+        repeatEndDate: repeat && repeatEndType === 'date' ? repeatEndDate : undefined,
+        repeatCount: repeat && repeatEndType === 'count' ? repeatCount : undefined,
         notes,
       };
 
-      await http.post('/blocked-time', payload);
+      try {
+        await http.post('/blocked-time', payload);
+      } catch (err: any) {
+        const msg = err?.response?.data?.message || err?.message || 'Zeit konnte nicht blockiert werden';
+        setError(msg);
+        Alert.alert('Fehler', msg);
+        return;
+      }
       Alert.alert('Erfolg', 'Zeit wurde erfolgreich blockiert.');
       navToCalendar();
     } catch (e: unknown) {

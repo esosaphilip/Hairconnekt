@@ -10,6 +10,7 @@
 - Payments: Stripe payment intent (test), Connect onboarding
 - Notifications: FCM push setup and token management; reminder emails
 - Settings: language/country defaults; legal pages
+ - Remove placeholder screens; replace mocked data with real backend calls
 - Performance: DB indexes for search; cache TTL tuning
 - Security: rate limiting; input validation audit; privacy policy link in app
 - CI/CD: backend deploy pipeline; mobile build pipeline; secrets management
@@ -20,6 +21,7 @@
 - Backblaze B2 native upload + public URLs (dev fallback OK)
 - Mobile Maps: autocomplete and geocoding helpers
 - Portfolio upload: end‑to‑end from mobile → B2 URLs
+ - Provider app: connect CreateAppointment screen to backend, persist data
 
 ## Review
 - Payment intent test flow (Stripe) with test cards
@@ -34,6 +36,7 @@
 - Email via Brevo SMTP (Nodemailer) and test route
 - Mobile env wiring and HTTP client with timeout
 - Portfolio upload integration and local dev static serving
+ - Blocked time: mobile payload flattened and persists to backend
 
 ## Blockers / Risks
 - App store compliance: ensure Data Safety (Play) and privacy forms (Apple)

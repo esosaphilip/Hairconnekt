@@ -16,6 +16,7 @@ import { AppCacheModule } from './modules/cache/cache.module';
 import { ServicesModule } from './modules/services/services.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
+import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
 
 @Module({
   imports: [
@@ -44,6 +45,8 @@ import { PortfolioModule } from './modules/portfolio/portfolio.module';
     PortfolioModule,
     // Register appointments API routes (client/provider listings, create, etc.)
     AppointmentsModule,
+    // Register blocked-time API routes (provider time off/pauses)
+    BlockedTimeModule,
   ],
   controllers: [],
   providers: [],

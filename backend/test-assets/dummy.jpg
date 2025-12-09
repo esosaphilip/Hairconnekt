@@ -1,1 +1,2 @@
-dummy test image content
+This is a tiny dummy image payload for upload tests.
+It is plain text but suffices for verifying S3-compatible storage writes.
