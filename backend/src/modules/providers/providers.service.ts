@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProviderProfile } from './entities/provider-profile.entity';
@@ -25,6 +25,8 @@ export class ProvidersService {
     private readonly servicesRepo: Repository<Service>,
     private readonly cache: AppCacheService,
   ) {}
+
+  private readonly logger = new Logger(ProvidersService.name);
 
   /**
    * Update basic provider profile information for the current user
@@ -55,7 +57,14 @@ export class ProvidersService {
       provider.minAdvanceHours = Math.max(0, dto.minAdvanceHours || 0);
     }
 
-    const saved = await this.providersRepo.save(provider);
+    let saved: ProviderProfile;
+    try {
+      saved = await this.providersRepo.save(provider);
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      this.logger.warn(`Failed to save provider profile for user ${userId}: ${msg}`);
+      throw new BadRequestException('Profil konnte nicht gespeichert werden');
+    }
     // Invalidate public profile and nearby caches, as well as per-user dashboard/me caches
     await this.cache.del(`providers:public:${saved.id}`);
     await this.cache.deleteByPrefix('providers:nearby');
@@ -92,9 +101,14 @@ export class ProvidersService {
     });
 
     // Remove existing availability for this provider
-    const existing = await this.availabilityRepo.find({ where: { provider: { id: provider.id } } });
-    if (existing.length) {
-      await this.availabilityRepo.remove(existing);
+    try {
+      const existing = await this.availabilityRepo.find({ where: { provider: { id: provider.id } } });
+      if (existing.length) {
+        await this.availabilityRepo.remove(existing);
+      }
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      this.logger.warn(`Failed to clear availability for provider ${provider.id}: ${msg}`);
     }
 
     // Create new rows
@@ -107,7 +121,14 @@ export class ProvidersService {
         isActive: true,
       }),
     );
-    const saved = await this.availabilityRepo.save(rows);
+    let saved;
+    try {
+      saved = await this.availabilityRepo.save(rows);
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      this.logger.warn(`Failed to save availability for provider ${provider.id}: ${msg}`);
+      throw new BadRequestException('Verfügbarkeit konnte nicht gespeichert werden');
+    }
     // Availability changes can affect nearby search and dashboard data
     await this.cache.deleteByPrefix('providers:nearby');
     const uid = userId;
@@ -152,13 +173,20 @@ export class ProvidersService {
     const todayStr = this.formatDate(new Date()); // YYYY-MM-DD
 
     // Today's appointments
-    const todays = await this.appointmentsRepo.find({
-      where: { provider: { id: provider.id }, appointmentDate: todayStr },
-      relations: ['client', 'appointmentServices'],
-      order: { startTime: 'ASC' },
-    });
+    let todayAppts: Appointment[] = [];
+    try {
+      todayAppts = await this.appointmentsRepo.find({
+        where: { provider: { id: provider.id }, appointmentDate: todayStr },
+        relations: ['client', 'appointmentServices'],
+        order: { startTime: 'ASC' },
+      });
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      this.logger.warn(`Failed to load today's appointments for dashboard user ${userId}: ${msg}`);
+      todayAppts = [];
+    }
     const now = new Date();
-    const todayAppointments = todays.map((a) => {
+    const todayAppointments = todayAppts.map((a: Appointment) => {
       const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
       const serviceSummary = (a.appointmentServices || []).map((s) => s.serviceName).join(' + ');
       const startStr = (a.startTime || '').slice(0, 5);
@@ -200,17 +228,24 @@ export class ProvidersService {
 
     // Week earnings (Mon-Sun) for completed appointments
     const { weekStart, weekEnd } = this.getWeekRange(new Date());
-    const earningsRows = await this.appointmentsRepo
-      .createQueryBuilder('a')
-      .leftJoin('a.appointmentServices', 'as')
-      .select('COALESCE(SUM(as.price_cents), 0)', 'totalCents')
-      .where('a.provider = :providerId', { providerId: provider.id })
-      .andWhere('a.status = :status', { status: 'COMPLETED' })
-      .andWhere('a.appointment_date BETWEEN :start AND :end', {
-        start: this.formatDate(weekStart),
-        end: this.formatDate(weekEnd),
-      })
+    let earningsRows: { totalCents: string } | undefined;
+    try {
+      earningsRows = await this.appointmentsRepo
+        .createQueryBuilder('a')
+        .leftJoin('a.appointmentServices', 'as')
+        .select('COALESCE(SUM(as.price_cents), 0)', 'totalCents')
+        .where('a.provider = :providerId', { providerId: provider.id })
+        .andWhere('a.status = :status', { status: 'COMPLETED' })
+        .andWhere('a.appointment_date BETWEEN :start AND :end', {
+          start: this.formatDate(weekStart),
+          end: this.formatDate(weekEnd),
+        })
       .getRawOne<{ totalCents: string }>();
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      this.logger.warn(`Failed to compute week earnings for dashboard user ${userId}: ${msg}`);
+      earningsRows = undefined;
+    }
     const weekEarningsCents = earningsRows?.totalCents ? parseInt(earningsRows.totalCents, 10) : 0;
 
     // Recent reviews (last 5)
@@ -270,11 +305,22 @@ export class ProvidersService {
     if (!provider) throw new NotFoundException('Provider profile not found');
 
     // Load appointments including client and services to aggregate spending
-    const appts = await this.appointmentsRepo.find({
-      where: { provider: { id: provider.id } },
-      relations: ['client', 'appointmentServices'],
-      order: { appointmentDate: 'DESC', startTime: 'DESC' },
-    });
+    let appts: Appointment[] = [];
+    try {
+      appts = await this.appointmentsRepo.find({
+        where: { provider: { id: provider.id } },
+        relations: ['client', 'appointmentServices'],
+        order: { appointmentDate: 'DESC', startTime: 'DESC' },
+      });
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      if (/no such table/i.test(msg) || /relation .* does not exist/i.test(msg)) {
+        this.logger.warn(`Appointments schema not available; returning empty clients list for user ${userId}: ${msg}`);
+      } else {
+        this.logger.warn(`Failed to load appointments for clients list (user ${userId}): ${msg}`);
+      }
+      appts = [];
+    }
 
     type ClientAgg = {
       id: string;
