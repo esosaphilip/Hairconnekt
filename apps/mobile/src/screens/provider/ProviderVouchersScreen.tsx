@@ -232,7 +232,20 @@ export function ProviderVouchersScreen() {
   };
   
   const handleDelete = (id: number) => {
-      Alert.alert("Löschen", `Gutschein ${id} gelöscht.`);
+      (async () => {
+        try {
+          setLoading(true);
+          await providerVouchersApi.remove(String(id));
+          const { items } = await providerVouchersApi.list();
+          const mapped = items.map(mapProviderVoucher);
+          setVouchers(mapped);
+        } catch (e) {
+          const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Löschen fehlgeschlagen';
+          Alert.alert('Fehler', String(msg));
+        } finally {
+          setLoading(false);
+        }
+      })();
   };
 
   const renderVoucherItem = ({ item }: { item: Voucher }) => (
@@ -321,16 +334,7 @@ export function ProviderVouchersScreen() {
   );
 
   // List Footer Component (Info Card)
-  const ListFooter = () => (
-      <Card style={styles.infoCard}>
-          <Text style={styles.infoTitle}>💡 Tipp</Text>
-          <Text style={styles.infoText}>
-              Gutscheine sind eine großartige Möglichkeit, neue Kunden zu gewinnen und
-              bestehende Kunden zu belohnen. Erstelle zeitlich begrenzte Angebote für
-              besondere Anlässe!
-          </Text>
-      </Card>
-  );
+  const ListFooter = () => null;
 
   return (
     <SafeAreaView style={styles.flexContainer}>

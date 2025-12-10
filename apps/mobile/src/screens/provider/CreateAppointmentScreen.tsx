@@ -150,7 +150,7 @@ export function CreateAppointmentScreen() {
       } catch (err: any) {
         const msg = err?.response?.data?.message || err?.message || 'Termin konnte nicht erstellt werden';
         setError(msg);
-        Alert.alert('Fehler', msg);
+        Alert.alert('Fehler', String(msg));
         return;
       }
 

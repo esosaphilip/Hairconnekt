@@ -105,6 +105,7 @@ export type ProviderMoreStackParamList = {
   ProviderProfileScreen: undefined;
   ProviderPublicProfileScreen: { id?: string; providerId?: string } | undefined;
   ProviderServicesScreen: { mode?: 'add' | 'edit'; serviceId?: string } | undefined;
+  AddEditServiceScreen: { serviceId?: string } | undefined;
   ProviderPortfolioScreen: undefined;
   Booking: { providerId?: string } | undefined;
   // Allow passing a suggested service name for preselection

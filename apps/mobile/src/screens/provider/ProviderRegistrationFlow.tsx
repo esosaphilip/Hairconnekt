@@ -23,6 +23,7 @@ import Picker from '../../components/Picker'; // Custom Picker component (Select
 import { Slider } from '../../components/slider'; // Custom Slider component
 import Icon from '../../components/Icon';
 import { colors, spacing, typography } from '../../theme/tokens';
+import { http } from '../../api/http';
 
 // --- Type Definitions (Adapted for React Native File objects) ---
 type Step = 1 | 2 | 3 | 4 | 5;
@@ -201,11 +202,40 @@ export function ProviderRegistrationFlow() {
       }
   };
 
-  const handleSubmit = () => {
-    Alert.alert("Einreichen", "Profil wird zur Prüfung eingereicht...");
-    setTimeout(() => {
-      navigation.navigate("ProviderPendingApproval");
-    }, 1500);
+  const handleSubmit = async () => {
+    try {
+      const payload = {
+        profile: {
+          businessName: formData.businessName || null,
+          businessType: formData.businessTypes[0] || null,
+          yearsOfExperience: formData.yearsExperience,
+          isMobileService: formData.businessTypes.includes('Mobil'),
+          serviceRadiusKm: formData.serviceRadius,
+        },
+        contact: {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phone: formData.phone,
+        },
+        address: {
+          street: formData.street,
+          houseNumber: formData.houseNumber,
+          postalCode: formData.postalCode,
+          city: formData.city,
+          state: formData.state,
+          showOnMap: formData.showOnMap,
+        },
+        services: formData.serviceCategories,
+        languages: formData.languages,
+        specializations: formData.specializations,
+      };
+      await http.post('/providers', payload);
+      navigation.navigate('ProviderPendingApproval');
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Einreichen fehlgeschlagen';
+      Alert.alert('Fehler', String(msg));
+    }
   };
 
   // --- Step Navigation Logic ---

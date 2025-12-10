@@ -230,9 +230,9 @@ export function ProviderMore() {
   const handleCheckUpdates = async () => {
     const res = await checkAndReloadUpdates();
     if (Platform.OS === 'web') {
-      Alert.alert('Aktualisierung', res.message);
+      Alert.alert('Aktualisierung', String(res.message));
     } else {
-      Alert.alert('Aktualisierung', res.message);
+      Alert.alert('Aktualisierung', String(res.message));
     }
   };
 

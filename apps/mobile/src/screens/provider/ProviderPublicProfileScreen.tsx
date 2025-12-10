@@ -182,8 +182,11 @@ export function ProviderPublicProfileScreen() {
 
   // Function to handle sharing link
   const handleShare = () => {
-    Clipboard.setString("https://app.example.com/aisha-braiding-studio");
-    Alert.alert("Link kopiert!", "Der Profil-Link wurde in die Zwischenablage kopiert.");
+    const w = typeof window !== 'undefined' ? window : null;
+    const origin = w && w.location && w.location.origin ? w.location.origin : 'https://hairconnekt.app';
+    const url = providerId ? `${origin}/providers/${providerId}` : origin;
+    Clipboard.setString(url);
+    Alert.alert('Link kopiert!', 'Der Profil-Link wurde in die Zwischenablage kopiert.');
   };
 
   // --- Tab Content Renderers ---
@@ -214,26 +217,7 @@ export function ProviderPublicProfileScreen() {
         </View>
       </Card>
 
-      <Card style={styles.tabCard}>
-        <Text style={styles.cardTitle}>Was uns auszeichnet</Text>
-        <View style={styles.featureList}>
-          {[
-            'Qualität und Sorgfalt',
-            'Individuelle Beratung',
-            'Angenehme Atmosphäre',
-          ].map((feature, index) => (
-            <View key={index} style={styles.featureItem}>
-              <Icon name="check" size={20} color={COLORS.success} style={styles.checkIcon} />
-              <Text style={styles.bodyText}>{feature}</Text>
-            </View>
-          ))}
-        </View>
-      </Card>
-
-      <Card style={styles.tabCard}>
-        <Text style={styles.cardTitle}>Öffnungszeiten</Text>
-        <Text style={styles.bodyText}>Bitte kontaktiere den Anbieter für aktuelle Öffnungszeiten.</Text>
-      </Card>
+      {/* Removed static feature and opening hours cards */}
     </View>
   );
 

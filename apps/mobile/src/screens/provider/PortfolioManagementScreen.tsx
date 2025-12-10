@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import { Badge } from '../../components/badge';
 import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { http } from '../../api/http';
+import { getAuthBundle } from '../../auth/tokenStorage';
 
 // Screen width for responsive grid calculation
 const screenWidth = Dimensions.get('window').width;
@@ -28,35 +30,51 @@ const listPadding = SPACING.md; // Padding inside the main scroll view
 const cardWidth = (screenWidth - listPadding * 2 - (numColumns - 1) * cardMargin) / numColumns;
 
 
-// --- Mock Portfolio Data (Replicated) ---
-const mockPortfolio = [
-  { id: "1", image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400", title: "Box Braids - Medium Length", category: "Box Braids", views: 245, likes: 32, createdAt: "2025-01-15" },
-  { id: "2", image: "https://images.unsplash.com/photo-1562322140-8baeececf3df?w=400", title: "Knotless Braids - Long", category: "Knotless Braids", views: 189, likes: 28, createdAt: "2025-01-10" },
-  { id: "3", image: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?w=400", title: "Cornrows Styles", category: "Cornrows", views: 167, likes: 21, createdAt: "2025-01-05" },
-  { id: "4", image: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?w=400", title: "Senegalese Twists", category: "Twists", views: 198, likes: 25, createdAt: "2024-12-28" },
-  { id: "5", image: "https://images.unsplash.com/photo-1522337660859-02fbefca4702?w=400", title: "Wedding Hairstyle", category: "Special Occasion", views: 312, likes: 45, createdAt: "2024-12-20" },
-  { id: "6", image: "https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400", title: "Passion Twists - Burgundy", category: "Passion Twists", views: 221, likes: 34, createdAt: "2024-12-15" },
-];
+// Load portfolio items from backend
 
 
 // --- Main Component ---
 type PortfolioItem = {
   id: string;
   image: string;
-  title: string;
-  category: string;
-  views: number;
-  likes: number;
-  createdAt: string;
+  title?: string;
+  category?: string;
+  createdAt?: string;
 };
 
 export function PortfolioManagementScreen() {
   const navigation = useNavigation<any>();
-  const [portfolioData, setPortfolioData] = useState<PortfolioItem[]>(mockPortfolio); // Use state to simulate deletion
+  const [portfolioData, setPortfolioData] = useState<PortfolioItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const bundle = await getAuthBundle();
+        const providerId = bundle?.user?.id;
+        if (!providerId) throw new Error('Nicht authentifiziert');
+        const res = await http.get(`/provider/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
+        type RawPortfolioItem = { id: string; imageUrl?: string; title?: string; category?: string; uploadedAt?: string };
+        const items = Array.isArray(res?.data?.items) ? (res.data.items as RawPortfolioItem[]) : [];
+        const mapped = items.map((it) => ({ id: it.id, image: it.imageUrl || '', title: it.title, category: it.category, createdAt: it.uploadedAt }));
+        if (active) setPortfolioData(mapped.filter((x) => !!x.image));
+      } catch (e) {
+        const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Fehler beim Laden des Portfolios';
+        if (active) setError(String(msg));
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Calculate stats
-  const totalViews = portfolioData.reduce((sum, item) => sum + item.views, 0);
-  const totalLikes = portfolioData.reduce((sum, item) => sum + item.likes, 0);
+  const totalViews = portfolioData.length;
+  const totalLikes = 0;
   
   // --- Delete Logic (Replaces AlertDialog and toast) ---
   const confirmDelete = (item: PortfolioItem) => {
@@ -74,9 +92,17 @@ export function PortfolioManagementScreen() {
     );
   };
 
-  const handleDelete = (id: string) => {
-    setPortfolioData(portfolioData.filter(item => item.id !== id));
-    Alert.alert("Erfolg", "Portfolio-Bild gelöscht");
+  const handleDelete = async (id: string) => {
+    try {
+      setLoading(true);
+      await http.delete(`/portfolio/${id}`);
+      setPortfolioData(portfolioData.filter(item => item.id !== id));
+    } catch (e) {
+      const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Löschen fehlgeschlagen';
+      Alert.alert('Fehler', String(msg));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // --- Render Item for FlatList ---
@@ -103,18 +129,8 @@ export function PortfolioManagementScreen() {
         </View>
         
         <View style={styles.cardContent}>
-          <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>
-          <Badge title={item.category} variant="outline" style={styles.itemBadge} />
-          <View style={styles.itemStats}>
-            <View style={styles.statRow}>
-              <Icon name="eye" size={12} color={COLORS.textSecondary} />
-              <Text style={styles.statText}>{item.views}</Text>
-            </View>
-            <View style={styles.statRow}>
-              <Text style={styles.heartIcon}>❤️</Text>
-              <Text style={styles.statText}>{item.likes}</Text>
-            </View>
-          </View>
+          {!!item.title && <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>}
+          {!!item.category && <Badge title={item.category} variant="outline" style={styles.itemBadge} />}
         </View>
       </Card>
     </View>
@@ -161,21 +177,11 @@ export function PortfolioManagementScreen() {
         </View>
       </View>
 
-      {/* Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{totalViews}</Text>
-          <Text style={styles.statLabel}>Aufrufe gesamt</Text>
+      {error && (
+        <View style={styles.statsContainer}>
+          <Text style={styles.statLabel}>{error}</Text>
         </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{totalLikes}</Text>
-          <Text style={styles.statLabel}>Likes gesamt</Text>
-        </View>
-        <View style={styles.statItem}>
-          <Text style={styles.statValue}>{portfolioData.length}</Text>
-          <Text style={styles.statLabel}>Bilder</Text>
-        </View>
-      </View>
+      )}
 
       {/* Portfolio Grid */}
       <FlatList

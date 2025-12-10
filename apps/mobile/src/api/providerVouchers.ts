@@ -54,4 +54,16 @@ export const providerVouchersApi = {
       return { items };
     }
   },
+  async remove(id: string) {
+    const res = await http.delete(`/providers/vouchers/${id}`);
+    return res.data;
+  },
+  async create(payload: { code: string; discount: string; title?: string; description?: string; minAmount?: number; startsAt?: string; expiresAt?: string; usageLimit?: number }) {
+    const res = await http.post('/providers/vouchers', payload);
+    return res.data;
+  },
+  async update(id: string, payload: Partial<{ code: string; discount: string; title?: string; description?: string; minAmount?: number; startsAt?: string; expiresAt?: string; usageLimit?: number }>) {
+    const res = await http.patch(`/providers/vouchers/${id}`, payload);
+    return res.data;
+  }
 };

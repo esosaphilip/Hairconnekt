@@ -111,7 +111,7 @@ export function BlockTimeScreen() {
       } catch (err: any) {
         const msg = err?.response?.data?.message || err?.message || 'Zeit konnte nicht blockiert werden';
         setError(msg);
-        Alert.alert('Fehler', msg);
+        Alert.alert('Fehler', String(msg));
         return;
       }
       Alert.alert('Erfolg', 'Zeit wurde erfolgreich blockiert.');

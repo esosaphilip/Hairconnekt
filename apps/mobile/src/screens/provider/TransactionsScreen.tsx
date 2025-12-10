@@ -173,7 +173,7 @@ export function TransactionsScreen() {
 
   useEffect(() => {
     if (error) {
-      Alert.alert('Hinweis', error);
+      Alert.alert('Hinweis', String(error));
     }
   }, [error]);
 

@@ -11,6 +11,7 @@ import { colors, spacing, typography } from '@/theme/tokens';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { logger } from '@/services/logger';
 import { API_CONFIG, MESSAGES } from '@/constants';
+import { getErrorMessage } from '@/presentation/utils/errorHandler';
 // Removed unused ProviderTabsParamList import
 
 type NextAppointment = {
@@ -110,7 +111,7 @@ export function ProviderDashboard() {
         setProfile(p?.data || null);
         setDashboard(d?.data || null);
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : MESSAGES.ERROR.UNKNOWN;
+        const msg = getErrorMessage(err);
         if (mounted) setError(msg);
         logger.error('Failed to load dashboard:', err);
       } finally {

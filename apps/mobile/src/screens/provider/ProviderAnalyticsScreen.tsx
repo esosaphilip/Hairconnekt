@@ -18,55 +18,36 @@ import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { providersApi } from '../../services/providers';
+import { getProviderAppointments } from '@/api/appointments';
 
 // Screen width for responsive layout
 const screenWidth = Dimensions.get('window').width;
 
-// --- Mock Data (Replicated) ---
-const monthlyData = [
-  { month: "Jan", revenue: 2800, appointments: 32, newClients: 8 },
-  { month: "Feb", revenue: 3200, appointments: 38, newClients: 12 },
-  { month: "Mar", revenue: 2950, appointments: 35, newClients: 10 },
-  { month: "Apr", revenue: 3400, appointments: 42, newClients: 15 },
-  { month: "Mai", revenue: 3800, appointments: 48, newClients: 18 },
-  { month: "Jun", revenue: 4100, appointments: 52, newClients: 20 },
-];
-
-const topServices = [
-  { name: "Box Braids", bookings: 156, revenue: 14820, growth: 12 },
-  { name: "Knotless Braids", bookings: 98, revenue: 10290, growth: 8 },
-  { name: "Cornrows", bookings: 87, revenue: 5655, growth: -3 },
-  { name: "Senegalese Twists", bookings: 72, revenue: 7920, growth: 15 },
-];
-
-const peakHours = [
-  { hour: "9-11", bookings: 12 },
-  { hour: "11-13", bookings: 18 },
-  { hour: "13-15", bookings: 24 },
-  { hour: "15-17", bookings: 32 },
-  { hour: "17-19", bookings: 28 },
-  { hour: "19-21", bookings: 15 },
-];
+type MonthlyDatum = { month: string; revenue: number; appointments: number; newClients: number };
+type TopServiceDatum = { name: string; bookings: number; revenue: number; growth: number };
+type PeakHourDatum = { hour: string; bookings: number };
+const monthLabels = ['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
 
 // --- Main Component ---
 export function ProviderAnalyticsScreen() {
   const navigation = useNavigation();
-  const [period, setPeriod] = useState("month"); // "week" | "month" | "year"
+  const [period, setPeriod] = useState("month");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   type DashboardStats = { weekEarningsCents?: number; todayCount?: number; reviewCount?: number; ratingAverage?: number };
   type Dashboard = { stats?: DashboardStats } | null;
   const [dashboard, setDashboard] = useState<Dashboard>(null);
+  const [monthlyData, setMonthlyData] = useState<MonthlyDatum[]>([]);
+  const [topServices, setTopServices] = useState<TopServiceDatum[]>([]);
+  const [peakHours, setPeakHours] = useState<PeakHourDatum[]>([]);
 
-  const maxRevenue = Math.max(...monthlyData.map(d => d.revenue));
-  const maxBookings = Math.max(...peakHours.map(d => d.bookings));
+  const maxRevenue = Math.max(0, ...monthlyData.map(d => d.revenue));
+  const maxBookings = Math.max(0, ...peakHours.map(d => d.bookings));
   
   // Max revenue for top services is assumed to be the highest revenue item (14820)
   const maxServiceRevenue = 14820; 
 
-  const handleDownload = () => {
-      Alert.alert("Download", "Bericht-Download - Funktion in Entwicklung");
-  };
+  const handleDownload = () => {};
 
   // Helper: format cents to EUR string
   const formatCurrency = useMemo(() => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }), []);
@@ -93,6 +74,47 @@ export function ProviderAnalyticsScreen() {
     };
     fetchDashboard();
     return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getProviderAppointments('completed');
+        const items = res.items || [];
+        const byMonth: Record<string, { revenue: number; appointments: number; clients: Set<string> }> = {};
+        const serviceMap: Record<string, { bookings: number; revenue: number }> = {};
+        const hourBuckets: Record<string, number> = {};
+        items.forEach((a) => {
+          const d = new Date((a.appointmentDate || '') + 'T' + (a.startTime || '00:00:00'));
+          const m = monthLabels[d.getMonth()] || '';
+          const revenue = (a.totalPriceCents || 0) / 100;
+          byMonth[m] = byMonth[m] || { revenue: 0, appointments: 0, clients: new Set<string>() };
+          byMonth[m].revenue += revenue;
+          byMonth[m].appointments += 1;
+          const cname = a.client?.name || '';
+          if (cname) byMonth[m].clients.add(cname);
+          (a.services || []).forEach((s) => {
+            const key = s.name || 'Service';
+            serviceMap[key] = serviceMap[key] || { bookings: 0, revenue: 0 };
+            serviceMap[key].bookings += 1;
+            serviceMap[key].revenue += revenue;
+          });
+          const hour = d.getHours();
+          const bucket = hour < 11 ? '9-11' : hour < 13 ? '11-13' : hour < 15 ? '13-15' : hour < 17 ? '15-17' : hour < 19 ? '17-19' : '19-21';
+          hourBuckets[bucket] = (hourBuckets[bucket] || 0) + 1;
+        });
+        const monthly = monthLabels.map((ml) => ({ month: ml, revenue: byMonth[ml]?.revenue || 0, appointments: byMonth[ml]?.appointments || 0, newClients: byMonth[ml]?.clients.size || 0 })).filter((x) => x.revenue > 0 || x.appointments > 0);
+        const top = Object.entries(serviceMap).map(([name, v]) => ({ name, bookings: v.bookings, revenue: v.revenue, growth: 0 })).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+        const peaks = Object.entries(hourBuckets).map(([hour, bookings]) => ({ hour, bookings })).sort((a, b) => a.hour.localeCompare(b.hour));
+        if (mounted) {
+          setMonthlyData(monthly);
+          setTopServices(top);
+          setPeakHours(peaks);
+        }
+      } catch {}
+    })();
+    return () => { mounted = false; };
   }, []);
 
   return (
@@ -206,7 +228,7 @@ export function ProviderAnalyticsScreen() {
                       styles.bar,
                       { height: `${(data.revenue / maxRevenue) * 100}%` },
                     ]}
-                    onPress={() => Alert.alert("Monatsdetails", `Umsatz im ${data.month}: €${data.revenue}\nTermine: ${data.appointments}\nNeue Kunden: ${data.newClients}`)}
+                    onPress={() => {}}
                 />
                 <Text style={styles.barLabel}>{data.month}</Text>
               </View>
@@ -257,7 +279,7 @@ export function ProviderAnalyticsScreen() {
                   <View
                     style={[
                       styles.progressBarFill,
-                      { width: `${(service.revenue / maxServiceRevenue) * 100}%` },
+                      { width: `${(service.revenue / (Math.max(...topServices.map(s=>s.revenue)) || 1)) * 100}%` },
                     ]}
                   />
                 </View>

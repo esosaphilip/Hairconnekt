@@ -95,7 +95,7 @@ export function ClientDetailScreen() {
       if (Platform.OS === 'web') {
         try { window.location.href = `tel:${clientItem.phone}`; } catch {}
       } else {
-        Alert.alert('Anrufen', clientItem.phone);
+        Alert.alert('Anrufen', String(clientItem.phone));
       }
     }
   };

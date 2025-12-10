@@ -9,6 +9,7 @@ import { ServiceRepositoryImpl } from '@/data/repositories/ServiceRepositoryImpl
 import type { Service } from '@/domain/entities/Service';
 import { DomainError } from '@/domain/errors/DomainError';
 import { MESSAGES } from '@/constants';
+import { getErrorMessage } from '@/presentation/utils/errorHandler';
 
 // Singleton instance (in real app, use dependency injection container)
 const serviceRepository = new ServiceRepositoryImpl();
@@ -26,8 +27,9 @@ export function useServices() {
       const data = await serviceUseCases.listServices();
       setServices(data);
     } catch (err: unknown) {
-      const message = err instanceof DomainError ? err.message : MESSAGES.ERROR.LOAD_FAILED;
-      setError(message);
+      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      setError(message || MESSAGES.ERROR.LOAD_FAILED);
+      
     } finally {
       setLoading(false);
     }
@@ -64,8 +66,8 @@ export function useServices() {
       return service;
     } catch (err: unknown) {
       setServices((prev) => prev.filter((s) => s.id !== temp.id));
-      const message = err instanceof DomainError ? err.message : MESSAGES.ERROR.SAVE_FAILED;
-      setError(message);
+      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;
     } finally {
       setLoading(false);
@@ -83,8 +85,8 @@ export function useServices() {
       return service;
     } catch (err: unknown) {
       setServices(before);
-      const message = err instanceof DomainError ? err.message : MESSAGES.ERROR.SAVE_FAILED;
-      setError(message);
+      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;
     } finally {
       setLoading(false);
@@ -100,8 +102,8 @@ export function useServices() {
       await serviceUseCases.deleteService(id);
     } catch (err: unknown) {
       setServices(before);
-      const message = err instanceof DomainError ? err.message : MESSAGES.ERROR.DELETE_FAILED;
-      setError(message);
+      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      setError(message || MESSAGES.ERROR.DELETE_FAILED);
       throw err;
     } finally {
       setLoading(false);
@@ -119,8 +121,8 @@ export function useServices() {
       return service;
     } catch (err: unknown) {
       setServices(before);
-      const message = err instanceof DomainError ? err.message : MESSAGES.ERROR.SAVE_FAILED;
-      setError(message);
+      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;
     } finally {
       setLoading(false);

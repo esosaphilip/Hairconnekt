@@ -93,8 +93,9 @@ export function VouchersScreen() {
   };
   const toast = {
     show: ({ type, text1, text2, position }: ToastParams) => {
-      // 'position' is accepted for compatibility with web toasts, but ignored here.
-      Alert.alert(text1, text2);
+      const title = typeof text1 === 'string' ? text1 : String(text1 ?? 'Hinweis');
+      const message = typeof text2 === 'string' ? text2 : String(text2 ?? '');
+      Alert.alert(title, message);
     },
   };
   const [copiedId, setCopiedId] = useState<string | null>(null);

@@ -255,7 +255,7 @@ export function ProviderReviews() {
       setResponseText('');
     } catch (err: any) {
       const msg = err?.response?.data?.message || err?.message || 'Fehler beim Senden der Antwort';
-      Alert.alert('Fehler', msg);
+      Alert.alert('Fehler', String(msg));
     }
   };
   

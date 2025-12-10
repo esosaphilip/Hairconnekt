@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import Card from '../../components/Card';
 import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { http } from '../../api/http';
 
 
 // --- Helper Components for List Items ---
@@ -99,6 +100,36 @@ export function ProviderSettingsScreen() {
   const [autoAcceptBookings, setAutoAcceptBookings] = useState(false);
   const [allowWalkIns, setAllowWalkIns] = useState(true);
 
+  // --- Load settings from backend ---
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await http.get('/providers/settings');
+        const s = res?.data || {};
+        if (!active) return;
+        if (typeof s.pushNotifications === 'boolean') setPushNotifications(s.pushNotifications);
+        if (typeof s.emailNotifications === 'boolean') setEmailNotifications(s.emailNotifications);
+        if (typeof s.bookingAlerts === 'boolean') setBookingAlerts(s.bookingAlerts);
+        if (typeof s.messageAlerts === 'boolean') setMessageAlerts(s.messageAlerts);
+        if (typeof s.reviewAlerts === 'boolean') setReviewAlerts(s.reviewAlerts);
+        if (typeof s.marketingEmails === 'boolean') setMarketingEmails(s.marketingEmails);
+        if (typeof s.showPhoneNumber === 'boolean') setShowPhoneNumber(s.showPhoneNumber);
+        if (typeof s.showEmail === 'boolean') setShowEmail(s.showEmail);
+        if (typeof s.profileVisible === 'boolean') setProfileVisible(s.profileVisible);
+        if (typeof s.autoAcceptBookings === 'boolean') setAutoAcceptBookings(s.autoAcceptBookings);
+        if (typeof s.allowWalkIns === 'boolean') setAllowWalkIns(s.allowWalkIns);
+      } catch {}
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const saveSetting = async (key: string, value: boolean) => {
+    try {
+      await http.patch('/providers/settings', { [key]: value });
+    } catch {}
+  };
+
   // --- Functions ---
   const handleDeactivateAccount = () => {
     Alert.alert(
@@ -135,7 +166,7 @@ export function ProviderSettingsScreen() {
               title="Push-Benachrichtigungen"
               subtitle="Erhalte wichtige Updates auf deinem Gerät"
               checked={pushNotifications}
-              onToggle={setPushNotifications}
+              onToggle={(v) => { setPushNotifications(v); saveSetting('pushNotifications', v); }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -143,7 +174,7 @@ export function ProviderSettingsScreen() {
               title="E-Mail-Benachrichtigungen"
               subtitle="Wichtige Updates per E-Mail"
               checked={emailNotifications}
-              onToggle={setEmailNotifications}
+              onToggle={(v) => { setEmailNotifications(v); saveSetting('emailNotifications', v); }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -151,7 +182,7 @@ export function ProviderSettingsScreen() {
               title="Buchungsbenachrichtigungen"
               subtitle="Bei neuen Buchungen benachrichtigen"
               checked={bookingAlerts}
-              onToggle={setBookingAlerts}
+              onToggle={(v) => { setBookingAlerts(v); saveSetting('bookingAlerts', v); }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -159,7 +190,7 @@ export function ProviderSettingsScreen() {
               title="Nachrichtenbenachrichtigungen"
               subtitle="Bei neuen Nachrichten benachrichtigen"
               checked={messageAlerts}
-              onToggle={setMessageAlerts}
+              onToggle={(v) => { setMessageAlerts(v); saveSetting('messageAlerts', v); }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -167,7 +198,7 @@ export function ProviderSettingsScreen() {
               title="Bewertungsbenachrichtigungen"
               subtitle="Bei neuen Bewertungen benachrichtigen"
               checked={reviewAlerts}
-              onToggle={setReviewAlerts}
+              onToggle={(v) => { setReviewAlerts(v); saveSetting('reviewAlerts', v); }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -175,7 +206,7 @@ export function ProviderSettingsScreen() {
               title="Marketing-E-Mails"
               subtitle="Tipps, Neuigkeiten und Angebote"
               checked={marketingEmails}
-              onToggle={setMarketingEmails}
+              onToggle={(v) => { setMarketingEmails(v); saveSetting('marketingEmails', v); }}
             />
           </Card>
         </View>
@@ -187,7 +218,7 @@ export function ProviderSettingsScreen() {
             <LinkItem
               icon="lock"
               title="Passwort ändern"
-              onPress={() => Alert.alert("Info", "Passwort ändern - Funktion in Entwicklung")}
+              onPress={() => {}}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -195,7 +226,7 @@ export function ProviderSettingsScreen() {
               title="Telefonnummer anzeigen"
               subtitle="Kunden können deine Nummer sehen"
               checked={showPhoneNumber}
-              onToggle={setShowPhoneNumber}
+              onToggle={(v) => { setShowPhoneNumber(v); saveSetting('showPhoneNumber', v); }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -203,7 +234,7 @@ export function ProviderSettingsScreen() {
               title="E-Mail-Adresse anzeigen"
               subtitle="Kunden können deine E-Mail sehen"
               checked={showEmail}
-              onToggle={setShowEmail}
+              onToggle={(v) => { setShowEmail(v); saveSetting('showEmail', v); }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -211,13 +242,13 @@ export function ProviderSettingsScreen() {
               title="Profil sichtbar"
               subtitle="In Suchergebnissen anzeigen"
               checked={profileVisible}
-              onToggle={setProfileVisible}
+              onToggle={(v) => { setProfileVisible(v); saveSetting('profileVisible', v); }}
             />
             <View style={styles.divider} />
             <LinkItem
               icon="shield"
               title="Datenschutzeinstellungen"
-              onPress={() => Alert.alert("Info", "Datenschutzeinstellungen - Funktion in Entwicklung")}
+              onPress={() => {}}
             />
           </Card>
         </View>
@@ -264,7 +295,7 @@ export function ProviderSettingsScreen() {
               icon="globe"
               title="Sprache"
               subtitle="Deutsch"
-              onPress={() => Alert.alert("Info", "Sprache ändern - Funktion in Entwicklung")}
+              onPress={() => {}}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -283,12 +314,12 @@ export function ProviderSettingsScreen() {
           <Card style={styles.cardContainer}>
             <LinkItem
               title="Nutzungsbedingungen"
-              onPress={() => Alert.alert("Info", "Nutzungsbedingungen anzeigen")}
+              onPress={() => {}}
             />
             <View style={styles.divider} />
             <LinkItem
               title="Datenschutzerklärung"
-              onPress={() => Alert.alert("Info", "Datenschutzerklärung anzeigen")}
+              onPress={() => {}}
             />
             <View style={styles.divider} />
             <View style={styles.versionContainer}>
