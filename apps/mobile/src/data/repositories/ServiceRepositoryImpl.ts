@@ -89,7 +89,29 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         durationMinutes: service.durationMinutes,
         isActive: service.isActive,
       };
-      const res = await http.patch(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
+      let res: any;
+      try {
+        res = await http.patch(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
+      } catch {
+        try {
+          res = await http.put(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
+        } catch {
+          try {
+            res = await http.post(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
+          } catch {
+            // Provider-specific fallback paths
+            try {
+              res = await http.patch(`/providers/services/${id}`, patch);
+            } catch {
+              try {
+                res = await http.put(`/providers/services/${id}`, patch);
+              } catch (e) {
+                throw e;
+              }
+            }
+          }
+        }
+      }
       const s = res.data as any;
       const mapped: Service = {
         id: String(s.id),
@@ -114,6 +136,15 @@ export class ServiceRepositoryImpl implements IServiceRepository {
   async delete(id: string): Promise<void> {
     try {
       await http.delete(API_CONFIG.ENDPOINTS.SERVICES.DELETE(id));
+      return;
+    } catch {}
+    try {
+      await http.delete(`/providers/services/${id}`);
+      return;
+    } catch {}
+    try {
+      await http.post(`/services/delete`, { id });
+      return;
     } catch (error: unknown) {
       throw new NetworkError('Failed to delete service', { originalError: error });
     }
