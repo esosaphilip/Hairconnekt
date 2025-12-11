@@ -8,6 +8,7 @@ import { Switch } from 'react-native';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
 import { http } from '../../api/http';
 import { providersApi } from '@/services/providers';
+import { useNavigation } from '@react-navigation/native';
 
 const BLOCK_REASONS: { value: BlockReason; label: string }[] = [
   { value: 'pause', label: 'Pause' },
@@ -34,6 +35,7 @@ type DayValue = 'monday' | 'tuesday' | 'wednesday' | 'thursday' | 'friday' | 'sa
 type RepeatEndType = 'never' | 'date' | 'count';
 
 export function BlockTimeScreen() {
+  const navigation = useNavigation<any>();
   const [reason, setReason] = useState<BlockReason>('vacation');
   const [customReason, setCustomReason] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -71,7 +73,9 @@ export function BlockTimeScreen() {
   };
 
   const navToCalendar = () => {
-    // Navigation back to calendar can be integrated here
+    try {
+      navigation.goBack();
+    } catch {}
   };
 
   const handleBlock = async () => {
@@ -88,8 +92,7 @@ export function BlockTimeScreen() {
         return;
       }
 
-      const payload = {
-        providerId,
+      const basePayload = {
         reason,
         customReason: reason === 'other' ? customReason : undefined,
         startDate,
@@ -104,15 +107,20 @@ export function BlockTimeScreen() {
         repeatEndDate: repeat && repeatEndType === 'date' ? repeatEndDate : undefined,
         repeatCount: repeat && repeatEndType === 'count' ? repeatCount : undefined,
         notes,
-      };
+      } as any;
+      const payload = providerId ? { ...basePayload, providerId } : basePayload;
 
       try {
-        await http.post('/blocked-time', payload);
+        await http.post('/providers/blocked-time', payload);
       } catch (err: any) {
-        const msg = err?.response?.data?.message || err?.message || 'Zeit konnte nicht blockiert werden';
-        setError(msg);
-        Alert.alert('Fehler', String(msg));
-        return;
+        try {
+          await http.post('/blocked-time', payload);
+        } catch (err2: any) {
+          const msg = err2?.response?.data?.message || err2?.message || err?.response?.data?.message || err?.message || 'Zeit konnte nicht blockiert werden';
+          setError(msg);
+          Alert.alert('Fehler', String(msg));
+          return;
+        }
       }
       Alert.alert('Erfolg', 'Zeit wurde erfolgreich blockiert.');
       navToCalendar();
