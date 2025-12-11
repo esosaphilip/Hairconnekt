@@ -57,7 +57,12 @@ export function PortfolioManagementScreen() {
         const bundle = await getAuthBundle();
         const providerId = bundle?.user?.id;
         if (!providerId) throw new Error('Nicht authentifiziert');
-        const res = await http.get(`/provider/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
+        let res: any;
+        try {
+          res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
+        } catch {
+          res = await http.get(`/provider/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
+        }
         type RawPortfolioItem = { id: string; imageUrl?: string; title?: string; category?: string; uploadedAt?: string };
         const items = Array.isArray(res?.data?.items) ? (res.data.items as RawPortfolioItem[]) : [];
         const mapped = items.map((it) => ({ id: it.id, image: it.imageUrl || '', title: it.title, category: it.category, createdAt: it.uploadedAt }));
@@ -95,7 +100,11 @@ export function PortfolioManagementScreen() {
   const handleDelete = async (id: string) => {
     try {
       setLoading(true);
-      await http.delete(`/portfolio/${id}`);
+      try {
+        await http.delete(`/providers/portfolio/${id}`);
+      } catch {
+        await http.delete(`/portfolio/${id}`);
+      }
       setPortfolioData(portfolioData.filter(item => item.id !== id));
     } catch (e) {
       const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Löschen fehlgeschlagen';
