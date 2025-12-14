@@ -49,11 +49,11 @@ export function AddEditServiceScreen() {
 
   const [formData, setFormData] = useState({
     name: '',
-    categoryId: '',
+    category: '',
     description: '',
     price: 100,
     duration: 180,
-    deposit: 20,
+    deposit: 0,
     isActive: true,
     allowOnlineBooking: true,
     requiresConsultation: false,
@@ -78,18 +78,19 @@ export function AddEditServiceScreen() {
     (async () => {
       if (!serviceId) return;
       try {
-        const res = await http.get('/services/provider');
-        const items: any[] = Array.isArray(res.data) ? res.data : (res.data?.items ?? []);
-        const found = items.find((s) => String(s.id) === String(serviceId));
+        const res = await http.get('/providers/me/services');
+        const data = (res?.data && (res.data as any).data) ? (res.data as any).data : res?.data;
+        const items: any[] = (data?.services ?? data?.items ?? []);
+        const found = items.find((s: any) => String(s.id) === String(serviceId));
         if (found) {
           setFormData({
             name: String(found.name || ''),
-            categoryId: String(found?.category?.id || ''),
+            category: String(found?.category || ''),
             description: found?.description || '',
-            price: typeof found.priceCents === 'number' ? Math.round(found.priceCents / 100) : (typeof found.price_cents === 'number' ? Math.round(found.price_cents / 100) : 100),
-            duration: typeof found.durationMinutes === 'number' ? found.durationMinutes : (typeof found.duration_minutes === 'number' ? found.duration_minutes : 180),
-            deposit: 20,
-            isActive: !!(found.isActive ?? found.is_active),
+            price: typeof found.price === 'number' ? found.price : 100,
+            duration: typeof found.duration === 'number' ? found.duration : 180,
+            deposit: 0,
+            isActive: !!found.isActive,
             allowOnlineBooking: true,
             requiresConsultation: false,
           });
@@ -145,7 +146,7 @@ export function AddEditServiceScreen() {
       setMessage('Bitte einen Service-Namen eingeben');
       return;
     }
-    if (!isEditing && !formData.categoryId) {
+    if (!isEditing && !formData.category) {
       setMessage('Bitte wähle eine Kategorie');
       return;
     }
@@ -153,36 +154,25 @@ export function AddEditServiceScreen() {
     setLoading(true);
     setError(null);
 
-    const serviceDataBase = {
+    const body: any = {
       name: formData.name,
-      description: formData.description,
-      priceCents: Math.round(Number(formData.price || 0) * 100),
-      durationMinutes: Number(formData.duration || 0),
+      category: formData.category,
+      duration: Number(formData.duration || 0),
+      durationUnit: 'fixed',
+      price: Number(formData.price || 0),
+      priceType: 'fixed',
+      description: formData.description || undefined,
       isActive: !!formData.isActive,
     };
-    const categoryIdPayload = formData.categoryId ? { categoryId: formData.categoryId } : {};
 
     try {
       if (isEditing && serviceId) {
-        await http.patch(`/services/${serviceId}` as any, serviceDataBase);
-        setMessage('Service aktualisiert!');
+        await http.put(`/providers/me/services/${serviceId}`, body);
+        setMessage('Dienst aktualisiert');
       } else {
-        const profile: any = await providersApi.getMyProfile();
-        const providerId = profile?.id || profile?.provider?.id;
-        if (!providerId) {
-          throw new Error('Provider-ID fehlt. Bitte Profil prüfen.');
-        }
-        const payload = {
-          provider_id: String(providerId),
-          category_id: formData.categoryId,
-          name: serviceDataBase.name,
-          description: serviceDataBase.description || undefined,
-          price_cents: serviceDataBase.priceCents,
-          duration_minutes: serviceDataBase.durationMinutes,
-          is_active: serviceDataBase.isActive,
-        };
-        await http.post('/services', payload);
-        setMessage('Service erstellt!');
+        const res = await http.post('/providers/me/services', body);
+        const msg = (res?.data && (res.data as any)?.data?.message) || 'Dienst gespeichert';
+        setMessage(String(msg));
       }
 
       if (Platform.OS === 'web') {
@@ -250,10 +240,10 @@ export function AddEditServiceScreen() {
             {categoriesLoading ? (
               <Text style={styles.mutedNote}>Lade Kategorien…</Text>
             ) : (
-              <Picker
-                selectedValue={formData.categoryId}
-                onValueChange={(v: string) => setFormData({ ...formData, categoryId: v })}
-                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.nameDe ?? 'Kategorie', value: c.id }))]}
+            <Picker
+                selectedValue={formData.category}
+                onValueChange={(v: string) => setFormData({ ...formData, category: v })}
+                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.nameDe ?? 'Kategorie', value: (c.nameDe ?? c.name ?? '') }))]}
               />
             )}
             {categoriesError && <Text style={styles.feedbackError}>{categoriesError}</Text>}

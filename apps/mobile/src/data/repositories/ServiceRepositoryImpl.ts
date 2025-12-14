@@ -13,37 +13,21 @@ import { providersApi } from '@/services/providers';
 export class ServiceRepositoryImpl implements IServiceRepository {
   async list(): Promise<Service[]> {
     try {
-      const adapt = (res: any): any[] => {
-        const raw = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
-        return Array.isArray(raw) ? raw : [];
-      };
-      let res: any;
-      try {
-        res = await http.get(API_CONFIG.ENDPOINTS.SERVICES.LIST);
-      } catch {
-        try {
-          res = await http.get('/provider/services');
-        } catch {
-          try {
-            res = await http.get('/providers/services');
-          } catch {
-            res = await http.get('/services');
-          }
-        }
-      }
-      const raw = adapt(res);
-      const items: Service[] = (raw as any[]).map((s) => ({
+      const res = await http.get('/providers/me/services');
+      const payload = res?.data;
+      const list = payload && typeof payload === 'object' && 'success' in payload && 'data' in payload
+        ? (payload as any).data?.services ?? []
+        : (Array.isArray(payload) ? payload : (payload?.items ?? payload?.services ?? []));
+      const items: Service[] = (Array.isArray(list) ? list : []).map((s: any) => ({
         id: String(s.id),
         name: String(s.name || ''),
         description: s.description ?? null,
-        category: s.category
-          ? { id: String(s.category.id), nameDe: s.category.nameDe ?? s.category.name_de, nameEn: s.category.nameEn ?? s.category.name_en }
-          : null,
-        priceCents: typeof s.priceCents === 'number' ? s.priceCents : (typeof s.price_cents === 'number' ? s.price_cents : 0),
-        durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : (typeof s.duration_minutes === 'number' ? s.duration_minutes : 60),
-        isActive: !!(s.isActive ?? s.is_active),
-        createdAt: s.createdAt ? new Date(s.createdAt) : (s.created_at ? new Date(s.created_at) : new Date()),
-        updatedAt: s.updatedAt ? new Date(s.updatedAt) : (s.updated_at ? new Date(s.updated_at) : new Date()),
+        category: s.category ? { id: String(s.category), nameDe: String(s.category), nameEn: String(s.category) } : null,
+        priceCents: typeof s.price === 'number' ? Math.round(s.price * 100) : 0,
+        durationMinutes: typeof s.duration === 'number' ? s.duration : 60,
+        isActive: !!s.isActive,
+        createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
+        updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
       }));
       return items;
     } catch (error: unknown) {
@@ -66,55 +50,28 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
   async create(service: Service): Promise<Service> {
     try {
-      const profile: any = await providersApi.getMyProfile();
-      const providerId = profile?.id || profile?.provider?.id;
       const payload = {
-        provider_id: String(providerId || ''),
-        category_id: (service as any)?.categoryId || (service as any)?.category?.id || undefined,
         name: service.name,
+        category: (service as any)?.categoryName || (service as any)?.category?.nameDe || (service as any)?.category?.name || '',
+        duration: Number(service.durationMinutes || 0),
+        durationUnit: 'fixed',
+        price: (service.priceCents || 0) / 100,
+        priceType: 'fixed',
         description: service.description ?? undefined,
-        price_cents: Number(service.priceCents || 0),
-        duration_minutes: Number(service.durationMinutes || 0),
-        is_active: !!service.isActive,
+        isActive: !!service.isActive,
       } as Record<string, unknown>;
-      let res: any;
-      try {
-        res = await http.post(API_CONFIG.ENDPOINTS.SERVICES.CREATE, payload);
-      } catch {
-        // Try provider-specific path with snake_case
-        try {
-          res = await http.post('/provider/services', payload);
-        } catch {
-          // Try legacy/camelCase payload on provider API
-          const camel = {
-            providerId: String(providerId || ''),
-            categoryId: (service as any)?.categoryId || (service as any)?.category?.id || undefined,
-            name: service.name,
-            description: service.description ?? undefined,
-            priceCents: Number(service.priceCents || 0),
-            durationMinutes: Number(service.durationMinutes || 0),
-            isActive: !!service.isActive,
-          } as Record<string, unknown>;
-          try {
-            res = await http.post('/api/v1/provider/services', camel);
-          } catch (e) {
-            throw e;
-          }
-        }
-      }
-      const s = res.data as any;
+      const res = await http.post('/providers/me/services', payload);
+      const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const mapped: Service = {
-        id: String(s.id),
-        name: String(s.name || ''),
+        id: String(s.serviceId || s.id),
+        name: String(s.name || service.name || ''),
         description: s.description ?? null,
-        category: s.category
-          ? { id: String(s.category.id), nameDe: s.category.nameDe ?? s.category.name_de, nameEn: s.category.nameEn ?? s.category.name_en }
-          : null,
-        priceCents: typeof s.priceCents === 'number' ? s.priceCents : (typeof s.price_cents === 'number' ? s.price_cents : 0),
-        durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : (typeof s.duration_minutes === 'number' ? s.duration_minutes : 60),
-        isActive: !!(s.isActive ?? s.is_active),
-        createdAt: s.createdAt ? new Date(s.createdAt) : (s.created_at ? new Date(s.created_at) : new Date()),
-        updatedAt: s.updatedAt ? new Date(s.updatedAt) : (s.updated_at ? new Date(s.updated_at) : new Date()),
+        category: payload.category ? { id: String(payload.category), nameDe: String(payload.category), nameEn: String(payload.category) } : null,
+        priceCents: Math.round(((s.price as number) ?? payload.price as number) * 100),
+        durationMinutes: Number((s.duration as number) ?? payload.duration as number),
+        isActive: typeof s.isActive === 'boolean' ? s.isActive : !!payload.isActive,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
       return mapped;
     } catch (error: unknown) {
@@ -133,49 +90,28 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       if (!existing) {
         throw new NotFoundError('Service', id);
       }
-      const patch: any = {
+      const body: any = {
         name: service.name,
+        category: (service as any)?.categoryName || (service as any)?.category?.nameDe,
+        duration: service.durationMinutes != null ? Number(service.durationMinutes) : undefined,
+        durationUnit: 'fixed',
+        price: service.priceCents != null ? Number(service.priceCents) / 100 : undefined,
+        priceType: 'fixed',
         description: service.description,
-        price_cents: service.priceCents != null ? Number(service.priceCents) : undefined,
-        duration_minutes: service.durationMinutes != null ? Number(service.durationMinutes) : undefined,
-        is_active: service.isActive,
+        isActive: service.isActive,
       };
-      let res: any;
-      try {
-        res = await http.patch(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
-      } catch {
-        try {
-          res = await http.put(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
-        } catch {
-          try {
-            res = await http.post(API_CONFIG.ENDPOINTS.SERVICES.UPDATE(id), patch);
-          } catch {
-            // Provider-specific fallback paths
-            try {
-              res = await http.patch(`/providers/services/${id}`, patch);
-            } catch {
-              try {
-                res = await http.put(`/providers/services/${id}`, patch);
-              } catch (e) {
-                throw e;
-              }
-            }
-          }
-        }
-      }
-      const s = res.data as any;
+      const res = await http.put(`/providers/me/services/${id}`, body);
+      const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const mapped: Service = {
-        id: String(s.id),
-        name: String(s.name || ''),
+        id: String(s.serviceId || id),
+        name: String(s.name || existing.name || ''),
         description: s.description ?? null,
-        category: s.category
-          ? { id: String(s.category.id), nameDe: s.category.nameDe ?? s.category.name_de, nameEn: s.category.nameEn ?? s.category.name_en }
-          : null,
-        priceCents: typeof s.priceCents === 'number' ? s.priceCents : (typeof s.price_cents === 'number' ? s.price_cents : 0),
-        durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : (typeof s.duration_minutes === 'number' ? s.duration_minutes : 60),
-        isActive: !!(s.isActive ?? s.is_active),
-        createdAt: s.createdAt ? new Date(s.createdAt) : (s.created_at ? new Date(s.created_at) : new Date()),
-        updatedAt: s.updatedAt ? new Date(s.updatedAt) : (s.updated_at ? new Date(s.updated_at) : new Date()),
+        category: body.category ? { id: String(body.category), nameDe: String(body.category), nameEn: String(body.category) } : null,
+        priceCents: Math.round(((s.price as number) ?? body.price as number ?? 0) * 100),
+        durationMinutes: Number((s.duration as number) ?? body.duration as number ?? existing.durationMinutes),
+        isActive: typeof s.isActive === 'boolean' ? s.isActive : !!body.isActive,
+        createdAt: existing.createdAt,
+        updatedAt: new Date(),
       };
       return mapped;
     } catch (error: unknown) {
@@ -191,15 +127,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
   async delete(id: string): Promise<void> {
     try {
-      await http.delete(API_CONFIG.ENDPOINTS.SERVICES.DELETE(id));
-      return;
-    } catch {}
-    try {
-      await http.delete(`/providers/services/${id}`);
-      return;
-    } catch {}
-    try {
-      await http.post(`/services/delete`, { id });
+      await http.delete(`/providers/me/services/${id}`);
       return;
     } catch (error: unknown) {
       const status = (error as any)?.response?.status;
@@ -212,6 +140,19 @@ export class ServiceRepositoryImpl implements IServiceRepository {
   }
 
   async toggleActive(id: string, isActive: boolean): Promise<Service> {
-    return this.update(id, { isActive });
+    try {
+      const res = await http.patch(`/providers/me/services/${id}/toggle-active`, { isActive });
+      const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
+      const updated = await this.getById(id);
+      if (!updated) throw new NotFoundError('Service', id);
+      return { ...updated, isActive: !!(s?.isActive ?? isActive) };
+    } catch (error: unknown) {
+      const status = (error as any)?.response?.status;
+      const message = (error as any)?.response?.data?.message;
+      if (status === 400) throw new Error(message || 'Ungültige Daten');
+      if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
+      throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
+    }
   }
 }
