@@ -29,9 +29,23 @@ export function getErrorMessage(error: unknown): string {
     if (status === 403) return MESSAGES.ERROR.FORBIDDEN;
     if (status === 404) return MESSAGES.ERROR.NOT_FOUND;
     if (typeof status === 'number' && status >= 500) return MESSAGES.ERROR.SERVER;
-    if (typeof msgFromData === 'string' && msgFromData.trim()) return msgFromData;
-    if (typeof msgFromOriginal === 'string' && msgFromOriginal.trim()) return msgFromOriginal;
-    if (typeof error.message === 'string' && error.message.trim()) return error.message;
+    
+    // Sanitize backend validation messages
+    const sanitizeValidation = (msg: string) => {
+      if (
+        msg.includes('must be a number') ||
+        msg.includes('must not be less than') ||
+        msg.includes('must be one of the following values') ||
+        msg.includes('conforming to the specified constraints')
+      ) {
+        return 'Bitte überprüfen Sie Ihre Eingaben (ungültiges Format).';
+      }
+      return msg;
+    };
+
+    if (typeof msgFromData === 'string' && msgFromData.trim()) return sanitizeValidation(msgFromData);
+    if (typeof msgFromOriginal === 'string' && msgFromOriginal.trim()) return sanitizeValidation(msgFromOriginal);
+    if (typeof error.message === 'string' && error.message.trim()) return sanitizeValidation(error.message);
     return MESSAGES.ERROR.NETWORK;
   }
   if (error instanceof DomainError) {
