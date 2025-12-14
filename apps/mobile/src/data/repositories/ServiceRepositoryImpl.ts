@@ -73,7 +73,12 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       };
       return mapped;
     } catch (error: unknown) {
-      throw new NetworkError('Failed to create service', { originalError: error });
+      const status = (error as any)?.response?.status;
+      const message = (error as any)?.response?.data?.message;
+      if (status === 400) throw new Error(message || 'Ungültige Daten');
+      if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
+      throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
 
@@ -130,7 +135,12 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       return mapped;
     } catch (error: unknown) {
       if (error instanceof NotFoundError) throw error;
-      throw new NetworkError('Failed to update service', { originalError: error });
+      const status = (error as any)?.response?.status;
+      const message = (error as any)?.response?.data?.message;
+      if (status === 400) throw new Error(message || 'Ungültige Daten');
+      if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
+      throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
 
@@ -147,7 +157,12 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       await http.post(`/services/delete`, { id });
       return;
     } catch (error: unknown) {
-      throw new NetworkError('Failed to delete service', { originalError: error });
+      const status = (error as any)?.response?.status;
+      const message = (error as any)?.response?.data?.message;
+      if (status === 400) throw new Error(message || 'Ungültige Daten');
+      if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
+      throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
 

@@ -11,7 +11,7 @@ import Textarea from '@/components/textarea';
 import { Badge } from '@/components/badge';
 import { Switch } from 'react-native';
 import { colors, spacing, typography } from '@/theme/tokens';
-import { http } from '../../api/http';
+import { http } from '@/api/http';
 import { useServices } from '@/presentation/hooks/useServices';
 import { showError, showSuccess } from '@/presentation/utils/errorHandler';
 import { MESSAGES } from '@/constants';
@@ -28,16 +28,54 @@ export function ServicesManagementScreen() {
   const [description, setDescription] = useState('');
   const [active, setActive] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [manualCategoryId, setManualCategoryId] = useState<string>('');
   const [categories, setCategories] = useState<Array<{ id: string; nameDe?: string; name_de?: string }>>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
 
   useEffect(() => {
-    (async () => {
+    const normalize = (raw: any): Array<{ id: string; nameDe?: string; name_de?: string }> => {
+      const arr = Array.isArray(raw) ? raw : (raw?.items ?? []);
+      return (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name_de ?? c.name }));
+    };
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      setCategoriesError(null);
       try {
-        const res = await http.get('/services/categories');
-        const items = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
-        setCategories(items as Array<{ id: string; nameDe?: string; name_de?: string }>);
-      } catch {}
-    })();
+        // Try primary path
+        try {
+          const res = await http.get('/services/categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        // Fall back to provider paths
+        try {
+          const res = await http.get('/provider/services/categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        try {
+          const res = await http.get('/providers/services/categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        // Generic fallbacks
+        try {
+          const res = await http.get('/service-categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        try {
+          const res = await http.get('/categories', { params: { type: 'service', locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        setCategoriesError('Keine Kategorien gefunden. Bitte versuche es erneut.');
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    fetchCategories();
   }, []);
 
   const activeServices = useMemo(() => services.filter(s => s.isActive), [services]);
@@ -140,11 +178,42 @@ export function ServicesManagementScreen() {
             <View style={{ gap: spacing.sm }}>
               <View>
                 <Text style={styles.label}>Service-Kategorie *</Text>
-                <Picker
-                  selectedValue={selectedCategoryId}
-                  onValueChange={(v: string) => setSelectedCategoryId(v)}
-                  items={[{ label: 'Kategorie wählen...', value: '' }, ...categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))]}
-                />
+                {categoriesLoading ? (
+                  <Text style={{ color: colors.gray600 }}>Kategorien werden geladen…</Text>
+                ) : (
+                  <Picker
+                    selectedValue={selectedCategoryId}
+                    onValueChange={(v: string) => setSelectedCategoryId(v)}
+                    items={[{ label: 'Kategorie wählen...', value: '' }, ...categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))]}
+                  />
+                )}
+                {categoriesError && (
+                  <View style={{ marginTop: spacing.xs }}>
+                    <Text style={{ color: colors.error }}>{categoriesError}</Text>
+                    <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
+                      <Button title="Neu laden" variant="outline" onPress={() => {
+                        setCategoriesError(null);
+                        setCategoriesLoading(true);
+                        // trigger reload by calling the same effect logic
+                        (async () => {
+                          try {
+                            const res = await http.get('/services/categories', { params: { locale: 'de' } });
+                            const arr = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
+                            const items = (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
+                            setCategories(items);
+                          } catch {}
+                          setCategoriesLoading(false);
+                        })();
+                      }} />
+                    </View>
+                  </View>
+                )}
+                {(!categoriesLoading && categories.length === 0) && (
+                  <View style={{ marginTop: spacing.sm }}>
+                    <Text style={styles.label}>Kategorie-ID (Fallback)</Text>
+                    <Input value={manualCategoryId} onChangeText={setManualCategoryId} placeholder="Kategorie-ID eingeben" />
+                  </View>
+                )}
               </View>
               <View>
                 <Text style={styles.label}>Name *</Text>
@@ -174,7 +243,8 @@ export function ServicesManagementScreen() {
                       Alert.alert('Fehler', 'Bitte einen Namen eingeben');
                       return;
                     }
-                    if (!selectedCategoryId) {
+                    const finalCategoryId = selectedCategoryId || manualCategoryId;
+                    if (!finalCategoryId) {
                       Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
                       return;
                     }
@@ -190,7 +260,7 @@ export function ServicesManagementScreen() {
                     }
                     try {
                       setSaving(true);
-                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: selectedCategoryId });
+                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: finalCategoryId });
                       setAdding(false);
                       setName('');
                       setPrice('');
@@ -198,6 +268,7 @@ export function ServicesManagementScreen() {
                       setDescription('');
                       setActive(true);
                       setSelectedCategoryId('');
+                      setManualCategoryId('');
                       showSuccess(MESSAGES.SUCCESS.SAVE);
                     } catch (err) {
                       showError(err);
