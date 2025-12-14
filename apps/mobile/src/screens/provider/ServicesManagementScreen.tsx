@@ -260,7 +260,7 @@ export function ServicesManagementScreen() {
                       return;
                     }
                     const finalCategoryId = selectedCategoryId;
-                    if (!finalCategoryId) {
+                    if (categories.length > 0 && !finalCategoryId) {
                       Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
                       return;
                     }
@@ -276,7 +276,7 @@ export function ServicesManagementScreen() {
                     }
                     try {
                       setSaving(true);
-                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: finalCategoryId });
+                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: finalCategoryId || undefined });
                       setAdding(false);
                       setName('');
                       setPrice('');

@@ -13,8 +13,25 @@ import { providersApi } from '@/services/providers';
 export class ServiceRepositoryImpl implements IServiceRepository {
   async list(): Promise<Service[]> {
     try {
-      const res = await http.get(API_CONFIG.ENDPOINTS.SERVICES.LIST);
-      const raw = Array.isArray(res.data) ? res.data : (res.data?.items ?? []);
+      const adapt = (res: any): any[] => {
+        const raw = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
+        return Array.isArray(raw) ? raw : [];
+      };
+      let res: any;
+      try {
+        res = await http.get(API_CONFIG.ENDPOINTS.SERVICES.LIST);
+      } catch {
+        try {
+          res = await http.get('/provider/services');
+        } catch {
+          try {
+            res = await http.get('/providers/services');
+          } catch {
+            res = await http.get('/services');
+          }
+        }
+      }
+      const raw = adapt(res);
       const items: Service[] = (raw as any[]).map((s) => ({
         id: String(s.id),
         name: String(s.name || ''),
@@ -30,7 +47,11 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       }));
       return items;
     } catch (error: unknown) {
-      throw new NetworkError('Failed to fetch services', { originalError: error });
+      const status = (error as any)?.response?.status;
+      const message = (error as any)?.response?.data?.message;
+      if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
+      throw new Error(message || 'Failed to fetch services');
     }
   }
 
