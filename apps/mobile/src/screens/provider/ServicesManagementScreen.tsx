@@ -286,8 +286,21 @@ export function ServicesManagementScreen() {
                       setSelectedCategoryId('');
                       setManualCategoryId('');
                       showSuccess(MESSAGES.SUCCESS.SAVE);
-                    } catch (err) {
-                      showError(err);
+                    } catch (err: unknown) {
+                      const msg = (err as any)?.response?.data?.message || (err instanceof Error ? err.message : 'Fehler beim Speichern');
+                      if (typeof msg === 'string' && msg.includes('must be a number')) {
+                        // Suppress technical validation errors with user friendly one
+                        Alert.alert('Fehler', 'Bitte überprüfe deine Eingaben (Preis und Dauer müssen Zahlen sein)');
+                      } else if (typeof msg === 'string' && msg.includes('priceCents must not be less than')) {
+                        Alert.alert('Fehler', 'Ungültiger Preis oder Dauer');
+                      } else {
+                         // Only show if not a 500 error
+                        if ((err as any)?.response?.status !== 500) {
+                          Alert.alert('Fehler', typeof msg === 'string' ? msg : 'Service konnte nicht gespeichert werden');
+                        } else {
+                          Alert.alert('Fehler', 'Service konnte nicht gespeichert werden. Bitte versuche es später erneut.');
+                        }
+                      }
                     } finally {
                       setSaving(false);
                     }
