@@ -12,6 +12,8 @@ import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { logger } from '@/services/logger';
 import { API_CONFIG, MESSAGES } from '@/constants';
 import { getErrorMessage } from '@/presentation/utils/errorHandler';
+import { useProviderGate } from '@/hooks/useProviderGate';
+import { useNavigation } from '@react-navigation/native';
 // Removed unused ProviderTabsParamList import
 
 type NextAppointment = {
@@ -93,6 +95,7 @@ function statusToBadge(status: string) {
 }
 
 export function ProviderDashboard() {
+  const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void };
   const [isAvailable, setIsAvailable] = useState(true);
   const [profile, setProfile] = useState<{ name?: string; avatarUrl?: string | null } | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -121,6 +124,19 @@ export function ProviderDashboard() {
     load();
     return () => { mounted = false; };
   }, []);
+
+  // Gate non-approved/non-provider users away from provider dashboard
+  const { status, checked } = useProviderGate();
+  useEffect(() => {
+    if (!checked) return;
+    try {
+      if (status === 'pending') {
+        navigation.navigate('ProviderPendingApproval');
+      } else if (status === 'not_provider') {
+        navigation.navigate('ProviderWelcome');
+      }
+    } catch {}
+  }, [status, checked]);
 
   const todayLabel = useMemo(() => safeLocaleDateString(new Date(), 'de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), []);
 
