@@ -24,11 +24,7 @@ const useNavigation = () => ({
   goBack: () => console.log('Navigating back...'),
   navigate: (screen: string, params?: Record<string, unknown>) => console.log(`Navigating to ${screen} with params: ${JSON.stringify(params)}`),
 });
-const useRoute = (): { params: { id: string } } => ({
-  params: {
-    id: 'req-123',
-  },
-});
+const useRoute = (): { params: { id: string } } => ({ params: { id: 'req-123' } });
 
 // Mock for displaying notifications in React Native
 const toast = {
@@ -126,22 +122,36 @@ export function AppointmentRequestScreen() {
   const [selectedAlternative, setSelectedAlternative] = useState<number | null>(null);
   const [customMessage, setCustomMessage] = useState<string>("");
 
-  const handleAccept = () => {
-    // Logic to accept...
-    toast.success("Buchungsanfrage angenommen!");
-    setShowAcceptDialog(false);
-    setTimeout(() => navigation.navigate("ProviderCalendar"), 1500);
+  const handleAccept = async () => {
+    try {
+      const res = await providerAppointmentsApi.accept(String(id));
+      const msg = res?.message || 'Termin bestätigt';
+      toast.success(msg);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Bestätigung fehlgeschlagen';
+      toast.error(msg);
+    } finally {
+      setShowAcceptDialog(false);
+      setTimeout(() => navigation.navigate('ProviderCalendar'), 1500);
+    }
   };
 
-  const handleDecline = () => {
+  const handleDecline = async () => {
     if (!declineReason && !customMessage) {
-      toast.error("Bitte gib einen Grund für die Ablehnung an");
+      toast.error('Bitte gib einen Grund für die Ablehnung an');
       return;
     }
-    // Logic to decline...
-    toast.success("Buchungsanfrage abgelehnt");
-    setShowDeclineDialog(false);
-    setTimeout(() => navigation.navigate("ProviderDashboard"), 1500);
+    try {
+      const res = await providerAppointmentsApi.decline(String(id), { reason: (declineReason || 'other') as any, messageToClient: customMessage || undefined });
+      const msg = res?.message || 'Anfrage abgelehnt';
+      toast.success(msg);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Ablehnung fehlgeschlagen';
+      toast.error(msg);
+    } finally {
+      setShowDeclineDialog(false);
+      setTimeout(() => navigation.navigate('ProviderDashboard'), 1500);
+    }
   };
 
   const handleProposeAlternative = () => {
@@ -561,3 +571,4 @@ const styles = StyleSheet.create({
     color: '#374151',
   }
 });
+import { providerAppointmentsApi } from '@/api/providerAppointments';

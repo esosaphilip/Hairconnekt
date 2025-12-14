@@ -119,34 +119,19 @@ export function CreateAppointmentScreen() {
         Alert.alert('Fehler', 'Bitte wähle mindestens einen Service');
         return;
       }
-      if (!providerId) {
-        Alert.alert('Fehler', 'Anbieterprofil konnte nicht geladen werden');
-        return;
-      }
-      const start = `${time}:00`;
-      const totalDuration = selectedServices.reduce((sum, id) => {
-        const svc = services.find((s) => s.id === id);
-        return sum + (svc?.durationMinutes || 60);
-      }, 0);
-      const [hh, mm] = time.split(':').map((t) => parseInt(t, 10));
-      const endDateObj = new Date(2000, 0, 1, hh || 0, mm || 0, 0);
-      endDateObj.setMinutes(endDateObj.getMinutes() + totalDuration);
-      const endH = String(endDateObj.getHours()).padStart(2, '0');
-      const endM = String(endDateObj.getMinutes()).padStart(2, '0');
-      const end = `${endH}:${endM}:00`;
-
-      const payload = {
-        providerId,
-        clientId: selectedClient,
+      const body: any = {
+        clientId: clientMode === 'existing' ? selectedClient : undefined,
+        newClient: clientMode === 'new' ? { name: newClient.name, phone: newClient.phone, email: newClient.email || undefined } : undefined,
         serviceIds: selectedServices,
-        appointmentDate: date,
-        startTime: start,
-        endTime: end,
-        notes,
-      } as any;
+        date,
+        startTime: time,
+        notes: notes || undefined,
+      };
 
       try {
-        await http.post(API_CONFIG.ENDPOINTS.APPOINTMENTS.CREATE, payload);
+        const res = await providersApi.createProviderAppointment(body);
+        const msg = res?.message || 'Termin erstellt!';
+        Alert.alert('Erfolg', msg);
       } catch (err: any) {
         const msg = err?.response?.data?.message || err?.message || 'Termin konnte nicht erstellt werden';
         setError(msg);
