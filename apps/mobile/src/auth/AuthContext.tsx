@@ -45,23 +45,47 @@ export function AuthProvider({ children }: PropsWithChildren) {
     return off;
   }, []);
 
-  const login = useCallback(async (emailOrPhone: string, password: string): Promise<{ user: PublicUser | null; tokens: Tokens }> => {
+  const login = useCallback(async (emailOrPhone: string, password: string, deviceId?: string): Promise<{ user: PublicUser | null; tokens: Tokens }> => {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      // eslint-disable-next-line no-console
-      if (typeof __DEV__ !== 'undefined' && __DEV__) console.log('[Auth] Login: POST /auth/login');
+      // Try provider-specific login first (new contract), then fall back
       // Ensure we do not attach any stale Authorization header during public login
-      const res = await http.post('/auth/login', { emailOrPhone, password }, { headers: { 'x-skip-auth': 'true' } });
-      const user: PublicUser | null = (res.data?.user as PublicUser) || null;
-      const tokens: Tokens | null = (res.data?.tokens as Tokens) || null;
-      if (!tokens?.accessToken) throw new Error('Login failed');
-      await saveAuthBundle({ user, tokens });
-      setState({ user: user || null, tokens, loading: false, error: null });
+      let res: any;
+      try {
+        if (typeof __DEV__ !== 'undefined' && __DEV__) console.log('[Auth] Login: POST /auth/provider/login');
+        res = await http.post(
+          '/auth/provider/login',
+          { email: emailOrPhone, password, deviceId },
+          { headers: { 'x-skip-auth': 'true' } },
+        );
+        const success = !!res?.data?.success;
+        if (success && res?.data?.data?.accessToken) {
+          const tokens: Tokens = { accessToken: res.data.data.accessToken, refreshToken: res.data.data.refreshToken };
+          const p = res.data.data.provider || {};
+          const user: PublicUser = {
+            id: String(p.id || ''),
+            email: p.email || emailOrPhone,
+            firstName: p.firstName || null,
+            lastName: p.lastName || null,
+            userType: 'provider',
+          };
+          await saveAuthBundle({ user, tokens });
+          setState({ user, tokens, loading: false, error: null });
+          setAuthDisabled(false);
+          return { user, tokens };
+        }
+        // If success false or missing tokens, fall through to classic login
+      } catch {}
+      if (typeof __DEV__ !== 'undefined' && __DEV__) console.log('[Auth] Login: fallback POST /auth/login');
+      res = await http.post('/auth/login', { emailOrPhone, password }, { headers: { 'x-skip-auth': 'true' } });
+      const userClassic: PublicUser | null = (res.data?.user as PublicUser) || null;
+      const tokensClassic: Tokens | null = (res.data?.tokens as Tokens) || null;
+      if (!tokensClassic?.accessToken) throw new Error('Login failed');
+      await saveAuthBundle({ user: userClassic, tokens: tokensClassic });
+      setState({ user: userClassic || null, tokens: tokensClassic, loading: false, error: null });
       setAuthDisabled(false);
-      // eslint-disable-next-line no-console
-      if (typeof __DEV__ !== 'undefined' && __DEV__) console.log('[Auth] Login: success. userType =', user?.userType);
-      // Return the authenticated user and tokens so callers can make immediate decisions (e.g., role gating)
-      return { user, tokens: tokens as Tokens };
+      if (typeof __DEV__ !== 'undefined' && __DEV__) console.log('[Auth] Login: classic success. userType =', userClassic?.userType);
+      return { user: userClassic, tokens: tokensClassic as Tokens };
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Login failed';
       setState({ user: null, tokens: null, loading: false, error: msg });
