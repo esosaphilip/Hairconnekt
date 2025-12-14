@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, View, Text, Pressable, StyleSheet, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { rootNavigationRef } from '@/navigation/rootNavigation';
+import { useProviderGate } from '@/hooks/useProviderGate';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -99,6 +101,19 @@ export function ProviderClients() {
   const goToClient = (id: string) => {
     navigation.navigate('ProviderClientDetail', { id });
   };
+
+  // Gate non-approved/non-provider users
+  const { status, checked } = useProviderGate();
+  React.useEffect(() => {
+    if (!checked) return;
+    try {
+      if (status === 'pending') {
+        rootNavigationRef.current?.navigate('ProviderPendingApproval');
+      } else if (status === 'not_provider') {
+        rootNavigationRef.current?.navigate('ProviderWelcome');
+      }
+    } catch {}
+  }, [status, checked]);
 
   return (
     <SafeAreaView style={styles.container}>

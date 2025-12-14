@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, View, Text, Pressable, ScrollView, ActivityIndicator, Dimensions, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
+import { useProviderGate } from '@/hooks/useProviderGate';
+import { useNavigation } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
@@ -18,6 +20,7 @@ import { MESSAGES } from '@/constants';
 const daysOfWeek = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
 export function ProviderCalendar() {
+  const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void };
   const today = new Date();
   const [currentDate, setCurrentDate] = useState(today);
   const [selectedDate, setSelectedDate] = useState<number>(today.getDate());
@@ -74,6 +77,19 @@ useEffect(() => {
       cancelled = true;
     };
   }, [isAuthenticated, isProviderRole]);
+
+  // Provider gate: redirect pending/non-provider
+  const { status, checked } = useProviderGate();
+  useEffect(() => {
+    if (!checked) return;
+    try {
+      if (status === 'pending') {
+        navigation.navigate('ProviderPendingApproval');
+      } else if (status === 'not_provider') {
+        navigation.navigate('ProviderWelcome');
+      }
+    } catch {}
+  }, [status, checked]);
 
   // Initialize from navigation params (targetDate: YYYY-MM-DD, viewMode: 'day'|'week'|'month')
   useEffect(() => {
