@@ -444,7 +444,8 @@ export class ProvidersService {
     const limit = typeof params.limit === 'number' ? params.limit : 20;
 
     if (!isFinite(lat) || !isFinite(lon)) {
-      throw new BadRequestException('Missing or invalid lat/lon');
+      // Instead of throwing 400, just return empty items if location is missing (e.g. initial dashboard load)
+      return { items: [] };
     }
 
     // Haversine formula (in kilometers) using Postgres math functions

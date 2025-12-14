@@ -55,12 +55,12 @@ export class ServiceRepositoryImpl implements IServiceRepository {
     try {
       const payload = {
         name: service.name,
-        categoryId: (service as any)?.category?.id || (service as any)?.categoryId, // Prefer ID
-        durationMinutes: Number(service.durationMinutes || 0),
-        priceCents: (service.priceCents || 0),
+        categoryId: (service as any)?.category?.id || (service as any)?.categoryId,
+        durationMinutes: Math.max(0, parseInt(String(service.durationMinutes || 0), 10)),
+        priceCents: Math.max(0, parseInt(String(service.priceCents || 0), 10)),
         priceType: 'FIXED',
         description: service.description ?? undefined,
-        isActive: service.isActive !== undefined ? !!service.isActive : true,
+        isActive: service.isActive !== undefined ? Boolean(service.isActive) : true,
       };
       // Correct endpoint: POST /services
       const res = await http.post('/services', payload);
@@ -78,12 +78,13 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       };
       return mapped;
     } catch (error: unknown) {
+      console.log('Create Service Error:', JSON.stringify((error as any)?.response?.data));
       const status = (error as any)?.response?.status;
       const message = (error as any)?.response?.data?.message;
       if (status === 400) throw new Error(message || 'Ungültige Daten');
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
       if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
-      throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
+      throw new Error(message || 'Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
 
@@ -96,10 +97,10 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const body: any = {
         name: service.name,
         categoryId: (service as any)?.category?.id || (service as any)?.categoryId,
-        durationMinutes: service.durationMinutes != null ? Number(service.durationMinutes) : undefined,
-        priceCents: service.priceCents != null ? Number(service.priceCents) : undefined,
+        durationMinutes: service.durationMinutes != null ? Math.max(0, parseInt(String(service.durationMinutes), 10)) : undefined,
+        priceCents: service.priceCents != null ? Math.max(0, parseInt(String(service.priceCents), 10)) : undefined,
         description: service.description,
-        isActive: service.isActive,
+        isActive: service.isActive !== undefined ? Boolean(service.isActive) : undefined,
       };
       // Correct endpoint: PATCH /services/:id
       const res = await http.patch(`/services/${id}`, body);
@@ -118,12 +119,13 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       return mapped;
     } catch (error: unknown) {
       if (error instanceof NotFoundError) throw error;
+      console.log('Update Service Error:', JSON.stringify((error as any)?.response?.data));
       const status = (error as any)?.response?.status;
       const message = (error as any)?.response?.data?.message;
       if (status === 400) throw new Error(message || 'Ungültige Daten');
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
       if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
-      throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
+      throw new Error(message || 'Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
 

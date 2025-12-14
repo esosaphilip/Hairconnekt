@@ -63,6 +63,16 @@ function normalizeProvider(input: Record<string, unknown>): ProviderSummary {
   };
 }
 
+// Helper to ensure valid ISO 8601 date strings
+function toIsoString(d: any): string {
+  if (!d) return new Date().toISOString();
+  if (d instanceof Date) return d.toISOString();
+  // If it's already a string, try to parse it to check validity, otherwise return as is or current date
+  const parsed = new Date(d);
+  if (!isNaN(parsed.getTime())) return parsed.toISOString();
+  return new Date().toISOString();
+}
+
 export const providersApi = {
   async nearby(params: { lat: number; lon: number; radiusKm?: number; limit?: number }): Promise<ProviderSummary[]> {
     const { lat, lon, radiusKm = 25, limit = 10 } = params;
@@ -140,22 +150,23 @@ export const providersApi = {
     return (payload as any) ?? { appointmentId: '' };
   },
 
+
   async blockTimeCreate(body: {
     startDate: string; endDate?: string; isAllDay: boolean; startTime?: string; endTime?: string;
     reason: string; notes?: string;
     recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
   }): Promise<{ blockId: string; message?: string }> {
     const payload = {
-      startDate: body.startDate,
-      endDate: body.endDate || body.startDate,
-      allDay: body.isAllDay,
+      startDate: toIsoString(body.startDate),
+      endDate: body.endDate ? toIsoString(body.endDate) : toIsoString(body.startDate),
+      allDay: Boolean(body.isAllDay),
       startTime: body.startTime,
       endTime: body.endTime,
       reason: body.reason,
       notes: body.notes,
-      repeat: !!body.recurring,
+      repeat: Boolean(body.recurring),
       repeatFrequency: body.recurring?.frequency,
-      repeatEndDate: body.recurring?.endsOn,
+      repeatEndDate: body.recurring?.endsOn ? toIsoString(body.recurring.endsOn) : undefined,
     };
     const res = await http.post('/blocked-time', payload);
     const data = res?.data;
@@ -171,16 +182,16 @@ export const providersApi = {
     recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
   }): Promise<{ blockId: string; message?: string }> {
     const payload = {
-      startDate: body.startDate,
-      endDate: body.endDate || body.startDate,
-      allDay: body.isAllDay,
+      startDate: toIsoString(body.startDate),
+      endDate: body.endDate ? toIsoString(body.endDate) : toIsoString(body.startDate),
+      allDay: Boolean(body.isAllDay),
       startTime: body.startTime,
       endTime: body.endTime,
       reason: body.reason,
       notes: body.notes,
-      repeat: !!body.recurring,
+      repeat: Boolean(body.recurring),
       repeatFrequency: body.recurring?.frequency,
-      repeatEndDate: body.recurring?.endsOn,
+      repeatEndDate: body.recurring?.endsOn ? toIsoString(body.recurring.endsOn) : undefined,
     };
     const res = await http.patch(`/blocked-time/${id}`, payload);
     const data = res?.data;
