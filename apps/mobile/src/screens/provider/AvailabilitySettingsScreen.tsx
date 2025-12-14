@@ -9,6 +9,7 @@ import Badge from '../../components/badge';
 import Input from '../../components/Input';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
 import { http } from '../../api/http';
+import { providersApi } from '@/services/providers';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 
 // Types
@@ -58,28 +59,33 @@ export function AvailabilitySettingsScreen() {
   });
 
   useEffect(() => {
-    // Fetch existing availability via provider profile
     const fetchAvailability = async () => {
       setLoading(true);
       try {
-        const response = await http.get('/providers/me');
-        const data: {
-          id: string;
-          availability?: Array<{ weekday: DayKey; start: string; end: string }>;
-        } = response.data || {};
-        const slots = Array.isArray(data.availability) ? data.availability : [];
-        const newSchedule = { ...schedule };
-        slots.forEach((slot) => {
-          const day = slot.weekday as DayKey;
-          if (newSchedule[day]) {
-            newSchedule[day].isWorkday = true;
-            newSchedule[day].slots.push({ start: slot.start, end: slot.end });
-          }
-        });
-        setSchedule(newSchedule);
-      } catch (err) {
-        // Ignore if not found; user may be new provider
-      }
+        const data = await providersApi.getAvailabilitySettings();
+        if (data?.weeklySchedule) {
+          const ws = data.weeklySchedule as Record<string, { isAvailable: boolean; startTime?: string; endTime?: string; breaks?: Array<{ start: string; end: string }> }>;
+          const newSchedule: WeekSchedule = { ...schedule };
+          (Object.keys(ws) as DayKey[]).forEach((day: DayKey) => {
+            const d = ws[day];
+            if (!d) return;
+            newSchedule[day].isWorkday = !!d.isAvailable;
+            const slots: TimeSlot[] = [];
+            if (d.startTime && d.endTime) slots.push({ start: d.startTime, end: d.endTime });
+            (d.breaks || []).forEach((b) => slots.push({ start: b.start, end: b.end }));
+            newSchedule[day].slots = slots;
+          });
+          setSchedule(newSchedule);
+        }
+        if (typeof data?.bufferTimeBetweenAppointments === 'number') setBufferTime(data.bufferTimeBetweenAppointments);
+        if (data?.advanceBooking) {
+          if (typeof data.advanceBooking.minimumNotice === 'number') setMinAdvanceHours(data.advanceBooking.minimumNotice);
+          if (typeof data.advanceBooking.maximumWindow === 'number') setAdvanceBookingDays(data.advanceBooking.maximumWindow);
+        }
+        if (typeof data?.autoBlockHolidays === 'boolean') {
+          // reserved for future toggle
+        }
+      } catch {}
       setLoading(false);
     };
     fetchAvailability();
@@ -182,13 +188,26 @@ export function AvailabilitySettingsScreen() {
     });
 
     try {
-      await http.patch('/providers', {
-        bufferTimeMinutes: bufferTime,
-        advanceBookingDays,
-        acceptsSameDayBooking: sameDayBooking,
-      });
-      await http.post('/providers/availability', { slots });
-      setMessage('Verfügbarkeit erfolgreich gespeichert!');
+      const weeklySchedule = ((): any => {
+        const obj: any = {};
+        (Object.entries(schedule) as [DayKey, DaySchedule][]).forEach(([day, d]) => {
+          obj[day] = {
+            isAvailable: !!d.isWorkday,
+            startTime: d.slots[0]?.start,
+            endTime: d.slots[0]?.end,
+            breaks: d.slots.slice(1).map((s) => ({ start: s.start, end: s.end })),
+          };
+        });
+        return obj;
+      })();
+      const body = {
+        weeklySchedule,
+        bufferTimeBetweenAppointments: bufferTime,
+        advanceBooking: { minimumNotice: minAdvanceHours, maximumWindow: advanceBookingDays },
+        autoBlockHolidays: false,
+      };
+      await providersApi.updateAvailabilitySettings(body);
+      setMessage('Verfügbarkeit gespeichert');
       if (Platform.OS === 'web') {
         try {
           // Navigate back to More screen on web
