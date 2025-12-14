@@ -104,6 +104,7 @@ export type ProviderClientsStackParamList = {
 export type ProviderMoreStackParamList = {
   ProviderMore: undefined;
   ProviderProfileScreen: undefined;
+  ProviderNotificationsScreen: undefined;
   ProviderPublicProfileScreen: { id?: string; providerId?: string } | undefined;
   ProviderServicesScreen: { mode?: 'add' | 'edit'; serviceId?: string } | undefined;
   AddEditServiceScreen: { serviceId?: string } | undefined;
