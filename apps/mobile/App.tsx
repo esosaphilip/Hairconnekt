@@ -54,6 +54,7 @@ import { ProviderSettingsScreen } from '@/screens/provider/ProviderSettingsScree
 import { ProviderHelpScreen } from '@/screens/provider/ProviderHelpScreen';
 import { PayoutRequestScreen } from '@/screens/provider/PayoutRequestScreen';
 import { ProviderReviews } from '@/screens/provider/ProviderReviews';
+import ProviderNotificationsScreen from '@/screens/provider/ProviderNotificationsScreen';
 import { TransactionsScreen } from '@/screens/provider/TransactionsScreen';
 import { BookingFlow } from '@/screens/clients/BookingFlow';
 import { ChatScreen } from '@/screens/shared/ChatScreen';
@@ -199,6 +200,7 @@ function ProviderMoreStackScreen() {
       {/* Finanzen */}
       <ProviderMoreStack.Screen name="PayoutRequestScreen" component={PayoutRequestScreen} options={{ title: 'Auszahlung beantragen' }} />
       <ProviderMoreStack.Screen name="TransactionsScreen" component={TransactionsScreen} options={{ title: 'Transaktionen' }} />
+      <ProviderMoreStack.Screen name="ProviderNotificationsScreen" component={ProviderNotificationsScreen} options={{ title: 'Benachrichtigungen' }} />
       <ProviderMoreStack.Screen name="ProviderAnalyticsScreen" component={ProviderAnalyticsScreen} options={{ title: 'Statistiken & Berichte' }} />
       <ProviderMoreStack.Screen name="ProviderVouchersScreen" component={ProviderVouchersScreen} options={{ title: 'Gutscheine & Angebote' }} />
       <ProviderMoreStack.Screen name="CreateEditVoucherScreen" component={CreateEditVoucherScreen} options={{ title: 'Gutschein' }} />

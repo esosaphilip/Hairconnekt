@@ -219,11 +219,7 @@ export function ProviderDashboard() {
                 <Pressable
                   style={styles.headerActionButton}
                   onPress={() => {
-                    try {
-                      navigation.navigate('Mehr', { screen: 'ProviderNotificationsScreen' });
-                    } catch {
-                      try { navigation.navigate('ProviderNotificationsScreen' as any); } catch {}
-                    }
+                    navigation.navigate('Mehr', { screen: 'ProviderNotificationsScreen' });
                   }}
                 >
                   <Ionicons name="notifications-outline" size={22} color={colors.gray700} />
