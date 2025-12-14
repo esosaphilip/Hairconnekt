@@ -6,7 +6,7 @@ import Button from '../../components/Button';
 import Input from '../../components/Input';
 import { Switch } from 'react-native';
 import { colors, spacing, radii, typography } from '../../theme/tokens';
-import { http } from '../../api/http';
+import { http } from '@/api/http';
 import { providersApi } from '@/services/providers';
 import { useNavigation } from '@react-navigation/native';
 
@@ -108,36 +108,18 @@ export function BlockTimeScreen() {
         return d;
       };
 
-      const basePayload = {
+      const payload = {
+        startDate: toISO(startDate),
+        endDate: endDate ? toISO(endDate) : undefined,
+        isAllDay: !!allDay,
+        startTime: allDay ? undefined : startTime,
+        endTime: allDay ? undefined : endTime,
         reason,
-        custom_reason: reason === 'other' ? customReason : undefined,
-        start_date: toISO(startDate),
-        end_date: toISO(endDate || startDate),
-        start_time: allDay ? null : startTime,
-        end_time: allDay ? null : endTime,
-        all_day: !!allDay,
-        repeat,
-        repeat_frequency: repeat ? repeatFrequency : undefined,
-        repeat_days: repeat && repeatFrequency === 'weekly' ? repeatDays : undefined,
-        repeat_end_type: repeat ? repeatEndType : undefined,
-        repeat_end_date: repeat && repeatEndType === 'date' ? toISO(repeatEndDate) : undefined,
-        repeat_count: repeat && repeatEndType === 'count' ? repeatCount : undefined,
         notes,
+        recurring: repeat ? { frequency: repeatFrequency, endsOn: repeatEndType === 'date' ? toISO(repeatEndDate || startDate) : toISO(endDate || startDate) } : undefined,
       } as any;
-      const payload = providerId ? { ...basePayload, provider_id: providerId } : basePayload;
 
-      try {
-        await http.post('/providers/blocked-time', payload);
-      } catch (err: any) {
-        try {
-          await http.post('/blocked-time', payload);
-        } catch (err2: any) {
-          const msg = err2?.response?.data?.message || err2?.message || err?.response?.data?.message || err?.message || 'Zeit konnte nicht blockiert werden';
-          setError(msg);
-          Alert.alert('Fehler', String(msg));
-          return;
-        }
-      }
+      await providersApi.blockTimeCreate(payload);
       Alert.alert('Erfolg', 'Zeit wurde erfolgreich blockiert.');
       navToCalendar();
     } catch (e: unknown) {

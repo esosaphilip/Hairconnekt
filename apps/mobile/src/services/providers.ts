@@ -119,4 +119,55 @@ export const providersApi = {
     }
     return (payload as any) ?? { appointments: [], blockedSlots: [], availableSlots: [] };
   },
+
+  async createProviderAppointment(body: {
+    clientId?: string;
+    newClient?: { name: string; phone: string; email?: string };
+    serviceIds: string[];
+    date: string;
+    startTime: string;
+    notes?: string;
+  }): Promise<{ appointmentId: string; message?: string; clientNotified?: boolean }> {
+    const res = await http.post('/appointments/provider-create', body);
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data ?? { appointmentId: '' };
+    }
+    return (payload as any) ?? { appointmentId: '' };
+  },
+
+  async blockTimeCreate(body: {
+    startDate: string; endDate?: string; isAllDay: boolean; startTime?: string; endTime?: string;
+    reason: string; notes?: string;
+    recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
+  }): Promise<{ blockId: string; message?: string }> {
+    const res = await http.post('/providers/calendar/block-time', body);
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data ?? { blockId: '' };
+    }
+    return (payload as any) ?? { blockId: '' };
+  },
+
+  async blockTimeUpdate(id: string, body: {
+    startDate: string; endDate?: string; isAllDay: boolean; startTime?: string; endTime?: string;
+    reason: string; notes?: string;
+    recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
+  }): Promise<{ blockId: string; message?: string }> {
+    const res = await http.patch(`/providers/calendar/block-time/${id}`, body);
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data ?? { blockId: id };
+    }
+    return (payload as any) ?? { blockId: id };
+  },
+
+  async blockTimeDelete(id: string): Promise<{ message?: string }> {
+    const res = await http.delete(`/providers/calendar/block-time/${id}`);
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload) {
+      return { message: (payload as any)?.message };
+    }
+    return (payload as any) ?? {};
+  },
 };
