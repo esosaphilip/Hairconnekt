@@ -18,8 +18,7 @@ import Card from '@/components/Card';
 // Removed unused Input import
 import Icon from '@/components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '@/theme/tokens';
-import { paymentsApi, centsToEuros, PLATFORM_FEE_RATE } from '@/api/payments';
-import { getProviderAppointments } from '@/api/appointments';
+import { providerFinanceApi } from '@/api/providerFinance';
 
 // --- Constants ---
 const minimumPayout = 50; // TODO: fetch from backend settings if available
@@ -42,22 +41,12 @@ export function PayoutRequestScreen() {
     let mounted = true;
     async function loadData() {
       try {
-        const [completed, payoutsRes] = await Promise.all([
-          // Backend expects lowercase status group values: 'completed' | 'upcoming' | 'cancelled'
-          getProviderAppointments('completed'),
-          paymentsApi.listProviderPayouts(),
-        ]);
-
-        if (!mounted) return;
-
-        const completedNetCents = (completed.items || []).reduce((sum, a) => sum + (a.totalPriceCents || 0), 0) * (1 - PLATFORM_FEE_RATE);
-        const reservedOrPaidOutCents = (payoutsRes.items || []).reduce((sum, p) => sum + (p.amountCents || 0), 0);
-        const computedAvailable = Math.max(0, centsToEuros(completedNetCents - reservedOrPaidOutCents));
-        setAvailableBalance(computedAvailable);
-        setAmount(computedAvailable.toFixed(2));
-        setPayouts(payoutsRes.items || []);
+        const overview = await providerFinanceApi.earningsOverview({ period: 'month' });
+        const available = Number(overview?.summary?.availableForPayout || 0);
+        setAvailableBalance(available);
+        setAmount(available.toFixed(2));
       } catch (err) {
-        console.warn('Failed to load payouts/appointments', err);
+        console.warn('Failed to load earnings overview', err);
       }
     }
     loadData();
@@ -83,10 +72,13 @@ export function PayoutRequestScreen() {
     }
     setIsSubmitting(true);
     try {
-      await paymentsApi.requestPayout({ amount: parsedAmount, currency: 'eur', iban });
+      await providerFinanceApi.requestPayout({ amount: parsedAmount, bankAccountId: 'default', payoutMethod: 'bank_transfer' });
       Alert.alert('Erfolg', 'Auszahlung beantragt! Du erhältst eine Bestätigung per E-Mail.');
-      const payoutsRes = await paymentsApi.listProviderPayouts();
-      setPayouts(payoutsRes.items || []);
+      try {
+        const overview = await providerFinanceApi.earningsOverview({ period: 'month' });
+        const available = Number(overview?.summary?.availableForPayout || 0);
+        setAvailableBalance(available);
+      } catch {}
       navigation.navigate('TransactionsScreen');
     } catch (err) {
       const anyErr = err as unknown as { response?: { data?: { message?: string } } };
@@ -260,7 +252,7 @@ export function PayoutRequestScreen() {
                 return (
                   <View key={payout.id || index} style={[styles.payoutItem, index < 2 && styles.payoutSeparator, index > 0 && { marginTop: SPACING.xs }]}>
                     <View>
-                      <Text style={styles.payoutAmount}>€{centsToEuros(payout.amountCents).toFixed(2)}</Text>
+                      <Text style={styles.payoutAmount}>€{((payout.amountCents || 0) / 100).toFixed(2)}</Text>
                       <Text style={styles.payoutDate}>{dateStr ? new Date(dateStr).toLocaleDateString('de-DE') : ''}</Text>
                     </View>
                     <View style={styles.payoutStatus}>

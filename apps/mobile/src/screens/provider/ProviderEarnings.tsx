@@ -7,8 +7,7 @@ import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { ProviderMoreStackParamList } from "@/navigation/types";
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ScrollView, StyleProp, ViewStyle } from "react-native";
-import { getProviderAppointments, AppointmentListItem } from "@/api/appointments";
-import { paymentsApi, PLATFORM_FEE_RATE, centsToEuros } from "@/api/payments";
+import { providerFinanceApi } from "@/api/providerFinance";
 
 // Minimal inline Card component to replace missing import
 type CardProps = { children: React.ReactNode; style?: StyleProp<ViewStyle> };
@@ -252,69 +251,30 @@ export function ProviderEarnings() {
 
   useEffect(() => {
     let mounted = true;
-    async function loadFinancials() {
+    (async () => {
       try {
-        const [completed, upcoming, payoutsRes] = await Promise.all([
-          // API expects a StatusGroup ('upcoming' | 'completed' | 'cancelled'), not an object
-          getProviderAppointments('completed'),
-          getProviderAppointments('upcoming'),
-          paymentsApi.listProviderPayouts(),
-        ]);
-
-        if (!mounted) return;
-
-        // Compute balances
-        const completedGrossCents = (completed.items || []).reduce(
-          (sum: number, a: AppointmentListItem) => sum + (a.totalPriceCents || 0),
-          0
-        );
-        const completedNetCents = completedGrossCents * (1 - PLATFORM_FEE_RATE);
-        // paymentsApi.listProviderPayouts() returns { items, count }
-        const reservedOrPaidOutCents = (payoutsRes.items || []).reduce(
-          (sum: number, p) => sum + (p.amountCents || 0),
-          0
-        );
-        setAvailableBalance(Math.max(0, centsToEuros(completedNetCents - reservedOrPaidOutCents)));
-
-        const upcomingGrossCents = (upcoming.items || []).reduce(
-          (sum: number, a: AppointmentListItem) => sum + (a.totalPriceCents || 0),
-          0
-        );
-        const upcomingNetCents = upcomingGrossCents * (1 - PLATFORM_FEE_RATE);
-        setPendingPayments(centsToEuros(upcomingNetCents));
-
-        // Build recent transactions from appointments
-        const mapApptToItem = (a: AppointmentListItem): TransactionItemTS => {
-          const dateStr = `${a.appointmentDate}T${(a.startTime || '00:00:00')}`;
-          const dt = new Date(dateStr);
-          return {
-            id: String(a.id || `${a.appointmentDate}-${a.startTime}`),
-            date: dt.toLocaleString('de-DE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
-            client: a.client?.name || 'Kunde',
-            service: (a.services || []).map((s: { name: string }) => s.name).join(', '),
-            gross: centsToEuros(a.totalPriceCents || 0),
-            fee: centsToEuros((a.totalPriceCents || 0) * PLATFORM_FEE_RATE),
-            net: centsToEuros((a.totalPriceCents || 0) * (1 - PLATFORM_FEE_RATE)),
-            status: a.status === 'COMPLETED' ? 'paid' as const : 'pending' as const,
-          };
-        };
-        const recent: TransactionItemTS[] = [
-          ...((completed.items || []).map(mapApptToItem)),
-          ...((upcoming.items || []).map(mapApptToItem)),
-        ]
-          .sort((a, b) => {
-            // sort descending by date (approximate, using string parse)
-            const ad = new Date(a.date.replace(' ', ' ')).getTime();
-            const bd = new Date(b.date.replace(' ', ' ')).getTime();
-            return bd - ad;
-          })
-          .slice(0, 5);
-        setRecentTransactions(recent);
+        const overview = await providerFinanceApi.earningsOverview({ period: 'month' });
+        if (mounted && overview?.summary) {
+          setAvailableBalance(Number(overview.summary.availableForPayout || 0));
+          setPendingPayments(Number(overview.summary.pendingPayouts || 0));
+        }
+        const tx = await providerFinanceApi.transactions({ page: 1, limit: 5 });
+        const transactions = Array.isArray(tx?.transactions) ? tx.transactions : [];
+        const mapped = transactions.map((t: any) => ({
+          id: String(t.id),
+          date: new Date(t.date).toLocaleString('de-DE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }),
+          client: t.client?.name || 'Kunde',
+          service: (t.services || []).join(', '),
+          gross: Number(t.amount || 0),
+          fee: 0,
+          net: Number(t.amount || 0),
+          status: (t.status === 'paid' ? 'paid' : (t.status === 'pending' ? 'pending' : 'pending')) as 'paid' | 'pending',
+        }));
+        if (mounted) setRecentTransactions(mapped);
       } catch (err) {
         console.warn('Failed to load provider earnings', err);
       }
-    }
-    loadFinancials();
+    })();
     return () => { mounted = false; };
   }, []);
 

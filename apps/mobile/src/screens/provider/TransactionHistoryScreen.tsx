@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -28,96 +28,7 @@ const toast = {
   error: (message: string) => console.log(`TOAST ERROR: ${message}`),
 };
 
-// --- Types and Mock Data (can be kept largely the same) ---
-const mockTransactions = [
-  // ... (Mock data remains unchanged)
-  {
-    id: "txn-001",
-    type: "payment",
-    amount: 95.0,
-    status: "completed",
-    date: "15. Nov 2025",
-    time: "14:30",
-    description: "Box Braids - Medium",
-    client: "Sarah Müller",
-    reference: "APP-1234",
-  },
-  {
-    id: "txn-002",
-    type: "payout",
-    amount: -450.0,
-    status: "completed",
-    date: "14. Nov 2025",
-    time: "09:00",
-    description: "Auszahlung auf Bankkonto",
-    reference: "PAY-5678",
-  },
-  {
-    id: "txn-003",
-    type: "payment",
-    amount: 65.0,
-    status: "completed",
-    date: "13. Nov 2025",
-    time: "16:15",
-    description: "Cornrows",
-    client: "Maria Klein",
-    reference: "APP-1233",
-  },
-  {
-    id: "txn-004",
-    type: "fee",
-    amount: -9.5,
-    status: "completed",
-    date: "13. Nov 2025",
-    time: "16:20",
-    description: "Plattformgebühr (10%)",
-    reference: "FEE-1233",
-  },
-  {
-    id: "txn-005",
-    type: "payment",
-    amount: 120.0,
-    status: "pending",
-    date: "12. Nov 2025",
-    time: "11:00",
-    description: "Knotless Braids",
-    client: "Anna Schmidt",
-    reference: "APP-1232",
-  },
-  {
-    id: "txn-006",
-    type: "refund",
-    amount: -45.0,
-    status: "completed",
-    date: "11. Nov 2025",
-    time: "10:30",
-    description: "Rückerstattung - Terminabsage",
-    client: "Lisa Weber",
-    reference: "REF-9876",
-  },
-  {
-    id: "txn-007",
-    type: "payment",
-    amount: 85.0,
-    status: "completed",
-    date: "10. Nov 2025",
-    time: "13:45",
-    description: "Twists",
-    client: "Emma Becker",
-    reference: "APP-1231",
-  },
-  {
-    id: "txn-008",
-    type: "payment",
-    amount: 75.0,
-    status: "failed",
-    date: "09. Nov 2025",
-    time: "15:20",
-    description: "Box Braids - Small",
-    client: "Sophie Meyer",
-    reference: "APP-1230",
-  },
-];
+import { providerFinanceApi } from '@/api/providerFinance';
 
 
 // --- Config Helpers Refactored for RN Styles/Icons ---
@@ -193,14 +104,40 @@ const getTypeConfig = (type: TxnType) => {
   return { label: 'Sonstige', color: colors.gray };
 };
 
+type Txn = { id: string; type: 'payment' | 'payout' | 'refund' | 'fee'; amount: number; status: 'completed' | 'pending' | 'failed'; date: string; time?: string; description: string; client?: string; reference?: string };
+
 export function TransactionHistoryScreen() {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterPeriod, setFilterPeriod] = useState<string>("all"); // Period filter is not used in logic but kept for UI
+  const [transactionsData, setTransactionsData] = useState<Txn[]>([]);
 
-  const filteredTransactions = mockTransactions.filter((txn) => {
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await providerFinanceApi.transactions({ page: 1, limit: 50 });
+        const items: any[] = Array.isArray(data?.transactions) ? data.transactions : [];
+        const mapped: Txn[] = items.map((t: any) => ({
+          id: String(t.id),
+          type: (t.status === 'paid' ? 'payment' : (t.status === 'refunded' ? 'refund' : (t.amount < 0 ? 'payout' : 'payment'))),
+          amount: Number(t.amount || 0),
+          status: (t.status === 'paid' ? 'completed' : (t.status === 'pending' ? 'pending' : 'failed')),
+          date: new Date(t.date).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' }),
+          time: new Date(t.date).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
+          description: (t.services || []).join(', '),
+          client: t.client?.name,
+          reference: t.referenceNumber,
+        }));
+        if (!cancelled) setTransactionsData(mapped);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const filteredTransactions = transactionsData.filter((txn: Txn) => {
     const matchesSearch =
       txn.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       txn.client?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -212,17 +149,17 @@ export function TransactionHistoryScreen() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const totalIncome = mockTransactions
-    .filter((t) => t.type === "payment" && t.status === "completed" && t.amount > 0)
-    .reduce((sum, t) => sum + t.amount, 0);
+  const totalIncome = transactionsData
+    .filter((t: Txn) => t.type === "payment" && t.status === "completed" && t.amount > 0)
+    .reduce((sum: number, t: Txn) => sum + t.amount, 0);
 
-  const totalPayout = mockTransactions
-    .filter((t) => t.type === "payout" && t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const totalPayout = transactionsData
+    .filter((t: Txn) => t.type === "payout" && t.amount < 0)
+    .reduce((sum: number, t: Txn) => sum + Math.abs(t.amount), 0);
 
-  const totalFees = mockTransactions
-    .filter((t) => t.type === "fee" && t.amount < 0)
-    .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+  const totalFees = transactionsData
+    .filter((t: Txn) => t.type === "fee" && t.amount < 0)
+    .reduce((sum: number, t: Txn) => sum + Math.abs(t.amount), 0);
 
   const handleExport = () => {
     // In React Native, this would trigger a Share/Export dialog
@@ -339,7 +276,7 @@ export function TransactionHistoryScreen() {
               <Text style={styles.noResultsText}>Keine Transaktionen gefunden</Text>
             </Card>
           ) : (
-            filteredTransactions.map((transaction) => {
+            filteredTransactions.map((transaction: Txn) => {
               const statusConfig = getStatusConfig(transaction.status as TxnStatus);
               const typeConfig = getTypeConfig(transaction.type as TxnType);
               

@@ -41,8 +41,8 @@ const categories = [
 
 // --- Custom Tokens (Imported from a central theme file) ---
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
-import { http } from '../../api/http';
 import { getAuthBundle } from '../../auth/tokenStorage';
+import { providerPortfolioApi } from '@/api/providerPortfolio';
 
 // --- Mock Image Picker Implementation ---
 // In RN, images are objects containing 'uri', 'fileName', 'fileSize', etc.
@@ -113,21 +113,10 @@ export function UploadPortfolioScreen() {
     }
     try {
       Alert.alert("Upload gestartet", "Portfolio-Bilder werden hochgeladen...");
-      const bundle = await getAuthBundle();
-      const providerId = bundle?.user?.id || '';
-      if (!providerId) {
-        Alert.alert("Fehler", "Kein Benutzer gefunden – bitte erneut anmelden");
-        return;
-      }
-      // Use the first image URL to create a portfolio entry via backend
-      const first = images[0];
-      const caption = formData.title || `Kategorie: ${formData.category}`;
-      await http.post('/portfolio/upload', {
-        providerId,
-        imageUrl: first.uri,
-        caption,
-      });
-      Alert.alert("Erfolg", "Portfolio erfolgreich aktualisiert!");
+      const meta = images.map(() => ({ serviceCategory: formData.category, caption: formData.title || undefined, isBeforeAfter: false }));
+      const response = await providerPortfolioApi.upload(images.map((img, i) => ({ uri: img.uri, name: `upload_${i}.jpg`, type: 'image/jpeg' })), meta);
+      const msg = response?.message || 'Portfolio aktualisiert!';
+      Alert.alert("Erfolg", String(msg));
       navigation.navigate("ProviderPortfolioScreen");
     } catch (e: any) {
       const msg = e?.response?.data?.message || e?.message || 'Upload fehlgeschlagen';
