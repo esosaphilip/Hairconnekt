@@ -28,10 +28,22 @@ export function ServicesManagementScreen() {
   const [description, setDescription] = useState('');
   const [active, setActive] = useState(true);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
   const [manualCategoryId, setManualCategoryId] = useState<string>('');
   const [categories, setCategories] = useState<Array<{ id: string; nameDe?: string; name_de?: string }>>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
+  const defaultCategoryNames = [
+    'Box Braids',
+    'Knotless Braids',
+    'Cornrows',
+    'Senegalese Twists',
+    'Passion Twists',
+    'Locs',
+    'Natural Hair Care',
+    'Barber Services',
+    'Other',
+  ];
 
   useEffect(() => {
     const normalize = (raw: any): Array<{ id: string; nameDe?: string; name_de?: string }> => {
@@ -178,18 +190,27 @@ export function ServicesManagementScreen() {
             <View style={{ gap: spacing.sm }}>
               <View>
                 <Text style={styles.label}>Service-Kategorie *</Text>
-                {categoriesLoading ? (
-                  <Text style={{ color: colors.gray600 }}>Kategorien werden geladen…</Text>
-                ) : (
+            {categoriesLoading ? (
+              <Text style={{ color: colors.gray600 }}>Kategorien werden geladen…</Text>
+            ) : (
                   <Picker
-                    selectedValue={selectedCategoryId}
-                    onValueChange={(v: string) => setSelectedCategoryId(v)}
-                    items={[{ label: 'Kategorie wählen...', value: '' }, ...categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))]}
+                    selectedValue={categories.length ? selectedCategoryId : selectedCategoryName}
+                    onValueChange={(v: string) => {
+                      if (categories.length) setSelectedCategoryId(v);
+                      else setSelectedCategoryName(v);
+                    }}
+                    items={
+                      [{ label: 'Kategorie wählen...', value: '' }].concat(
+                        categories.length
+                          ? categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))
+                          : defaultCategoryNames.map((name) => ({ label: name, value: name }))
+                      )
+                    }
                   />
-                )}
-                {categoriesError && (
-                  <View style={{ marginTop: spacing.xs }}>
-                    <Text style={{ color: colors.error }}>{categoriesError}</Text>
+            )}
+            {categoriesError && (
+              <View style={{ marginTop: spacing.xs }}>
+                <Text style={{ color: colors.error }}>{categoriesError}</Text>
                     <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
                       <Button title="Neu laden" variant="outline" onPress={() => {
                         setCategoriesError(null);
@@ -243,10 +264,39 @@ export function ServicesManagementScreen() {
                       Alert.alert('Fehler', 'Bitte einen Namen eingeben');
                       return;
                     }
-                    const finalCategoryId = selectedCategoryId || manualCategoryId;
+                    let finalCategoryId = selectedCategoryId || manualCategoryId;
                     if (!finalCategoryId) {
-                      Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
-                      return;
+                      if (selectedCategoryName) {
+                        try {
+                          const tryFetch = async (): Promise<string | ''> => {
+                            const normalize = (raw: any) => (Array.isArray(raw) ? raw : (raw?.items ?? [])) as any[];
+                            const tries = [
+                              () => http.get('/services/categories', { params: { locale: 'de' } }),
+                              () => http.get('/provider/services/categories', { params: { locale: 'de' } }),
+                              () => http.get('/providers/services/categories', { params: { locale: 'de' } }),
+                              () => http.get('/service-categories', { params: { locale: 'de' } }),
+                              () => http.get('/categories', { params: { type: 'service', locale: 'de' } }),
+                            ];
+                            for (const fn of tries) {
+                              try {
+                                const res = await fn();
+                                const arr = normalize(res?.data);
+                                const found = arr.find((c: any) => {
+                                  const name = c?.nameDe ?? c?.name_de ?? c?.name_en ?? c?.name;
+                                  return String(name || '').toLowerCase() === selectedCategoryName.toLowerCase();
+                                });
+                                if (found?.id) return String(found.id);
+                              } catch {}
+                            }
+                            return '';
+                          };
+                          finalCategoryId = await tryFetch();
+                        } catch {}
+                      }
+                      if (!finalCategoryId) {
+                        Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
+                        return;
+                      }
                     }
                     const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100) || 0;
                     const durationMinutes = parseInt(duration, 10) || 60;
