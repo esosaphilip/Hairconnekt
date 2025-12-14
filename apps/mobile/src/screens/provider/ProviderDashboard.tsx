@@ -219,7 +219,8 @@ export function ProviderDashboard() {
                 <Pressable
                   style={styles.headerActionButton}
                   onPress={() => {
-                    navigation.navigate('Mehr', { screen: 'ProviderNotificationsScreen' });
+                    // Navigate to the global notifications screen (registered in RootStack)
+                    navigation.navigate('ProviderNotificationsScreen');
                   }}
                 >
                   <Ionicons name="notifications-outline" size={22} color={colors.gray700} />

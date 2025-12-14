@@ -200,7 +200,6 @@ function ProviderMoreStackScreen() {
       {/* Finanzen */}
       <ProviderMoreStack.Screen name="PayoutRequestScreen" component={PayoutRequestScreen} options={{ title: 'Auszahlung beantragen' }} />
       <ProviderMoreStack.Screen name="TransactionsScreen" component={TransactionsScreen} options={{ title: 'Transaktionen' }} />
-      <ProviderMoreStack.Screen name="ProviderNotificationsScreen" component={ProviderNotificationsScreen} options={{ title: 'Benachrichtigungen' }} />
       <ProviderMoreStack.Screen name="ProviderAnalyticsScreen" component={ProviderAnalyticsScreen} options={{ title: 'Statistiken & Berichte' }} />
       <ProviderMoreStack.Screen name="ProviderVouchersScreen" component={ProviderVouchersScreen} options={{ title: 'Gutscheine & Angebote' }} />
       <ProviderMoreStack.Screen name="CreateEditVoucherScreen" component={CreateEditVoucherScreen} options={{ title: 'Gutschein' }} />
@@ -574,6 +573,7 @@ function RootNavigator() {
           })()}
           {/* Global provider detail (public profile) route accessible from anywhere */}
           <Stack.Screen name="ProviderDetail" component={ProviderPublicProfileScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ProviderNotificationsScreen" component={ProviderNotificationsScreen} options={{ headerShown: false }} />
           {/* Global client routes accessible from anywhere */}
           <Stack.Screen name="AllStyles" component={AllStylesScreen} options={{ headerShown: true, title: 'Alle Styles' }} />
           {/* Client map view */}

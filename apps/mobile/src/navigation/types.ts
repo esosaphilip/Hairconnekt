@@ -21,6 +21,7 @@ export type RootStackParamList = {
   LocationAccess: undefined;
   Home: undefined;
   SignInPrompt: { returnUrl?: string } | undefined;
+  ProviderNotificationsScreen: undefined;
 };
 
 // Client Tabs
