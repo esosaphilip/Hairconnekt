@@ -20,6 +20,7 @@ import { colors, spacing, typography, COLORS, SPACING, FONT_SIZES } from '@/them
 import { logger } from '@/services/logger';
 import { MESSAGES } from '@/constants';
 import { http } from '@/api/http';
+import { providerClientsApi } from '@/api/providerClients';
 import { API_CONFIG } from '@/constants';
 import { providersApi } from '@/services/providers';
 import type { Service } from '@/domain/entities/Service';
@@ -71,9 +72,9 @@ export function CreateAppointmentScreen() {
         if (mounted) setProviderId('');
       }
       try {
-        const res = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.CLIENTS);
-        const items: any[] = (res?.data?.items ?? res?.data ?? []) as any[];
-        const mapped = items.map((c) => ({ id: String(c.id), name: String(c.name || ''), phone: c.phone ?? null }));
+        const res: any = await providerClientsApi.list({ filter: 'all', sortBy: 'recent' });
+        const items: any[] = (res?.clients ?? res?.items ?? res ?? []) as any[];
+        const mapped = items.map((c) => ({ id: String(c.id), name: [c.firstName, c.lastName].filter(Boolean).join(' ') || String(c.name || ''), phone: c.phone ?? null }));
         if (mounted) setClients(mapped);
       } catch (e) {
         logger.error('Failed to load clients', e);

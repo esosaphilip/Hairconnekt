@@ -5,6 +5,7 @@ import Card from '@/components/Card';
 import Button from '@/components/Button';
 import { colors, spacing, radii, typography, COLORS } from '@/theme/tokens';
 import { http } from '@/api/http';
+import { providerClientsApi } from '@/api/providerClients';
 import { getProviderAppointments } from '@/api/appointments';
 import type { AppointmentListItem as ApiAppointmentListItem, AppointmentServiceItem as ApiAppointmentServiceItem } from '@/api/appointments';
 import { useNavigation } from '@react-navigation/native';
@@ -55,9 +56,19 @@ export function ClientDetailScreen() {
       setLoading(true);
       setError(null);
       try {
-        const res = await http.get('/providers/clients');
-        const items = (res?.data?.items || []) as ProviderClientItem[];
-        const item = items.find((c) => c.id === clientId) || null;
+        const detail: any = await providerClientsApi.detail(String(clientId));
+        const item: ProviderClientItem | null = detail
+          ? {
+              id: String(detail.id),
+              name: [detail.firstName, detail.lastName].filter(Boolean).join(' ') || String(detail.name || ''),
+              image: detail.avatar || undefined,
+              phone: detail?.contactInfo?.phone || detail.phone || undefined,
+              appointments: Number(detail?.stats?.totalAppointments || 0),
+              lastVisitIso: detail?.stats?.lastVisit || undefined,
+              totalSpentCents: Math.round(Number(detail?.stats?.totalSpent || 0) * 100),
+              isVIP: !!detail?.isVIP,
+            }
+          : null;
         if (!cancelled) setClientItem(item);
       } catch (err: any) {
         const msg = err?.message || 'Fehler beim Laden des Kunden';
@@ -85,9 +96,36 @@ export function ClientDetailScreen() {
     return () => { cancelled = true; };
   }, [clientId]);
 
-  const handleSaveNotes = () => {
-    setIsEditingNotes(false);
-    Alert.alert('Gespeichert', 'Notizen gespeichert');
+  const handleSaveNotes = async () => {
+    try {
+      if (!clientItem?.id) return;
+      await providerClientsApi.patchNotes(clientItem.id, notes || '');
+      setIsEditingNotes(false);
+      Alert.alert('Gespeichert', 'Notizen gespeichert');
+    } catch (e: any) {
+      Alert.alert('Fehler', e?.response?.data?.message || e?.message || 'Speichern fehlgeschlagen');
+    }
+  };
+
+  const toggleVip = async () => {
+    try {
+      if (!clientItem?.id) return;
+      const res = await providerClientsApi.patchVip(clientItem.id, !clientItem.isVIP);
+      setClientItem((prev) => (prev ? { ...prev, isVIP: !!res?.isVIP } : prev));
+      Alert.alert('Erfolg', res?.message || (res?.isVIP ? 'Als VIP markiert' : 'VIP entfernt'));
+    } catch (e: any) {
+      Alert.alert('Fehler', e?.response?.data?.message || e?.message || 'VIP-Status ändern fehlgeschlagen');
+    }
+  };
+
+  const blockClient = async () => {
+    try {
+      if (!clientItem?.id) return;
+      const res = await providerClientsApi.block(clientItem.id, 'Verstoss gegen Richtlinien');
+      Alert.alert('Erfolg', res?.message || 'Kunde blockiert');
+    } catch (e: any) {
+      Alert.alert('Fehler', e?.response?.data?.message || e?.message || 'Blockieren fehlgeschlagen');
+    }
   };
 
   const handleCall = () => {
@@ -126,8 +164,8 @@ export function ClientDetailScreen() {
             <Ionicons name={'chevron-back'} size={24} color={colors.gray700} />
           </Pressable>
           <Text style={[typography.h3, styles.flex1]}>Kundendetails</Text>
-          <Pressable onPress={() => setIsFavorite(!isFavorite)} style={styles.iconButton}>
-            <Ionicons name={'heart'} size={24} color={isFavorite ? colors.secondary : colors.gray400} />
+          <Pressable onPress={toggleVip} style={styles.iconButton}>
+            <Ionicons name={clientItem?.isVIP ? 'star' : 'star-outline'} size={24} color={clientItem?.isVIP ? colors.amber600 : colors.gray400} />
           </Pressable>
         </View>
       </View>
@@ -228,6 +266,9 @@ export function ClientDetailScreen() {
           </View>
           <View style={styles.flex1Container}>
             <Button title="Anrufen" onPress={handleCall} variant="ghost" />
+          </View>
+          <View style={styles.flex1Container}>
+            <Button title="Blockieren" onPress={blockClient} variant="ghost" />
           </View>
         </View>
 
