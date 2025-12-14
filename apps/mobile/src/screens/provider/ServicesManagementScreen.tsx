@@ -229,12 +229,7 @@ export function ServicesManagementScreen() {
                     </View>
                   </View>
                 )}
-                {(!categoriesLoading && categories.length === 0) && (
-                  <View style={{ marginTop: spacing.sm }}>
-                    <Text style={styles.label}>Kategorie-ID (Fallback)</Text>
-                    <Input value={manualCategoryId} onChangeText={setManualCategoryId} placeholder="Kategorie-ID eingeben" />
-                  </View>
-                )}
+                {/* Fallback ID input removed to keep flow simple */}
               </View>
               <View>
                 <Text style={styles.label}>Name *</Text>
@@ -264,39 +259,10 @@ export function ServicesManagementScreen() {
                       Alert.alert('Fehler', 'Bitte einen Namen eingeben');
                       return;
                     }
-                    let finalCategoryId = selectedCategoryId || manualCategoryId;
+                    const finalCategoryId = selectedCategoryId;
                     if (!finalCategoryId) {
-                      if (selectedCategoryName) {
-                        try {
-                          const tryFetch = async (): Promise<string | ''> => {
-                            const normalize = (raw: any) => (Array.isArray(raw) ? raw : (raw?.items ?? [])) as any[];
-                            const tries = [
-                              () => http.get('/services/categories', { params: { locale: 'de' } }),
-                              () => http.get('/provider/services/categories', { params: { locale: 'de' } }),
-                              () => http.get('/providers/services/categories', { params: { locale: 'de' } }),
-                              () => http.get('/service-categories', { params: { locale: 'de' } }),
-                              () => http.get('/categories', { params: { type: 'service', locale: 'de' } }),
-                            ];
-                            for (const fn of tries) {
-                              try {
-                                const res = await fn();
-                                const arr = normalize(res?.data);
-                                const found = arr.find((c: any) => {
-                                  const name = c?.nameDe ?? c?.name_de ?? c?.name_en ?? c?.name;
-                                  return String(name || '').toLowerCase() === selectedCategoryName.toLowerCase();
-                                });
-                                if (found?.id) return String(found.id);
-                              } catch {}
-                            }
-                            return '';
-                          };
-                          finalCategoryId = await tryFetch();
-                        } catch {}
-                      }
-                      if (!finalCategoryId) {
-                        Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
-                        return;
-                      }
+                      Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
+                      return;
                     }
                     const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100) || 0;
                     const durationMinutes = parseInt(duration, 10) || 60;

@@ -56,7 +56,31 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         duration_minutes: Number(service.durationMinutes || 0),
         is_active: !!service.isActive,
       } as Record<string, unknown>;
-      const res = await http.post(API_CONFIG.ENDPOINTS.SERVICES.CREATE, payload);
+      let res: any;
+      try {
+        res = await http.post(API_CONFIG.ENDPOINTS.SERVICES.CREATE, payload);
+      } catch {
+        // Try provider-specific path with snake_case
+        try {
+          res = await http.post('/provider/services', payload);
+        } catch {
+          // Try legacy/camelCase payload on provider API
+          const camel = {
+            providerId: String(providerId || ''),
+            categoryId: (service as any)?.categoryId || (service as any)?.category?.id || undefined,
+            name: service.name,
+            description: service.description ?? undefined,
+            priceCents: Number(service.priceCents || 0),
+            durationMinutes: Number(service.durationMinutes || 0),
+            isActive: !!service.isActive,
+          } as Record<string, unknown>;
+          try {
+            res = await http.post('/api/v1/provider/services', camel);
+          } catch (e) {
+            throw e;
+          }
+        }
+      }
       const s = res.data as any;
       const mapped: Service = {
         id: String(s.id),
