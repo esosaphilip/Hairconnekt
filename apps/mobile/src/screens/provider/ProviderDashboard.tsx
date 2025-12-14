@@ -216,7 +216,10 @@ export function ProviderDashboard() {
                 <Text style={styles.dateText}>{todayLabel}</Text>
               </View>
               <View style={styles.headerActions}>
-                <Pressable style={styles.headerActionButton}>
+                <Pressable
+                  style={styles.headerActionButton}
+                  onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderNotificationsScreen' })}
+                >
                   <Ionicons name="notifications-outline" size={22} color={colors.gray700} />
                 </Pressable>
                 <Pressable style={styles.headerActionButton}>
