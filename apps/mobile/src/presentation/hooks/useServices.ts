@@ -45,6 +45,7 @@ export function useServices() {
     priceCents: number;
     durationMinutes: number;
     isActive?: boolean;
+    categoryId?: string;
   }): Promise<Service> => {
     setLoading(true);
     setError(null);
@@ -52,7 +53,7 @@ export function useServices() {
       id: `temp_${Date.now()}`,
       name: data.name,
       description: data.description ?? null,
-      category: null,
+      category: data.categoryId ? ({ id: data.categoryId } as any) : null,
       priceCents: data.priceCents,
       durationMinutes: data.durationMinutes,
       isActive: data.isActive ?? true,

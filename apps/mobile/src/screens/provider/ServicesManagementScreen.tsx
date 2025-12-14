@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform, Alert, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -6,10 +6,12 @@ import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Input from '@/components/Input';
+import Picker from '@/components/Picker';
 import Textarea from '@/components/textarea';
 import { Badge } from '@/components/badge';
 import { Switch } from 'react-native';
 import { colors, spacing, typography } from '@/theme/tokens';
+import { http } from '../../api/http';
 import { useServices } from '@/presentation/hooks/useServices';
 import { showError, showSuccess } from '@/presentation/utils/errorHandler';
 import { MESSAGES } from '@/constants';
@@ -25,6 +27,18 @@ export function ServicesManagementScreen() {
   const [duration, setDuration] = useState('60');
   const [description, setDescription] = useState('');
   const [active, setActive] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [categories, setCategories] = useState<Array<{ id: string; nameDe?: string; name_de?: string }>>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await http.get('/services/categories');
+        const items = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
+        setCategories(items as Array<{ id: string; nameDe?: string; name_de?: string }>);
+      } catch {}
+    })();
+  }, []);
 
   const activeServices = useMemo(() => services.filter(s => s.isActive), [services]);
   const inactiveServices = useMemo(() => services.filter(s => !s.isActive), [services]);
@@ -125,6 +139,14 @@ export function ServicesManagementScreen() {
             <Text style={styles.sectionTitle}>Neuen Service hinzufügen</Text>
             <View style={{ gap: spacing.sm }}>
               <View>
+                <Text style={styles.label}>Service-Kategorie *</Text>
+                <Picker
+                  selectedValue={selectedCategoryId}
+                  onValueChange={(v: string) => setSelectedCategoryId(v)}
+                  items={[{ label: 'Kategorie wählen...', value: '' }, ...categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))]}
+                />
+              </View>
+              <View>
                 <Text style={styles.label}>Name *</Text>
                 <Input value={name} onChangeText={setName} placeholder="z. B. Box Braids" />
               </View>
@@ -152,6 +174,10 @@ export function ServicesManagementScreen() {
                       Alert.alert('Fehler', 'Bitte einen Namen eingeben');
                       return;
                     }
+                    if (!selectedCategoryId) {
+                      Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
+                      return;
+                    }
                     const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100) || 0;
                     const durationMinutes = parseInt(duration, 10) || 60;
                     if (priceCents <= 0) {
@@ -164,13 +190,14 @@ export function ServicesManagementScreen() {
                     }
                     try {
                       setSaving(true);
-                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active });
+                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: selectedCategoryId });
                       setAdding(false);
                       setName('');
                       setPrice('');
                       setDuration('60');
                       setDescription('');
                       setActive(true);
+                      setSelectedCategoryId('');
                       showSuccess(MESSAGES.SUCCESS.SAVE);
                     } catch (err) {
                       showError(err);

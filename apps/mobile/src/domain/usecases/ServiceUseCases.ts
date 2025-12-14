@@ -29,6 +29,7 @@ export class ServiceUseCases {
     priceCents: number;
     durationMinutes: number;
     isActive?: boolean;
+    categoryId?: string;
   }): Promise<Service> {
     // Validation
     if (!data.name || data.name.trim().length < VALIDATION_RULES.SERVICE.NAME_MIN_LENGTH) {
@@ -47,7 +48,7 @@ export class ServiceUseCases {
       id: '',
       name: data.name.trim(),
       description: data.description?.trim() ?? null,
-      category: null,
+      category: data.categoryId ? ({ id: data.categoryId } as any) : null,
       priceCents: data.priceCents,
       durationMinutes: data.durationMinutes,
       isActive: data.isActive ?? true,
@@ -89,4 +90,3 @@ export class ServiceUseCases {
     return this.serviceRepository.toggleActive(id, isActive);
   }
 }
-

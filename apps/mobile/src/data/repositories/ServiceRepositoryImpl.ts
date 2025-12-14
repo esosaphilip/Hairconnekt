@@ -49,6 +49,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const providerId = profile?.id || profile?.provider?.id;
       const payload = {
         provider_id: String(providerId || ''),
+        category_id: (service as any)?.categoryId || (service as any)?.category?.id || undefined,
         name: service.name,
         description: service.description ?? undefined,
         price_cents: Number(service.priceCents || 0),
