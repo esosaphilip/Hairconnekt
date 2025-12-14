@@ -54,17 +54,36 @@ export function PortfolioManagementScreen() {
       setLoading(true);
       setError(null);
       try {
-        const bundle = await getAuthBundle();
-        const providerId = bundle?.user?.id;
-        if (!providerId) throw new Error('Nicht authentifiziert');
-        let res: any;
+        // Try 'me' endpoint first, fallback to ID-based if needed (though me should work)
+        let res;
         try {
-          res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
-        } catch {
-          res = await http.get(`/provider/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
+          res = await http.get('/providers/me/portfolio', { params: { limit: 50, sort: 'latest' } });
+        } catch (err) {
+           // Fallback to explicit ID if 'me' fails (e.g. backend issue)
+           const bundle = await getAuthBundle();
+           const providerId = bundle?.user?.id;
+           if (providerId) {
+             res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
+           } else {
+             throw err;
+           }
         }
+
+        const payload = res?.data;
+        // Robust unpacking: check for { success: true, data: { items: [] } } vs { items: [] }
+        let list = [];
+        if (payload && typeof payload === 'object') {
+             if ('data' in payload && (payload as any).data && 'items' in (payload as any).data) {
+                 list = (payload as any).data.items;
+             } else if ('items' in payload) {
+                 list = (payload as any).items;
+             } else if (Array.isArray(payload)) {
+                 list = payload;
+             }
+        }
+        
         type RawPortfolioItem = { id: string; imageUrl?: string; title?: string; category?: string; uploadedAt?: string };
-        const items = Array.isArray(res?.data?.items) ? (res.data.items as RawPortfolioItem[]) : [];
+        const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
         const mapped = items.map((it) => ({ id: it.id, image: it.imageUrl || '', title: it.title, category: it.category, createdAt: it.uploadedAt }));
         if (active) setPortfolioData(mapped.filter((x) => !!x.image));
       } catch (e) {

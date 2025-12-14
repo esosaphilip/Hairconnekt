@@ -22,7 +22,6 @@ import Textarea from '../../components/textarea'; // Custom multiline Input comp
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { http } from '../../api/http';
-import { providerReviewsApi } from '@/api/providerReviews';
 
 // Screen width for responsive layout
 const screenWidth = Dimensions.get('window').width;
@@ -194,8 +193,21 @@ export function ProviderReviews() {
       setLoading(true);
       setError(null);
       try {
-        const res: any = await providerReviewsApi.list({ filter: 'all', sortBy: 'newest', page: 1, limit: 50 });
-        const list = Array.isArray(res?.reviews) ? res.reviews : [];
+        const res = await http.get('/reviews/provider');
+        const payload = res?.data;
+        let list = [];
+        if (Array.isArray(payload)) {
+          list = payload;
+        } else if (payload && typeof payload === 'object') {
+          if ('data' in payload && Array.isArray((payload as any).data)) {
+            list = (payload as any).data;
+          } else if ('items' in payload && Array.isArray((payload as any).items)) {
+            list = (payload as any).items;
+          } else if ('reviews' in payload && Array.isArray((payload as any).reviews)) {
+            list = (payload as any).reviews;
+          }
+        }
+        
         const mapped: Review[] = list.map((r: any) => ({
           id: r.id,
           client: r.isAnonymous
@@ -238,7 +250,8 @@ export function ProviderReviews() {
       return;
     }
     try {
-      await providerReviewsApi.respond(String(reviewId), payload.response);
+      const res = await http.post('/reviews/respond', payload);
+      const updated = res?.data;
       // Optimistically update local state
       setReviewsData((prev) => prev.map((r) => {
         if (String(r.id) === String(reviewId)) {

@@ -81,7 +81,11 @@ export const providersApi = {
 
   async getMyProfile(): Promise<unknown> {
     const res = await http.get('/providers/me');
-    return res.data;
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data;
+    }
+    return payload;
   },
 
   async getDashboard(): Promise<unknown> {
