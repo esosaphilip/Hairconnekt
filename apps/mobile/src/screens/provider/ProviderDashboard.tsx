@@ -106,13 +106,28 @@ export function ProviderDashboard() {
     let mounted = true;
     async function load() {
       try {
-        const [p, d] = await Promise.all([
-          http.get(API_CONFIG.ENDPOINTS.PROVIDERS.ME),
-          http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD),
-        ]);
+        const p = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.ME);
         if (!mounted) return;
         setProfile(p?.data || null);
-        setDashboard(d?.data || null);
+        // Try standard dashboard; on failure, use analytics overview with provider_id
+        try {
+          const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
+          if (!mounted) return;
+          setDashboard(d?.data || null);
+        } catch {
+          try {
+            const pid = (p?.data?.id as string | undefined) || undefined;
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+            const toYMD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+            const a = await http.get('/provider/analytics/overview', { params: { provider_id: pid, start_date: toYMD(start), end_date: toYMD(end) } });
+            if (!mounted) return;
+            setDashboard(a?.data || null);
+          } catch (e) {
+            // swallow; error handled below
+          }
+        }
       } catch (err: unknown) {
         const msg = getErrorMessage(err);
         if (mounted) setError(msg);

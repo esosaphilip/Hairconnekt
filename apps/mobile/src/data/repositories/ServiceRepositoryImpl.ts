@@ -48,13 +48,13 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const profile: any = await providersApi.getMyProfile();
       const providerId = profile?.id || profile?.provider?.id;
       const payload = {
-        providerId: String(providerId || ''),
+        provider_id: String(providerId || ''),
         name: service.name,
         description: service.description ?? undefined,
-        priceCents: service.priceCents,
-        durationMinutes: service.durationMinutes,
-        isActive: service.isActive,
-      };
+        price_cents: Number(service.priceCents || 0),
+        duration_minutes: Number(service.durationMinutes || 0),
+        is_active: !!service.isActive,
+      } as Record<string, unknown>;
       const res = await http.post(API_CONFIG.ENDPOINTS.SERVICES.CREATE, payload);
       const s = res.data as any;
       const mapped: Service = {
@@ -85,9 +85,9 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const patch: any = {
         name: service.name,
         description: service.description,
-        priceCents: service.priceCents,
-        durationMinutes: service.durationMinutes,
-        isActive: service.isActive,
+        price_cents: service.priceCents != null ? Number(service.priceCents) : undefined,
+        duration_minutes: service.durationMinutes != null ? Number(service.durationMinutes) : undefined,
+        is_active: service.isActive,
       };
       let res: any;
       try {

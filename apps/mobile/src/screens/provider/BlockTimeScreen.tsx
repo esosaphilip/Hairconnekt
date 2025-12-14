@@ -92,23 +92,39 @@ export function BlockTimeScreen() {
         return;
       }
 
+      // Normalize dates to ISO (YYYY-MM-DD)
+      const toISO = (d: string) => {
+        try {
+          const parts = d.trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(parts)) return parts;
+          const dt = new Date(parts);
+          if (!Number.isNaN(dt.getTime())) {
+            const y = dt.getFullYear();
+            const m = String(dt.getMonth() + 1).padStart(2, '0');
+            const day = String(dt.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+          }
+        } catch {}
+        return d;
+      };
+
       const basePayload = {
         reason,
-        customReason: reason === 'other' ? customReason : undefined,
-        startDate,
-        endDate: endDate || startDate,
-        startTime: allDay ? undefined : startTime,
-        endTime: allDay ? undefined : endTime,
-        allDay,
+        custom_reason: reason === 'other' ? customReason : undefined,
+        start_date: toISO(startDate),
+        end_date: toISO(endDate || startDate),
+        start_time: allDay ? null : startTime,
+        end_time: allDay ? null : endTime,
+        all_day: !!allDay,
         repeat,
-        repeatFrequency: repeat ? repeatFrequency : undefined,
-        repeatDays: repeat && repeatFrequency === 'weekly' ? repeatDays : undefined,
-        repeatEndType: repeat ? repeatEndType : undefined,
-        repeatEndDate: repeat && repeatEndType === 'date' ? repeatEndDate : undefined,
-        repeatCount: repeat && repeatEndType === 'count' ? repeatCount : undefined,
+        repeat_frequency: repeat ? repeatFrequency : undefined,
+        repeat_days: repeat && repeatFrequency === 'weekly' ? repeatDays : undefined,
+        repeat_end_type: repeat ? repeatEndType : undefined,
+        repeat_end_date: repeat && repeatEndType === 'date' ? toISO(repeatEndDate) : undefined,
+        repeat_count: repeat && repeatEndType === 'count' ? repeatCount : undefined,
         notes,
       } as any;
-      const payload = providerId ? { ...basePayload, providerId } : basePayload;
+      const payload = providerId ? { ...basePayload, provider_id: providerId } : basePayload;
 
       try {
         await http.post('/providers/blocked-time', payload);
