@@ -9,8 +9,8 @@ import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Badge from '@/components/badge';
 import Avatar, { AvatarImage, AvatarFallback } from '@/components/avatar';
-import { getProviderAppointments } from '@/api/appointments';
 import type { AppointmentListItem } from '@/api/appointments';
+import { providersApi } from '@/services/providers';
 import { colors, spacing } from '@/theme/tokens';
 import { useAuth } from '@/auth/AuthContext';
 import { logger } from '@/services/logger';
@@ -43,7 +43,7 @@ export function ProviderCalendar() {
   const daysInMonth = useMemo(() => new Date(year, month + 1, 0).getDate(), [year, month]);
   const monthDays = useMemo(() => Array.from({ length: daysInMonth }, (_, i) => i + 1), [daysInMonth]);
 
-useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     // Only fetch when authenticated and with provider role
     if (!isAuthenticated || !isProviderRole) {
@@ -54,13 +54,35 @@ useEffect(() => {
     }
     setLoading(true);
     setError(null);
-    getProviderAppointments('upcoming')
-      .then((res) => {
-        if (!cancelled) {
-          const items = res && res.items ? res.items : [];
-          setAppointments(items);
-        }
-      })
+    (async () => {
+      try {
+        const startDate = new Date(year, month, 1);
+        const endDate = new Date(year, month + 1, 0);
+        const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const data = await providersApi.getCalendar({ startDate: toYMD(startDate), endDate: toYMD(endDate), view: viewMode });
+        const items: AppointmentListItem[] = (Array.isArray(data?.appointments) ? data.appointments : []).map((a: any) => ({
+          id: a.id,
+          appointmentDate: a.date,
+          startTime: a.startTime,
+          endTime: a.endTime,
+          services: Array.isArray(a.services) ? a.services.map((s: any) => ({ name: s.name, durationMinutes: s.durationMinutes })) : [],
+          totalPriceCents: typeof a.totalPrice === 'number' ? Math.round(a.totalPrice * 100) : undefined,
+          client: a.client ? { name: a.client.name, avatarUrl: a.client.avatar } : undefined,
+          status: a.status,
+        }));
+        if (!cancelled) setAppointments(items);
+      } catch (err: unknown) {
+        const error = err as { response?: { status?: number }; message?: string };
+        const status = error?.response?.status;
+        let msg: string = String(MESSAGES.ERROR.UNKNOWN);
+        if (status === 401) msg = 'Bitte melde dich als Anbieter an';
+        else if (status === 403) msg = 'Keine Berechtigung: Anbieterrolle erforderlich';
+        if (!cancelled) setError(msg);
+        logger.error('Failed to fetch provider calendar:', err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })()
       .catch((err: unknown) => {
         const error = err as { response?: { status?: number }; message?: string };
         const status = error?.response?.status;
@@ -76,7 +98,7 @@ useEffect(() => {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, isProviderRole]);
+  }, [isAuthenticated, isProviderRole, year, month, viewMode]);
 
   // Provider gate: redirect pending/non-provider
   const { status, checked } = useProviderGate();
@@ -419,21 +441,33 @@ useEffect(() => {
               }
               setError(null);
               setLoading(true);
-              getProviderAppointments('upcoming')
-                .then((res) => {
-                  const items = res && res.items ? res.items : [];
+              (async () => {
+                try {
+                  const startDate = new Date(year, month, 1);
+                  const endDate = new Date(year, month + 1, 0);
+                  const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                  const data = await providersApi.getCalendar({ startDate: toYMD(startDate), endDate: toYMD(endDate), view: viewMode });
+                  const items: AppointmentListItem[] = (Array.isArray(data?.appointments) ? data.appointments : []).map((a: any) => ({
+                    id: a.id,
+                    appointmentDate: a.date,
+                    startTime: a.startTime,
+                    endTime: a.endTime,
+                    services: Array.isArray(a.services) ? a.services.map((s: any) => ({ name: s.name, durationMinutes: s.durationMinutes })) : [],
+                    totalPriceCents: typeof a.totalPrice === 'number' ? Math.round(a.totalPrice * 100) : undefined,
+                    client: a.client ? { name: a.client.name, avatarUrl: a.client.avatar } : undefined,
+                    status: a.status,
+                  }));
                   setAppointments(items);
-                })
-                .catch((err) => {
+                } catch (err: any) {
                   const status = err?.response?.status;
                   let msg = 'Fehler beim Laden der Termine';
                   if (status === 401) msg = 'Bitte melde dich als Anbieter an';
                   else if (status === 403) msg = 'Keine Berechtigung: Anbieterrolle erforderlich';
                   setError(msg);
-                })
-                .finally(() => {
+                } finally {
                   setLoading(false);
-                });
+                }
+              })();
             }}
           >
             <Text style={styles.primaryButtonText}>Erneut versuchen</Text>

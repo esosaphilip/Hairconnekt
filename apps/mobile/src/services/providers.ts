@@ -101,4 +101,22 @@ export const providersApi = {
     }
     return (payload as any) ?? null;
   },
+
+  async setOnlineStatus(isOnline: boolean): Promise<{ isOnline: boolean; message?: string }> {
+    const res = await http.patch('/providers/me/online-status', { isOnline });
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data ?? { isOnline };
+    }
+    return (payload as any) ?? { isOnline };
+  },
+
+  async getCalendar(params: { startDate: string; endDate: string; view?: 'day' | 'week' | 'month' }): Promise<any> {
+    const res = await http.get('/providers/calendar', { params });
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data ?? { appointments: [], blockedSlots: [], availableSlots: [] };
+    }
+    return (payload as any) ?? { appointments: [], blockedSlots: [], availableSlots: [] };
+  },
 };

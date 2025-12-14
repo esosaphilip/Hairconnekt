@@ -236,7 +236,16 @@ export function ProviderDashboard() {
                     {isAvailable ? 'Kunden können dich jetzt buchen' : 'Du erscheinst nicht in den Suchergebnissen'}
                   </Text>
                 </View>
-                <Switch value={isAvailable} onValueChange={setIsAvailable} />
+                <Switch
+                  value={isAvailable}
+                  onValueChange={async (v: boolean) => {
+                    setIsAvailable(v);
+                    try {
+                      const r = await (await import('@/services/providers')).providersApi.setOnlineStatus(v);
+                      if (r?.isOnline !== undefined) setIsAvailable(!!r.isOnline);
+                    } catch {}
+                  }}
+                />
               </View>
             </Card>
           </View>
