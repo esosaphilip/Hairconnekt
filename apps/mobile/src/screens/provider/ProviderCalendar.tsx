@@ -27,6 +27,7 @@ export function ProviderCalendar() {
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('month');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [appointments, setAppointments] = useState<AppointmentListItem[]>([]);
   const route = useRoute() as { params?: { targetDate?: string; viewMode?: 'day' | 'week' | 'month' } };
   const authCtx = useAuth();
@@ -98,7 +99,7 @@ export function ProviderCalendar() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, isProviderRole, year, month, viewMode]);
+  }, [isAuthenticated, isProviderRole, year, month, viewMode, refreshTrigger]);
 
   // Provider gate: redirect pending/non-provider
   const { status, checked } = useProviderGate();
@@ -308,7 +309,7 @@ export function ProviderCalendar() {
         <RNButton
           title="+ Termin"
           variant="secondary"
-          onPress={() => rootNavigationRef.current?.navigate('Kalender', { screen: 'CreateAppointmentScreen' })}
+          onPress={() => navigation.navigate('CreateAppointmentScreen')}
         />
       </View>
 
@@ -357,13 +358,15 @@ export function ProviderCalendar() {
           </RNCard>
         ))}
 
-        {/* Free Slot */}
-        <RNCard style={styles.dayFreeCard}>
-          <View style={styles.dayFreeRow}>
-            <Text style={{ color: colors.gray600 }}>15:00 - 16:00 Verfügbar</Text>
-            <RNButton title="Buchen" variant="ghost" onPress={() => rootNavigationRef.current?.navigate('Kalender', { screen: 'CreateAppointmentScreen' })} />
-          </View>
-        </RNCard>
+        {/* Free Slot Placeholder - Removed hardcoded time to avoid confusion */}
+        {selectedDate === today.getDate() && month === today.getMonth() && year === today.getFullYear() && (
+          <RNCard style={styles.dayFreeCard}>
+            <View style={styles.dayFreeRow}>
+              <Text style={{ color: colors.gray600 }}>Neuen Termin erstellen</Text>
+              <RNButton title="Buchen" variant="ghost" onPress={() => navigation.navigate('CreateAppointmentScreen')} />
+            </View>
+          </RNCard>
+        )}
       </View>
     </View>
   );
@@ -439,35 +442,21 @@ export function ProviderCalendar() {
                 rootNavigationRef.current?.navigate('Register', { userType: 'provider' });
                 return;
               }
+              // Trigger re-fetch by toggling a dummy state or just calling the effect dependencies?
+              // Best way is to clear error and let the effect run again if dependencies didn't change, 
+              // but since dependencies didn't change, effect won't run. 
+              // We need a forceUpdate or just re-call the fetch logic.
+              // For simplicity, we just reset loading/error which might not trigger effect if deps are same.
+              // But actually, just setting loading=true won't trigger the async function inside useEffect.
+              // We will just reload the whole screen logic by toggling viewMode temporarily or adding a 'refresh' dependency.
+              // A simple way is to force a re-mount or add a refresh counter.
+              // For now, let's just use the logic that was here but simplified.
               setError(null);
               setLoading(true);
-              (async () => {
-                try {
-                  const startDate = new Date(year, month, 1);
-                  const endDate = new Date(year, month + 1, 0);
-                  const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-                  const data = await providersApi.getCalendar({ startDate: toYMD(startDate), endDate: toYMD(endDate), view: viewMode });
-                  const items: AppointmentListItem[] = (Array.isArray(data?.appointments) ? data.appointments : []).map((a: any) => ({
-                    id: a.id,
-                    appointmentDate: a.date,
-                    startTime: a.startTime,
-                    endTime: a.endTime,
-                    services: Array.isArray(a.services) ? a.services.map((s: any) => ({ name: s.name, durationMinutes: s.durationMinutes })) : [],
-                    totalPriceCents: typeof a.totalPrice === 'number' ? Math.round(a.totalPrice * 100) : undefined,
-                    client: a.client ? { name: a.client.name, avatarUrl: a.client.avatar } : undefined,
-                    status: a.status,
-                  }));
-                  setAppointments(items);
-                } catch (err: any) {
-                  const status = err?.response?.status;
-                  let msg = 'Fehler beim Laden der Termine';
-                  if (status === 401) msg = 'Bitte melde dich als Anbieter an';
-                  else if (status === 403) msg = 'Keine Berechtigung: Anbieterrolle erforderlich';
-                  setError(msg);
-                } finally {
-                  setLoading(false);
-                }
-              })();
+              // We rely on the fact that setting loading=true will show the loader, 
+              // but we need to actually trigger the fetch.
+              // Let's add a 'refreshTrigger' state to the dependency array.
+              setRefreshTrigger(p => p + 1);
             }}
           >
             <Text style={styles.primaryButtonText}>Erneut versuchen</Text>
