@@ -113,7 +113,33 @@ export function ProviderDashboard() {
         try {
           const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
           if (!mounted) return;
-          setDashboard(d?.data || null);
+          const payload = d?.data;
+          let mapped: DashboardData | null = null;
+          if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+            const data = (payload as any).data || {};
+            const summary = data.summary || {};
+            const next = data.nextAppointment || null;
+            const todayCount = Number(summary.todayAppointments || 0);
+            const nextAppointment = next ? {
+              time: String(next.startTime || ''),
+              client: String(next?.client?.name || ''),
+              hoursUntil: (() => {
+                try { const start = new Date(String(next.startTime)); return Math.max(0, (start.getTime() - Date.now()) / (1000 * 60 * 60)); } catch { return 0; }
+              })(),
+            } : null;
+            mapped = {
+              stats: {
+                todayCount,
+                nextAppointment,
+                weekEarningsCents: 0,
+                ratingAverage: Number(summary.averageRating || 0),
+                reviewCount: Number(data?.recentActivity?.filter?.((x: any) => x?.type === 'review')?.length || 0),
+              },
+              todayAppointments: [],
+              recentReviews: [],
+            };
+          }
+          setDashboard(mapped || (payload as any) || null);
         } catch {
           try {
             const pid = (p?.data?.id as string | undefined) || undefined;

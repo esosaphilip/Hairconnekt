@@ -86,6 +86,19 @@ export const providersApi = {
 
   async getDashboard(): Promise<unknown> {
     const res = await http.get('/providers/dashboard');
-    return res.data;
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data;
+    }
+    return payload;
+  },
+
+  async getVerificationStatus(): Promise<{ status: string; submittedAt?: string; reviewedAt?: string; rejectionReason?: string; requiredActions?: string[] } | null> {
+    const res = await http.get('/providers/me/verification-status');
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data ?? null;
+    }
+    return (payload as any) ?? null;
   },
 };

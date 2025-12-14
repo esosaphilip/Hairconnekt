@@ -17,12 +17,24 @@ export function useProviderGate() {
     }, 6000);
     (async () => {
       try {
-        const profile: any = await providersApi.getMyProfile();
-        const isProvider = !!(profile?.id || profile?.provider?.id);
-        const pending = String(profile?.status || '').toLowerCase() === 'pending';
-        if (!isProvider) setStatus('not_provider');
-        else if (pending) setStatus('pending');
-        else setStatus('ok');
+        const v = await providersApi.getVerificationStatus();
+        const status = String(v?.status || '').toLowerCase();
+        if (!status) {
+          const profile: any = await providersApi.getMyProfile();
+          const isProvider = !!(profile?.id || profile?.provider?.id);
+          const pending = String(profile?.status || '').toLowerCase() === 'pending';
+          if (!isProvider) setStatus('not_provider');
+          else if (pending) setStatus('pending');
+          else setStatus('ok');
+        } else if (status === 'pending') {
+          setStatus('pending');
+        } else if (status === 'approved') {
+          setStatus('ok');
+        } else if (status === 'rejected') {
+          setStatus('not_provider');
+        } else {
+          setStatus('ok');
+        }
       } catch {
         setStatus('error');
       } finally {
