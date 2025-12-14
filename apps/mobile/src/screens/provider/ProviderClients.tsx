@@ -68,9 +68,14 @@ export function ProviderClients() {
       const res = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.CLIENTS);
       setData(res?.data || null);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : MESSAGES.ERROR.LOAD_FAILED;
+      const message = (err as any)?.response?.status === 500
+        ? 'Dienst derzeit nicht verfügbar.'
+        : (err instanceof Error ? err.message : MESSAGES.ERROR.LOAD_FAILED);
       setError(message);
-      showError(err);
+      // Only show toast/alert for non-500 errors to avoid spamming user on server outage
+      if ((err as any)?.response?.status !== 500) {
+        showError(err);
+      }
     } finally {
       setLoading(false);
     }

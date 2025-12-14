@@ -13,19 +13,22 @@ import { providersApi } from '@/services/providers';
 export class ServiceRepositoryImpl implements IServiceRepository {
   async list(): Promise<Service[]> {
     try {
-      const res = await http.get('/providers/me/services');
+      // Use the correct endpoint as defined in API_CONFIG (/services/provider)
+      const res = await http.get('/services/provider');
       const payload = res?.data;
+      // Backend returns { success: true, data: [ ... ] } or just [ ... ]
       const list = payload && typeof payload === 'object' && 'success' in payload && 'data' in payload
-        ? (payload as any).data?.services ?? []
+        ? (payload as any).data
         : (Array.isArray(payload) ? payload : (payload?.items ?? payload?.services ?? []));
+        
       const items: Service[] = (Array.isArray(list) ? list : []).map((s: any) => ({
-        id: String(s.id),
+        id: String(s.id || s.serviceId),
         name: String(s.name || ''),
         description: s.description ?? null,
         category: s.category ? { id: String(s.category), nameDe: String(s.category), nameEn: String(s.category) } : null,
         priceCents: typeof s.price === 'number' ? Math.round(s.price * 100) : 0,
         durationMinutes: typeof s.duration === 'number' ? s.duration : 60,
-        isActive: !!s.isActive,
+        isActive: s.isActive !== undefined ? !!s.isActive : true,
         createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
         updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
       }));
@@ -60,7 +63,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         description: service.description ?? undefined,
         isActive: !!service.isActive,
       } as Record<string, unknown>;
-      const res = await http.post('/providers/me/services', payload);
+      // Correct endpoint: POST /services
+      const res = await http.post('/services', payload);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const mapped: Service = {
         id: String(s.serviceId || s.id),
@@ -100,7 +104,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         description: service.description,
         isActive: service.isActive,
       };
-      const res = await http.put(`/providers/me/services/${id}`, body);
+      // Correct endpoint: PUT /services/:id
+      const res = await http.put(`/services/${id}`, body);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const mapped: Service = {
         id: String(s.serviceId || id),
@@ -127,7 +132,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
   async delete(id: string): Promise<void> {
     try {
-      await http.delete(`/providers/me/services/${id}`);
+      // Correct endpoint: DELETE /services/:id
+      await http.delete(`/services/${id}`);
       return;
     } catch (error: unknown) {
       const status = (error as any)?.response?.status;
@@ -141,7 +147,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
   async toggleActive(id: string, isActive: boolean): Promise<Service> {
     try {
-      const res = await http.patch(`/providers/me/services/${id}/toggle-active`, { isActive });
+      // Correct endpoint: PATCH /services/:id
+      const res = await http.patch(`/services/${id}`, { isActive });
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const updated = await this.getById(id);
       if (!updated) throw new NotFoundError('Service', id);

@@ -97,7 +97,7 @@ function statusToBadge(status: string) {
 export function ProviderDashboard() {
   const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void };
   const [isAvailable, setIsAvailable] = useState(true);
-  const [profile, setProfile] = useState<{ name?: string; avatarUrl?: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ id?: string; name?: string; avatarUrl?: string | null } | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -105,59 +105,61 @@ export function ProviderDashboard() {
   useEffect(() => {
     let mounted = true;
     async function load() {
+      // 1. Load Profile (fail gracefully)
       try {
         const p = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.ME);
+        if (mounted && p?.data) setProfile(p.data);
+      } catch (e) {
+        logger.warn('Failed to load provider profile', e);
+        // Don't block dashboard loading on profile failure
+      }
+
+      // 2. Load Dashboard Data
+      try {
+        const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
         if (!mounted) return;
-        setProfile(p?.data || null);
-        // Try standard dashboard; on failure, use analytics overview with provider_id
-        try {
-          const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
-          if (!mounted) return;
-          const payload = d?.data;
-          let mapped: DashboardData | null = null;
-          if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-            const data = (payload as any).data || {};
-            const summary = data.summary || {};
-            const next = data.nextAppointment || null;
-            const todayCount = Number(summary.todayAppointments || 0);
-            const nextAppointment = next ? {
-              time: String(next.startTime || ''),
-              client: String(next?.client?.name || ''),
-              hoursUntil: (() => {
-                try { const start = new Date(String(next.startTime)); return Math.max(0, (start.getTime() - Date.now()) / (1000 * 60 * 60)); } catch { return 0; }
-              })(),
-            } : null;
-            mapped = {
-              stats: {
-                todayCount,
-                nextAppointment,
-                weekEarningsCents: 0,
-                ratingAverage: Number(summary.averageRating || 0),
-                reviewCount: Number(data?.recentActivity?.filter?.((x: any) => x?.type === 'review')?.length || 0),
-              },
-              todayAppointments: [],
-              recentReviews: [],
-            };
-          }
-          setDashboard(mapped || (payload as any) || null);
-        } catch {
-          try {
-            const pid = (p?.data?.id as string | undefined) || undefined;
-            const today = new Date();
-            const start = new Date(today.getFullYear(), today.getMonth(), 1);
-            const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-            const toYMD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-            const a = await http.get('/provider/analytics/overview', { params: { provider_id: pid, start_date: toYMD(start), end_date: toYMD(end) } });
-            if (!mounted) return;
-            setDashboard(a?.data || null);
-          } catch (e) {
-            // swallow; error handled below
-          }
+        const payload = d?.data;
+        let mapped: DashboardData | null = null;
+        if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+          const data = (payload as any).data || {};
+          const summary = data.summary || {};
+          const next = data.nextAppointment || null;
+          const todayCount = Number(summary.todayAppointments || 0);
+          const nextAppointment = next ? {
+            time: String(next.startTime || ''),
+            client: String(next?.client?.name || ''),
+            hoursUntil: (() => {
+              try { const start = new Date(String(next.startTime)); return Math.max(0, (start.getTime() - Date.now()) / (1000 * 60 * 60)); } catch { return 0; }
+            })(),
+          } : null;
+          mapped = {
+            stats: {
+              todayCount,
+              nextAppointment,
+              weekEarningsCents: 0,
+              ratingAverage: Number(summary.averageRating || 0),
+              reviewCount: Number(data?.recentActivity?.filter?.((x: any) => x?.type === 'review')?.length || 0),
+            },
+            todayAppointments: [],
+            recentReviews: [],
+          };
         }
-      } catch (err: unknown) {
-        const msg = getErrorMessage(err);
-        if (mounted) setError(msg);
-        logger.error('Failed to load dashboard:', err);
+        setDashboard(mapped || (payload as any) || null);
+      } catch (err) {
+        // Fallback to analytics if dashboard fails
+        try {
+          const pid = (profile?.id as string | undefined) || undefined; // might be undefined if profile failed
+          const today = new Date();
+          const start = new Date(today.getFullYear(), today.getMonth(), 1);
+          const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+          const toYMD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+          const a = await http.get('/provider/analytics/overview', { params: { provider_id: pid, start_date: toYMD(start), end_date: toYMD(end) } });
+          if (mounted) setDashboard(a?.data || null);
+        } catch (e) {
+          const msg = getErrorMessage(err);
+          if (mounted) setError(msg);
+          logger.error('Failed to load dashboard:', err);
+        }
       } finally {
         if (mounted) setLoading(false);
       }

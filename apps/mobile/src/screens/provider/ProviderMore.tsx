@@ -164,7 +164,12 @@ export function ProviderMore() {
         if (!cancelled) setProfile(res?.data ?? null);
       })
       .catch((err) => {
-        const msg = err?.response?.data?.message || err?.message || 'Profil konnte nicht geladen werden';
+        // Map 500 to a friendlier message
+        const status = err?.response?.status;
+        let msg = err?.response?.data?.message || err?.message || 'Profil konnte nicht geladen werden';
+        if (status === 500) {
+          msg = 'Profil derzeit nicht verfügbar';
+        }
         if (!cancelled) setProfileError(msg);
       })
       .finally(() => {
