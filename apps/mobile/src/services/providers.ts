@@ -145,12 +145,24 @@ export const providersApi = {
     reason: string; notes?: string;
     recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
   }): Promise<{ blockId: string; message?: string }> {
-    const res = await http.post('/blocked-time', body);
-    const payload = res?.data;
-    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-      return (payload as any).data ?? { blockId: '' };
+    const payload = {
+      startDate: body.startDate,
+      endDate: body.endDate || body.startDate,
+      allDay: body.isAllDay,
+      startTime: body.startTime,
+      endTime: body.endTime,
+      reason: body.reason,
+      notes: body.notes,
+      repeat: !!body.recurring,
+      repeatFrequency: body.recurring?.frequency,
+      repeatEndDate: body.recurring?.endsOn,
+    };
+    const res = await http.post('/blocked-time', payload);
+    const data = res?.data;
+    if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+      return (data as any).data ?? { blockId: '' };
     }
-    return (payload as any) ?? { blockId: '' };
+    return (data as any) ?? { blockId: '' };
   },
 
   async blockTimeUpdate(id: string, body: {
@@ -158,12 +170,24 @@ export const providersApi = {
     reason: string; notes?: string;
     recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
   }): Promise<{ blockId: string; message?: string }> {
-    const res = await http.patch(`/blocked-time/${id}`, body);
-    const payload = res?.data;
-    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-      return (payload as any).data ?? { blockId: id };
+    const payload = {
+      startDate: body.startDate,
+      endDate: body.endDate || body.startDate,
+      allDay: body.isAllDay,
+      startTime: body.startTime,
+      endTime: body.endTime,
+      reason: body.reason,
+      notes: body.notes,
+      repeat: !!body.recurring,
+      repeatFrequency: body.recurring?.frequency,
+      repeatEndDate: body.recurring?.endsOn,
+    };
+    const res = await http.patch(`/blocked-time/${id}`, payload);
+    const data = res?.data;
+    if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+      return (data as any).data ?? { blockId: id };
     }
-    return (payload as any) ?? { blockId: id };
+    return (data as any) ?? { blockId: id };
   },
 
   async blockTimeDelete(id: string): Promise<{ message?: string }> {

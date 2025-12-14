@@ -55,14 +55,13 @@ export class ServiceRepositoryImpl implements IServiceRepository {
     try {
       const payload = {
         name: service.name,
-        category: (service as any)?.categoryName || (service as any)?.category?.nameDe || (service as any)?.category?.name || '',
-        duration: Number(service.durationMinutes || 0),
-        durationUnit: 'fixed',
-        price: (service.priceCents || 0) / 100,
-        priceType: 'fixed',
+        categoryId: (service as any)?.category?.id || (service as any)?.categoryId, // Prefer ID
+        durationMinutes: Number(service.durationMinutes || 0),
+        priceCents: (service.priceCents || 0),
+        priceType: 'FIXED',
         description: service.description ?? undefined,
-        isActive: !!service.isActive,
-      } as Record<string, unknown>;
+        isActive: service.isActive !== undefined ? !!service.isActive : true,
+      };
       // Correct endpoint: POST /services
       const res = await http.post('/services', payload);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
@@ -70,9 +69,9 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         id: String(s.serviceId || s.id),
         name: String(s.name || service.name || ''),
         description: s.description ?? null,
-        category: payload.category ? { id: String(payload.category), nameDe: String(payload.category), nameEn: String(payload.category) } : null,
-        priceCents: Math.round(((s.price as number) ?? payload.price as number) * 100),
-        durationMinutes: Number((s.duration as number) ?? payload.duration as number),
+        category: payload.categoryId ? { id: String(payload.categoryId), nameDe: 'Category', nameEn: 'Category' } : null,
+        priceCents: Math.round(((s.priceCents as number) ?? payload.priceCents as number)),
+        durationMinutes: Number((s.durationMinutes as number) ?? payload.durationMinutes as number),
         isActive: typeof s.isActive === 'boolean' ? s.isActive : !!payload.isActive,
         createdAt: new Date(),
         updatedAt: new Date(),
@@ -96,11 +95,9 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       }
       const body: any = {
         name: service.name,
-        category: (service as any)?.categoryName || (service as any)?.category?.nameDe,
-        duration: service.durationMinutes != null ? Number(service.durationMinutes) : undefined,
-        durationUnit: 'fixed',
-        price: service.priceCents != null ? Number(service.priceCents) / 100 : undefined,
-        priceType: 'fixed',
+        categoryId: (service as any)?.category?.id || (service as any)?.categoryId,
+        durationMinutes: service.durationMinutes != null ? Number(service.durationMinutes) : undefined,
+        priceCents: service.priceCents != null ? Number(service.priceCents) : undefined,
         description: service.description,
         isActive: service.isActive,
       };
@@ -111,9 +108,9 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         id: String(s.serviceId || id),
         name: String(s.name || existing.name || ''),
         description: s.description ?? null,
-        category: body.category ? { id: String(body.category), nameDe: String(body.category), nameEn: String(body.category) } : null,
-        priceCents: Math.round(((s.price as number) ?? body.price as number ?? 0) * 100),
-        durationMinutes: Number((s.duration as number) ?? body.duration as number ?? existing.durationMinutes),
+        category: body.categoryId ? { id: String(body.categoryId), nameDe: 'Category', nameEn: 'Category' } : null,
+        priceCents: Math.round(((s.priceCents as number) ?? body.priceCents as number ?? existing.priceCents)),
+        durationMinutes: Number((s.durationMinutes as number) ?? body.durationMinutes as number ?? existing.durationMinutes),
         isActive: typeof s.isActive === 'boolean' ? s.isActive : !!body.isActive,
         createdAt: existing.createdAt,
         updatedAt: new Date(),

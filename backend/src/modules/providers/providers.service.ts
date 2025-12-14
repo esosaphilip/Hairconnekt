@@ -167,7 +167,13 @@ export class ProvidersService {
    * Provider dashboard data aggregation
    */
   async getDashboard(userId: string) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    let provider;
+    try {
+      provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    } catch (err: any) {
+      this.logger.error(`Failed to find provider for dashboard user ${userId}: ${err.message}`, err.stack);
+      throw new BadRequestException('Fehler beim Laden des Profils');
+    }
     if (!provider) throw new NotFoundException('Provider profile not found');
 
     try {
