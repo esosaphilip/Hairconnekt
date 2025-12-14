@@ -94,7 +94,6 @@ type PopularStyle = {
 export function HomeScreen() {
   const { t, locale } = useI18n();
   const [favorites, setFavorites] = useState<string[]>([]);
-  const navigation = { goBack: () => {} } as any;
   const { tokens, user } = useAuth();
   const isAuthenticated = !!tokens?.accessToken;
 
@@ -334,7 +333,7 @@ export function HomeScreen() {
 
           {/* Search Bar */}
           <TouchableOpacity
-            onPress={() => navigation.navigate("Search")}
+            onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Search' })}
             style={styles.searchBarWrapper}
             activeOpacity={1} // Prevent visual change on press
           >
