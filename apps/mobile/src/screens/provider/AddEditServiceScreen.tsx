@@ -11,18 +11,10 @@ import { http } from '@/api/http';
 import { providersApi } from '@/services/providers';
 import { logger } from '@/services/logger';
 import { API_CONFIG, MESSAGES } from '@/constants';
+import Picker from '@/components/Picker';
+import { Slider } from '@/components/slider';
 
-const categories = [
-  "Box Braids",
-  "Knotless Braids",
-  "Cornrows",
-  "Senegalese Twists",
-  "Passion Twists",
-  "Locs",
-  "Natural Hair Care",
-  "Barber Services",
-  "Other",
-];
+type CategoryItem = { id: string; nameDe?: string; name_en?: string; name_de?: string; name?: string };
 
 const durationOptions = [
   { value: 30, label: '30 Min.' },
@@ -57,7 +49,7 @@ export function AddEditServiceScreen() {
 
   const [formData, setFormData] = useState({
     name: '',
-    category: '',
+    categoryId: '',
     description: '',
     price: 100,
     duration: 180,
@@ -70,7 +62,9 @@ export function AddEditServiceScreen() {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [durationOpen, setDurationOpen] = useState(false);
 
   const onBack = () => {
@@ -90,7 +84,7 @@ export function AddEditServiceScreen() {
         if (found) {
           setFormData({
             name: String(found.name || ''),
-            category: found?.category?.nameDe || found?.category?.nameEn || '',
+            categoryId: String(found?.category?.id || ''),
             description: found?.description || '',
             price: typeof found.priceCents === 'number' ? Math.round(found.priceCents / 100) : (typeof found.price_cents === 'number' ? Math.round(found.price_cents / 100) : 100),
             duration: typeof found.durationMinutes === 'number' ? found.durationMinutes : (typeof found.duration_minutes === 'number' ? found.duration_minutes : 180),
@@ -104,12 +98,57 @@ export function AddEditServiceScreen() {
     })();
   }, [serviceId]);
 
+  useEffect(() => {
+    const normalize = (raw: any): CategoryItem[] => {
+      const arr = Array.isArray(raw) ? raw : (raw?.items ?? []);
+      return (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
+    };
+    const fetchCategories = async () => {
+      setCategoriesLoading(true);
+      setCategoriesError(null);
+      try {
+        try {
+          const res = await http.get('/services/categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        try {
+          const res = await http.get('/provider/services/categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        try {
+          const res = await http.get('/providers/services/categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        try {
+          const res = await http.get('/service-categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        try {
+          const res = await http.get('/categories', { params: { type: 'service', locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch {}
+        setCategoriesError('Keine Kategorien gefunden.');
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       setMessage('Bitte einen Service-Namen eingeben');
       return;
     }
-    // Kategorie optional: wir erlauben das Erstellen ohne Kategorie
+    if (!isEditing && !formData.categoryId) {
+      setMessage('Bitte wähle eine Kategorie');
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -121,7 +160,7 @@ export function AddEditServiceScreen() {
       durationMinutes: Number(formData.duration || 0),
       isActive: !!formData.isActive,
     };
-    // Kategorie aktuell optional und ohne Backend-IDs: keine categoryId senden
+    const categoryIdPayload = formData.categoryId ? { categoryId: formData.categoryId } : {};
 
     try {
       if (isEditing && serviceId) {
@@ -133,7 +172,16 @@ export function AddEditServiceScreen() {
         if (!providerId) {
           throw new Error('Provider-ID fehlt. Bitte Profil prüfen.');
         }
-        await http.post('/services', { providerId: String(providerId), ...serviceDataBase });
+        const payload = {
+          provider_id: String(providerId),
+          category_id: formData.categoryId,
+          name: serviceDataBase.name,
+          description: serviceDataBase.description || undefined,
+          price_cents: serviceDataBase.priceCents,
+          duration_minutes: serviceDataBase.durationMinutes,
+          is_active: serviceDataBase.isActive,
+        };
+        await http.post('/services', payload);
         setMessage('Service erstellt!');
       }
 
@@ -198,13 +246,17 @@ export function AddEditServiceScreen() {
           </View>
 
           <View style={styles.mtMd}>
-            <Text style={styles.label}>Kategorie (optional)</Text>
-            <Pressable onPress={() => setCategoryOpen(true)} style={styles.selectTrigger} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
-              <Text style={!formData.category ? styles.selectPlaceholderText : styles.selectText}>
-                {formData.category || 'Kategorie wählen'}
-              </Text>
-              <Ionicons name="chevron-down" size={18} color={colors.gray500} />
-            </Pressable>
+            <Text style={styles.label}>Kategorie *</Text>
+            {categoriesLoading ? (
+              <Text style={styles.mutedNote}>Lade Kategorien…</Text>
+            ) : (
+              <Picker
+                selectedValue={formData.categoryId}
+                onValueChange={(v: string) => setFormData({ ...formData, categoryId: v })}
+                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.nameDe ?? 'Kategorie', value: c.id }))]}
+              />
+            )}
+            {categoriesError && <Text style={styles.feedbackError}>{categoriesError}</Text>}
           </View>
 
           <View style={styles.mtMd}>
@@ -253,16 +305,8 @@ export function AddEditServiceScreen() {
 
           <View style={styles.mtMd}>
             <Text style={styles.label}>Anzahlung (%)</Text>
-            <View style={styles.depositRow}>
-              <Button title="-" variant="ghost" onPress={() => incrementDeposit(-5)} />
-              <Text style={styles.mxMd}>{formData.deposit}%</Text>
-              <Button title="+" variant="ghost" onPress={() => incrementDeposit(5)} />
-              <View style={styles.flex1} />
-              <Text style={styles.totalText}>
-                {((formData.price * formData.deposit) / 100).toFixed(2)}€
-              </Text>
-            </View>
-            <Text style={styles.mutedNote}>Kunden zahlen bei der Buchung eine Anzahlung</Text>
+            <Slider value={formData.deposit} onValueChange={(v) => setFormData({ ...formData, deposit: v })} min={0} max={50} step={5} />
+            <Text style={styles.mutedNote}>{formData.deposit}% Anzahlung   {((formData.price * formData.deposit) / 100).toFixed(2)}€</Text>
           </View>
         </Card>
 
@@ -319,22 +363,7 @@ export function AddEditServiceScreen() {
         {loading && <ActivityIndicator />}
       </ScrollView>
 
-      {/* Category Modal */}
-      <Modal visible={categoryOpen} transparent animationType="fade" onRequestClose={() => setCategoryOpen(false)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={[styles.sectionTitle, styles.mbSm]}>Kategorie wählen</Text>
-            <ScrollView style={styles.modalScroll}>
-              {categories.map((cat) => (
-                <Pressable key={cat} style={styles.modalItem} onPress={() => { setFormData({ ...formData, category: cat }); setCategoryOpen(false); }}>
-                  <Text style={styles.modalItemText}>{cat}</Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <Button title="Abbrechen" variant="ghost" onPress={() => setCategoryOpen(false)} style={styles.mtSm} />
-          </View>
-        </View>
-      </Modal>
+      {/* Category Modal removed in favor of Picker */}
 
       {/* Duration Modal */}
       <Modal visible={durationOpen} transparent animationType="fade" onRequestClose={() => setDurationOpen(false)}>
