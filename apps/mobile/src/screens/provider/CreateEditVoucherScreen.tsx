@@ -1,21 +1,60 @@
 import React, { useState } from 'react';
-import { SafeAreaView, View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView, View, Text, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import IconButton from '../../components/IconButton';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
+import { providerVouchersApi } from '../../api/providerVouchers';
 
 export function CreateEditVoucherScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const params = (route && route.params) ? route.params : {};
-  const isEdit = typeof ((params as any)?.id) === 'number';
+  const isEdit = (params as any)?.id && typeof ((params as any)?.id) === 'string';
+  const voucherId = (params as any)?.id;
 
-  const [code, setCode] = useState('');
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [code, setCode] = useState((params as any)?.code || '');
+  const [title, setTitle] = useState((params as any)?.title || '');
+  const [description, setDescription] = useState((params as any)?.description || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    if (!code.trim()) {
+      Alert.alert('Fehler', 'Bitte gib einen Code ein');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const payload = {
+        code: code.trim(),
+        title: title.trim(),
+        description: description.trim(),
+        // Defaults for required fields that aren't in this UI yet
+        type: 'percentage' as const, 
+        discountValue: 10,
+        validFrom: new Date().toISOString(),
+        validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        usageLimits: { totalUses: 100, usesPerClient: 1 }
+      };
+
+      if (isEdit) {
+        await providerVouchersApi.update(voucherId, payload);
+        Alert.alert('Erfolg', 'Gutschein aktualisiert');
+      } else {
+        await providerVouchersApi.create(payload);
+        Alert.alert('Erfolg', 'Gutschein erstellt');
+      }
+      navigation.goBack();
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || 'Fehler beim Speichern';
+      Alert.alert('Fehler', msg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.flexContainer}>
@@ -48,15 +87,18 @@ export function CreateEditVoucherScreen() {
             <Button
               title={isEdit ? 'Speichern' : 'Erstellen'}
               icon="check"
-              onPress={() => {
-                // TODO: Wire to backend: POST /providers/vouchers or PUT /providers/vouchers/:id
-                navigation.goBack();
-              }}
+              onPress={handleSave}
+              disabled={loading}
               style={{ flex: 1, marginLeft: SPACING.sm }}
             />
           </View>
         </Card>
       </View>
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -96,6 +138,12 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     marginTop: SPACING.lg,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

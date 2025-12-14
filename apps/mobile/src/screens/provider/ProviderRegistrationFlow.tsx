@@ -205,6 +205,8 @@ export function ProviderRegistrationFlow() {
   const handleSubmit = async () => {
     try {
       const payload = {
+        // Include password for account creation
+        password: formData.password,
         profile: {
           businessName: formData.businessName || null,
           businessType: formData.businessTypes[0] || null,
