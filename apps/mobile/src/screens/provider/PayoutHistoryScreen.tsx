@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -27,72 +27,9 @@ const toast = {
 };
 
 // --- Types and Mock Data (can be kept largely the same) ---
-const mockPayouts = [
-  // ... (Mock data remains unchanged)
-  {
-    id: "payout-001",
-    amount: 450.0,
-    status: "completed",
-    requestDate: "14. Nov 2025",
-    completedDate: "16. Nov 2025",
-    bankAccount: "Sparkasse Berlin",
-    bankAccountLast4: "4532",
-    reference: "PAY-5678",
-    fee: 5.0,
-    netAmount: 445.0,
-    transactions: 8,
-  },
-  {
-    id: "payout-002",
-    amount: 320.5,
-    status: "processing",
-    requestDate: "07. Nov 2025",
-    bankAccount: "Deutsche Bank",
-    bankAccountLast4: "4532",
-    reference: "PAY-5677",
-    fee: 5.0,
-    netAmount: 315.5,
-    transactions: 6,
-  },
-  {
-    id: "payout-003",
-    amount: 580.0,
-    status: "completed",
-    requestDate: "31. Okt 2025",
-    completedDate: "02. Nov 2025",
-    bankAccount: "Sparkasse Berlin",
-    bankAccountLast4: "4532",
-    reference: "PAY-5676",
-    fee: 5.0,
-    netAmount: 575.0,
-    transactions: 10,
-  },
-  {
-    id: "payout-004",
-    amount: 250.0,
-    status: "failed",
-    requestDate: "24. Okt 2025",
-    bankAccount: "Sparkasse Berlin",
-    bankAccountLast4: "4532",
-    reference: "PAY-5675",
-    fee: 5.0,
-    netAmount: 245.0,
-    transactions: 5,
-  },
-  {
-    id: "payout-005",
-    amount: 410.5,
-    status: "completed",
-    requestDate: "17. Okt 2025",
-    completedDate: "19. Okt 2025",
-    bankAccount: "Sparkasse Berlin",
-    bankAccountLast4: "4532",
-    reference: "PAY-5674",
-    fee: 5.0,
-    netAmount: 405.5,
-    transactions: 7,
-  },
-];
+import { providerFinanceApi } from '@/api/providerFinance';
+type Payout = { id: string; status: 'processing' | 'completed' | 'failed'; requestDate: string; completedDate?: string; bankAccount: string; bankAccountLast4: string; reference?: string; fee: number; netAmount: number; amount: number; transactions?: number };
+const initialPayouts: Payout[] = [];
 
 
 // --- Config Helpers Refactored for RN Styles/Icons ---
@@ -167,18 +104,44 @@ export function PayoutHistoryScreen() {
   const navigation = useNavigation();
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterPeriod, setFilterPeriod] = useState("all");
+  const [payouts, setPayouts] = useState<Payout[]>(initialPayouts);
 
-  const filteredPayouts = mockPayouts.filter((payout) => {
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const data = await providerFinanceApi.payouts({ status: 'all', page: 1, limit: 50 });
+        const items: any[] = Array.isArray(data?.payouts) ? data.payouts : [];
+        const mapped: Payout[] = items.map((p) => ({
+          id: String(p.id),
+          status: p.status,
+          requestDate: new Date(p.requestedDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' }),
+          completedDate: p.completedDate ? new Date(p.completedDate).toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: 'numeric' }) : undefined,
+          bankAccount: p.bankAccount?.bankName || 'Bankkonto',
+          bankAccountLast4: p.bankAccount?.lastFourDigits || '—',
+          reference: p.referenceNumber,
+          fee: Number(p.platformFee || 0),
+          netAmount: Number(p.netAmount || 0),
+          amount: Number(p.amount || (Number(p.netAmount || 0) + Number(p.platformFee || 0))),
+          transactions: undefined,
+        }));
+        if (!cancelled) setPayouts(mapped);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const filteredPayouts = payouts.filter((payout) => {
     const matchesStatus = filterStatus === "all" || payout.status === filterStatus;
     return matchesStatus;
   });
 
-  const totalPaidOut = mockPayouts
+  const totalPaidOut = payouts
     .filter((p) => p.status === "completed")
     .reduce((sum, p) => sum + p.netAmount, 0);
 
-  const totalPending = mockPayouts
-    .filter((p) => p.status === "processing" || p.status === "pending")
+  const totalPending = payouts
+    .filter((p) => p.status === "processing")
     .reduce((sum, p) => sum + p.netAmount, 0);
 
   const handleExport = () => {
@@ -221,7 +184,7 @@ export function PayoutHistoryScreen() {
             </View>
             <Text variant="h1" style={styles.statValue}>€{totalPaidOut.toFixed(2)}</Text>
             <Text style={styles.statSubText}>
-              {mockPayouts.filter((p) => p.status === "completed").length} Auszahlungen
+              {payouts.filter((p) => p.status === "completed").length} Auszahlungen
             </Text>
           </Card>
           
@@ -233,11 +196,7 @@ export function PayoutHistoryScreen() {
             </View>
             <Text variant="h1" style={styles.statValue}>€{totalPending.toFixed(2)}</Text>
             <Text style={styles.statSubText}>
-              {
-                mockPayouts.filter(
-                  (p) => p.status === "processing" || p.status === "pending"
-                ).length
-              } Auszahlungen
+              {payouts.filter((p) => p.status === "processing").length} Auszahlungen
             </Text>
           </Card>
         </View>
@@ -274,7 +233,7 @@ export function PayoutHistoryScreen() {
                   { label: "Alle", value: "all" },
                   { label: "Abgeschlossen", value: "completed" },
                   { label: "In Bearbeitung", value: "processing" },
-                  { label: "Ausstehend", value: "pending" },
+                  
                   { label: "Fehlgeschlagen", value: "failed" },
                 ]}
               />

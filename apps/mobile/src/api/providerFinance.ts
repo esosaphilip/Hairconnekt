@@ -27,5 +27,22 @@ export const providerFinanceApi = {
     }
     return payload;
   },
-};
 
+  async payouts(params: { status?: 'all' | 'processing' | 'completed' | 'failed'; page?: number; limit?: number } = {}) {
+    const res = await http.get('/providers/payouts', { params });
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data;
+    }
+    return payload;
+  },
+
+  async payoutDetail(payoutId: string) {
+    const res = await http.get(`/providers/payouts/${payoutId}`);
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data;
+    }
+    return payload;
+  },
+};
