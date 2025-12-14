@@ -24,7 +24,7 @@ export class ProvidersService {
     @InjectRepository(Service)
     private readonly servicesRepo: Repository<Service>,
     private readonly cache: AppCacheService,
-  ) {}
+  ) { }
 
   private readonly logger = new Logger(ProvidersService.name);
 
@@ -133,7 +133,7 @@ export class ProvidersService {
     await this.cache.deleteByPrefix('providers:nearby');
     const uid = userId;
     await this.cache.del(`providers:dashboard:user:${uid}`);
-    
+
     return {
       providerId: provider.id,
       slots: saved.map((r) => ({
@@ -170,115 +170,144 @@ export class ProvidersService {
     const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    const todayStr = this.formatDate(new Date()); // YYYY-MM-DD
-
-    // Today's appointments
-    let todayAppts: Appointment[] = [];
     try {
-      todayAppts = await this.appointmentsRepo.find({
-        where: { provider: { id: provider.id }, appointmentDate: todayStr },
-        relations: ['client', 'appointmentServices'],
-        order: { startTime: 'ASC' },
+      const todayStr = this.formatDate(new Date()); // YYYY-MM-DD
+
+      // Today's appointments
+      let todayAppts: Appointment[] = [];
+      try {
+        todayAppts = await this.appointmentsRepo.find({
+          where: { provider: { id: provider.id }, appointmentDate: todayStr },
+          relations: ['client', 'appointmentServices'],
+          order: { startTime: 'ASC' },
+        });
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        this.logger.warn(`Failed to load today's appointments for dashboard user ${userId}: ${msg}`);
+        todayAppts = [];
+      }
+      const now = new Date();
+      const todayAppointments = todayAppts.map((a: Appointment) => {
+        const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
+        const serviceSummary = (a.appointmentServices || []).map((s) => s.serviceName).join(' + ');
+        const startStr = (a.startTime || '').slice(0, 5);
+        const endStr = (a.endTime || '').slice(0, 5);
+        const startDt = this.combineDateTimeLocal(a.appointmentDate, a.startTime);
+        const diffMs = startDt.getTime() - now.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        return {
+          id: a.id,
+          time: `${startStr} - ${endStr}`,
+          startTime: startStr,
+          endTime: endStr,
+          client: {
+            id: a.client?.id,
+            name: [a.client?.firstName, a.client?.lastName].filter(Boolean).join(' ').trim() || 'Kunde',
+            image: a.client?.profilePictureUrl || undefined,
+          },
+          service: serviceSummary,
+          priceCents,
+          status: a.status,
+          hoursUntil: Math.round(diffHours * 100) / 100,
+        };
       });
-    } catch (err: any) {
-      const msg = err?.message || String(err);
-      this.logger.warn(`Failed to load today's appointments for dashboard user ${userId}: ${msg}`);
-      todayAppts = [];
-    }
-    const now = new Date();
-    const todayAppointments = todayAppts.map((a: Appointment) => {
-      const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
-      const serviceSummary = (a.appointmentServices || []).map((s) => s.serviceName).join(' + ');
-      const startStr = (a.startTime || '').slice(0, 5);
-      const endStr = (a.endTime || '').slice(0, 5);
-      const startDt = this.combineDateTimeLocal(a.appointmentDate, a.startTime);
-      const diffMs = startDt.getTime() - now.getTime();
-      const diffHours = diffMs / (1000 * 60 * 60);
+
+      // Next appointment (today) if any
+      const nextAppt = todayAppointments.find((a) => a.hoursUntil > 0) || null;
+
+      // Reviews aggregation
+      let avgRating = 0;
+      let reviewCount = 0;
+      try {
+        const { avgRating: avg, reviewCount: count } = await this.reviewsRepo
+          .createQueryBuilder('r')
+          .select('AVG(r.rating)', 'avgRating')
+          .addSelect('COUNT(r.id)', 'reviewCount')
+          .where('r.provider = :providerId', { providerId: provider.id })
+          .getRawOne<{ avgRating: string; reviewCount: string }>()
+          .then((row) => ({
+            avgRating: row?.avgRating ? parseFloat(row.avgRating) : 0,
+            reviewCount: row?.reviewCount ? parseInt(row.reviewCount, 10) : 0,
+          }));
+        avgRating = avg;
+        reviewCount = count;
+      } catch (err: any) {
+        this.logger.warn(`Failed to load reviews stats for dashboard user ${userId}: ${err.message}`);
+      }
+
+      // Week earnings (Mon-Sun) for completed appointments
+      const { weekStart, weekEnd } = this.getWeekRange(new Date());
+      let earningsRows: { totalCents: string } | undefined;
+      try {
+        earningsRows = await this.appointmentsRepo
+          .createQueryBuilder('a')
+          .leftJoin('a.appointmentServices', 'as')
+          .select('COALESCE(SUM(as.price_cents), 0)', 'totalCents')
+          .where('a.provider = :providerId', { providerId: provider.id })
+          .andWhere('a.status = :status', { status: 'COMPLETED' })
+          .andWhere('a.appointment_date BETWEEN :start AND :end', {
+            start: this.formatDate(weekStart),
+            end: this.formatDate(weekEnd),
+          })
+          .getRawOne<{ totalCents: string }>();
+      } catch (err: any) {
+        const msg = err?.message || String(err);
+        this.logger.warn(`Failed to compute week earnings for dashboard user ${userId}: ${msg}`);
+        earningsRows = undefined;
+      }
+      const weekEarningsCents = earningsRows?.totalCents ? parseInt(earningsRows.totalCents, 10) : 0;
+
+      // Recent reviews (last 5)
+      let recentReviews: any[] = [];
+      try {
+        const recent = await this.reviewsRepo.find({
+          where: { provider: { id: provider.id } },
+          relations: ['client'],
+          order: { createdAt: 'DESC' },
+          take: 5,
+        });
+        recentReviews = recent.map((r) => ({
+          id: r.id,
+          client: r.isAnonymous
+            ? 'Anonym'
+            : [r.client?.firstName, r.client?.lastName].filter(Boolean).join(' ').trim() || 'Kunde',
+          rating: r.rating,
+          text: r.comment || '',
+          date: r.createdAt,
+          hasResponse: !!r.providerResponse,
+        }));
+      } catch (err: any) {
+        this.logger.warn(`Failed to load recent reviews for dashboard user ${userId}: ${err.message}`);
+      }
+
       return {
-        id: a.id,
-        time: `${startStr} - ${endStr}`,
-        startTime: startStr,
-        endTime: endStr,
-        client: {
-          id: a.client?.id,
-          name: [a.client?.firstName, a.client?.lastName].filter(Boolean).join(' ').trim() || 'Kunde',
-          image: a.client?.profilePictureUrl || undefined,
+        stats: {
+          todayCount: todayAppointments.length,
+          nextAppointment: nextAppt
+            ? { time: nextAppt.startTime, client: nextAppt.client?.name, hoursUntil: nextAppt.hoursUntil }
+            : null,
+          weekEarningsCents,
+          ratingAverage: Math.round(avgRating * 10) / 10,
+          reviewCount,
         },
-        service: serviceSummary,
-        priceCents,
-        status: a.status,
-        hoursUntil: Math.round(diffHours * 100) / 100,
+        todayAppointments,
+        recentReviews,
       };
-    });
-
-    // Next appointment (today) if any
-    const nextAppt = todayAppointments.find((a) => a.hoursUntil > 0) || null;
-
-    // Reviews aggregation
-    const { avgRating, reviewCount } = await this.reviewsRepo
-      .createQueryBuilder('r')
-      .select('AVG(r.rating)', 'avgRating')
-      .addSelect('COUNT(r.id)', 'reviewCount')
-      .where('r.provider = :providerId', { providerId: provider.id })
-      .getRawOne<{ avgRating: string; reviewCount: string }>()
-      .then((row) => ({
-        avgRating: row?.avgRating ? parseFloat(row.avgRating) : 0,
-        reviewCount: row?.reviewCount ? parseInt(row.reviewCount, 10) : 0,
-      }));
-
-    // Week earnings (Mon-Sun) for completed appointments
-    const { weekStart, weekEnd } = this.getWeekRange(new Date());
-    let earningsRows: { totalCents: string } | undefined;
-    try {
-      earningsRows = await this.appointmentsRepo
-        .createQueryBuilder('a')
-        .leftJoin('a.appointmentServices', 'as')
-        .select('COALESCE(SUM(as.price_cents), 0)', 'totalCents')
-        .where('a.provider = :providerId', { providerId: provider.id })
-        .andWhere('a.status = :status', { status: 'COMPLETED' })
-        .andWhere('a.appointment_date BETWEEN :start AND :end', {
-          start: this.formatDate(weekStart),
-          end: this.formatDate(weekEnd),
-        })
-      .getRawOne<{ totalCents: string }>();
     } catch (err: any) {
-      const msg = err?.message || String(err);
-      this.logger.warn(`Failed to compute week earnings for dashboard user ${userId}: ${msg}`);
-      earningsRows = undefined;
+      this.logger.error(`Dashboard error for user ${userId}: ${err.message}`, err.stack);
+      // Return empty dashboard instead of 500
+      return {
+        stats: {
+          todayCount: 0,
+          nextAppointment: null,
+          weekEarningsCents: 0,
+          ratingAverage: 0,
+          reviewCount: 0,
+        },
+        todayAppointments: [],
+        recentReviews: [],
+      };
     }
-    const weekEarningsCents = earningsRows?.totalCents ? parseInt(earningsRows.totalCents, 10) : 0;
-
-    // Recent reviews (last 5)
-    const recent = await this.reviewsRepo.find({
-      where: { provider: { id: provider.id } },
-      relations: ['client'],
-      order: { createdAt: 'DESC' },
-      take: 5,
-    });
-    const recentReviews = recent.map((r) => ({
-      id: r.id,
-      client: r.isAnonymous
-        ? 'Anonym'
-        : [r.client?.firstName, r.client?.lastName].filter(Boolean).join(' ').trim() || 'Kunde',
-      rating: r.rating,
-      text: r.comment || '',
-      date: r.createdAt,
-      hasResponse: !!r.providerResponse,
-    }));
-
-    return {
-      stats: {
-        todayCount: todayAppointments.length,
-        nextAppointment: nextAppt
-          ? { time: nextAppt.startTime, client: nextAppt.client?.name, hoursUntil: nextAppt.hoursUntil }
-          : null,
-        weekEarningsCents,
-        ratingAverage: Math.round(avgRating * 10) / 10,
-        reviewCount,
-      },
-      todayAppointments,
-      recentReviews,
-    };
   }
 
   /**
@@ -466,13 +495,13 @@ export class ProvidersService {
     // Aggregate ratings per provider
     const ratingRows: Array<{ provider_id: string; avg_rating: string; reviews: string }> = ids.length
       ? await this.reviewsRepo
-          .createQueryBuilder('r')
-          .select('r.provider_id', 'provider_id')
-          .addSelect('AVG(r.rating)', 'avg_rating')
-          .addSelect('COUNT(*)', 'reviews')
-          .where('r.provider_id IN (:...ids)', { ids })
-          .groupBy('r.provider_id')
-          .getRawMany()
+        .createQueryBuilder('r')
+        .select('r.provider_id', 'provider_id')
+        .addSelect('AVG(r.rating)', 'avg_rating')
+        .addSelect('COUNT(*)', 'reviews')
+        .where('r.provider_id IN (:...ids)', { ids })
+        .groupBy('r.provider_id')
+        .getRawMany()
       : [];
     const ratingMap = new Map<string, { rating: number; reviews: number }>();
     for (const row of ratingRows) {
@@ -485,15 +514,15 @@ export class ProvidersService {
     // Aggregate specialties and min price from services
     const svcRows: Array<{ provider_id: string; name: string; price_cents: number }> = ids.length
       ? await this.servicesRepo
-          .createQueryBuilder('svc')
-          .select('svc.provider_id', 'provider_id')
-          .addSelect('svc.name', 'name')
-          .addSelect('svc.price_cents', 'price_cents')
-          .where('svc.provider_id IN (:...ids)', { ids })
-          .andWhere('svc.is_active = :active', { active: true })
-          .orderBy('svc.display_order', 'ASC')
-          .limit(200)
-          .getRawMany()
+        .createQueryBuilder('svc')
+        .select('svc.provider_id', 'provider_id')
+        .addSelect('svc.name', 'name')
+        .addSelect('svc.price_cents', 'price_cents')
+        .where('svc.provider_id IN (:...ids)', { ids })
+        .andWhere('svc.is_active = :active', { active: true })
+        .orderBy('svc.display_order', 'ASC')
+        .limit(200)
+        .getRawMany()
       : [];
     const specialties = new Map<string, string[]>();
     const minPrice = new Map<string, number>();
@@ -681,13 +710,13 @@ export class ProvidersService {
       updatedAt: p.updatedAt,
       user: p.user
         ? {
-            id: p.user.id,
-            email: p.user.email,
-            phone: p.user.phone,
-            firstName: p.user.firstName,
-            lastName: p.user.lastName,
-            profilePictureUrl: p.user.profilePictureUrl || null,
-          }
+          id: p.user.id,
+          email: p.user.email,
+          phone: p.user.phone,
+          firstName: p.user.firstName,
+          lastName: p.user.lastName,
+          profilePictureUrl: p.user.profilePictureUrl || null,
+        }
         : undefined,
     };
   }

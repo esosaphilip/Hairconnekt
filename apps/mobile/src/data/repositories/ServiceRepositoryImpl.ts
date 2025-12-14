@@ -20,7 +20,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const list = payload && typeof payload === 'object' && 'success' in payload && 'data' in payload
         ? (payload as any).data
         : (Array.isArray(payload) ? payload : (payload?.items ?? payload?.services ?? []));
-        
+
       const items: Service[] = (Array.isArray(list) ? list : []).map((s: any) => ({
         id: String(s.id || s.serviceId),
         name: String(s.name || ''),
@@ -104,8 +104,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         description: service.description,
         isActive: service.isActive,
       };
-      // Correct endpoint: PUT /services/:id
-      const res = await http.put(`/services/${id}`, body);
+      // Correct endpoint: PATCH /services/:id
+      const res = await http.patch(`/services/${id}`, body);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const mapped: Service = {
         id: String(s.serviceId || id),

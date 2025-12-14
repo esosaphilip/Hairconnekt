@@ -145,7 +145,7 @@ export const providersApi = {
     reason: string; notes?: string;
     recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
   }): Promise<{ blockId: string; message?: string }> {
-    const res = await http.post('/providers/calendar/block-time', body);
+    const res = await http.post('/blocked-time', body);
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
       return (payload as any).data ?? { blockId: '' };
@@ -158,7 +158,7 @@ export const providersApi = {
     reason: string; notes?: string;
     recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
   }): Promise<{ blockId: string; message?: string }> {
-    const res = await http.patch(`/providers/calendar/block-time/${id}`, body);
+    const res = await http.patch(`/blocked-time/${id}`, body);
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
       return (payload as any).data ?? { blockId: id };
@@ -167,7 +167,7 @@ export const providersApi = {
   },
 
   async blockTimeDelete(id: string): Promise<{ message?: string }> {
-    const res = await http.delete(`/providers/calendar/block-time/${id}`);
+    const res = await http.delete(`/blocked-time/${id}`);
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload) {
       return { message: (payload as any)?.message };

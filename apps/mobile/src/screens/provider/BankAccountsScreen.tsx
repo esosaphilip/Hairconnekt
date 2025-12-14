@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   ScrollView,
@@ -15,7 +15,6 @@ import Card from '../../components/Card';
 import Badge from '../../components/badge';
 import Icon from '../../components/Icon'; 
 import ActionSheet from '../../components/ActionSheet';
-import { providerBankingApi } from '@/api/providerBanking';
 import AlertModal from '../../components/AlertModal';
 
 // Mock React Navigation hook
@@ -40,7 +39,26 @@ type Account = {
   isDefault: boolean;
   addedDate: string;
 };
-const mockBankAccounts: Account[] = [];
+const mockBankAccounts: Account[] = [
+  {
+    id: "bank-1",
+    bankName: "Sparkasse Berlin",
+    accountHolder: "Maria Schmidt",
+    iban: "DE89 3704 0044 0532 0130 00",
+    bic: "COBADEFFXXX",
+    isDefault: true,
+    addedDate: "März 2024",
+  },
+  {
+    id: "bank-2",
+    bankName: "Deutsche Bank",
+    accountHolder: "Maria Schmidt",
+    iban: "DE89 5001 0517 4231 2345 67",
+    bic: "DEUTDEFFXXX",
+    isDefault: false,
+    addedDate: "Januar 2024",
+  },
+];
 
 // --- Config Helpers ---
 const IconNames = {
@@ -79,19 +97,18 @@ export function BankAccountsScreen() {
   const [actionSheetAccount, setActionSheetAccount] = useState<Account | null>(null);
   const [accountToDelete, setAccountToDelete] = useState<string | null>(null);
 
-  const handleSetDefault = async (accountId: string) => {
-    try {
-      await providerBankingApi.updateBankAccount(accountId, { isDefault: true });
-      setAccounts((prev) => prev.map((acc) => ({ ...acc, isDefault: acc.id === accountId })));
-      toast.success("Standardkonto aktualisiert");
-    } catch {
-      toast.error("Aktualisierung fehlgeschlagen");
-    } finally {
-      setActionSheetAccount(null);
-    }
+  const handleSetDefault = (accountId: string) => {
+    setAccounts((prev) =>
+      prev.map((acc) => ({
+        ...acc,
+        isDefault: acc.id === accountId,
+      }))
+    );
+    toast.success("Standardkonto aktualisiert");
+    setActionSheetAccount(null);
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = () => {
     if (accountToDelete) {
       const account = accounts.find((acc) => acc.id === accountToDelete);
       if (account?.isDefault && accounts.length > 1) {
@@ -100,38 +117,12 @@ export function BankAccountsScreen() {
         setAccountToDelete(null);
         return;
       }
-      try {
-        await providerBankingApi.deleteBankAccount(accountToDelete);
-        setAccounts((prev) => prev.filter((acc) => acc.id !== accountToDelete));
-        toast.success("Bankkonto entfernt");
-      } catch {
-        toast.error("Löschen fehlgeschlagen");
-      }
+      setAccounts((prev) => prev.filter((acc) => acc.id !== accountToDelete));
+      toast.success("Bankkonto entfernt");
       setDeleteDialogOpen(false);
       setAccountToDelete(null);
     }
   };
-
-  React.useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await providerBankingApi.getBankAccounts();
-        const items: any[] = Array.isArray(data?.bankAccounts) ? data.bankAccounts : [];
-        const mapped: Account[] = items.map((b) => ({
-          id: String(b.id),
-          bankName: String(b.bankName || 'Bankkonto'),
-          accountHolder: String(b.accountHolder || ''),
-          iban: String(b.iban || ''),
-          bic: String(b.bic || ''),
-          isDefault: !!b.isDefault,
-          addedDate: new Date(b.createdAt).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }),
-        }));
-        if (!cancelled) setAccounts(mapped);
-      } catch {}
-    })();
-    return () => { cancelled = true; };
-  }, []);
 
   const handleDeleteClick = (accountId: string) => {
     setAccountToDelete(accountId);

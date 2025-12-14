@@ -15,7 +15,6 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import { Checkbox } from '../../components/checkbox';
 import Icon from '../../components/Icon';
-import { providerBankingApi } from '@/api/providerBanking';
 // Removed web Alert component usage in favor of inline info boxes
 
 // Mock React Navigation hook
@@ -110,7 +109,7 @@ export function AddBankAccountScreen() {
     }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     // Local validation
     if (!formData.accountHolder.trim()) {
       toast.error("Bitte gib den Kontoinhaber an");
@@ -138,20 +137,18 @@ export function AddBankAccountScreen() {
     }
 
     setIsSubmitting(true);
-    try {
-      if (isEditing && id) {
-        await providerBankingApi.updateBankAccount(String(id), { accountHolder: formData.accountHolder.trim() });
-        toast.success("Bankkonto aktualisiert!");
-      } else {
-        await providerBankingApi.addBankAccount({ accountHolder: formData.accountHolder.trim(), iban: formData.iban.trim(), bic: formData.bic.trim() || undefined, bankName: formData.bankName.trim() || undefined });
-        toast.success("Bankkonto hinzugefügt! Die Verifizierung kann 1-2 Werktage dauern.");
-      }
-      navigation.navigate("ProviderBankAccounts");
-    } catch (e) {
-      toast.error("Speichern fehlgeschlagen");
-    } finally {
+
+    // Simulate API call
+    setTimeout(() => {
       setIsSubmitting(false);
-    }
+      toast.success(
+        isEditing
+          ? "Bankkonto aktualisiert!"
+          : "Bankkonto hinzugefügt! Die Verifizierung kann 1-2 Werktage dauern."
+      );
+      // Navigate to the list screen
+      navigation.navigate("ProviderBankAccounts"); 
+    }, 1500);
   };
 
   return (

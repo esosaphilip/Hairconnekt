@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useState, useMemo } from "react";
 import { View, ScrollView, StyleSheet, SafeAreaView } from "react-native";
 
 // Reusable components (assumed, based on previous refactoring)
@@ -9,7 +9,6 @@ import Badge from '../../components/badge';
 import Picker from '../../components/Picker';
 import Icon from '../../components/Icon'; 
 import { colors } from '../../theme/tokens';
-import { providerAnalyticsApi } from '@/api/providerAnalytics';
 
 // Mock React Navigation hook
 const useNavigation = () => ({
@@ -107,30 +106,11 @@ export function AnalyticsDashboardScreen() {
   const navigation = useNavigation();
   const [timePeriod, setTimePeriod] = useState("week");
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const data = await providerAnalyticsApi.getAnalytics({ period: 'month' });
-        // Optional: integrate live data into charts/metrics if desired
-        // For now, we keep UI static but could map data.keyMetrics/charts/topServices etc.
-      } catch {}
-    })();
-    return () => { cancelled = true; };
-  }, []);
-
   const maxRevenue = useMemo(() => Math.max(...revenueData.map((d) => d.value)), [revenueData]);
   const maxBookings = useMemo(() => Math.max(...peakHours.map((h) => h.bookings)), [peakHours]);
 
-  const handleExport = async () => {
-    const periodNormalized = (['week','month','quarter','year'] as const).includes(timePeriod as any) ? (timePeriod as 'week'|'month'|'quarter'|'year') : 'month';
-    const body = { format: 'pdf' as const, period: periodNormalized };
-    try {
-      const res = await providerAnalyticsApi.exportAnalytics(body);
-      toast.success(res?.message || "Bericht erstellt");
-    } catch {
-      toast.success("Bericht wird exportiert...");
-    }
+  const handleExport = () => {
+    toast.success("Bericht wird exportiert...");
   };
 
   const timePeriodOptions = [

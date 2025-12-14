@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards, Req, Get, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards, Req, Get, Patch, Param, Delete, BadRequestException } from '@nestjs/common';
 import type { Request } from 'express';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -16,7 +16,7 @@ export class ServicesController {
   constructor(
     private readonly servicesService: ServicesService,
     @InjectRepository(ProviderProfile) private readonly providersRepo: Repository<ProviderProfile>,
-  ) {}
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Post()
@@ -37,7 +37,10 @@ export class ServicesController {
     };
     return (async () => {
       const pid = await withProvider();
-      return this.servicesService.create({ ...createServiceDto, providerId: String(pid || '') });
+      if (!pid) {
+        throw new BadRequestException('Provider profile not found');
+      }
+      return this.servicesService.create({ ...createServiceDto, providerId: String(pid) });
     })();
   }
 
