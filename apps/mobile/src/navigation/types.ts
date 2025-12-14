@@ -45,6 +45,7 @@ export type BookingsStackParamList = {
 // Client Profile Stack
 export type ClientProfileStackParamList = {
   Profile: undefined;
+  BecomeProvider: undefined;
   Settings: undefined;
   SettingsScreen: undefined;
   SecuritySettingsScreen: undefined;

@@ -514,6 +514,19 @@ export function ProfileScreen() {
           <MenuItem iconName="document-text" label={t('screens.profile.menu.imprint')} onClick={() => navigateTo('Imprint')} />
         </Card>
 
+        {/* Anbieter werden CTA für CLIENT */}
+        {String(user?.userType || '').toLowerCase() === 'client' && (
+          <View style={{ padding: spacing.xl }}>
+            <View style={{ backgroundColor: colors.primary, padding: spacing.xl, borderRadius: radii.lg, alignItems: 'center' }}>
+              <Text style={{ fontSize: typography.h3.fontSize, fontWeight: typography.h3.fontWeight, color: colors.white, marginBottom: spacing.sm }}>Anbieter werden</Text>
+              <Text style={{ fontSize: typography.body.fontSize, color: colors.white, textAlign: 'center', opacity: 0.9, marginBottom: spacing.lg }}>
+                Biete deine Services an und erreiche neue Kunden
+              </Text>
+              <Button title="Mehr erfahren" onPress={() => navigateTo('BecomeProvider')} style={{ backgroundColor: colors.white }} textStyle={{ color: colors.primary }} />
+            </View>
+          </View>
+        )}
+
         {/* Account Actions */}
         <SectionHeader title={t('screens.profile.sections.account')} />
         <Card style={styles.card}>

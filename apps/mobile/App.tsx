@@ -64,6 +64,7 @@ import { SettingsScreen } from '@/screens/clients/SettingsScreen';
 import { SecuritySettingsScreen } from '@/screens/clients/SecuritySettingsScreen';
 // Shared client management screens
 import { EditProfileScreen } from '@/screens/shared/EditProfileScreen';
+import BecomeProviderScreen from '@/screens/shared/BecomeProviderScreen';
 import { AddressManagementScreen } from '@/screens/clients/AddressManagementScreen';
 import { AddEditAddressScreen } from '@/screens/clients/AddEditAddressScreen';
 import { AllStylesScreen } from '@/screens/clients/AllStylesScreen';
@@ -392,6 +393,7 @@ function ProviderTabs() {
 
 function RootNavigator() {
   const { user, loading } = useAuth();
+  const { mode } = useUserMode();
   // Shared root navigation ref is used for imperative navigation (web hash-based routing)
   
   // Ensure that after logout (user becomes null) we immediately reset to Welcome on the root navigator.
@@ -548,17 +550,26 @@ function RootNavigator() {
           {/* Route to provider vs client app based on userType */}
           {(() => {
             const userType = String(user?.userType || '').toLowerCase();
-            const isProvider = userType === 'provider' || userType === 'both';
-            return isProvider;
-          })() ? (
-            <>
-              <Stack.Screen name="ProviderTabs" component={ProviderTabs} />
-              {/** Alias route to keep backward compatibility with older code that navigates to 'ProviderDashboard' */}
-              <Stack.Screen name="ProviderDashboard" component={ProviderTabs} />
-            </>
-          ) : (
-            <Stack.Screen name="Tabs" component={Tabs} />
-          )}
+            if (userType === 'both') {
+              return mode === 'provider' ? (
+                <>
+                  <Stack.Screen name="ProviderTabs" component={ProviderTabs} />
+                  <Stack.Screen name="ProviderDashboard" component={ProviderTabs} />
+                </>
+              ) : (
+                <Stack.Screen name="Tabs" component={Tabs} />
+              );
+            }
+            if (userType === 'provider') {
+              return (
+                <>
+                  <Stack.Screen name="ProviderTabs" component={ProviderTabs} />
+                  <Stack.Screen name="ProviderDashboard" component={ProviderTabs} />
+                </>
+              );
+            }
+            return <Stack.Screen name="Tabs" component={Tabs} />;
+          })()}
           {/* Global provider detail (public profile) route accessible from anywhere */}
           <Stack.Screen name="ProviderDetail" component={ProviderPublicProfileScreen} options={{ headerShown: false }} />
           {/* Global client routes accessible from anywhere */}
@@ -597,11 +608,14 @@ function RootNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <I18nProvider>
-        <ErrorBoundary>
-          <RootNavigator />
-        </ErrorBoundary>
-      </I18nProvider>
+      <UserModeProvider>
+        <I18nProvider>
+          <ErrorBoundary>
+            <ModeSwitcher />
+            <RootNavigator />
+          </ErrorBoundary>
+        </I18nProvider>
+      </UserModeProvider>
     </AuthProvider>
   );
 }
@@ -634,3 +648,6 @@ function LoginRoute({ route, navigation }: RootStackScreenProps<'Login'>) {
     />
   );
 }
+import { UserModeProvider, useUserMode } from '@/state/UserModeContext';
+import ModeSwitcher from '@/components/ModeSwitcher';
+      <ClientProfileStack.Screen name="BecomeProvider" component={BecomeProviderScreen} options={{ title: 'Anbieter werden' }} />
