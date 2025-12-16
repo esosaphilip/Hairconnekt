@@ -390,15 +390,12 @@ function ProviderTabs() {
       <Tab.Screen 
         name="Mehr" 
         component={ProviderMoreStackScreen} 
-        options={{ headerShown: false }} 
-        listeners={({ navigation, route }) => ({
-          tabPress: (e) => {
-            // Prevent default behavior (which pops to top if already focused)
-            // This keeps the user on the current screen (e.g., Profile) if they click the tab again
-            e.preventDefault();
-            navigation.navigate(route.name);
-          },
-        })}
+        options={{ 
+          headerShown: false,
+          // Reset the stack when leaving the tab, so it always starts at the Menu when returning
+          // @ts-ignore: unmountOnBlur exists in v7 but types might be mismatching
+          unmountOnBlur: true 
+        }} 
       />
     </Tab.Navigator>
   );
