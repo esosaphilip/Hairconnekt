@@ -387,7 +387,19 @@ function ProviderTabs() {
       <Tab.Screen name="Kalender" component={ProviderCalendarStackScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Kunden" component={ProviderClientsStackScreen} options={{ headerShown: false }} />
       <Tab.Screen name="Nachrichten" component={MessagesScreen} />
-      <Tab.Screen name="Mehr" component={ProviderMoreStackScreen} options={{ headerShown: false }} />
+      <Tab.Screen 
+        name="Mehr" 
+        component={ProviderMoreStackScreen} 
+        options={{ headerShown: false }} 
+        listeners={({ navigation, route }) => ({
+          tabPress: (e) => {
+            // Prevent default behavior (which pops to top if already focused)
+            // This keeps the user on the current screen (e.g., Profile) if they click the tab again
+            e.preventDefault();
+            navigation.navigate(route.name);
+          },
+        })}
+      />
     </Tab.Navigator>
   );
 }
