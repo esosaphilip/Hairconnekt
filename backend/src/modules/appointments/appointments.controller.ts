@@ -8,16 +8,10 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
 import { Request } from 'express';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(
-    private readonly appointmentsService: AppointmentsService,
-    @InjectRepository(ProviderProfile) private readonly providersRepo: Repository<ProviderProfile>,
-  ) {}
+  constructor(private readonly appointmentsService: AppointmentsService) {}
 
   // Client side listings
   @Get('client')
@@ -40,20 +34,9 @@ export class AppointmentsController {
   @UseGuards(JwtAuthGuard)
   @Post()
   create(@Body() createAppointmentDto: CreateAppointmentDto, @Req() req: Request) {
-    const providerIdFromToken = (req as any)?.user?.providerId;
-    const userId = (req as any)?.user?.sub || (req as any)?.user?.id;
-    const resolveProviderId = async (): Promise<string | undefined> => {
-      if (providerIdFromToken) return providerIdFromToken;
-      if (userId) {
-        const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
-        return provider?.id;
-      }
-      return undefined;
-    };
-    return (async () => {
-      const pid = await resolveProviderId();
-      return this.appointmentsService.create({ ...createAppointmentDto, providerId: String(pid || '') });
-    })();
+    // In NestJS with Passport, req.user is appended at runtime but not typed on Express Request
+    const providerId = (req as any)?.user?.providerId; // Assuming providerId is on the user object
+    return this.appointmentsService.create({ ...createAppointmentDto, providerId });
   }
 
   @Patch()

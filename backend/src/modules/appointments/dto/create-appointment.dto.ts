@@ -12,12 +12,9 @@ export class CreateAppointmentDto {
   serviceIds: string[];
 
   @IsDateString()
-  appointmentDate: string;
-
-  @IsString()
   startTime: string;
 
-  @IsString()
+  @IsDateString()
   endTime: string;
 
   @IsOptional()

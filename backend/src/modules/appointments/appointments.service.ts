@@ -29,7 +29,7 @@ export class AppointmentsService {
   private readonly logger = new Logger(AppointmentsService.name);
 
   async create(createAppointmentDto: CreateAppointmentDto): Promise<Appointment> {
-    const { providerId, clientId, serviceIds, appointmentDate, startTime, endTime, notes } = createAppointmentDto;
+    const { providerId, clientId, serviceIds, startTime, endTime, notes } = createAppointmentDto;
 
     const provider = await this.providerProfileRepository.findOne({ where: { id: providerId } });
     if (!provider) {
@@ -52,9 +52,10 @@ export class AppointmentsService {
       client,
       startTime,
       endTime,
+      // Map generic notes to clientNotes for now
       clientNotes: notes,
       status: AppointmentStatus.PENDING,
-      appointmentDate: appointmentDate,
+      appointmentDate: new Date().toISOString().split('T')[0],
       totalDurationMinutes,
     });
 

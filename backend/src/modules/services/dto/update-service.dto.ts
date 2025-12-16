@@ -1,5 +1,4 @@
-import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
-import { PriceType } from '../entities/service.entity';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateServiceDto {
   @IsOptional()
@@ -8,32 +7,13 @@ export class UpdateServiceDto {
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  durationMinutes?: number;
+  durationMin?: number;
 
   @IsOptional()
   @IsNumber()
-  @Min(0)
-  priceCents?: number;
-
-  @IsOptional()
-  @IsEnum(PriceType)
-  priceType?: PriceType;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  priceMaxCents?: number;
+  price?: number;
 
   @IsOptional()
   @IsString()
   categoryId?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  isActive?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  displayOrder?: number;
 }

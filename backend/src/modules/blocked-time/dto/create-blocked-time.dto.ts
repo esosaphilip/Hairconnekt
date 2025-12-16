@@ -2,7 +2,6 @@ import { IsArray, IsBoolean, IsDateString, IsNumber, IsOptional, IsString, IsUUI
 
 export class CreateBlockedTimeDto {
   @IsUUID()
-  @IsOptional()
   providerId: string;
 
   @IsString()

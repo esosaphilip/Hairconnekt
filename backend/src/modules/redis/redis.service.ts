@@ -5,11 +5,9 @@ import Redis from 'ioredis';
 export class RedisService implements OnModuleDestroy {
   private client: Redis | null = null;
   private initError: string | null = null;
-  private url: string = '';
 
   constructor() {
     const url = process.env.REDIS_URL || '';
-    this.url = url;
     if (!url) {
       this.initError = 'REDIS_URL not set';
       return;
@@ -21,37 +19,33 @@ export class RedisService implements OnModuleDestroy {
       return;
     }
 
-    // Lazy init; do not connect during module construction
-  }
-
-  getClient(): Redis | null {
-    if (this.client) return this.client;
-    if (this.initError) return null;
-    if (!this.url) return null;
     try {
-      const useTls = this.url.startsWith('rediss://');
+      const useTls = url.startsWith('rediss://');
       const options = useTls ? { tls: {} } : {};
-      this.client = new Redis(this.url, options);
+      this.client = new Redis(url, options);
+      // Prevent unhandled 'error' events from crashing the process
       this.client.on('error', (err) => {
+        // eslint-disable-next-line no-console
         console.error('[Redis] error event:', (err as any)?.message || err);
       });
-      return this.client;
     } catch (e) {
       const msg = (e as Error)?.message || 'Failed to initialize Redis client';
       this.initError = msg;
-      return null;
     }
+  }
+
+  getClient(): Redis | null {
+    return this.client;
   }
 
   async ping(): Promise<boolean> {
     if (this.initError) {
       throw new Error(this.initError);
     }
-    const client = this.getClient();
-    if (!client) {
+    if (!this.client) {
       throw new Error('Redis client not initialized');
     }
-    const res = await client.ping();
+    const res = await this.client.ping();
     return res === 'PONG';
   }
 

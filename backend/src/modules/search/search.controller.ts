@@ -20,28 +20,13 @@ export class SearchController {
     @Query('q') q?: string,
     @Query('query') queryStr?: string,
     @Query('category') category?: string,
-    @Query('minRating') minRating?: string,
-    @Query('priceMin') priceMin?: string,
-    @Query('priceMax') priceMax?: string,
-    @Query('lat') lat?: string,
-    @Query('lng') lng?: string,
-    @Query('withinKm') withinKm?: string,
   ) {
     // Support both ?q= and ?query= from different clients
     const normalizedQuery = (queryStr || q || '').trim();
     if (!normalizedQuery) {
       return { results: [] };
     }
-    const dto: SearchQueryDto = {
-      query: normalizedQuery,
-      category,
-      minRating: minRating ? Number(minRating) : undefined,
-      priceMinCents: priceMin ? Math.round(Number(priceMin) * 100) : undefined,
-      priceMaxCents: priceMax ? Math.round(Number(priceMax) * 100) : undefined,
-      lat: lat ? Number(lat) : undefined,
-      lng: lng ? Number(lng) : undefined,
-      withinKm: withinKm ? Number(withinKm) : undefined,
-    } as any;
+    const dto: SearchQueryDto = { query: normalizedQuery, category } as any;
     try {
       const res = await this.searchService.search(dto);
       return res;

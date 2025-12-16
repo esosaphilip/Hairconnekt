@@ -108,36 +108,7 @@ export class SearchService {
       });
     }
 
-    // Build minimal price per provider (active services only)
-    const svcRows: Array<{ provider_id: string; min_price: string }> = ids.length
-      ? await this.servicesRepo
-          .createQueryBuilder('s')
-          .select('s.provider_id', 'provider_id')
-          .addSelect('MIN(s.price_cents)', 'min_price')
-          .where('s.provider_id IN (:...ids)', { ids })
-          .andWhere('s.is_active = :active', { active: true })
-          .groupBy('s.provider_id')
-          .getRawMany()
-      : [];
-    const priceMap = new Map<string, number>();
-    for (const row of svcRows) priceMap.set(row.provider_id, Number(row.min_price) || 0);
-
-    type Result = {
-      id: string;
-      name: string;
-      business: string | null;
-      rating: number;
-      reviews: number;
-      distance?: number;
-      specialties: string[];
-      price?: number;
-      available: boolean;
-      verified: boolean;
-      image?: string;
-      isFavorited: boolean;
-    };
-
-    const results: Result[] = providers.map((p) => {
+    const results = providers.map((p) => {
       const name = [p.user?.firstName, p.user?.lastName].filter(Boolean).join(' ').trim();
       return {
         id: p.id,
@@ -147,7 +118,7 @@ export class SearchService {
         reviews: ratingMap.get(p.id)?.reviews ?? 0,
         distance: undefined,
         specialties: svcMap.get(p.id) || [],
-        price: priceMap.get(p.id),
+        price: undefined,
         available: p.acceptsSameDayBooking || false,
         verified: p.isVerified || false,
         image: p.coverPhotoUrl || undefined,
@@ -155,61 +126,6 @@ export class SearchService {
       };
     });
 
-    // Optional filters: rating, price, distance
-    let filtered = results;
-    if (typeof params.minRating === 'number') {
-      filtered = filtered.filter((r) => (r.rating ?? 0) >= params.minRating!);
-    }
-    if (typeof params.priceMinCents === 'number') {
-      filtered = filtered.filter((r) => (r.price ?? 0) >= params.priceMinCents!);
-    }
-    if (typeof params.priceMaxCents === 'number') {
-      filtered = filtered.filter((r) => (r.price ?? Number.MAX_SAFE_INTEGER) <= params.priceMaxCents!);
-    }
-
-    // Distance calculation (application-side) if client location provided
-    if (typeof params.lat === 'number' && typeof params.lng === 'number') {
-      // Load primary address lat/lng per provider
-      const locs = ids.length
-        ? await this.providersRepo
-            .createQueryBuilder('p')
-            .leftJoin('p.locations', 'pl')
-            .leftJoin('pl.address', 'a')
-            .select(['p.id AS provider_id', 'a.latitude AS lat', 'a.longitude AS lng', 'pl.is_primary AS is_primary'])
-            .where('p.id IN (:...ids)', { ids })
-            .andWhere('pl.is_primary = true')
-            .getRawMany()
-        : [];
-      const coordMap = new Map<string, { lat: number; lng: number }>();
-      for (const row of locs) {
-        const lat = row.lat !== null && row.lat !== undefined ? Number(row.lat) : NaN;
-        const lng = row.lng !== null && row.lng !== undefined ? Number(row.lng) : NaN;
-        if (!Number.isNaN(lat) && !Number.isNaN(lng)) coordMap.set(row.provider_id, { lat, lng });
-      }
-      const toRad = (n: number) => (n * Math.PI) / 180;
-      const R = 6371; // km
-      filtered = filtered
-        .map((r) => {
-          const c = coordMap.get(r.id);
-          if (!c) return { ...r, distance: undefined } as Result;
-          const dLat = toRad(c.lat - params.lat!);
-          const dLng = toRad(c.lng - params.lng!);
-          const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(params.lat!)) * Math.cos(toRad(c.lat)) * Math.sin(dLng / 2) ** 2;
-          const d = 2 * R * Math.asin(Math.sqrt(a));
-          return { ...r, distance: d } as Result;
-        })
-        .sort((a, b) => (a.distance ?? Number.MAX_VALUE) - (b.distance ?? Number.MAX_VALUE));
-      if (typeof params.withinKm === 'number') {
-        filtered = filtered.filter((r) => (r.distance ?? Number.MAX_VALUE) <= params.withinKm!);
-      }
-    }
-
-    // Sort by verified, rating desc, price asc
-    filtered = filtered
-      .sort((a, b) => Number(b.verified) - Number(a.verified))
-      .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-      .sort((a, b) => (a.price ?? Number.MAX_VALUE) - (b.price ?? Number.MAX_VALUE));
-
-    return { results: filtered };
+    return { results };
   }
 }

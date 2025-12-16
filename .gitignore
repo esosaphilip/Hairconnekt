@@ -10,9 +10,6 @@ logs/
 .env
 .env.*
 backend/.env
-apps/mobile/.env
-!backend/.env.example
-!apps/mobile/.env.example
 
 # Node/Nest backend
 backend/node_modules/

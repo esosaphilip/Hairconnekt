@@ -15,8 +15,6 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AppCacheModule } from './modules/cache/cache.module';
 import { ServicesModule } from './modules/services/services.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
-import { PortfolioModule } from './modules/portfolio/portfolio.module';
-import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
 
 @Module({
   imports: [
@@ -25,7 +23,7 @@ import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
     // Database connection (Postgres/Neon via DATABASE_URL)
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL || process.env.NEON_DB_STRING,
+      url: process.env.DATABASE_URL,
       ssl: process.env.DATABASE_SSL ? { rejectUnauthorized: false } : false,
       autoLoadEntities: true,
       synchronize: false,
@@ -42,11 +40,8 @@ import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
     ProvidersModule,
     ReviewsModule,
     ServicesModule,
-    PortfolioModule,
     // Register appointments API routes (client/provider listings, create, etc.)
     AppointmentsModule,
-    // Register blocked-time API routes (provider time off/pauses)
-    BlockedTimeModule,
   ],
   controllers: [],
   providers: [],

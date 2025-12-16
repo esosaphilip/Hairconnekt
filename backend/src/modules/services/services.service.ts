@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Service, PriceType } from './entities/service.entity';
+import { Service } from './entities/service.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { ServiceCategory } from './entities/service-category.entity';
@@ -36,15 +36,7 @@ export class ServicesService {
     }
 
     const service: Service = this.serviceRepository.create({
-      name: rest.name,
-      description: typeof rest.description === 'string' ? rest.description : '',
-      durationMinutes: rest.durationMinutes,
-      priceCents: rest.priceCents,
-      priceType: rest.priceType ?? PriceType.FIXED,
-      priceMaxCents: typeof rest.priceMaxCents === 'number' ? rest.priceMaxCents : null,
-      imageUrl: typeof rest.imageUrl === 'string' ? rest.imageUrl : null,
-      isActive: typeof rest.isActive === 'boolean' ? rest.isActive : true,
-      displayOrder: typeof rest.displayOrder === 'number' ? rest.displayOrder : 0,
+      ...rest,
       provider,
       category,
     });
@@ -65,42 +57,5 @@ export class ServicesService {
       relations: ['category'],
       order: { displayOrder: 'ASC', name: 'ASC' },
     });
-  }
-
-  async update(serviceId: string, update: Partial<Service> & { categoryId?: string }): Promise<Service> {
-    const existing = await this.serviceRepository.findOne({ where: { id: serviceId }, relations: ['provider', 'category'] });
-    if (!existing) throw new NotFoundException(`Service with ID "${serviceId}" not found`);
-
-    let category = existing.category ?? null;
-    if (typeof update.categoryId === 'string') {
-      if (update.categoryId) {
-        const found = await this.serviceCategoryRepository.findOne({ where: { id: update.categoryId } });
-        if (!found) throw new NotFoundException(`ServiceCategory with ID "${update.categoryId}" not found`);
-        category = found;
-      } else {
-        category = null;
-      }
-    }
-
-    const toSave: Service = {
-      ...existing,
-      name: update.name ?? existing.name,
-      description: update.description ?? existing.description,
-      durationMinutes: typeof update.durationMinutes === 'number' ? update.durationMinutes : existing.durationMinutes,
-      priceCents: typeof update.priceCents === 'number' ? update.priceCents : existing.priceCents,
-      priceType: update.priceType ?? existing.priceType,
-      priceMaxCents: typeof update.priceMaxCents === 'number' ? update.priceMaxCents : existing.priceMaxCents ?? null,
-      isActive: typeof update.isActive === 'boolean' ? update.isActive : existing.isActive,
-      displayOrder: typeof update.displayOrder === 'number' ? update.displayOrder : existing.displayOrder,
-      imageUrl: update.imageUrl ?? existing.imageUrl ?? null,
-      category,
-    };
-    return this.serviceRepository.save(toSave);
-  }
-
-  async delete(serviceId: string): Promise<void> {
-    const existing = await this.serviceRepository.findOne({ where: { id: serviceId } });
-    if (!existing) throw new NotFoundException(`Service with ID "${serviceId}" not found`);
-    await this.serviceRepository.delete(serviceId);
   }
 }

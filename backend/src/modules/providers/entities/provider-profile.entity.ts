@@ -73,9 +73,6 @@ export class ProviderProfile {
   @Column({ name: 'buffer_time_minutes', type: 'int', default: 15 })
   bufferTimeMinutes: number;
 
-  @Column({ name: 'min_advance_hours', type: 'int', default: 2 })
-  minAdvanceHours: number;
-
   @Column({ name: 'cancellation_policy', type: 'text' })
   cancellationPolicy: string;
 
