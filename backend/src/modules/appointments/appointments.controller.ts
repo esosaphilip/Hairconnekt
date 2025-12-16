@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
@@ -7,11 +9,37 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
+import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { Request } from 'express';
 
 @Controller('appointments')
 export class AppointmentsController {
-  constructor(private readonly appointmentsService: AppointmentsService) {}
+  private readonly logger = new Logger(AppointmentsController.name);
+
+  constructor(
+    private readonly appointmentsService: AppointmentsService,
+    @InjectRepository(ProviderProfile)
+    private readonly providersRepo: Repository<ProviderProfile>,
+  ) {}
+
+  private async resolveProviderId(req: any): Promise<string> {
+    const user = req.user;
+    if (user?.providerId) return user.providerId;
+    
+    const userId = user?.sub || user?.id;
+    if (!userId) throw new BadRequestException('User ID not found in request');
+
+    try {
+      const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+      if (!provider) {
+        throw new BadRequestException('User is not a registered provider');
+      }
+      return provider.id;
+    } catch (error) {
+      this.logger.error(`Failed to resolve provider for user ${userId}`, error);
+      throw new InternalServerErrorException('Failed to resolve provider context');
+    }
+  }
 
   // Client side listings
   @Get('client')
@@ -33,9 +61,8 @@ export class AppointmentsController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createAppointmentDto: CreateAppointmentDto, @Req() req: Request) {
-    // In NestJS with Passport, req.user is appended at runtime but not typed on Express Request
-    const providerId = (req as any)?.user?.providerId; // Assuming providerId is on the user object
+  async create(@Body() createAppointmentDto: CreateAppointmentDto, @Req() req: Request) {
+    const providerId = await this.resolveProviderId(req);
     return this.appointmentsService.create({ ...createAppointmentDto, providerId });
   }
 
