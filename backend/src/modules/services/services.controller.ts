@@ -34,6 +34,7 @@ export class ServicesController {
       }
       return provider.id;
     } catch (error) {
+      if (error instanceof BadRequestException) throw error;
       this.logger.error(`Failed to resolve provider for user ${userId}`, error);
       throw new InternalServerErrorException('Failed to resolve provider context');
     }

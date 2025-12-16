@@ -2,7 +2,8 @@ import { IsArray, IsDateString, IsOptional, IsString, IsUUID } from 'class-valid
 
 export class CreateAppointmentDto {
   @IsUUID()
-  providerId: string;
+  @IsOptional()
+  providerId?: string;
 
   @IsUUID()
   clientId: string;

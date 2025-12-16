@@ -11,7 +11,8 @@ import { PriceType } from '../entities/service.entity';
 
 export class CreateServiceDto {
   @IsUUID()
-  providerId: string;
+  @IsOptional()
+  providerId?: string;
 
   @IsString()
   name: string;
