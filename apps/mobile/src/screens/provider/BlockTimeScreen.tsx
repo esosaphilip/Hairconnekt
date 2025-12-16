@@ -96,6 +96,11 @@ export function BlockTimeScreen() {
       const toISO = (d: string) => {
         try {
           const parts = d.trim();
+          // Handle DD.MM.YYYY format common in German locale
+          if (/^\d{2}\.\d{2}\.\d{4}$/.test(parts)) {
+            const [day, month, year] = parts.split('.');
+            return `${year}-${month}-${day}`;
+          }
           if (/^\d{4}-\d{2}-\d{2}$/.test(parts)) return parts;
           const dt = new Date(parts);
           if (!Number.isNaN(dt.getTime())) {
@@ -111,12 +116,19 @@ export function BlockTimeScreen() {
       const payload = {
         startDate: toISO(startDate),
         endDate: endDate ? toISO(endDate) : undefined,
-        isAllDay: !!allDay,
+        allDay: !!allDay,
+        repeat: !!repeat,
         startTime: allDay ? undefined : startTime,
         endTime: allDay ? undefined : endTime,
         reason,
         notes,
-        recurring: repeat ? { frequency: repeatFrequency, endsOn: repeatEndType === 'date' ? toISO(repeatEndDate || startDate) : toISO(endDate || startDate) } : undefined,
+        ...(repeat ? {
+          repeatFrequency,
+          repeatDays: repeatFrequency === 'weekly' ? repeatDays : undefined,
+          repeatEndType,
+          repeatEndDate: repeatEndType === 'date' ? toISO(repeatEndDate) : undefined,
+          repeatCount: repeatEndType === 'count' ? repeatCount : undefined,
+        } : {}),
       } as any;
 
       await providersApi.blockTimeCreate(payload);
