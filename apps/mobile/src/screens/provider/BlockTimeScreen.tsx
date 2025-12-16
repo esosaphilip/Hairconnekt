@@ -121,7 +121,9 @@ export function BlockTimeScreen() {
         startTime: allDay ? undefined : startTime,
         endTime: allDay ? undefined : endTime,
         reason,
+        customReason: reason === 'other' ? customReason : undefined,
         notes,
+        ...(providerId ? { providerId } : {}),
         ...(repeat ? {
           repeatFrequency,
           repeatDays: repeatFrequency === 'weekly' ? repeatDays : undefined,
