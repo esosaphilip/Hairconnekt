@@ -175,11 +175,11 @@ export class AddProviderProfileFeatures1765953245960 implements MigrationInterfa
         await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "slug" TYPE character varying(255)`);
         await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "name_en" TYPE character varying(255)`);
         
+        // Fix for ATRewriteTable: handle existing rows before setting NOT NULL
         await queryRunner.query(`ALTER TABLE "service_categories" ADD COLUMN IF NOT EXISTS "name_de" character varying(255)`);
         await queryRunner.query(`UPDATE "service_categories" SET "name_de" = 'Kategorie' WHERE "name_de" IS NULL`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "name_de" TYPE character varying(255)`);
         await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "name_de" SET NOT NULL`);
-
+        
         // Re-add the unique constraint
         await queryRunner.query(`ALTER TABLE "service_categories" ADD CONSTRAINT "service_categories_slug_key" UNIQUE ("slug")`);
 
