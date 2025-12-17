@@ -130,6 +130,11 @@ export type ProviderMoreStackParamList = {
   AvailabilitySettingsScreen: undefined;
   ProviderHelpScreen: undefined;
   EditProfileScreen: undefined;
+  EditAboutMeScreen: undefined;
+  EditCertificationsScreen: undefined;
+  EditLanguagesScreen: undefined;
+  EditSocialMediaScreen: undefined;
+  EditSpecializationsScreen: undefined;
   AddressManagementScreen: undefined;
   AddEditAddressScreen: { id?: string } | undefined;
 };

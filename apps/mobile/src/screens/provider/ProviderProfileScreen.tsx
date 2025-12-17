@@ -173,13 +173,19 @@ export function ProviderProfileScreen() {
   };
 
   const onEdit = () => {
-    // Navigate to the real EditProfileScreen
+    // Navigate to the real EditProfileScreen (Basic Info)
     try {
       navigation.navigate('EditProfileScreen');
     } catch (e) {
       console.log('Navigation to EditProfileScreen failed', e);
     }
   };
+
+  const onEditAboutMe = () => navigation.navigate('EditAboutMeScreen');
+  const onEditSpecializations = () => navigation.navigate('EditSpecializationsScreen');
+  const onEditLanguages = () => navigation.navigate('EditLanguagesScreen');
+  const onEditSocialMedia = () => navigation.navigate('EditSocialMediaScreen');
+  const onEditCertifications = () => navigation.navigate('EditCertificationsScreen');
 
   const onOpenPublicProfile = () => {
     // Placeholder for navigation
@@ -301,7 +307,7 @@ export function ProviderProfileScreen() {
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
           <View style={styles.sectionHeader}> 
             <Text style={styles.sectionTitle}>Über mich</Text>
-            <Pressable onPress={onEdit} style={styles.iconBtn}>
+            <Pressable onPress={onEditAboutMe} style={styles.iconBtn}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
             </Pressable>
           </View>
@@ -314,7 +320,7 @@ export function ProviderProfileScreen() {
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Spezialisierungen</Text>
-            <Pressable onPress={onEdit} style={styles.iconBtn}>
+            <Pressable onPress={onEditSpecializations} style={styles.iconBtn}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
             </Pressable>
           </View>
@@ -395,7 +401,7 @@ export function ProviderProfileScreen() {
         <Card style={{ padding: spacing.md, marginTop: spacing.md, marginBottom: spacing.lg }}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Zertifikate & Ausbildungen</Text>
-            <Pressable onPress={onEdit} style={styles.iconBtn}>
+            <Pressable onPress={onEditCertifications} style={styles.iconBtn}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
             </Pressable>
           </View>
