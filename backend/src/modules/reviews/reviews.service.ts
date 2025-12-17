@@ -139,7 +139,7 @@ export class ReviewsService {
       throw new ForbiddenException('Not allowed to respond to this review');
     }
 
-    review.respond(dto.response);
+    review.respond(dto.response ?? '');
     await this.reviewsRepo.save(review);
 
     return {

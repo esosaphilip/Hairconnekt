@@ -65,7 +65,7 @@ export class UsersService {
   }
 
   async updateMe(userId: string, payload: Partial<User>) {
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     // Only allow safe fields

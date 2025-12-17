@@ -39,7 +39,7 @@ export class ServicesService {
     const service = Service.create(
       provider,
       rest.name,
-      rest.description,
+      rest.description ?? '',
       rest.durationMinutes,
       rest.priceCents,
       rest.priceType,
