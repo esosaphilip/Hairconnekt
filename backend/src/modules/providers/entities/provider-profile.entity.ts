@@ -16,6 +16,8 @@ import { ProviderAvailability } from './provider-availability.entity';
 import { ProviderTimeOff } from './provider-time-off.entity';
 import { Service } from '../../services/entities/service.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
+import { ProviderSpecialization } from './provider-specialization.entity';
+import { ProviderCertification } from './provider-certification.entity';
 
 export enum BusinessType {
   INDIVIDUAL = 'INDIVIDUAL',
@@ -40,8 +42,26 @@ export class ProviderProfile {
   @Column({ name: 'business_type', type: 'enum', enum: BusinessType })
   businessType: BusinessType;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   bio: string;
+
+  @Column({ type: 'varchar', length: 1024, nullable: true })
+  website?: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  instagram?: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  facebook?: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  twitter?: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  youtube?: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  linkedin?: string | null;
 
   @Column({ name: 'years_of_experience', type: 'int', default: 0 })
   yearsOfExperience: number;
@@ -105,6 +125,12 @@ export class ProviderProfile {
 
   @OneToMany(() => Appointment, (appt: Appointment) => appt.provider)
   appointments?: Appointment[];
+
+  @OneToMany(() => ProviderSpecialization, (spec) => spec.provider, { cascade: true })
+  specializations?: ProviderSpecialization[];
+
+  @OneToMany(() => ProviderCertification, (cert) => cert.provider, { cascade: true })
+  certifications?: ProviderCertification[];
 
   // Stripe Connect integration fields
   @Column({ name: 'stripe_account_id', type: 'varchar', length: 255, nullable: true })

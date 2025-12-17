@@ -1,9 +1,14 @@
-import { Body, Controller, Get, Patch, Post, Req, UseGuards, Query, Param, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Put, Delete, Req, UseGuards, Query, Param, UseInterceptors } from '@nestjs/common';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { ProvidersService } from './providers.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { AvailabilityDto } from './dto/availability.dto';
+import { UpdateBioDto } from './dto/update-bio.dto';
+import { UpdateSpecializationsDto } from './dto/update-specializations.dto';
+import { UpdateLanguagesDto } from './dto/update-languages.dto';
+import { UpdateSocialMediaDto } from './dto/update-social-media.dto';
+import { CreateCertificationDto } from './dto/create-certification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -34,6 +39,62 @@ export class ProvidersController {
   setAvailability(@Req() req: Request, @Body() dto: AvailabilityDto) {
     const userId = (req.user as any)?.sub;
     return this.providersService.setAvailability(userId, dto);
+  }
+
+  @Patch('profile/bio')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  updateBio(@Req() req: Request, @Body() dto: UpdateBioDto) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.updateBio(userId, dto);
+  }
+
+  @Put('profile/specializations')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  updateSpecializations(@Req() req: Request, @Body() dto: UpdateSpecializationsDto) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.updateSpecializations(userId, dto);
+  }
+
+  @Put('profile/languages')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  updateLanguages(@Req() req: Request, @Body() dto: UpdateLanguagesDto) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.updateLanguages(userId, dto);
+  }
+
+  @Patch('profile/social-media')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  updateSocialMedia(@Req() req: Request, @Body() dto: UpdateSocialMediaDto) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.updateSocialMedia(userId, dto);
+  }
+
+  @Get('profile/certifications')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  getCertifications(@Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.getCertifications(userId);
+  }
+
+  @Post('profile/certifications')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  addCertification(@Req() req: Request, @Body() dto: CreateCertificationDto) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.addCertification(userId, dto);
+  }
+
+  @Delete('profile/certifications/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  removeCertification(@Req() req: Request, @Param('id') id: string) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.removeCertification(userId, id);
   }
 
   @Get('me')

@@ -7,6 +7,8 @@ import { ProviderLocation } from './entities/provider-location.entity';
 import { ProviderLanguage } from './entities/provider-language.entity';
 import { ProviderAvailability } from './entities/provider-availability.entity';
 import { ProviderTimeOff } from './entities/provider-time-off.entity';
+import { ProviderSpecialization } from './entities/provider-specialization.entity';
+import { ProviderCertification } from './entities/provider-certification.entity';
 import { VerificationDocument } from './entities/verification-document.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { AppointmentService } from '../appointments/entities/appointment-service.entity';
@@ -24,6 +26,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
       ProviderLanguage,
       ProviderAvailability,
       ProviderTimeOff,
+      ProviderSpecialization,
+      ProviderCertification,
       VerificationDocument,
       Appointment,
       AppointmentService,

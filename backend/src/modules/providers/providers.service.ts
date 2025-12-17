@@ -1,10 +1,19 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
+import * as sanitizeHtml from 'sanitize-html';
 import { ProviderProfile } from './entities/provider-profile.entity';
 import { ProviderAvailability } from './entities/provider-availability.entity';
+import { ProviderSpecialization } from './entities/provider-specialization.entity';
+import { ProviderLanguage } from './entities/provider-language.entity';
+import { ProviderCertification } from './entities/provider-certification.entity';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { AvailabilityDto } from './dto/availability.dto';
+import { UpdateBioDto } from './dto/update-bio.dto';
+import { UpdateSpecializationsDto } from './dto/update-specializations.dto';
+import { UpdateLanguagesDto } from './dto/update-languages.dto';
+import { UpdateSocialMediaDto } from './dto/update-social-media.dto';
+import { CreateCertificationDto } from './dto/create-certification.dto';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { Review } from '../reviews/entities/review.entity';
 import { Service } from '../services/entities/service.entity';
@@ -17,6 +26,12 @@ export class ProvidersService {
     private readonly providersRepo: Repository<ProviderProfile>,
     @InjectRepository(ProviderAvailability)
     private readonly availabilityRepo: Repository<ProviderAvailability>,
+    @InjectRepository(ProviderSpecialization)
+    private readonly specializationsRepo: Repository<ProviderSpecialization>,
+    @InjectRepository(ProviderLanguage)
+    private readonly languagesRepo: Repository<ProviderLanguage>,
+    @InjectRepository(ProviderCertification)
+    private readonly certificationsRepo: Repository<ProviderCertification>,
     @InjectRepository(Appointment)
     private readonly appointmentsRepo: Repository<Appointment>,
     @InjectRepository(Review)
@@ -24,7 +39,180 @@ export class ProvidersService {
     @InjectRepository(Service)
     private readonly servicesRepo: Repository<Service>,
     private readonly cache: AppCacheService,
+    private readonly entityManager: EntityManager,
   ) {}
+
+  /**
+   * Update provider bio with sanitization
+   */
+  async updateBio(userId: string, dto: UpdateBioDto) {
+    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    // Sanitize HTML input
+    const cleanBio = sanitizeHtml(dto.bio, {
+      allowedTags: [], // No tags allowed
+      allowedAttributes: {},
+    });
+
+    provider.bio = cleanBio;
+    await this.providersRepo.save(provider);
+    
+    await this.invalidateProviderCache(provider.id, userId);
+    return { bio: cleanBio };
+  }
+
+  /**
+   * Update specializations (Transactional: Clear & Sync)
+   */
+  async updateSpecializations(userId: string, dto: UpdateSpecializationsDto) {
+    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    await this.entityManager.transaction(async (manager) => {
+      // 1. Delete existing specializations
+      await manager.delete(ProviderSpecialization, { provider: { id: provider.id } });
+
+      // 2. Insert new ones
+      const newSpecs = dto.specializations.map((spec) =>
+        manager.create(ProviderSpecialization, {
+          provider: { id: provider.id } as any,
+          specialization: spec,
+        })
+      );
+      
+      if (newSpecs.length > 0) {
+        await manager.save(newSpecs);
+      }
+    });
+
+    await this.invalidateProviderCache(provider.id, userId);
+    return { specializations: dto.specializations };
+  }
+
+  /**
+   * Update languages (Transactional: Clear & Sync)
+   */
+  async updateLanguages(userId: string, dto: UpdateLanguagesDto) {
+    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    await this.entityManager.transaction(async (manager) => {
+      // 1. Delete existing languages
+      await manager.delete(ProviderLanguage, { provider: { id: provider.id } });
+
+      // 2. Insert new ones
+      const newLangs = dto.languages.map((lang) =>
+        manager.create(ProviderLanguage, {
+          provider: { id: provider.id } as any,
+          language: lang,
+        })
+      );
+      
+      if (newLangs.length > 0) {
+        await manager.save(newLangs);
+      }
+    });
+
+    await this.invalidateProviderCache(provider.id, userId);
+    return { languages: dto.languages };
+  }
+
+  /**
+   * Update social media links
+   */
+  async updateSocialMedia(userId: string, dto: UpdateSocialMediaDto) {
+    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    if (dto.website !== undefined) provider.website = dto.website || null;
+    if (dto.instagram !== undefined) provider.instagram = dto.instagram || null;
+    if (dto.facebook !== undefined) provider.facebook = dto.facebook || null;
+    if (dto.twitter !== undefined) provider.twitter = dto.twitter || null;
+    if (dto.youtube !== undefined) provider.youtube = dto.youtube || null;
+    if (dto.linkedin !== undefined) provider.linkedin = dto.linkedin || null;
+
+    await this.providersRepo.save(provider);
+    await this.invalidateProviderCache(provider.id, userId);
+    
+    return {
+      website: provider.website,
+      instagram: provider.instagram,
+      facebook: provider.facebook,
+      twitter: provider.twitter,
+      youtube: provider.youtube,
+      linkedin: provider.linkedin,
+    };
+  }
+
+  /**
+   * Get all certifications
+   */
+  async getCertifications(userId: string) {
+    const provider = await this.providersRepo.findOne({ 
+      where: { user: { id: userId } },
+      relations: ['certifications'],
+    });
+    if (!provider) throw new NotFoundException('Provider profile not found');
+    return provider.certifications || [];
+  }
+
+  /**
+   * Add a new certification
+   */
+  async addCertification(userId: string, dto: CreateCertificationDto) {
+    const provider = await this.providersRepo.findOne({ 
+      where: { user: { id: userId } },
+      relations: ['certifications'],
+    });
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const count = await this.certificationsRepo.count({ where: { provider: { id: provider.id } } });
+    if (count >= 20) {
+      throw new BadRequestException('Maximal 20 Zertifikate erlaubt');
+    }
+
+    const cert = this.certificationsRepo.create({
+      provider: { id: provider.id } as any,
+      ...dto,
+    });
+    const saved = await this.certificationsRepo.save(cert);
+    
+    await this.invalidateProviderCache(provider.id, userId);
+    return saved;
+  }
+
+  /**
+   * Remove a certification
+   */
+  async removeCertification(userId: string, certId: string) {
+    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const cert = await this.certificationsRepo.findOne({
+      where: { id: certId },
+      relations: ['provider'],
+    });
+
+    if (!cert) throw new NotFoundException('Zertifikat nicht gefunden');
+    if (cert.provider.id !== provider.id) {
+      throw new ForbiddenException('Keine Berechtigung für diese Aktion');
+    }
+
+    await this.certificationsRepo.remove(cert);
+    await this.invalidateProviderCache(provider.id, userId);
+    return { success: true };
+  }
+
+  /**
+   * Helper to invalidate caches after profile updates
+   */
+  private async invalidateProviderCache(providerId: string, userId: string) {
+    await this.cache.del(`providers:public:${providerId}`);
+    await this.cache.deleteByPrefix('providers:nearby');
+    await this.cache.del(`providers:dashboard:user:${userId}`);
+    await this.cache.del(`providers:me:user:${userId}`);
+  }
 
   /**
    * Update basic provider profile information for the current user
