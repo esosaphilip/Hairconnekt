@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, EntityManager } from 'typeorm';
-import * as sanitizeHtml from 'sanitize-html';
+import sanitizeHtml from 'sanitize-html';
 import { ProviderProfile } from './entities/provider-profile.entity';
 import { ProviderAvailability } from './entities/provider-availability.entity';
 import { ProviderSpecialization } from './entities/provider-specialization.entity';
