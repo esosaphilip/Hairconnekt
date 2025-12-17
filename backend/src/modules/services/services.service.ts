@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Service } from './entities/service.entity';
+import { Service, PriceType } from './entities/service.entity';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { ServiceCategory } from './entities/service-category.entity';
@@ -42,7 +42,7 @@ export class ServicesService {
       rest.description ?? '',
       rest.durationMinutes,
       rest.priceCents,
-      rest.priceType,
+      rest.priceType ?? PriceType.FIXED,
       category,
       rest.priceMaxCents,
       rest.imageUrl,

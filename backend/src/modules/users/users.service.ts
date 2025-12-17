@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
+import { IAddressRepository } from '../../domain/repositories/IAddressRepository';
 import { User } from './entities/user.entity';
 
 @Injectable()
@@ -7,6 +8,8 @@ export class UsersService {
   constructor(
     @Inject('IUserRepository')
     private readonly userRepo: IUserRepository,
+    @Inject('IAddressRepository')
+    private readonly addressesRepo: IAddressRepository,
   ) {}
 
   async getMe(userId: string) {
@@ -31,7 +34,7 @@ export class UsersService {
     // Addresses count (avoid joining addresses in the main query to prevent FK naming issues)
     let addressesCount = 0;
     try {
-      addressesCount = await this.addressesRepo.count({ where: { user: { id: userId } } });
+      addressesCount = await this.addressesRepo.countByUserId(userId);
     } catch {
       addressesCount = 0;
     }

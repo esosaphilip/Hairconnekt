@@ -11,6 +11,7 @@ import { ClientProfilesService } from './client-profiles.service';
 import { PreferencesController } from './preferences.controller';
 
 import { TypeORMUserRepository } from '../../infrastructure/repositories/TypeORMUserRepository';
+import { TypeORMAddressRepository } from '../../infrastructure/repositories/TypeORMAddressRepository';
 
 @Module({
   imports: [
@@ -25,7 +26,11 @@ import { TypeORMUserRepository } from '../../infrastructure/repositories/TypeORM
       provide: 'IUserRepository',
       useClass: TypeORMUserRepository,
     },
+    {
+      provide: 'IAddressRepository',
+      useClass: TypeORMAddressRepository,
+    },
   ],
-  exports: [UsersService, 'IUserRepository'],
+  exports: [UsersService, 'IUserRepository', 'IAddressRepository'],
 })
 export class UsersModule {}
