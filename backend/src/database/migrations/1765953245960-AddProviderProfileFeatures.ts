@@ -167,17 +167,12 @@ export class AddProviderProfileFeatures1765953245960 implements MigrationInterfa
         await queryRunner.query(`ALTER TABLE "provider_availability" ALTER COLUMN "provider_id" DROP NOT NULL`);
         await queryRunner.query(`ALTER TABLE "provider_time_off" DROP COLUMN "created_at"`);
         await queryRunner.query(`ALTER TABLE "provider_time_off" ADD "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "name_de"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "name_de" character varying(255) NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "name_en"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "name_en" character varying(255)`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP CONSTRAINT "service_categories_slug_key"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "slug"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "slug" character varying(255) NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "icon_url"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "icon_url" character varying(1024)`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "display_order" SET NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "is_active" SET NOT NULL`);
+        // Consolidated service_categories updates to later section to avoid redundancy and errors
+        /* 
+        Removed redundant DROP/ADD operations for name_de, name_en, slug 
+        to prevent data loss and constraint violations.
+        */
+        /* Removed redundant icon_url, display_order, is_active ops */
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "description" SET NOT NULL`);
         await queryRunner.query(`CREATE TYPE "public"."services_price_type_enum" AS ENUM('FIXED', 'FROM', 'RANGE')`);
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" TYPE "public"."services_price_type_enum" USING "price_type"::text::"public"."services_price_type_enum"`);
@@ -487,15 +482,14 @@ export class AddProviderProfileFeatures1765953245960 implements MigrationInterfa
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "description" DROP NOT NULL`);
         await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "is_active" DROP NOT NULL`);
         await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "display_order" DROP NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "icon_url"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "icon_url" text`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "slug"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "slug" character varying(100) NOT NULL`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD CONSTRAINT "service_categories_slug_key" UNIQUE ("slug")`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "name_en"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "name_en" character varying(100)`);
-        await queryRunner.query(`ALTER TABLE "service_categories" DROP COLUMN "name_de"`);
-        await queryRunner.query(`ALTER TABLE "service_categories" ADD "name_de" character varying(100) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "icon_url" TYPE text`);
+        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "slug" TYPE character varying(100)`);
+        // await queryRunner.query(`ALTER TABLE "service_categories" ADD CONSTRAINT "service_categories_slug_key" UNIQUE ("slug")`);
+        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "name_en" TYPE character varying(100)`);
+        await queryRunner.query(`ALTER TABLE "service_categories" ADD COLUMN IF NOT EXISTS "name_de" character varying(100)`);
+        await queryRunner.query(`UPDATE "service_categories" SET "name_de" = 'Kategorie' WHERE "name_de" IS NULL`);
+        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "name_de" TYPE character varying(100)`);
+        await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "name_de" SET NOT NULL`);
         await queryRunner.query(`ALTER TABLE "provider_time_off" DROP COLUMN "created_at"`);
         await queryRunner.query(`ALTER TABLE "provider_time_off" ADD "created_at" TIMESTAMP DEFAULT CURRENT_TIMESTAMP`);
         await queryRunner.query(`ALTER TABLE "provider_availability" ALTER COLUMN "provider_id" SET NOT NULL`);
