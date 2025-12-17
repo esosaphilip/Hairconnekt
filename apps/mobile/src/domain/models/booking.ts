@@ -1,0 +1,30 @@
+export type BookingStatus = 'upcoming' | 'completed' | 'cancelled';
+
+export interface IBookingService {
+  name: string;
+  durationMinutes?: number;
+}
+
+export interface IBookingProvider {
+  name: string;
+  businessName?: string;
+  avatarUrl?: string;
+}
+
+export interface IBooking {
+  id: string;
+  providerName: string;
+  providerBusiness?: string | null;
+  providerImage?: string;
+  serviceName: string;
+  date: string; // Formatted date string for UI
+  time: string; // Formatted time string
+  duration?: string | null;
+  price?: string | null;
+  location?: string | null;
+  status: BookingStatus;
+  isReviewed: boolean;
+  rating?: number;
+  cancelledBy?: string | null;
+  rawDate: string; // ISO string for sorting/logic
+}

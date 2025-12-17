@@ -8,128 +8,54 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { clientBraiderApi } from '@/api/clientBraider';
+import { IBraider } from '@/domain/models/braider';
+import { colors } from '@/theme/tokens'; // Assuming tokens available
 
-// --- Mock Data ---
-const providerData = {
-  id: '1',
-  name: 'Aisha Mohammed',
-  business: "Aisha's Braiding Studio",
-  rating: 4.8,
-  reviews: 234,
-  address: 'Westenhellweg 102-106, 44137 Dortmund',
-  distance: '1.2 km',
-  verified: true,
-  coverImage:
-    'https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=800',
-  profileImage:
-    'https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=200',
-  badges: ['Salon', 'Mobil verfügbar', 'Verifiziert'],
-  stats: [
-    { label: 'Termine', value: '234' },
-    { label: 'Jahre', value: '8' },
-    { label: 'Response', value: '< 1 Std.' },
-    { label: 'Empfehlung', value: '98%' },
-  ],
-  bio: "Willkommen bei Aisha's Braiding Studio! Mit über 8 Jahren Erfahrung im Haar-Flechten spezialisiere ich mich auf traditionelle und moderne Flechtechniken. Ich arbeite mit natürlichen Haarprodukten und lege großen Wert auf die Gesundheit Ihrer Haare.",
-  specialties: ['Box Braids Expertin', 'Kinderfreundlich', 'Natürliche Haarpflege'],
-  languages: ['Deutsch', 'Englisch', 'Französisch'],
-  hours: [
-    { day: 'Montag', hours: '09:00 - 18:00' },
-    { day: 'Dienstag', hours: '09:00 - 18:00' },
-    { day: 'Mittwoch', hours: '09:00 - 18:00' },
-    { day: 'Donnerstag', hours: '09:00 - 20:00' },
-    { day: 'Freitag', hours: '09:00 - 20:00' },
-    { day: 'Samstag', hours: '10:00 - 16:00' },
-    { day: 'Sonntag', hours: 'Geschlossen' },
-  ],
-};
-
-type ServiceItem = { name: string; duration: string; price: string; description: string };
-type ServiceCategory = { category: string; items: ServiceItem[] };
-
-const services: ServiceCategory[] = [
-  {
-    category: 'Box Braids',
-    items: [
-      {
-        name: 'Classic Box Braids',
-        duration: '3-4 Std.',
-        price: '€45 - €65',
-        description: 'Traditionelle Box Braids in verschiedenen Größen',
-      },
-      {
-        name: 'Knotless Box Braids',
-        duration: '4-5 Std.',
-        price: '€55 - €75',
-        description: 'Schonende Knotless-Technik für natürlichen Look',
-      },
-    ],
-  },
-  {
-    category: 'Cornrows',
-    items: [
-      {
-        name: 'Simple Cornrows',
-        duration: '2-3 Std.',
-        price: '€35 - €50',
-        description: 'Klassische Cornrows in geraden Linien',
-      },
-      {
-        name: 'Design Cornrows',
-        duration: '3-4 Std.',
-        price: '€50 - €70',
-        description: 'Kreative Muster und Designs',
-      },
-    ],
-  },
-];
-
-const portfolioImages: string[] = [
-  'https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-  'https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-  'https://images.unsplash.com/photo-1702236240794-58dc4c6895e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-  'https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-  'https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-  'https://images.unsplash.com/photo-1702236240794-58dc4c6895e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-];
-
-type Review = { id: number; name: string; rating: number; date: string; text: string; verified: boolean; style: string };
-const reviews: Review[] = [
-  {
-    id: 1,
-    name: 'Sarah M.',
-    rating: 5,
-    date: 'vor 2 Wochen',
-    text:
-      'Aisha ist fantastisch! Meine Box Braids sehen perfekt aus und sie war super schnell. Absolut empfehlenswert!',
-    verified: true,
-    style: 'Box Braids',
-  },
-  {
-    id: 2,
-    name: 'Lisa K.',
-    rating: 5,
-    date: 'vor 1 Monat',
-    text:
-      'Beste Braids ever! Super professionell, saubere Arbeit und sehr freundlich. Komme auf jeden Fall wieder!',
-    verified: true,
-    style: 'Knotless Braids',
-  },
-];
+// Mock fallback for now if ID fetch fails or while building
+// But we aim to use real data.
+// Removing hardcoded `providerData` object and using state.
 
 export default function ProviderProfile() {
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { id } = route.params || {};
+
+  const [loading, setLoading] = useState(true);
+  const [provider, setProvider] = useState<IBraider | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const [isFavorite, setIsFavorite] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'gallery' | 'reviews'>('overview');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
   useEffect(() => {
+    if (!id) {
+        setError("Kein Provider gefunden.");
+        setLoading(false);
+        return;
+    }
+
+    async function loadProfile() {
+        setLoading(true);
+        try {
+            const data = await clientBraiderApi.getProfile(id);
+            setProvider(data);
+        } catch (err) {
+            setError("Fehler beim Laden des Profils.");
+        } finally {
+            setLoading(false);
+        }
+    }
+    loadProfile();
+
     // Simulate favorite status init
     setIsFavorite(false);
-  }, []);
+  }, [id]);
 
   const toggleService = (serviceName: string) => {
     setSelectedServices((prev) =>
@@ -137,13 +63,36 @@ export default function ProviderProfile() {
     );
   };
 
+  if (loading) {
+      return (
+          <SafeAreaView style={styles.safeArea}>
+              <View style={[styles.safeArea, {justifyContent: 'center', alignItems: 'center'}]}>
+                  <ActivityIndicator size="large" color="#8B4513" />
+              </View>
+          </SafeAreaView>
+      );
+  }
+
+  if (error || !provider) {
+      return (
+        <SafeAreaView style={styles.safeArea}>
+            <View style={[styles.safeArea, {justifyContent: 'center', alignItems: 'center'}]}>
+                <Text>{error || "Provider nicht gefunden"}</Text>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={{marginTop: 20}}>
+                    <Text style={{color: '#8B4513'}}>Zurück</Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
+      );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconButton}>
           <Ionicons name="chevron-back" size={22} color="#111827" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{providerData.business}</Text>
+        <Text style={styles.headerTitle}>{provider.businessName || provider.name}</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={() => Alert.alert('Teilen')} style={styles.headerIconButton}>
             <Ionicons name="share-outline" size={20} color="#111827" />
@@ -157,10 +106,10 @@ export default function ProviderProfile() {
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Hero Image + Avatar */}
         <View style={styles.heroWrapper}>
-          <Image source={{ uri: providerData.coverImage }} style={styles.heroImage} />
+          <Image source={{ uri: provider.coverImage || provider.imageUrl }} style={styles.heroImage} />
           <View style={styles.avatarWrapper}>
-            <Image source={{ uri: providerData.profileImage }} style={styles.avatarImage} />
-            {providerData.verified && (
+            <Image source={{ uri: provider.profileImage || provider.imageUrl }} style={styles.avatarImage} />
+            {provider.isVerified && (
               <View style={styles.verifiedBadge}>
                 <Ionicons name="checkmark" size={14} color="#fff" />
               </View>
@@ -170,30 +119,30 @@ export default function ProviderProfile() {
 
         {/* Title & Rating */}
         <View style={styles.section}>
-          <Text style={styles.title}>{providerData.business}</Text>
-          <Text style={styles.subtitle}>von {providerData.name}</Text>
+          <Text style={styles.title}>{provider.businessName || provider.name}</Text>
+          <Text style={styles.subtitle}>von {provider.name}</Text>
           <View style={styles.ratingRow}>
             {Array.from({ length: 5 }).map((_, i) => (
               <Ionicons
                 key={i}
-                name={i < Math.floor(providerData.rating) ? 'star' : 'star-outline'}
+                name={i < Math.floor(provider.rating) ? 'star' : 'star-outline'}
                 size={16}
-                color={i < Math.floor(providerData.rating) ? '#F59E0B' : '#D1D5DB'}
+                color={i < Math.floor(provider.rating) ? '#F59E0B' : '#D1D5DB'}
                 style={{ marginRight: 2 }}
               />
             ))}
-            <Text style={styles.ratingText}>{providerData.rating}</Text>
-            <Text style={styles.reviewsText}>({providerData.reviews} Bewertungen)</Text>
+            <Text style={styles.ratingText}>{provider.rating}</Text>
+            <Text style={styles.reviewsText}>({provider.reviewCount} Bewertungen)</Text>
           </View>
           <View style={styles.distanceRow}>
             <Ionicons name="location-outline" size={16} color="#8B4513" />
-            <Text style={styles.distanceText}>{providerData.distance} entfernt</Text>
+            <Text style={styles.distanceText}>{provider.address || (provider.distanceKm ? `${provider.distanceKm.toFixed(1)} km entfernt` : 'Entfernung unbekannt')}</Text>
           </View>
         </View>
 
         {/* Badges */}
         <View style={[styles.section, styles.badgesRow]}>
-          {providerData.badges.map((badge, idx) => (
+          {(provider.badges || []).map((badge, idx) => (
             <View key={idx} style={styles.badge}>
               <Text style={styles.badgeText}>{badge}</Text>
             </View>
@@ -202,7 +151,7 @@ export default function ProviderProfile() {
 
         {/* Stats */}
         <View style={[styles.section, styles.statsRow]}>
-          {providerData.stats.map((stat, idx) => (
+          {(provider.stats || []).map((stat, idx) => (
             <View key={idx} style={styles.statCard}>
               <Text style={styles.statValue}>{stat.value}</Text>
               <Text style={styles.statLabel}>{stat.label}</Text>
@@ -224,10 +173,10 @@ export default function ProviderProfile() {
         {activeTab === 'overview' && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Über mich</Text>
-            <Text style={styles.cardText}>{providerData.bio}</Text>
+            <Text style={styles.cardText}>{provider.bio || 'Keine Beschreibung verfügbar.'}</Text>
 
             <Text style={[styles.cardTitle, { marginTop: 12 }]}>Spezialisierungen</Text>
-            {providerData.specialties.map((s, i) => (
+            {provider.specialties.map((s, i) => (
               <View key={i} style={styles.rowWithIcon}>
                 <Ionicons name="checkmark-circle" size={16} color="#10B981" />
                 <Text style={styles.cardText}>{s}</Text>
@@ -236,7 +185,7 @@ export default function ProviderProfile() {
 
             <Text style={[styles.cardTitle, { marginTop: 12 }]}>Sprachen</Text>
             <View style={styles.badgesRow}>
-              {providerData.languages.map((lang, i) => (
+              {(provider.languages || []).map((lang, i) => (
                 <View key={i} style={[styles.badge, styles.badgeOutline]}>
                   <Text style={[styles.badgeText, { color: '#374151' }]}>{lang}</Text>
                 </View>
@@ -244,7 +193,7 @@ export default function ProviderProfile() {
             </View>
 
             <Text style={[styles.cardTitle, { marginTop: 12 }]}>Öffnungszeiten</Text>
-            {providerData.hours.map((h, i) => (
+            {(provider.hours || []).map((h, i) => (
               <View key={i} style={styles.rowBetween}>
                 <Text style={[styles.cardText, h.day === 'Montag' && styles.boldText]}>{h.day}</Text>
                 <Text style={[styles.cardText, h.hours === 'Geschlossen' ? styles.closedText : styles.boldText]}>{h.hours}</Text>
@@ -255,7 +204,7 @@ export default function ProviderProfile() {
 
         {activeTab === 'services' && (
           <View style={styles.section}>
-            {services.map((cat, idx) => (
+            {(provider.services || []).map((cat, idx) => (
               <View key={idx} style={styles.card}>
                 <Text style={styles.cardTitle}>{cat.category}</Text>
                 {cat.items.map((service, sIdx) => {
@@ -283,10 +232,10 @@ export default function ProviderProfile() {
           <View style={styles.card}>
             <View style={styles.rowBetween}>
               <Text style={styles.cardTitle}>Portfolio</Text>
-              <Text style={styles.cardText}>({portfolioImages.length} Bilder)</Text>
+              <Text style={styles.cardText}>({(provider.portfolioImages || []).length} Bilder)</Text>
             </View>
             <View style={styles.galleryGrid}>
-              {portfolioImages.map((uri, i) => (
+              {(provider.portfolioImages || []).map((uri, i) => (
                 <Image key={i} source={{ uri }} style={styles.galleryImage} />
               ))}
             </View>
@@ -297,12 +246,12 @@ export default function ProviderProfile() {
           <View style={styles.card}>
             <Text style={styles.cardTitle}>Bewertungsübersicht</Text>
             <View style={styles.rowWithIcon}>
-              <Text style={styles.ratingBig}>{providerData.rating}</Text>
+              <Text style={styles.ratingBig}>{provider.rating}</Text>
               <Ionicons name="star" size={16} color="#F59E0B" />
-              <Text style={styles.cardText}>{providerData.reviews} Gesamtbewertungen</Text>
+              <Text style={styles.cardText}>{provider.reviewCount} Gesamtbewertungen</Text>
             </View>
 
-            {reviews.map((review) => (
+            {(provider.reviews || []).map((review) => (
               <View key={review.id} style={[styles.reviewCard, styles.card]}> 
                 <View style={styles.rowBetween}>
                   <View style={styles.rowWithIcon}>
@@ -329,14 +278,14 @@ export default function ProviderProfile() {
         <View style={[styles.card, styles.bottomBar]}>
           <View style={styles.rowWithIcon}>
             <Text style={styles.cardText}>Preise starten ab</Text>
-            <Text style={styles.priceBig}>€35</Text>
+            <Text style={styles.priceBig}>{provider.priceFromCents ? `€${provider.priceFromCents/100}` : 'Anfrage'}</Text>
           </View>
           <View style={styles.rowBetween}>
             <TouchableOpacity style={[styles.btn, styles.btnOutline]} onPress={() => Alert.alert('Nachricht')}>
               <Ionicons name="chatbubble-ellipses-outline" size={16} color="#374151" style={{ marginRight: 6 }} />
               <Text style={[styles.btnText]}>Nachricht</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => navigation.navigate('Booking', { id: providerData.id })}>
+            <TouchableOpacity style={[styles.btn, styles.btnPrimary]} onPress={() => navigation.navigate('Booking', { id: provider.id })}>
               <Text style={[styles.btnText, styles.btnTextPrimary]}>Termin buchen</Text>
               <Ionicons name="chevron-forward" size={16} color="#fff" style={{ marginLeft: 6 }} />
             </TouchableOpacity>

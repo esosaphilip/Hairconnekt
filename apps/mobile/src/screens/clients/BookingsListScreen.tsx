@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { SafeAreaView, FlatList, View, Text, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
-import { getClientAppointments, type AppointmentListItem, type StatusGroup, type AppointmentsListResponse } from '@/api/appointments';
+import { clientBookingApi } from '@/api/clientBooking';
+import { IBooking, BookingStatus } from '@/domain/models/booking';
 import { colors, spacing } from '@/theme/tokens';
-import { hhmm } from '@hairconnekt/shared';
 import { useAuth } from '@/auth/AuthContext';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { useI18n } from '@/i18n';
 import { logger } from '@/services/logger';
 import { MESSAGES } from '@/constants';
+import { DateService } from '@/domain/services/DateService';
+import { DomainError, ErrorType } from '@/domain/errors/DomainError';
 
-const statusOptions: StatusGroup[] = ['upcoming', 'completed', 'cancelled'];
+const statusOptions: BookingStatus[] = ['upcoming', 'completed', 'cancelled'];
 
 import type { BookingsStackParamList } from '@/navigation/types';
 
@@ -23,11 +25,10 @@ export default function BookingsListScreen() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isUnauthorized, setIsUnauthorized] = useState<boolean>(false);
-  const [items, setItems] = useState<AppointmentListItem[]>([]);
-  const [status, setStatus] = useState<StatusGroup>('upcoming');
+  const [items, setItems] = useState<IBooking[]>([]);
+  const [status, setStatus] = useState<BookingStatus>('upcoming');
 
   const fetchAppointments = React.useCallback(() => {
-    // If not authenticated, don't call the API. Show a friendly prompt instead.
     if (!isAuthenticated) {
       setItems([]);
       setError(null);
@@ -39,15 +40,15 @@ export default function BookingsListScreen() {
     setLoading(true);
     setError(null);
     setIsUnauthorized(false);
-    getClientAppointments(status)
-      .then((data: AppointmentsListResponse) => setItems(data.items || []))
+    clientBookingApi.getAppointments(status)
+      .then((data) => setItems(data || []))
       .catch((e: unknown) => {
-        const err = e as { response?: { status?: number }; message?: string };
-        const unauthorized = !!(err && (err?.response?.status === 401 || err?.message?.includes('401')));
+        const err = e as DomainError;
+        const unauthorized = err.type === ErrorType.UNAUTHORIZED;
         setIsUnauthorized(unauthorized);
         const msg = unauthorized
           ? t('screens.bookingsList.loginPrompt', {})
-          : (err?.message || MESSAGES.ERROR.UNKNOWN || t('common.genericError', {}));
+          : err.message || t('common.genericError', {});
         setError(msg);
         logger.error('Failed to fetch appointments:', e);
       })
@@ -55,7 +56,7 @@ export default function BookingsListScreen() {
   }, [status, isAuthenticated, t]);
 
   useEffect(() => {
-    if (authLoading) return; // Wait for auth to be ready
+    if (authLoading) return;
     fetchAppointments();
   }, [status, isAuthenticated, authLoading, fetchAppointments]);
 
@@ -113,23 +114,23 @@ export default function BookingsListScreen() {
           );
         })}
       </View>
-      <FlatList<AppointmentListItem>
+      <FlatList<IBooking>
         data={items}
-        keyExtractor={(it) => String(it.id)}
+        keyExtractor={(it) => it.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
           <Pressable
-            onPress={() => navigation.navigate('AppointmentDetail', { id: String(item.id) })}
+            onPress={() => navigation.navigate('AppointmentDetail', { id: item.id })}
             style={styles.card}
           >
             <View style={styles.cardHeaderRow}>
-              <Text style={styles.cardProviderName}>{item.provider?.businessName || item.provider?.name || t('common.provider', {})}</Text>
+              <Text style={styles.cardProviderName}>{item.providerName}</Text>
               <Text style={styles.cardStatus}>{item.status}</Text>
             </View>
             <Text style={styles.cardInfoText}>
-              {item.appointmentDate} {hhmm(String(item.startTime))}
+              {DateService.formatDateTime(item.date, item.time)}
             </Text>
-            <Text style={styles.cardServicesText}>{item.services.map((s: AppointmentListItem['services'][number]) => s.name).join(', ')}</Text>
+            <Text style={styles.cardServicesText}>{item.serviceName}</Text>
           </Pressable>
         )}
       />

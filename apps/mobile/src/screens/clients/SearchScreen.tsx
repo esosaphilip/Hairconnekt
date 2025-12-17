@@ -13,8 +13,8 @@ import {
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import ProviderCard from '@/components/ProviderCard';
-import { providersApi } from '@/services/providers';
-import type { ProviderSummary } from '@/services/providers';
+import { clientBraiderApi } from '@/api/clientBraider';
+import { IBraider } from '@/domain/models/braider';
 import { favoriteStatus, addFavorite, removeFavorite } from '@/services/favorites';
 import { getRecentSearches, addRecentSearch, clearRecentSearches } from '@/services/recentSearches';
 import { useAuth } from '@/auth/AuthContext';
@@ -77,7 +77,7 @@ export function SearchScreen() {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'map'>('list');
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [results, setResults] = useState<ProviderSummary[]>([]);
+  const [results, setResults] = useState<IBraider[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
@@ -173,7 +173,7 @@ export function SearchScreen() {
       try {
         // Map selected category filters to backend category param (first match wins)
         const category = activeFilters.find((f) => ['salon', 'individual', 'mobile'].includes(f));
-        const data = await providersApi.search(searchTerm, { category });
+        const data = await clientBraiderApi.search(searchTerm, { category });
         setResults(data);
       } catch (err) {
         const message =
@@ -210,7 +210,7 @@ export function SearchScreen() {
     };
   }, [isAuthenticated, results]);
 
-  const RenderListItem = ({ braider }: { braider: ProviderSummary }) => {
+  const RenderListItem = ({ braider }: { braider: IBraider }) => {
     const isFavorite = favorites.includes(braider.id);
     return (
       <ProviderCard

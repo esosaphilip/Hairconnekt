@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { 
@@ -28,24 +29,65 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { spacing, colors } from '../../theme/tokens';
 
+// API
+import { providerProfileApi } from '../../api/providerProfile';
+
 export default function EditSocialMediaScreen() {
   const navigation = useNavigation();
   const [socialLinks, setSocialLinks] = useState({
-    website: "www.aishas-braiding.de",
-    instagram: "@aishas_braiding_studio",
-    facebook: "Aisha's Braiding Studio Berlin",
+    website: "",
+    instagram: "",
+    facebook: "",
     twitter: "",
     youtube: "",
     linkedin: "",
   });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const profile = await providerProfileApi.getMe();
+      if (profile?.socialMedia) {
+        setSocialLinks({
+          website: profile.socialMedia.website || "",
+          instagram: profile.socialMedia.instagram || "",
+          facebook: profile.socialMedia.facebook || "",
+          twitter: profile.socialMedia.twitter || "",
+          youtube: profile.socialMedia.youtube || "",
+          linkedin: profile.socialMedia.linkedin || "",
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Profil konnte nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (platform: string, value: string) => {
     setSocialLinks({ ...socialLinks, [platform]: value });
   };
 
-  const handleSave = () => {
-    Alert.alert("Erfolg", "Social Media Links erfolgreich aktualisiert");
-    navigation.goBack();
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await providerProfileApi.updateSocialMedia(socialLinks);
+      Alert.alert("Erfolg", "Social Media Links erfolgreich aktualisiert", [
+        { text: "OK", onPress: () => navigation.goBack() }
+      ]);
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Speichern fehlgeschlagen.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const socialFields = [
@@ -57,6 +99,14 @@ export default function EditSocialMediaScreen() {
     { id: 'linkedin', label: 'LinkedIn', icon: Linkedin, placeholder: 'Dein LinkedIn Profil' },
   ];
 
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
@@ -65,8 +115,12 @@ export default function EditSocialMediaScreen() {
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Social Media</Text>
-        <TouchableOpacity onPress={handleSave} hitSlop={15}>
-          <Save size={20} color="#8B4513" />
+        <TouchableOpacity onPress={handleSave} hitSlop={15} disabled={saving}>
+          {saving ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Save size={20} color="#8B4513" />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -109,9 +163,10 @@ export default function EditSocialMediaScreen() {
             </View>
 
             <Button
-              title="Änderungen speichern"
+              title={saving ? "Speichert..." : "Änderungen speichern"}
               onPress={handleSave}
               style={styles.saveButton}
+              disabled={saving}
             />
           </Card>
         </ScrollView>
@@ -124,6 +179,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',

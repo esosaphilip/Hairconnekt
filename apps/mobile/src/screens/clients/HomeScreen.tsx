@@ -15,7 +15,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Icon from "@/components/Icon";
 import { useAuth } from "@/auth/AuthContext";
-import { http } from "@/api/http";
+import { clientBraiderApi } from '@/api/clientBraider';
+import { IBraider } from '@/domain/models/braider';
 import { addFavorite, removeFavorite, favoriteStatus } from "@/services/favorites";
 import { showMessage } from "react-native-flash-message";
 import { Avatar, Badge, Card, Input, Button } from "@/ui";
@@ -67,6 +68,8 @@ const quickActions = [
 ];
 
 // Type definitions
+// Remove NearbyItem type definition as we use IBraider now
+/* 
 type NearbyItem = {
   id: string;
   name: string;
@@ -80,6 +83,7 @@ type NearbyItem = {
   priceFromCents?: number;
   available?: boolean;
 };
+*/
 
 type PopularStyle = {
   id: number;
@@ -103,7 +107,7 @@ export function HomeScreen() {
     : (user?.email ? user.email[0].toUpperCase() : "U");
 
   const [locationLabel, setLocationLabel] = useState<string>(t('screens.home.location.detecting'));
-  const [nearby, setNearby] = useState<NearbyItem[] | null>(null);
+  const [nearby, setNearby] = useState<IBraider[] | null>(null);
   const [nearbyLoading, setNearbyLoading] = useState<boolean>(false);
   const [nearbyError, setNearbyError] = useState<string | null>(null);
 
@@ -121,7 +125,7 @@ export function HomeScreen() {
   }, [locale]);
 
   // Use useCallback for async handlers
-  const initFavStatus = useCallback(async (currentNearby: NearbyItem[] | null) => {
+  const initFavStatus = useCallback(async (currentNearby: IBraider[] | null) => {
     if (!isAuthenticated || !currentNearby?.length) return;
     const ids = (currentNearby || []).map((n) => n.id).filter(Boolean);
     if (!ids.length) return;
@@ -155,8 +159,13 @@ export function HomeScreen() {
 
     // API Call
     try {
-      const res = await http.get<{ items: NearbyItem[] }>(API_CONFIG.ENDPOINTS.PROVIDERS.NEARBY, { params: { lat: latitude, lon: longitude, radiusKm: 25, limit: 10 } });
-      const items = res.data?.items ?? [];
+      // Use the new clientBraiderApi instead of direct http call
+      const items = await clientBraiderApi.getNearby({ 
+        lat: latitude, 
+        lon: longitude, 
+        radiusKm: 25, 
+        limit: 10 
+      });
       setNearby(items);
       // Re-initialize favorites after loading nearby
       initFavStatus(items);
@@ -264,7 +273,7 @@ export function HomeScreen() {
     </TouchableOpacity>
   );
 
-  const renderNearbyBraider = ({ item: braider }: { item: NearbyItem }) => (
+  const renderNearbyBraider = ({ item: braider }: { item: IBraider }) => (
     <ProviderCard
       data={braider}
       isFavorite={favorites.includes(braider.id)}

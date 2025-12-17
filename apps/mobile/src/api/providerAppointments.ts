@@ -1,13 +1,20 @@
 import { http } from './http';
+import { IAppointmentRequest } from '../domain/models/appointment';
+import { AppointmentAdapter } from './adapters/appointmentAdapter';
 
 export const providerAppointmentsApi = {
   async listRequests(params: { status?: 'pending' | 'all'; page?: number; limit?: number } = {}) {
     const res = await http.get('/providers/appointment-requests', { params });
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-      return (payload as any).data;
+      // Assuming payload.data is an array of requests
+      const list = (payload as any).data;
+      if (Array.isArray(list)) {
+        return list.map(AppointmentAdapter.toDomain);
+      }
+      return [];
     }
-    return payload;
+    return [];
   },
 
   async accept(id: string) {

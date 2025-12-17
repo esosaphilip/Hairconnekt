@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   ScrollView,
@@ -7,8 +7,9 @@ import {
   Switch,
   Platform,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/auth/AuthContext';
 import Text from '@/components/Text';
 import Button from '@/components/Button';
@@ -21,13 +22,10 @@ import { colors, spacing, typography, radii, COLORS, SPACING, FONT_SIZES } from 
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
- 
-
-const services = [
-  { id: 1, name: 'Classic Box Braids', duration: '3-4 Std.', price: 55 },
-  { id: 2, name: 'Knotless Box Braids', duration: '4-5 Std.', price: 65 },
-  { id: 3, name: 'Simple Cornrows', duration: '2-3 Std.', price: 45 },
-];
+import { clientBraiderApi } from '@/api/clientBraider';
+import { IBraider, IBraiderService } from '@/domain/models/braider';
+import { DateService } from '@/domain/services/DateService';
+import { DomainError, ErrorType } from '@/domain/errors/DomainError';
 
 const timeSlots = {
   morning: ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30'],
@@ -39,45 +37,78 @@ const timeSlots = {
 
 export function BookingFlow() {
   const [step, setStep] = useState<'services' | 'datetime' | 'details' | 'confirmation'>('services');
-  const [selectedServices, setSelectedServices] = useState<number[]>([]);
+  const [selectedServices, setSelectedServices] = useState<string[]>([]); // Using name as ID for now, ideally backend provides IDs
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [mobileService, setMobileService] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'paypal'>('cash');
- 
+  
+  const [provider, setProvider] = useState<IBraider | null>(null);
+  const [loadingProvider, setLoadingProvider] = useState<boolean>(true);
+  const [servicesList, setServicesList] = useState<IBraiderService[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  
-  // id from routeParams is not needed directly in this screen
+  const route = useRoute<any>();
+  const { id } = route.params || {};
   
   // Auth Context (Adaptation for React Native)
   const { tokens } = useAuth();
   const isAuthenticated = !!tokens?.accessToken;
 
+  useEffect(() => {
+    if (!id) {
+        setLoadingProvider(false);
+        return;
+    }
+    async function loadProvider() {
+        try {
+            const data = await clientBraiderApi.getProfile(id);
+            setProvider(data);
+            // Flatten services for selection
+            const allServices: IBraiderService[] = [];
+            (data.services || []).forEach(cat => {
+                cat.items.forEach(item => allServices.push(item));
+            });
+            setServicesList(allServices);
+        } catch (err) {
+            const domainError = err as DomainError;
+            setError(domainError.message);
+        } finally {
+            setLoadingProvider(false);
+        }
+    }
+    loadProvider();
+  }, [id]);
+
   // Function to toggle service selection
-  const toggleService = (serviceId: number) => {
+  const toggleService = (serviceName: string) => {
     setSelectedServices(prev =>
-      prev.includes(serviceId)
-        ? prev.filter(id => id !== serviceId)
-        : [...prev, serviceId]
+      prev.includes(serviceName)
+        ? prev.filter(name => name !== serviceName)
+        : [...prev, serviceName]
     );
   };
 
   // Function to calculate total price
   const getTotalPrice = (): number => {
-    const basePrice = selectedServices.reduce((sum, id) => {
-      const service = services.find(s => s.id === id);
-      return sum + (service?.price || 0);
+    // Parse price strings "€45 - €65" -> take lower bound 45 for calculation or average?
+    // For simplicity, let's try to parse the first number found
+    const basePrice = selectedServices.reduce((sum, name) => {
+      const service = servicesList.find(s => s.name === name);
+      if (!service) return sum;
+      const match = service.price.match(/(\d+)/);
+      const price = match ? parseInt(match[0], 10) : 0;
+      return sum + price;
     }, 0);
     return mobileService ? basePrice + 15 : basePrice;
   };
 
   // Function to get total duration string (simplified for display)
   const getTotalDuration = (): string => {
-    const selected = services.filter(s => selectedServices.includes(s.id));
+    const selected = servicesList.filter(s => selectedServices.includes(s.name));
     if (selected.length === 0) return '0 Std.';
-    // Simplification for display purposes; a real app might calculate an estimated total time range.
     return selected.map(s => s.duration.split(' ')[0]).join(' / ');
   };
 
@@ -120,6 +151,13 @@ export function BookingFlow() {
     (step === 'details')
   );
 
+  if (loadingProvider) {
+      return (
+          <SafeAreaView style={[styles.flexContainer, {justifyContent: 'center', alignItems: 'center'}]}>
+              <ActivityIndicator size="large" color={colors.primary} />
+          </SafeAreaView>
+      );
+  }
 
   // --- Confirmation Step Rendering (Replaces full-page web rendering) ---
   if (step === 'confirmation') {
@@ -141,7 +179,7 @@ export function BookingFlow() {
           <View style={styles.separator} />
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Datum:</Text>
-            <Text>{selectedDate?.toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'short' })}</Text>
+            <Text>{selectedDate ? DateService.formatWeekdayDateMonth(selectedDate) : ''}</Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailLabel}>Uhrzeit:</Text>
@@ -207,35 +245,39 @@ export function BookingFlow() {
         {step === 'services' && (
           <View style={styles.stepContainer}>
             <Text style={styles.stepTitle}>Wähle deine Services</Text>
-            {services.map((service) => (
-              <TouchableOpacity
-                key={service.id}
-                onPress={() => toggleService(service.id)}
-                style={[
-                  styles.serviceCard,
-                  selectedServices.includes(service.id) && styles.serviceCardSelected,
-                ]}
-              >
-                <View style={styles.serviceItem}>
-                  <View style={[
-                    styles.checkbox,
-                    selectedServices.includes(service.id) && styles.checkboxSelected,
-                  ]}>
-                    {selectedServices.includes(service.id) && (
-                      <Icon name="check" size={12} color={colors.white} />
-                    )}
-                  </View>
-                  <View style={styles.serviceDetails}>
-                    <Text style={styles.serviceName}>{service.name}</Text>
-                    <View style={styles.serviceMeta}>
-                      <Icon name="clock" size={14} color={colors.gray600} />
-                      <Text style={styles.serviceDuration}>{service.duration}</Text>
-                      <Text style={styles.servicePrice}>€{service.price}</Text>
+            {servicesList.length === 0 ? (
+                <Text style={{padding: 20, textAlign: 'center'}}>Keine Services verfügbar.</Text>
+            ) : (
+                servicesList.map((service, index) => (
+                <TouchableOpacity
+                    key={index}
+                    onPress={() => toggleService(service.name)}
+                    style={[
+                    styles.serviceCard,
+                    selectedServices.includes(service.name) && styles.serviceCardSelected,
+                    ]}
+                >
+                    <View style={styles.serviceItem}>
+                    <View style={[
+                        styles.checkbox,
+                        selectedServices.includes(service.name) && styles.checkboxSelected,
+                    ]}>
+                        {selectedServices.includes(service.name) && (
+                        <Icon name="check" size={12} color={colors.white} />
+                        )}
                     </View>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+                    <View style={styles.serviceDetails}>
+                        <Text style={styles.serviceName}>{service.name}</Text>
+                        <View style={styles.serviceMeta}>
+                        <Icon name="clock" size={14} color={colors.gray600} />
+                        <Text style={styles.serviceDuration}>{service.duration}</Text>
+                        <Text style={styles.servicePrice}>{service.price}</Text>
+                        </View>
+                    </View>
+                    </View>
+                </TouchableOpacity>
+                ))
+            )}
           </View>
         )}
 
@@ -255,7 +297,7 @@ export function BookingFlow() {
             {selectedDate && (
               <Card style={styles.card}>
                 <Text style={styles.cardTitle}>
-                  Verfügbare Zeiten für {selectedDate.toLocaleDateString('de-DE', { day: '2-digit', month: 'long' })}
+                  Verfügbare Zeiten für {DateService.formatWeekdayDateMonth(selectedDate)}
                 </Text>
 
                 {Object.keys(timeSlots).map((period) => (

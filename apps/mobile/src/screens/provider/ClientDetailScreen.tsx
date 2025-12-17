@@ -9,18 +9,9 @@ import { providerClientsApi } from '@/api/providerClients';
 import { getProviderAppointments } from '@/api/appointments';
 import type { AppointmentListItem as ApiAppointmentListItem, AppointmentServiceItem as ApiAppointmentServiceItem } from '@/api/appointments';
 import { useNavigation } from '@react-navigation/native';
+import { IClient } from '@/domain/models/client';
 
 // Types
-interface ProviderClientItem {
-  id: string;
-  name: string;
-  image?: string;
-  phone?: string;
-  appointments: number;
-  lastVisitIso?: string;
-  totalSpentCents: number;
-  isVIP: boolean;
-}
 
 // Use API types to keep state consistent with server responses
 type AppointmentServiceItem = ApiAppointmentServiceItem;
@@ -32,7 +23,7 @@ export function ClientDetailScreen() {
   const [clientId, setClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [clientItem, setClientItem] = useState<ProviderClientItem | null>(null);
+  const [clientItem, setClientItem] = useState<IClient | null>(null);
   const [completed, setCompleted] = useState<AppointmentListItem[]>([]);
   const [upcoming, setUpcoming] = useState<AppointmentListItem[]>([]);
   const [notes, setNotes] = useState<string>('');
@@ -56,20 +47,8 @@ export function ClientDetailScreen() {
       setLoading(true);
       setError(null);
       try {
-        const detail: any = await providerClientsApi.detail(String(clientId));
-        const item: ProviderClientItem | null = detail
-          ? {
-              id: String(detail.id),
-              name: [detail.firstName, detail.lastName].filter(Boolean).join(' ') || String(detail.name || ''),
-              image: detail.avatar || undefined,
-              phone: detail?.contactInfo?.phone || detail.phone || undefined,
-              appointments: Number(detail?.stats?.totalAppointments || 0),
-              lastVisitIso: detail?.stats?.lastVisit || undefined,
-              totalSpentCents: Math.round(Number(detail?.stats?.totalSpent || 0) * 100),
-              isVIP: !!detail?.isVIP,
-            }
-          : null;
-        if (!cancelled) setClientItem(item);
+        const detail = await providerClientsApi.detail(String(clientId));
+        if (!cancelled) setClientItem(detail);
       } catch (err: any) {
         const msg = err?.message || 'Fehler beim Laden des Kunden';
         if (!cancelled) setError(msg);

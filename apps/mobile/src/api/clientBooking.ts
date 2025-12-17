@@ -1,0 +1,18 @@
+import { http } from './http';
+import { API_CONFIG } from '@/constants';
+import { IBooking, BookingStatus } from '../domain/models/booking';
+import { BookingAdapter } from './adapters/bookingAdapter';
+import { mapApiError } from '../domain/errors/DomainError';
+
+export const clientBookingApi = {
+  async getAppointments(status: BookingStatus): Promise<IBooking[]> {
+    try {
+      const res = await http.get<{ items?: any[] } | any[]>(API_CONFIG.ENDPOINTS.APPOINTMENTS.CLIENT, { params: { status } });
+      const data = res.data;
+      const items = Array.isArray(data) ? data : (data?.items ?? []);
+      return items.map(BookingAdapter.toDomain);
+    } catch (error) {
+      throw mapApiError(error);
+    }
+  }
+};

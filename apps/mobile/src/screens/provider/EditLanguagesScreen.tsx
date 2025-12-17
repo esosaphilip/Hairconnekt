@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Save, X, Plus } from 'lucide-react-native';
@@ -17,6 +18,9 @@ import Card from '../../components/Card';
 import Badge from '../../components/badge';
 import { spacing, colors } from '../../theme/tokens';
 
+// API
+import { providerProfileApi } from '../../api/providerProfile';
+
 const AVAILABLE_LANGUAGES = [
   "Deutsch", "Englisch", "Französisch", "Spanisch", "Italienisch",
   "Portugiesisch", "Russisch", "Türkisch", "Arabisch", "Twi",
@@ -26,9 +30,28 @@ const AVAILABLE_LANGUAGES = [
 
 export default function EditLanguagesScreen() {
   const navigation = useNavigation();
-  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([
-    "Deutsch", "Englisch", "Französisch", "Twi",
-  ]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const profile = await providerProfileApi.getMe();
+      if (profile?.languages) {
+        setSelectedLanguages(profile.languages);
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Profil konnte nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleToggle = (language: string) => {
     if (selectedLanguages.includes(language)) {
@@ -38,14 +61,32 @@ export default function EditLanguagesScreen() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (selectedLanguages.length === 0) {
       Alert.alert("Fehler", "Bitte wähle mindestens eine Sprache aus");
       return;
     }
-    Alert.alert("Erfolg", "Sprachen erfolgreich aktualisiert");
-    navigation.goBack();
+    try {
+      setSaving(true);
+      await providerProfileApi.updateLanguages(selectedLanguages);
+      Alert.alert("Erfolg", "Sprachen erfolgreich aktualisiert", [
+        { text: "OK", onPress: () => navigation.goBack() }
+      ]);
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Speichern fehlgeschlagen.");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -55,8 +96,12 @@ export default function EditLanguagesScreen() {
           <ArrowLeft size={24} color="#374151" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Sprachen bearbeiten</Text>
-        <TouchableOpacity onPress={handleSave} hitSlop={10}>
-          <Save size={20} color="#8B4513" />
+        <TouchableOpacity onPress={handleSave} hitSlop={10} disabled={saving}>
+          {saving ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Save size={20} color="#8B4513" />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -116,9 +161,10 @@ export default function EditLanguagesScreen() {
         </View>
 
         <Button
-          title="Änderungen speichern"
+          title={saving ? "Speichert..." : "Änderungen speichern"}
           onPress={handleSave}
           style={styles.saveButton}
+          disabled={saving}
         />
       </ScrollView>
     </SafeAreaView>
@@ -129,6 +175,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',

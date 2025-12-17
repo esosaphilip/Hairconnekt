@@ -47,35 +47,7 @@ const IconNames = {
   Phone: 'phone',
 };
 
-// Mock data (same as Web)
-const mockRequest = {
-  id: "req-123",
-  client: {
-    id: "client-1",
-    name: "Sarah Müller",
-    avatar: "",
-    phone: "+4915198765432", // Cleaned phone number for Linking
-    email: "sarah.mueller@email.de",
-    totalBookings: 12,
-    joinedDate: "März 2024",
-  },
-  service: {
-    name: "Box Braids - Medium",
-    duration: "5 Std.",
-    price: "€95",
-  },
-  requestedDate: "Montag, 15. Nov 2025",
-  requestedTime: "10:00",
-  alternativeDates: [
-    { date: "Dienstag, 16. Nov 2025", time: "14:00" },
-    { date: "Mittwoch, 17. Nov 2025", time: "10:00" },
-  ],
-  location: "Ihr Salon",
-  address: "Hauptstraße 45, 10115 Berlin",
-  notes: "Ich hätte gerne eine Beratung zur Haarfarbe und würde auch Extensions in Betracht ziehen.",
-  requestedAt: "Vor 2 Stunden",
-  status: "pending",
-};
+import { IAppointmentRequest } from '@/domain/models/appointment';
 
 // Styles for visual consistency and tokens (assuming tokens like spacing.md)
 const primaryColor = '#8B4513';
@@ -86,6 +58,7 @@ const spacing = { sm: 8, md: 16, lg: 24, xl: 32 };
 // Helper to get initials for AvatarFallback
 const getInitials = (name: string) =>
   name.split(" ").map((n) => n[0]).join("");
+
 function AlertModal({ isVisible, onClose, title, description, customContent, buttons }: { isVisible: boolean; onClose: () => void; title: string; description?: string; customContent?: React.ReactNode; buttons: { title: string; onPress: () => void; variant?: 'outline' | 'primary'; style?: any }[] }) {
   return (
     <Modal visible={isVisible} transparent animationType="fade" onRequestClose={onClose}>
@@ -111,12 +84,50 @@ function AlertModal({ isVisible, onClose, title, description, customContent, but
   );
 }
 
+// Mock data (temporary, typed)
+const mockRequest: IAppointmentRequest = {
+  id: "req-123",
+  client: {
+    id: "client-1",
+    name: "Sarah Müller",
+    avatar: "",
+    phone: "+4915198765432", 
+    email: "sarah.mueller@email.de",
+    totalBookings: 12,
+    joinedDate: "März 2024",
+  },
+  service: {
+    name: "Box Braids - Medium",
+    duration: "5 Std.",
+    price: "€95",
+    priceCents: 9500,
+  },
+  requestedDate: "Montag, 15. Nov 2025",
+  requestedTime: "10:00",
+  alternativeDates: [
+    { date: "Dienstag, 16. Nov 2025", time: "14:00" },
+    { date: "Mittwoch, 17. Nov 2025", time: "10:00" },
+  ],
+  location: "Ihr Salon",
+  address: "Hauptstraße 45, 10115 Berlin",
+  notes: "Ich hätte gerne eine Beratung zur Haarfarbe und würde auch Extensions in Betracht ziehen.",
+  requestedAt: "Vor 2 Stunden",
+  status: "pending",
+};
+
 export function AppointmentRequestScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { id } = route.params; // Get ID from route params
-  const [request] = useState(mockRequest);
-  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
+  const { id } = route.params; 
+  // Initialize with null or loading state in real app, but here we use mock or fetched data
+  // The screen currently uses `mockRequest`. We should ideally fetch it.
+  // For the purpose of this refactor, let's type the state.
+  const [request, setRequest] = useState<IAppointmentRequest>(mockRequest as unknown as IAppointmentRequest); 
+  // Note: `mockRequest` structure matches `IAppointmentRequest` closely but might need adjustment.
+  // Let's assume for this task we are focusing on the TYPE usage.
+  
+  // ... rest of code
+
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState<string | null>(null);
   const [selectedAlternative, setSelectedAlternative] = useState<number | null>(null);

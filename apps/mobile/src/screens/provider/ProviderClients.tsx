@@ -14,18 +14,9 @@ import { colors, spacing, typography } from '@/theme/tokens';
 import { API_CONFIG } from '@/constants';
 import { MESSAGES } from '@/constants';
 import { showError } from '@/presentation/utils/errorHandler';
-import type { ProviderClientsStackScreenProps } from '@/navigation/types';
+import { IClient } from '@/domain/models/client';
 
-type Client = {
-  id: string;
-  name: string;
-  image?: string | null;
-  isVIP?: boolean;
-  phone?: string | null;
-  appointments?: number;
-  totalSpentCents?: number;
-  lastVisitIso?: string | null;
-};
+import type { ProviderClientsStackScreenProps } from '@/navigation/types';
 
 function formatRelativeGerman(iso: string | Date | undefined | null): string {
   if (!iso) return '';
@@ -55,7 +46,7 @@ export function ProviderClients() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<{
-    items: Client[];
+    items: IClient[]; // Use Domain Model
     totalClients?: number;
     regularCustomers?: number;
     newThisWeek?: number;
@@ -91,8 +82,8 @@ export function ProviderClients() {
     };
   }, []);
 
-  const filteredClients: Client[] = useMemo(() => {
-    const items = ((data?.items || []) as Client[]).slice();
+  const filteredClients: IClient[] = useMemo(() => {
+    const items = ((data?.items || []) as IClient[]).slice();
     const q = (searchQuery || '').trim().toLowerCase();
     if (!q) return items;
     return items.filter((c) => (c.name || '').toLowerCase().includes(q));
@@ -179,7 +170,7 @@ export function ProviderClients() {
           ) : null}
 
           <View>
-            {filteredClients.map((client: Client) => (
+            {filteredClients.map((client: IClient) => (
               <Card key={client.id} style={styles.clientCard}>
                 <Pressable onPress={() => goToClient(client.id)} style={styles.clientRow} accessibilityRole="button">
                   <Avatar size={56} style={styles.avatar}>

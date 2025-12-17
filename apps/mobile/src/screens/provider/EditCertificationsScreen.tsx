@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Save, Plus, Trash2, Award } from 'lucide-react-native';
@@ -19,58 +20,81 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { spacing, colors } from '../../theme/tokens';
 
-interface Certification {
-  id: string;
-  title: string;
-  institution: string;
-  year: string;
-}
+import { IProviderProfile, ICertification } from '../../domain/models/provider';
+// API
+import { providerProfileApi } from '../../api/providerProfile';
 
 export default function EditCertificationsScreen() {
   const navigation = useNavigation();
-  const [certifications, setCertifications] = useState<Certification[]>([
-    {
-      id: "1",
-      title: "Professionelle Flechtfrisuren Ausbildung",
-      institution: "Braiding Academy Berlin",
-      year: "2019",
-    },
-    {
-      id: "2",
-      title: "Natürliche Haarpflege Spezialist",
-      institution: "Natural Hair Institute",
-      year: "2020",
-    },
-  ]);
-
+  const [certifications, setCertifications] = useState<ICertification[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [newCert, setNewCert] = useState({ title: "", institution: "", year: "" });
+  const [saving, setSaving] = useState(false);
 
-  const handleAdd = () => {
+  useEffect(() => {
+    fetchCertifications();
+  }, []);
+
+  const fetchCertifications = async () => {
+    try {
+      setLoading(true);
+      const certs = await providerProfileApi.getCertifications();
+      if (Array.isArray(certs)) {
+        setCertifications(certs);
+      }
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Zertifikate konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdd = async () => {
     if (!newCert.title || !newCert.institution || !newCert.year) {
       Alert.alert("Fehler", "Bitte fülle alle Felder aus");
       return;
     }
 
-    setCertifications([
-      ...certifications,
-      { id: Date.now().toString(), ...newCert },
-    ]);
-
-    setNewCert({ title: "", institution: "", year: "" });
-    setIsAdding(false);
-    Alert.alert("Erfolg", "Zertifikat hinzugefügt");
+    try {
+      setSaving(true);
+      const addedCert = await providerProfileApi.addCertification(newCert);
+      setCertifications([...certifications, addedCert]);
+      setNewCert({ title: "", institution: "", year: "" });
+      setIsAdding(false);
+      Alert.alert("Erfolg", "Zertifikat hinzugefügt");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Hinzufügen fehlgeschlagen.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (id: string) => {
-    setCertifications(certifications.filter((cert) => cert.id !== id));
-    Alert.alert("Erfolg", "Zertifikat entfernt");
+  const handleDelete = async (id: string) => {
+    try {
+      await providerProfileApi.removeCertification(id);
+      setCertifications(certifications.filter((cert) => cert.id !== id));
+      Alert.alert("Erfolg", "Zertifikat entfernt");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Löschen fehlgeschlagen.");
+    }
   };
 
   const handleSave = () => {
-    Alert.alert("Erfolg", "Erfolgreich aktualisiert");
+    // Just navigation back since actions are immediate
     navigation.goBack();
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -133,14 +157,21 @@ export default function EditCertificationsScreen() {
                   keyboardType="numeric"
                   onChangeText={(val: string) => setNewCert({ ...newCert, year: val })}
                   placeholder="z.B. 2023"
+                  maxLength={4}
                 />
                 <View style={styles.buttonRow}>
-                  <Button title="Hinzufügen" onPress={handleAdd} style={styles.flex1} />
+                  <Button 
+                    title={saving ? "Speichert..." : "Hinzufügen"} 
+                    onPress={handleAdd} 
+                    style={styles.flex1} 
+                    disabled={saving}
+                  />
                   <Button 
                     title="Abbrechen" 
                     variant="outline" 
                     onPress={() => setIsAdding(false)} 
                     style={styles.flex1} 
+                    disabled={saving}
                   />
                 </View>
               </View>
@@ -167,7 +198,7 @@ export default function EditCertificationsScreen() {
           </View>
 
           <Button
-            title="Änderungen speichern"
+            title="Fertig"
             onPress={handleSave}
             style={styles.mainSaveButton}
           />
@@ -179,6 +210,7 @@ export default function EditCertificationsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F9FAFB' },
+  center: { justifyContent: 'center', alignItems: 'center' },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

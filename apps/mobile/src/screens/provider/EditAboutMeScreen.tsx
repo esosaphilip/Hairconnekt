@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   View,
@@ -8,6 +8,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Save } from 'lucide-react-native';
@@ -19,16 +20,54 @@ import Card from '../../components/Card';
 import Input from '../../components/Input';
 import { spacing, colors } from '../../theme/tokens';
 
+// API
+import { providerProfileApi } from '../../api/providerProfile';
+
 export default function EditAboutMeScreen() {
   const navigation = useNavigation();
-  const [bio, setBio] = useState(
-    "Hallo! Ich bin Aisha und habe über 10 Jahre Erfahrung mit afrikanischen Flechtfrisuren. Meine Leidenschaft ist es, jedem Kunden einen individuellen Look zu kreieren, der perfekt zu ihm passt. Ich verwende nur hochwertige Produkte und lege großen Wert auf die Gesundheit deiner Haare."
-  );
+  const [bio, setBio] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    Alert.alert("Erfolg", "Über mich erfolgreich aktualisiert");
-    navigation.goBack();
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const profile = await providerProfileApi.getMe();
+      setBio(profile?.bio || "");
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Profil konnte nicht geladen werden.");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      await providerProfileApi.updateBio(bio);
+      Alert.alert("Erfolg", "Über mich erfolgreich aktualisiert", [
+        { text: "OK", onPress: () => navigation.goBack() }
+      ]);
+    } catch (err) {
+      console.error(err);
+      Alert.alert("Fehler", "Speichern fehlgeschlagen. Bitte versuche es erneut.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -38,8 +77,12 @@ export default function EditAboutMeScreen() {
           <ArrowLeft size={24} color={colors.gray800} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Über mich bearbeiten</Text>
-        <TouchableOpacity onPress={handleSave} hitSlop={15}>
-          <Save size={20} color={colors.primary} />
+        <TouchableOpacity onPress={handleSave} hitSlop={15} disabled={saving}>
+          {saving ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Save size={20} color={colors.primary} />
+          )}
         </TouchableOpacity>
       </View>
 
@@ -77,9 +120,10 @@ export default function EditAboutMeScreen() {
               </View>
 
               <Button
-                title="Änderungen speichern"
+                title={saving ? "Speichert..." : "Änderungen speichern"}
                 onPress={handleSave}
                 style={styles.saveButton}
+                disabled={saving}
               />
             </View>
           </Card>
@@ -93,6 +137,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.gray50,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',

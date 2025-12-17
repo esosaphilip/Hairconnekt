@@ -1,49 +1,44 @@
-/**
- * Domain layer error classes
- * Pure TypeScript, no external dependencies
- */
-
-export class DomainError extends Error {
-  constructor(
-    message: string,
-    public readonly code?: string,
-    public readonly details?: Record<string, unknown>
-  ) {
-    super(message);
-    this.name = 'DomainError';
-    Object.setPrototypeOf(this, DomainError.prototype);
-  }
+export enum ErrorType {
+  NETWORK = 'NETWORK',
+  UNAUTHORIZED = 'UNAUTHORIZED',
+  NOT_FOUND = 'NOT_FOUND',
+  VALIDATION = 'VALIDATION',
+  SERVER = 'SERVER',
+  UNKNOWN = 'UNKNOWN',
 }
 
-export class ValidationError extends DomainError {
-  constructor(message: string, details?: Record<string, unknown>) {
-    super(message, 'VALIDATION_ERROR', details);
-    this.name = 'ValidationError';
-    Object.setPrototypeOf(this, ValidationError.prototype);
-  }
+export interface DomainError {
+  type: ErrorType;
+  message: string;
+  originalError?: unknown;
 }
 
-export class NotFoundError extends DomainError {
-  constructor(resource: string, id?: string) {
-    super(`${resource} not found${id ? `: ${id}` : ''}`, 'NOT_FOUND', { resource, id });
-    this.name = 'NotFoundError';
-    Object.setPrototypeOf(this, NotFoundError.prototype);
-  }
-}
+export const createDomainError = (type: ErrorType, message: string, originalError?: unknown): DomainError => ({
+  type,
+  message,
+  originalError,
+});
 
-export class NetworkError extends DomainError {
-  constructor(message: string = 'Network request failed', details?: Record<string, unknown>) {
-    super(message, 'NETWORK_ERROR', details);
-    this.name = 'NetworkError';
-    Object.setPrototypeOf(this, NetworkError.prototype);
+export const mapApiError = (error: any): DomainError => {
+  if (error?.response) {
+    const status = error.response.status;
+    const msg = error.response.data?.message || 'Ein Fehler ist aufgetreten';
+    
+    if (status === 401 || status === 403) {
+      return createDomainError(ErrorType.UNAUTHORIZED, 'Bitte melden Sie sich erneut an.', error);
+    }
+    if (status === 404) {
+      return createDomainError(ErrorType.NOT_FOUND, 'Ressource nicht gefunden.', error);
+    }
+    if (status >= 500) {
+      return createDomainError(ErrorType.SERVER, 'Serverfehler. Bitte versuchen Sie es später erneut.', error);
+    }
+    return createDomainError(ErrorType.VALIDATION, msg, error);
   }
-}
-
-export class UnauthorizedError extends DomainError {
-  constructor(message: string = 'Unauthorized') {
-    super(message, 'UNAUTHORIZED');
-    this.name = 'UnauthorizedError';
-    Object.setPrototypeOf(this, UnauthorizedError.prototype);
+  
+  if (error?.message === 'Network Error' || !error?.response) {
+    return createDomainError(ErrorType.NETWORK, 'Keine Internetverbindung.', error);
   }
-}
-
+  
+  return createDomainError(ErrorType.UNKNOWN, 'Ein unbekannter Fehler ist aufgetreten.', error);
+};
