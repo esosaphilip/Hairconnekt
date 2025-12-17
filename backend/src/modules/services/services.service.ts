@@ -35,11 +35,18 @@ export class ServicesService {
       category = found;
     }
 
-    const service: Service = this.serviceRepository.create({
-      ...rest,
+    // Use Domain Factory
+    const service = Service.create(
       provider,
+      rest.name,
+      rest.description,
+      rest.durationMinutes,
+      rest.priceCents,
+      rest.priceType,
       category,
-    });
+      rest.priceMaxCents,
+      rest.imageUrl,
+    );
 
     return this.serviceRepository.save(service);
   }

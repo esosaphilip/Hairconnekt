@@ -7,7 +7,7 @@ import type { IServiceRepository } from '@/domain/repositories/IServiceRepositor
 import type { Service } from '@/domain/entities/Service';
 import { http } from '@/api/http';
 import { API_CONFIG } from '@/constants';
-import { NetworkError, NotFoundError } from '@/domain/errors/DomainError';
+import { createDomainError, ErrorType, mapApiError } from '@/domain/errors/DomainError';
 import { providersApi } from '@/services/providers';
 
 export class ServiceRepositoryImpl implements IServiceRepository {
@@ -47,7 +47,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const services = await this.list();
       return services.find((s) => s.id === id) ?? null;
     } catch (error: unknown) {
-      throw new NetworkError('Failed to fetch service', { originalError: error });
+      throw mapApiError(error);
     }
   }
 
@@ -92,7 +92,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
     try {
       const existing = await this.getById(id);
       if (!existing) {
-        throw new NotFoundError('Service', id);
+        throw createDomainError(ErrorType.NOT_FOUND, `Service with id ${id} not found`);
       }
       const body: any = {
         name: service.name,
@@ -118,7 +118,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       };
       return mapped;
     } catch (error: unknown) {
-      if (error instanceof NotFoundError) throw error;
+      if ((error as any)?.type === ErrorType.NOT_FOUND) throw error;
       console.log('Update Service Error:', JSON.stringify((error as any)?.response?.data));
       const status = (error as any)?.response?.status;
       const message = (error as any)?.response?.data?.message;
@@ -150,7 +150,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const res = await http.patch(`/services/${id}`, { isActive });
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const updated = await this.getById(id);
-      if (!updated) throw new NotFoundError('Service', id);
+      if (!updated) throw createDomainError(ErrorType.NOT_FOUND, `Service with id ${id} not found`);
       return { ...updated, isActive: !!(s?.isActive ?? isActive) };
     } catch (error: unknown) {
       const status = (error as any)?.response?.status;

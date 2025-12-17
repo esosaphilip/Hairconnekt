@@ -55,4 +55,15 @@ export class Review {
 
   @OneToMany(() => ReviewImage, (img: ReviewImage) => img.review, { cascade: true })
   images?: ReviewImage[];
+
+  // --- Domain Methods ---
+
+  /**
+   * Update the provider's response to the review.
+   */
+  respond(response: string) {
+    const text = (response ?? '').trim();
+    this.providerResponse = text.length > 0 ? text : null;
+    this.providerRespondedAt = text.length > 0 ? new Date() : null;
+  }
 }

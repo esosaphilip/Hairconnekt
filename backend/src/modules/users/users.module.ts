@@ -10,12 +10,22 @@ import { AddressesService } from './addresses.service';
 import { ClientProfilesService } from './client-profiles.service';
 import { PreferencesController } from './preferences.controller';
 
+import { TypeORMUserRepository } from '../../infrastructure/repositories/TypeORMUserRepository';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Address, ClientProfile]),
   ],
   controllers: [UsersController, AddressesController, PreferencesController],
-  providers: [UsersService, AddressesService, ClientProfilesService],
-  exports: [UsersService],
+  providers: [
+    UsersService, 
+    AddressesService, 
+    ClientProfilesService,
+    {
+      provide: 'IUserRepository',
+      useClass: TypeORMUserRepository,
+    },
+  ],
+  exports: [UsersService, 'IUserRepository'],
 })
 export class UsersModule {}

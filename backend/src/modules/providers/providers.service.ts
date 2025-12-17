@@ -1,12 +1,7 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
-import sanitizeHtml from 'sanitize-html';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject } from '@nestjs/common';
+import { IProviderRepository } from '../../domain/repositories/IProviderRepository';
 import { ProviderProfile } from './entities/provider-profile.entity';
 import { ProviderAvailability } from './entities/provider-availability.entity';
-import { ProviderSpecialization } from './entities/provider-specialization.entity';
-import { ProviderLanguage } from './entities/provider-language.entity';
-import { ProviderCertification } from './entities/provider-certification.entity';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { AvailabilityDto } from './dto/availability.dto';
 import { UpdateBioDto } from './dto/update-bio.dto';
@@ -14,77 +9,40 @@ import { UpdateSpecializationsDto } from './dto/update-specializations.dto';
 import { UpdateLanguagesDto } from './dto/update-languages.dto';
 import { UpdateSocialMediaDto } from './dto/update-social-media.dto';
 import { CreateCertificationDto } from './dto/create-certification.dto';
-import { Appointment } from '../appointments/entities/appointment.entity';
-import { Review } from '../reviews/entities/review.entity';
-import { Service } from '../services/entities/service.entity';
 import { AppCacheService } from '../cache/cache.service';
+
+import { ProviderCertification } from './entities/provider-certification.entity';
 
 @Injectable()
 export class ProvidersService {
   constructor(
-    @InjectRepository(ProviderProfile)
-    private readonly providersRepo: Repository<ProviderProfile>,
-    @InjectRepository(ProviderAvailability)
-    private readonly availabilityRepo: Repository<ProviderAvailability>,
-    @InjectRepository(ProviderSpecialization)
-    private readonly specializationsRepo: Repository<ProviderSpecialization>,
-    @InjectRepository(ProviderLanguage)
-    private readonly languagesRepo: Repository<ProviderLanguage>,
-    @InjectRepository(ProviderCertification)
-    private readonly certificationsRepo: Repository<ProviderCertification>,
-    @InjectRepository(Appointment)
-    private readonly appointmentsRepo: Repository<Appointment>,
-    @InjectRepository(Review)
-    private readonly reviewsRepo: Repository<Review>,
-    @InjectRepository(Service)
-    private readonly servicesRepo: Repository<Service>,
+    @Inject('IProviderRepository')
+    private readonly providerRepo: IProviderRepository,
     private readonly cache: AppCacheService,
-    private readonly entityManager: EntityManager,
   ) {}
 
   /**
    * Update provider bio with sanitization
    */
   async updateBio(userId: string, dto: UpdateBioDto) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    // Sanitize HTML input
-    const cleanBio = sanitizeHtml(dto.bio, {
-      allowedTags: [], // No tags allowed
-      allowedAttributes: {},
-    });
-
-    provider.bio = cleanBio;
-    await this.providersRepo.save(provider);
+    provider.updateBio(dto);
+    await this.providerRepo.save(provider);
     
     await this.invalidateProviderCache(provider.id, userId);
-    return { bio: cleanBio };
+    return { bio: provider.bio };
   }
 
   /**
    * Update specializations (Transactional: Clear & Sync)
    */
   async updateSpecializations(userId: string, dto: UpdateSpecializationsDto) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    await this.entityManager.transaction(async (manager) => {
-      // 1. Delete existing specializations
-      await manager.delete(ProviderSpecialization, { provider: { id: provider.id } });
-
-      // 2. Insert new ones
-      const newSpecs = dto.specializations.map((spec) =>
-        manager.create(ProviderSpecialization, {
-          provider: { id: provider.id } as any,
-          specialization: spec,
-        })
-      );
-      
-      if (newSpecs.length > 0) {
-        await manager.save(newSpecs);
-      }
-    });
+    await this.providerRepo.updateSpecializations(provider.id, dto.specializations);
 
     await this.invalidateProviderCache(provider.id, userId);
     return { specializations: dto.specializations };
@@ -94,25 +52,10 @@ export class ProvidersService {
    * Update languages (Transactional: Clear & Sync)
    */
   async updateLanguages(userId: string, dto: UpdateLanguagesDto) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    await this.entityManager.transaction(async (manager) => {
-      // 1. Delete existing languages
-      await manager.delete(ProviderLanguage, { provider: { id: provider.id } });
-
-      // 2. Insert new ones
-      const newLangs = dto.languages.map((lang) =>
-        manager.create(ProviderLanguage, {
-          provider: { id: provider.id } as any,
-          language: lang,
-        })
-      );
-      
-      if (newLangs.length > 0) {
-        await manager.save(newLangs);
-      }
-    });
+    await this.providerRepo.updateLanguages(provider.id, dto.languages);
 
     await this.invalidateProviderCache(provider.id, userId);
     return { languages: dto.languages };
@@ -122,17 +65,12 @@ export class ProvidersService {
    * Update social media links
    */
   async updateSocialMedia(userId: string, dto: UpdateSocialMediaDto) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    if (dto.website !== undefined) provider.website = dto.website || null;
-    if (dto.instagram !== undefined) provider.instagram = dto.instagram || null;
-    if (dto.facebook !== undefined) provider.facebook = dto.facebook || null;
-    if (dto.twitter !== undefined) provider.twitter = dto.twitter || null;
-    if (dto.youtube !== undefined) provider.youtube = dto.youtube || null;
-    if (dto.linkedin !== undefined) provider.linkedin = dto.linkedin || null;
+    provider.updateSocialMedia(dto);
 
-    await this.providersRepo.save(provider);
+    await this.providerRepo.save(provider);
     await this.invalidateProviderCache(provider.id, userId);
     
     return {
@@ -149,10 +87,10 @@ export class ProvidersService {
    * Get all certifications
    */
   async getCertifications(userId: string) {
-    const provider = await this.providersRepo.findOne({ 
-      where: { user: { id: userId } },
-      relations: ['certifications'],
-    });
+    // We can rely on findByUserId loading relations if IProviderRepository specifies it, 
+    // or we can add getCertifications to the repo. 
+    // TypeORMProviderRepository.findByUserId loads 'certifications'.
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
     return provider.certifications || [];
   }
@@ -161,22 +99,32 @@ export class ProvidersService {
    * Add a new certification
    */
   async addCertification(userId: string, dto: CreateCertificationDto) {
-    const provider = await this.providersRepo.findOne({ 
-      where: { user: { id: userId } },
-      relations: ['certifications'],
-    });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    const count = await this.certificationsRepo.count({ where: { provider: { id: provider.id } } });
-    if (count >= 20) {
-      throw new BadRequestException('Maximal 20 Zertifikate erlaubt');
-    }
+    provider.canAddCertification();
 
-    const cert = this.certificationsRepo.create({
-      provider: { id: provider.id } as any,
-      ...dto,
+    // Create a new certification instance (we can't use Repo.create here, so we instantiate or use a factory)
+    // Ideally ProviderCertification.create(...) exists.
+    // For now we pass a partial object and let the repo handle it or assume TypeORM repo.create behavior is needed.
+    // Wait, IProviderRepository.saveCertification expects a ProviderCertification entity.
+    // I should probably add a factory to ProviderCertification or use "new ProviderCertification()".
+    // Let's assume for now we construct it manually as we did with Entity.create pattern.
+    
+    // Using a plain object cast for now as we don't have a factory on ProviderCertification yet.
+    // Actually, `TypeORMProviderRepository` uses `certificationsRepo.save`.
+    // We should construct it.
+    
+    const cert = new ProviderCertification(); // Assuming we import it? No, imports removed. 
+    // Wait, I need to import ProviderCertification entity class to instantiate it.
+    // I added it to imports at the top.
+    
+    Object.assign(cert, {
+      provider: { id: provider.id },
+      ...dto
     });
-    const saved = await this.certificationsRepo.save(cert);
+
+    const saved = await this.providerRepo.saveCertification(cert);
     
     await this.invalidateProviderCache(provider.id, userId);
     return saved;
@@ -186,20 +134,17 @@ export class ProvidersService {
    * Remove a certification
    */
   async removeCertification(userId: string, certId: string) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    const cert = await this.certificationsRepo.findOne({
-      where: { id: certId },
-      relations: ['provider'],
-    });
+    const cert = await this.providerRepo.findCertificationById(certId);
 
     if (!cert) throw new NotFoundException('Zertifikat nicht gefunden');
     if (cert.provider.id !== provider.id) {
       throw new ForbiddenException('Keine Berechtigung für diese Aktion');
     }
 
-    await this.certificationsRepo.remove(cert);
+    await this.providerRepo.removeCertification(cert);
     await this.invalidateProviderCache(provider.id, userId);
     return { success: true };
   }
@@ -218,20 +163,12 @@ export class ProvidersService {
    * Update basic provider profile information for the current user
    */
   async updateProfile(userId: string, dto: UpdateProviderDto) {
-    const provider = await this.providersRepo.findOne({
-      where: { user: { id: userId } },
-      relations: ['user'],
-    });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    if (typeof dto.businessName !== 'undefined') {
-      provider.businessName = dto.businessName || null;
-    }
-    if (typeof dto.bio !== 'undefined') {
-      provider.bio = dto.bio || '';
-    }
+    provider.updateDetails(dto);
 
-    const saved = await this.providersRepo.save(provider);
+    const saved = await this.providerRepo.save(provider);
     // Invalidate public profile and nearby caches, as well as per-user dashboard/me caches
     await this.cache.del(`providers:public:${saved.id}`);
     await this.cache.deleteByPrefix('providers:nearby');
@@ -245,45 +182,31 @@ export class ProvidersService {
    * Replace availability slots for the current provider
    */
   async setAvailability(userId: string, dto: AvailabilityDto) {
-    const provider = await this.providersRepo.findOne({
-      where: { user: { id: userId } },
-    });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    // Validate slots
-    const slots = (dto.slots || []).map((s, idx) => {
+    const newRows: ProviderAvailability[] = [];
+    (dto.slots || []).forEach((s, idx) => {
       const dayOfWeek = this.weekdayToNumber(s.weekday);
       if (dayOfWeek === null) {
         throw new BadRequestException(`Invalid weekday at index ${idx}: ${s.weekday}`);
       }
-      const start = this.normalizeTime(s.start);
-      const end = this.normalizeTime(s.end);
-      if (!start || !end) {
-        throw new BadRequestException(`Invalid time format at index ${idx}: start=${s.start}, end=${s.end}`);
+      try {
+        const availabilityData = ProviderAvailability.create(dayOfWeek, s.start, s.end);
+        // Manually construct entity or use partial
+        const entity = new ProviderAvailability();
+        Object.assign(entity, {
+           provider: { id: provider.id },
+           ...availabilityData
+        });
+        newRows.push(entity);
+      } catch (error: any) {
+        throw new BadRequestException(`Index ${idx}: ${error.message}`);
       }
-      if (start >= end) {
-        throw new BadRequestException(`Start time must be before end time at index ${idx}`);
-      }
-      return { dayOfWeek, startTime: start, endTime: end };
     });
 
-    // Remove existing availability for this provider
-    const existing = await this.availabilityRepo.find({ where: { provider: { id: provider.id } } });
-    if (existing.length) {
-      await this.availabilityRepo.remove(existing);
-    }
-
-    // Create new rows
-    const rows = slots.map((slot) =>
-      this.availabilityRepo.create({
-        provider: { id: provider.id } as any,
-        dayOfWeek: slot.dayOfWeek,
-        startTime: slot.startTime,
-        endTime: slot.endTime,
-        isActive: true,
-      }),
-    );
-    const saved = await this.availabilityRepo.save(rows);
+    const saved = await this.providerRepo.replaceAvailability(provider.id, newRows);
+    
     // Availability changes can affect nearby search and dashboard data
     await this.cache.deleteByPrefix('providers:nearby');
     const uid = userId;
@@ -303,10 +226,7 @@ export class ProvidersService {
    * Get the current provider profile for the logged-in user
    */
   async getMyProfile(userId: string) {
-    const provider = await this.providersRepo.findOne({
-      where: { user: { id: userId } },
-      relations: ['user', 'availability'],
-    });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
     const sanitized = this.sanitizeProvider(provider);
@@ -322,17 +242,14 @@ export class ProvidersService {
    * Provider dashboard data aggregation
    */
   async getDashboard(userId: string) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
     const todayStr = this.formatDate(new Date()); // YYYY-MM-DD
 
     // Today's appointments
-    const todays = await this.appointmentsRepo.find({
-      where: { provider: { id: provider.id }, appointmentDate: todayStr },
-      relations: ['client', 'appointmentServices'],
-      order: { startTime: 'ASC' },
-    });
+    const todays = await this.providerRepo.findAppointmentsForDashboard(provider.id, todayStr);
+    
     const now = new Date();
     const todayAppointments = todays.map((a) => {
       const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
@@ -363,39 +280,14 @@ export class ProvidersService {
     const nextAppt = todayAppointments.find((a) => a.hoursUntil > 0) || null;
 
     // Reviews aggregation
-    const { avgRating, reviewCount } = await this.reviewsRepo
-      .createQueryBuilder('r')
-      .select('AVG(r.rating)', 'avgRating')
-      .addSelect('COUNT(r.id)', 'reviewCount')
-      .where('r.provider = :providerId', { providerId: provider.id })
-      .getRawOne<{ avgRating: string; reviewCount: string }>()
-      .then((row) => ({
-        avgRating: row?.avgRating ? parseFloat(row.avgRating) : 0,
-        reviewCount: row?.reviewCount ? parseInt(row.reviewCount, 10) : 0,
-      }));
+    const { avgRating, reviewCount } = await this.providerRepo.getReviewStats(provider.id);
 
     // Week earnings (Mon-Sun) for completed appointments
     const { weekStart, weekEnd } = this.getWeekRange(new Date());
-    const earningsRows = await this.appointmentsRepo
-      .createQueryBuilder('a')
-      .leftJoin('a.appointmentServices', 'as')
-      .select('COALESCE(SUM(as.price_cents), 0)', 'totalCents')
-      .where('a.provider = :providerId', { providerId: provider.id })
-      .andWhere('a.status = :status', { status: 'COMPLETED' })
-      .andWhere('a.appointment_date BETWEEN :start AND :end', {
-        start: this.formatDate(weekStart),
-        end: this.formatDate(weekEnd),
-      })
-      .getRawOne<{ totalCents: string }>();
-    const weekEarningsCents = earningsRows?.totalCents ? parseInt(earningsRows.totalCents, 10) : 0;
+    const weekEarningsCents = await this.providerRepo.getWeekEarnings(provider.id, weekStart, weekEnd);
 
     // Recent reviews (last 5)
-    const recent = await this.reviewsRepo.find({
-      where: { provider: { id: provider.id } },
-      relations: ['client'],
-      order: { createdAt: 'DESC' },
-      take: 5,
-    });
+    const recent = await this.providerRepo.findRecentReviews(provider.id, 5);
     const recentReviews = recent.map((r) => ({
       id: r.id,
       client: r.isAnonymous
@@ -442,15 +334,11 @@ export class ProvidersService {
    * }
    */
   async getClients(userId: string) {
-    const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
+    const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
     // Load appointments including client and services to aggregate spending
-    const appts = await this.appointmentsRepo.find({
-      where: { provider: { id: provider.id } },
-      relations: ['client', 'appointmentServices'],
-      order: { appointmentDate: 'DESC', startTime: 'DESC' },
-    });
+    const appts = await this.providerRepo.findAllAppointments(provider.id);
 
     type ClientAgg = {
       id: string;
@@ -542,51 +430,9 @@ export class ProvidersService {
       throw new BadRequestException('Missing or invalid lat/lon');
     }
 
-    // Haversine formula (in kilometers) using Postgres math functions
-    const distanceExpr =
-      `6371 * 2 * ASIN(SQRT(POWER(SIN((CAST(addr.latitude AS double precision) - :lat) * pi() / 180 / 2), 2) ` +
-      `+ COS(:lat * pi() / 180) * COS(CAST(addr.latitude AS double precision) * pi() / 180) ` +
-      `* POWER(SIN((CAST(addr.longitude AS double precision) - :lon) * pi() / 180 / 2), 2)))`;
-
-    const qb = this.providersRepo
-      .createQueryBuilder('p')
-      .leftJoin('p.user', 'u')
-      .leftJoin('p.locations', 'pl')
-      .leftJoin('pl.address', 'addr')
-      .where('addr.latitude IS NOT NULL AND addr.longitude IS NOT NULL')
-      .andWhere('p.user_id IS NOT NULL')
-      .select('p.id', 'id')
-      .addSelect('u.first_name', 'first_name')
-      .addSelect('u.last_name', 'last_name')
-      .addSelect('p.business_name', 'business_name')
-      .addSelect('p.cover_photo_url', 'cover_photo_url')
-      .addSelect('p.is_verified', 'is_verified')
-      .addSelect('p.accepts_same_day_booking', 'accepts_same_day_booking')
-      .addSelect(`MIN(${distanceExpr})`, 'distance_km')
-      .groupBy('p.id')
-      .addGroupBy('u.first_name')
-      .addGroupBy('u.last_name')
-      .addGroupBy('p.business_name')
-      .addGroupBy('p.cover_photo_url')
-      .addGroupBy('p.is_verified')
-      .addGroupBy('p.accepts_same_day_booking')
-      .having(`MIN(${distanceExpr}) <= :radiusKm`)
-      .orderBy('distance_km', 'ASC')
-      .limit(limit)
-      .setParameters({ lat, lon, radiusKm });
-
-    let rows: Array<{
-      id: string;
-      first_name: string | null;
-      last_name: string | null;
-      business_name: string | null;
-      cover_photo_url: string | null;
-      is_verified: boolean;
-      accepts_same_day_booking: boolean;
-      distance_km: string | number;
-    }> = [];
+    let rows: any[] = [];
     try {
-      rows = await qb.getRawMany();
+      rows = await this.providerRepo.findNearby({ lat, lon, radiusKm, limit });
     } catch (err) {
       console.error('[ProvidersService] getNearbyProviders query error:', err);
       throw new BadRequestException('Konnte nahegelegene Anbieter nicht laden');
@@ -594,16 +440,7 @@ export class ProvidersService {
 
     const ids = rows.map((r) => r.id);
     // Aggregate ratings per provider
-    const ratingRows: Array<{ provider_id: string; avg_rating: string; reviews: string }> = ids.length
-      ? await this.reviewsRepo
-          .createQueryBuilder('r')
-          .select('r.provider_id', 'provider_id')
-          .addSelect('AVG(r.rating)', 'avg_rating')
-          .addSelect('COUNT(*)', 'reviews')
-          .where('r.provider_id IN (:...ids)', { ids })
-          .groupBy('r.provider_id')
-          .getRawMany()
-      : [];
+    const ratingRows = await this.providerRepo.getRatingsForProviders(ids);
     const ratingMap = new Map<string, { rating: number; reviews: number }>();
     for (const row of ratingRows) {
       ratingMap.set(row.provider_id, {
@@ -613,18 +450,7 @@ export class ProvidersService {
     }
 
     // Aggregate specialties and min price from services
-    const svcRows: Array<{ provider_id: string; name: string; price_cents: number }> = ids.length
-      ? await this.servicesRepo
-          .createQueryBuilder('svc')
-          .select('svc.provider_id', 'provider_id')
-          .addSelect('svc.name', 'name')
-          .addSelect('svc.price_cents', 'price_cents')
-          .where('svc.provider_id IN (:...ids)', { ids })
-          .andWhere('svc.is_active = :active', { active: true })
-          .orderBy('svc.display_order', 'ASC')
-          .limit(200)
-          .getRawMany()
-      : [];
+    const svcRows = await this.providerRepo.getServicesForProviders(ids);
     const specialties = new Map<string, string[]>();
     const minPrice = new Map<string, number>();
     for (const r of svcRows) {
@@ -664,33 +490,15 @@ export class ProvidersService {
    * Public: Get provider's public profile/details by id
    */
   async getPublicProfileById(id: string) {
-    const provider = await this.providersRepo.findOne({
-      where: { id },
-      relations: ['user'],
-    });
+    const provider = await this.providerRepo.findById(id);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
     // Aggregate rating and review count
-    const ratingRow = await this.reviewsRepo
-      .createQueryBuilder('r')
-      .select('AVG(r.rating)', 'avg_rating')
-      .addSelect('COUNT(r.id)', 'reviews')
-      .where('r.provider_id = :id', { id })
-      .getRawOne<{ avg_rating: string; reviews: string }>();
-    const avgRating = ratingRow?.avg_rating ? parseFloat(ratingRow.avg_rating) : 0;
-    const reviewCount = ratingRow?.reviews ? parseInt(ratingRow.reviews, 10) : 0;
+    const { avgRating, reviewCount } = await this.providerRepo.getReviewStats(id);
 
-    // Aggregate specialties (service names) and min price
-    const svcRows: Array<{ name: string; price_cents: number }> = await this.servicesRepo
-      .createQueryBuilder('svc')
-      .select('svc.name', 'name')
-      .addSelect('svc.price_cents', 'price_cents')
-      .where('svc.provider_id = :id', { id })
-      .andWhere('svc.is_active = :active', { active: true })
-      .orderBy('svc.display_order', 'ASC')
-      .limit(200)
-      .getRawMany();
-    const specialties = svcRows.map((r) => r.name).slice(0, 5);
+    // Aggregate specialties and min price from services
+    const svcRows = await this.providerRepo.getServicesForProviders([id]);
+    const specialties = svcRows.slice(0, 5).map((r) => r.name);
     const priceFromCents = svcRows.reduce((min, r) => (min == null || r.price_cents < min ? r.price_cents : min), null as number | null);
 
     const name = [provider.user?.firstName, provider.user?.lastName].filter(Boolean).join(' ').trim();

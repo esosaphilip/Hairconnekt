@@ -9,11 +9,13 @@ import {
   OneToMany,
   JoinColumn,
 } from 'typeorm';
+import { BadRequestException } from '@nestjs/common';
 import { User } from '../../users/entities/user.entity';
 import { ProviderProfile } from '../../providers/entities/provider-profile.entity';
 import { Address } from '../../users/entities/address.entity';
 import { AppointmentService } from './appointment-service.entity';
 import { PortfolioImage } from '../../portfolio/entities/portfolio-image.entity';
+import { Service } from '../../services/entities/service.entity';
 
 export enum AppointmentStatus {
   PENDING = 'PENDING',
@@ -97,4 +99,67 @@ export class Appointment {
   @ManyToOne(() => PortfolioImage, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'portfolio_image_id' })
   portfolioImage?: PortfolioImage | null;
+
+  // --- Domain Methods ---
+
+  /**
+   * Factory method to create a new Appointment.
+   * Calculates duration from services and sets initial status.
+   */
+  static create(
+    provider: ProviderProfile,
+    client: User,
+    services: Service[],
+    startTime: string,
+    endTime: string,
+    notes?: string,
+  ): Appointment {
+    if (!services || services.length === 0) {
+      throw new BadRequestException('At least one service is required');
+    }
+
+    const totalDurationMinutes = services.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+    const appointmentDate = new Date().toISOString().split('T')[0];
+
+    const appointment = new Appointment();
+    appointment.provider = provider;
+    appointment.client = client;
+    appointment.startTime = startTime;
+    appointment.endTime = endTime;
+    appointment.clientNotes = notes;
+    appointment.status = AppointmentStatus.PENDING;
+    appointment.appointmentDate = appointmentDate;
+    appointment.totalDurationMinutes = totalDurationMinutes;
+    // Generate a simple unique number for now (should be replaced by a proper sequence generator in prod)
+    appointment.appointmentNumber = `APT-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+
+    // Create AppointmentService relations
+    appointment.appointmentServices = services.map((service) => {
+      const as = new AppointmentService();
+      as.service = service;
+      as.serviceName = service.name;
+      as.durationMinutes = service.durationMinutes;
+      as.priceCents = service.priceCents;
+      as.appointment = appointment;
+      return as;
+    });
+
+    return appointment;
+  }
+
+  /**
+   * Domain getter: Calculate hours until appointment starts
+   */
+  get hoursUntil(): number {
+    try {
+      const [year, month, day] = this.appointmentDate.split('-').map((s) => parseInt(s, 10));
+      const [hours, minutes, seconds] = this.startTime.split(':').map((s) => parseInt(s, 10));
+      const start = new Date(year, (month || 1) - 1, day, hours || 0, minutes || 0, seconds || 0);
+      const now = new Date();
+      const diffMs = start.getTime() - now.getTime();
+      return Math.round(diffMs / (1000 * 60 * 60));
+    } catch (e) {
+      return 0;
+    }
+  }
 }

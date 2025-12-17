@@ -17,6 +17,7 @@ import { Service } from '../services/entities/service.entity';
 import { ServiceCategory } from '../services/entities/service-category.entity';
 import { PortfolioImage } from '../portfolio/entities/portfolio-image.entity';
 import { RolesGuard } from '../auth/guards/roles.guard';
+import { TypeORMProviderRepository } from '../../infrastructure/repositories/TypeORMProviderRepository';
 
 @Module({
   imports: [
@@ -38,7 +39,14 @@ import { RolesGuard } from '../auth/guards/roles.guard';
     ]),
   ],
   controllers: [ProvidersController],
-  providers: [ProvidersService, RolesGuard],
-  exports: [ProvidersService],
+  providers: [
+    ProvidersService, 
+    RolesGuard,
+    {
+      provide: 'IProviderRepository',
+      useClass: TypeORMProviderRepository,
+    },
+  ],
+  exports: [ProvidersService, 'IProviderRepository'],
 })
 export class ProvidersModule {}

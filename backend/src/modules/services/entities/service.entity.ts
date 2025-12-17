@@ -7,6 +7,7 @@ import {
   ManyToOne,
   Index,
 } from 'typeorm';
+import { BadRequestException } from '@nestjs/common';
 import { ProviderProfile } from '../../providers/entities/provider-profile.entity';
 import { ServiceCategory } from './service-category.entity';
 
@@ -62,4 +63,47 @@ export class Service {
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamptz' })
   updatedAt: Date;
+
+  // --- Domain Methods ---
+
+  /**
+   * Factory method to create a new Service.
+   * Enforces business rules like non-negative price and positive duration.
+   */
+  static create(
+    provider: ProviderProfile,
+    name: string,
+    description: string,
+    durationMinutes: number,
+    priceCents: number,
+    priceType: PriceType,
+    category?: ServiceCategory,
+    priceMaxCents?: number,
+    imageUrl?: string,
+  ): Service {
+    if (priceCents < 0) {
+      throw new BadRequestException('Price cannot be negative');
+    }
+    if (durationMinutes <= 0) {
+      throw new BadRequestException('Duration must be positive');
+    }
+    if (priceType === PriceType.RANGE && (!priceMaxCents || priceMaxCents <= priceCents)) {
+      throw new BadRequestException('Max price must be greater than price for RANGE type');
+    }
+
+    const service = new Service();
+    service.provider = provider;
+    service.name = name;
+    service.description = description;
+    service.durationMinutes = durationMinutes;
+    service.priceCents = priceCents;
+    service.priceType = priceType;
+    service.category = category || null;
+    service.priceMaxCents = priceMaxCents || null;
+    service.imageUrl = imageUrl || null;
+    service.isActive = true;
+    service.displayOrder = 0; // Default
+
+    return service;
+  }
 }

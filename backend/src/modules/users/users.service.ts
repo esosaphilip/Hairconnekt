@@ -1,21 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { User } from './entities/user.entity';
-import { Address } from './entities/address.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User) private readonly usersRepo: Repository<User>,
-    @InjectRepository(Address) private readonly addressesRepo: Repository<Address>,
+    @Inject('IUserRepository')
+    private readonly userRepo: IUserRepository,
   ) {}
 
   async getMe(userId: string) {
-    const user = await this.usersRepo.findOne({
-      where: { id: userId },
-      relations: ['clientProfile'],
-    });
+    const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
     // Compute appointment stats for client view (be resilient to errors)
@@ -82,15 +77,15 @@ export class UsersService {
     if (typeof payload.preferredLanguage === 'string') allowed.preferredLanguage = payload.preferredLanguage;
 
     Object.assign(user, allowed);
-    await this.usersRepo.save(user);
+    await this.userRepo.save(user);
     return { success: true };
   }
 
   async updateLanguage(userId: string, preferredLanguage: string) {
-    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');
     user.preferredLanguage = preferredLanguage;
-    await this.usersRepo.save(user);
+    await this.userRepo.save(user);
     return { success: true };
   }
 }

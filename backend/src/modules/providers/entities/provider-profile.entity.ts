@@ -18,6 +18,12 @@ import { Service } from '../../services/entities/service.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
 import { ProviderSpecialization } from './provider-specialization.entity';
 import { ProviderCertification } from './provider-certification.entity';
+import sanitizeHtml from 'sanitize-html';
+import { UpdateBioDto } from '../dto/update-bio.dto';
+import { UpdateSocialMediaDto } from '../dto/update-social-media.dto';
+import { UpdateProviderDto } from '../dto/update-provider.dto';
+import { CreateCertificationDto } from '../dto/create-certification.dto';
+import { BadRequestException } from '@nestjs/common';
 
 export enum BusinessType {
   INDIVIDUAL = 'INDIVIDUAL',
@@ -138,4 +144,50 @@ export class ProviderProfile {
 
   @Column({ name: 'stripe_payouts_enabled', type: 'boolean', default: false })
   stripePayoutsEnabled: boolean;
+
+  // --- Domain Methods ---
+
+  /**
+   * Updates and sanitizes the provider's bio.
+   */
+  updateBio(dto: UpdateBioDto) {
+    this.bio = sanitizeHtml(dto.bio, {
+      allowedTags: [],
+      allowedAttributes: {},
+    });
+  }
+
+  /**
+   * Updates social media links.
+   */
+  updateSocialMedia(dto: UpdateSocialMediaDto) {
+    if (dto.website !== undefined) this.website = dto.website || null;
+    if (dto.instagram !== undefined) this.instagram = dto.instagram || null;
+    if (dto.facebook !== undefined) this.facebook = dto.facebook || null;
+    if (dto.twitter !== undefined) this.twitter = dto.twitter || null;
+    if (dto.youtube !== undefined) this.youtube = dto.youtube || null;
+    if (dto.linkedin !== undefined) this.linkedin = dto.linkedin || null;
+  }
+
+  /**
+   * Updates basic profile details.
+   */
+  updateDetails(dto: UpdateProviderDto) {
+    if (typeof dto.businessName !== 'undefined') {
+      this.businessName = dto.businessName || null;
+    }
+    if (typeof dto.bio !== 'undefined') {
+      this.updateBio({ bio: dto.bio });
+    }
+  }
+
+  /**
+   * Validates if a new certification can be added.
+   * Note: This requires the 'certifications' relation to be loaded.
+   */
+  canAddCertification(): void {
+    if (this.certifications && this.certifications.length >= 20) {
+      throw new BadRequestException('Maximal 20 Zertifikate erlaubt');
+    }
+  }
 }

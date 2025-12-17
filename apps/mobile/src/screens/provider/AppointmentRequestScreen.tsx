@@ -48,6 +48,7 @@ const IconNames = {
 };
 
 import { IAppointmentRequest } from '@/domain/models/appointment';
+import { providerAppointmentsApi } from '@/api/providerAppointments';
 
 // Styles for visual consistency and tokens (assuming tokens like spacing.md)
 const primaryColor = '#8B4513';
@@ -128,6 +129,7 @@ export function AppointmentRequestScreen() {
   
   // ... rest of code
 
+  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
   const [declineReason, setDeclineReason] = useState<string | null>(null);
   const [selectedAlternative, setSelectedAlternative] = useState<number | null>(null);
@@ -582,4 +584,3 @@ const styles = StyleSheet.create({
     color: '#374151',
   }
 });
-import { providerAppointmentsApi } from '@/api/providerAppointments';

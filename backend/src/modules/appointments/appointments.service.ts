@@ -16,8 +16,7 @@ type StatusGroup = 'upcoming' | 'completed' | 'cancelled';
 export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment) private readonly appointmentRepo: Repository<Appointment>,
-    @InjectRepository(AppointmentServiceEntity)
-    private readonly appointmentServiceRepo: Repository<AppointmentServiceEntity>,
+    // AppointmentServiceRepo removed as creation is now handled by Appointment domain entity
     @InjectRepository(ProviderProfile)
     private readonly providerProfileRepository: Repository<ProviderProfile>,
     @InjectRepository(User)
@@ -46,33 +45,12 @@ export class AppointmentsService {
       throw new NotFoundException('One or more services not found');
     }
 
-    const totalDurationMinutes = services.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
-    const appointment = this.appointmentRepo.create({
-      provider,
-      client,
-      startTime,
-      endTime,
-      // Map generic notes to clientNotes for now
-      clientNotes: notes,
-      status: AppointmentStatus.PENDING,
-      appointmentDate: new Date().toISOString().split('T')[0],
-      totalDurationMinutes,
-    });
+    // Use Domain Factory
+    const appointment = Appointment.create(provider, client, services, startTime, endTime, notes);
 
-    // Save using array overload to avoid union return type confusion, then pick first
+    // Save with cascade
     const savedAppointments = await this.appointmentRepo.save([appointment]);
     const savedAppointment = savedAppointments[0];
-
-    const appointmentServices = services.map(service => {
-      return this.appointmentServiceRepo.create({
-        appointment: savedAppointment,
-        serviceName: service.name,
-        durationMinutes: service.durationMinutes,
-        priceCents: service.priceCents,
-      });
-    });
-
-    await this.appointmentServiceRepo.save(appointmentServices);
 
     const reloaded = await this.appointmentRepo.findOne({
       where: { id: savedAppointment.id },
@@ -97,19 +75,6 @@ export class AppointmentsService {
       case 'upcoming':
       default:
         return [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS];
-    }
-  }
-
-  private computeHoursUntil(appointmentDate: string, startTime: string): number {
-    try {
-      const [year, month, day] = appointmentDate.split('-').map((s) => parseInt(s, 10));
-      const [hours, minutes, seconds] = startTime.split(':').map((s) => parseInt(s, 10));
-      const start = new Date(year, (month || 1) - 1, day, hours || 0, minutes || 0, seconds || 0);
-      const now = new Date();
-      const diffMs = start.getTime() - now.getTime();
-      return Math.round(diffMs / (1000 * 60 * 60));
-    } catch (e) {
-      return 0;
     }
   }
 
@@ -157,7 +122,7 @@ export class AppointmentsService {
       address: addressStr,
       createdAt: appt.createdAt,
       updatedAt: appt.updatedAt,
-      hoursUntil: this.computeHoursUntil(appt.appointmentDate, appt.startTime),
+      hoursUntil: appt.hoursUntil,
     };
   }
 

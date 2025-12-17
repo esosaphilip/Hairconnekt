@@ -139,9 +139,7 @@ export class ReviewsService {
       throw new ForbiddenException('Not allowed to respond to this review');
     }
 
-    const text = (dto.response ?? '').trim();
-    review.providerResponse = text.length > 0 ? text : null;
-    review.providerRespondedAt = text.length > 0 ? new Date() : null;
+    review.respond(dto.response);
     await this.reviewsRepo.save(review);
 
     return {
