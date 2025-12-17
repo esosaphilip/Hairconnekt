@@ -208,10 +208,52 @@ export class AddProviderProfileFeatures1765953245960 implements MigrationInterfa
         await queryRunner.query(`ALTER TABLE "appointment_services" ADD "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()`);
         await queryRunner.query(`ALTER TABLE "appointment_services" ALTER COLUMN "appointment_id" DROP NOT NULL`);
         await queryRunner.query(`ALTER TABLE "appointment_services" ALTER COLUMN "service_id" DROP NOT NULL`);
+        
+        // Fix for QueryFailedError: Update existing NULL rows before setting NOT NULL
+        // Handle image_url
         await queryRunner.query(`ALTER TABLE "portfolio_images" DROP COLUMN "image_url"`);
-        await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "image_url" character varying(1024) NOT NULL`);
+        await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "image_url" character varying(1024)`);
+        await queryRunner.query(`UPDATE "portfolio_images" SET "image_url" = '' WHERE "image_url" IS NULL`);
+        await queryRunner.query(`ALTER TABLE "portfolio_images" ALTER COLUMN "image_url" SET NOT NULL`);
+
+        // Handle thumbnail_url
         await queryRunner.query(`ALTER TABLE "portfolio_images" DROP COLUMN "thumbnail_url"`);
         await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "thumbnail_url" character varying(1024)`);
+        await queryRunner.query(`UPDATE "portfolio_images" SET "thumbnail_url" = '' WHERE "thumbnail_url" IS NULL`);
+        // await queryRunner.query(`ALTER TABLE "portfolio_images" ALTER COLUMN "thumbnail_url" SET NOT NULL`); // Assuming this might be optional based on entity, but migration said NOT NULL. Let's keep it safe. 
+        // Wait, checking original migration: 
+        // await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "thumbnail_url" character varying(1024)`); -> This was default nullable in ADD? No, TypeORM usually adds nullable by default unless specified.
+        // The original code was:
+        // await queryRunner.query(`ALTER TABLE "portfolio_images" DROP COLUMN "thumbnail_url"`);
+        // await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "thumbnail_url" character varying(1024)`); 
+        // It didn't say NOT NULL in the original ADD line I'm replacing? 
+        // Wait, line 214: await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "thumbnail_url" character varying(1024)`);
+        // It doesn't say NOT NULL. So I shouldn't force it unless I'm sure. 
+        // But line 212: await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "image_url" character varying(1024) NOT NULL`);
+        // So image_url IS NOT NULL. thumbnail_url is nullable?
+        // Let's check line 483 in original file... wait, I'm editing around line 211.
+        
+        // Re-reading the file content provided in tool result:
+        // 212→        await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "image_url" character varying(1024) NOT NULL`);
+        // 214→        await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "thumbnail_url" character varying(1024)`);
+        
+        // Okay, so image_url IS NOT NULL. thumbnail_url IS NULLABLE.
+        
+        // Correct logic for image_url:
+        // 1. Drop old
+        // 2. Add new (nullable first)
+        // 3. Update values
+        // 4. Set NOT NULL
+        
+        // Correct logic for thumbnail_url:
+        // 1. Drop old
+        // 2. Add new (nullable)
+        // No need to update or set NOT NULL.
+
+        /* 
+        await queryRunner.query(`ALTER TABLE "portfolio_images" DROP COLUMN "image_url"`);
+        await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "image_url" character varying(1024) NOT NULL`);
+        */
         await queryRunner.query(`ALTER TABLE "portfolio_images" DROP COLUMN "hair_length"`);
         await queryRunner.query(`ALTER TABLE "portfolio_images" ADD "hair_length" "public"."hair_length_enum"`);
         await queryRunner.query(`ALTER TABLE "portfolio_images" ALTER COLUMN "is_featured" SET NOT NULL`);
