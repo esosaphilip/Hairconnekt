@@ -186,7 +186,15 @@ export class AddProviderProfileFeatures1765953245960 implements MigrationInterfa
         /* Removed redundant icon_url, display_order, is_active ops */
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "description" SET NOT NULL`);
         await queryRunner.query(`CREATE TYPE "public"."services_price_type_enum" AS ENUM('FIXED', 'FROM', 'RANGE')`);
+        
+        // Fix for QueryFailedError: Drop default before altering type
+        await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" DROP DEFAULT`);
+        
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" TYPE "public"."services_price_type_enum" USING "price_type"::text::"public"."services_price_type_enum"`);
+        
+        // Re-apply default value correctly cast to enum
+        await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" SET DEFAULT 'FIXED'`);
+        
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" SET NOT NULL`);
         await queryRunner.query(`ALTER TABLE "services" DROP COLUMN "image_url"`);
         await queryRunner.query(`ALTER TABLE "services" ADD "image_url" character varying(1024)`);
@@ -487,9 +495,13 @@ export class AddProviderProfileFeatures1765953245960 implements MigrationInterfa
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "is_active" DROP NOT NULL`);
         await queryRunner.query(`ALTER TABLE "services" DROP COLUMN "image_url"`);
         await queryRunner.query(`ALTER TABLE "services" ADD "image_url" text`);
-        await queryRunner.query(`ALTER TABLE "services" DROP COLUMN "price_type"`);
+        
+        // Fix for revert: Drop default, convert back to varchar, drop enum
+        await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" DROP DEFAULT`);
+        await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" TYPE character varying(20)`);
         await queryRunner.query(`DROP TYPE "public"."services_price_type_enum"`);
-        await queryRunner.query(`ALTER TABLE "services" ADD "price_type" character varying(20) DEFAULT 'FIXED'`);
+        await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "price_type" SET DEFAULT 'FIXED'`);
+        
         await queryRunner.query(`ALTER TABLE "services" ALTER COLUMN "description" DROP NOT NULL`);
         await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "is_active" DROP NOT NULL`);
         await queryRunner.query(`ALTER TABLE "service_categories" ALTER COLUMN "display_order" DROP NOT NULL`);
