@@ -48,6 +48,11 @@ import { PortfolioManagementScreen } from '@/screens/provider/PortfolioManagemen
 import { ProviderAnalyticsScreen } from '@/screens/provider/ProviderAnalyticsScreen';
 import { ProviderVouchersScreen } from '@/screens/provider/ProviderVouchersScreen';
 import { CreateEditVoucherScreen } from '@/screens/provider/CreateEditVoucherScreen';
+import EditAboutMeScreen from '@/screens/provider/EditAboutMeScreen';
+import EditCertificationsScreen from '@/screens/provider/EditCertificationsScreen';
+import EditLanguagesScreen from '@/screens/provider/EditLanguagesScreen';
+import EditSocialMediaScreen from '@/screens/provider/EditSocialMediaScreen';
+import EditSpecializationsScreen from '@/screens/provider/EditSpecializationsScreen';
 import { AddEditServiceScreen } from '@/screens/provider/AddEditServiceScreen';
 import { ProviderSubscriptionScreen } from '@/screens/provider/ProviderSubscriptionScreen';
 import { ProviderSettingsScreen } from '@/screens/provider/ProviderSettingsScreen';
@@ -217,6 +222,11 @@ function ProviderMoreStackScreen() {
       <ProviderMoreStack.Screen name="ProviderHelpScreen" component={ProviderHelpScreen} options={{ title: 'Hilfe & Support' }} />
       {/* Shared/edit screens */}
       <ProviderMoreStack.Screen name="AvailabilitySettingsScreen" component={AvailabilitySettingsScreen} options={{ title: 'Verfügbarkeitszeiten' }} />
+      <ProviderMoreStack.Screen name="EditAboutMeScreen" component={EditAboutMeScreen} options={{ title: 'Über mich' }} />
+      <ProviderMoreStack.Screen name="EditSpecializationsScreen" component={EditSpecializationsScreen} options={{ title: 'Spezialisierungen' }} />
+      <ProviderMoreStack.Screen name="EditLanguagesScreen" component={EditLanguagesScreen} options={{ title: 'Sprachen' }} />
+      <ProviderMoreStack.Screen name="EditSocialMediaScreen" component={EditSocialMediaScreen} options={{ title: 'Social Media' }} />
+      <ProviderMoreStack.Screen name="EditCertificationsScreen" component={EditCertificationsScreen} options={{ title: 'Zertifikate & Ausbildungen' }} />
       <ProviderMoreStack.Screen name="EditProfileScreen" component={EditProfileScreen} options={{ title: 'Profil bearbeiten' }} />
       <ProviderMoreStack.Screen name="AddressManagementScreen" component={AddressManagementScreen} options={{ title: 'Meine Adressen' }} />
       <ProviderMoreStack.Screen name="AddEditAddressScreen" component={AddEditAddressScreen} options={{ title: 'Adresse' }} />

@@ -54,10 +54,25 @@ async function ensureProviderProfile(
   return repo.save(provider);
 }
 
+import { seedCategories } from './seed-categories';
+
 async function run() {
   await AppDataSource.initialize();
   const userRepo = AppDataSource.getRepository(User);
   const providerRepo = AppDataSource.getRepository(ProviderProfile);
+
+  // Seed categories
+  await seedCategories(AppDataSource);
+
+  // Ensure an Admin user
+  const adminUser = await ensureUser(userRepo, {
+    email: 'admin@hairconnekt.com',
+    phone: '+490000000000',
+    firstName: 'System',
+    lastName: 'Admin',
+    userType: UserType.ADMIN,
+    passwordHash: makeLegacyPbkdf2Hash('admin123'),
+  });
 
   // Ensure a provider user and profile
   const providerUser = await ensureUser(userRepo, {

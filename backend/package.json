@@ -12,7 +12,8 @@
     "test": "jest --passWithNoTests",
     "test:int": "RUN_INT_TESTS=true jest src/modules/payments/payments.int.spec.ts --runInBand --detectOpenHandles --verbose",
     "test:watch": "jest --watch",
-    "typeorm:migrate": "npm run typeorm migration:run"
+    "typeorm:migrate": "npm run typeorm migration:run",
+    "seed": "ts-node src/database/seeds/seed.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.635.0",

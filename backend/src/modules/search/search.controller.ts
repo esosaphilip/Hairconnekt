@@ -1,4 +1,4 @@
-import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseInterceptors } from '@nestjs/common';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { SearchService } from './search.service';
 import { SearchQueryDto } from './dto/search-query.dto';

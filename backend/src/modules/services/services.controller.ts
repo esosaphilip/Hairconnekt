@@ -8,7 +8,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators';
 import { UserType } from '../users/entities/user.entity';
-import { ProviderProfile } from '../providers/entities/provider-profile.entity';
+import { ServiceCategory } from './entities/service-category.entity';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Controller('services')
 export class ServicesController {
@@ -18,7 +19,18 @@ export class ServicesController {
     private readonly servicesService: ServicesService,
     @InjectRepository(ProviderProfile)
     private readonly providersRepo: Repository<ProviderProfile>,
+    @InjectRepository(ServiceCategory)
+    private readonly categoryRepo: Repository<ServiceCategory>,
   ) {}
+
+  @Get('categories')
+  async listCategories() {
+    // Public endpoint to list all active categories
+    return this.categoryRepo.find({
+      where: { isActive: true },
+      order: { displayOrder: 'ASC', nameDe: 'ASC' },
+    });
+  }
 
   private async resolveProviderId(req: any): Promise<string> {
     const user = req.user;

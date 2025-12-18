@@ -25,14 +25,10 @@ export class ServicesService {
       throw new NotFoundException(`Provider with ID "${providerId}" not found`);
     }
 
-    // Optional category: fetch and narrow; coerce null to undefined for create()
-    let category: ServiceCategory | undefined;
-    if (categoryId) {
-      const found = await this.serviceCategoryRepository.findOne({ where: { id: categoryId } });
-      if (!found) {
-        throw new NotFoundException(`ServiceCategory with ID "${categoryId}" not found`);
-      }
-      category = found;
+    // Category is now required
+    const category = await this.serviceCategoryRepository.findOne({ where: { id: categoryId } });
+    if (!category) {
+      throw new NotFoundException(`ServiceCategory with ID "${categoryId}" not found`);
     }
 
     // Use Domain Factory

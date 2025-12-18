@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '@/auth/AuthContext'; // Use shared auth context
 import { http } from '../../api/http';
 import { getProviderAppointments } from '../../api/appointments';
@@ -155,56 +155,60 @@ export function ProviderMore() {
   const [earningsError, setEarningsError] = useState<string | null>(null);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoadingProfile(true);
-    setProfileError(null);
-    http.get('/providers/me')
-      .then((res) => {
-        if (!cancelled) setProfile(res?.data ?? null);
-      })
-      .catch((err) => {
-        // Map 500 to a friendlier message
-        const status = err?.response?.status;
-        let msg = err?.response?.data?.message || err?.message || 'Profil konnte nicht geladen werden';
-        if (status === 500) {
-          msg = 'Profil derzeit nicht verfügbar';
-        }
-        if (!cancelled) setProfileError(msg);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingProfile(false);
-      });
-    return () => { cancelled = true; };
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
 
-  // Fetch earnings summary (last 30 days, completed appointments)
-  useEffect(() => {
-    let cancelled = false;
-    setEarningsError(null);
-    const now = Date.now();
-    const sinceTs = now - 30 * 24 * 60 * 60 * 1000;
-    getProviderAppointments('completed')
-      .then((res) => {
-        const items = res?.items || [];
-        const total = items.reduce((sum, a) => {
-          const d = new Date((a.appointmentDate || '').trim() + 'T' + ((a.startTime || '').trim() || '00:00:00'));
-          const ts = d.getTime();
-          if (Number.isNaN(ts) || ts < sinceTs) return sum;
-          const gross = (a.totalPriceCents || 0) / 100;
-          const fee = Math.round(gross * PLATFORM_FEE_RATE * 100) / 100;
-          const net = Math.round((gross - fee) * 100) / 100;
-          return sum + net;
-        }, 0);
-        const formatted = `€${total.toLocaleString('de-DE', { maximumFractionDigits: 0 })}`;
-        if (!cancelled) setEarningsBadge(formatted);
-      })
-      .catch((err) => {
-        const msg = err?.response?.data?.message || err?.message || 'Einnahmen konnten nicht geladen werden';
-        if (!cancelled) setEarningsError(msg);
-      });
-    return () => { cancelled = true; };
-  }, []);
+      const loadProfile = async () => {
+        setLoadingProfile(true);
+        setProfileError(null);
+        try {
+          const res = await http.get('/providers/me');
+          if (isActive) setProfile(res?.data ?? null);
+        } catch (err: any) {
+          const status = err?.response?.status;
+          let msg = err?.response?.data?.message || err?.message || 'Profil konnte nicht geladen werden';
+          if (status === 500) {
+            msg = 'Profil derzeit nicht verfügbar';
+          }
+          if (isActive) setProfileError(msg);
+        } finally {
+          if (isActive) setLoadingProfile(false);
+        }
+      };
+
+      const loadEarnings = async () => {
+        setEarningsError(null);
+        try {
+          const now = Date.now();
+          const sinceTs = now - 30 * 24 * 60 * 60 * 1000;
+          const res = await getProviderAppointments('completed');
+          if (!isActive) return;
+          
+          const items = res?.items || [];
+          const total = items.reduce((sum, a) => {
+            const d = new Date((a.appointmentDate || '').trim() + 'T' + ((a.startTime || '').trim() || '00:00:00'));
+            const ts = d.getTime();
+            if (Number.isNaN(ts) || ts < sinceTs) return sum;
+            const gross = (a.totalPriceCents || 0) / 100;
+            const fee = Math.round(gross * PLATFORM_FEE_RATE * 100) / 100;
+            const net = Math.round((gross - fee) * 100) / 100;
+            return sum + net;
+          }, 0);
+          const formatted = `€${total.toLocaleString('de-DE', { maximumFractionDigits: 0 })}`;
+          setEarningsBadge(formatted);
+        } catch (err: any) {
+          const msg = err?.response?.data?.message || err?.message || 'Einnahmen konnten nicht geladen werden';
+          if (isActive) setEarningsError(msg);
+        }
+      };
+
+      loadProfile();
+      loadEarnings();
+
+      return () => { isActive = false; };
+    }, [])
+  );
 
   const handleLogout = () => {
     // Use platform-aware confirmation: modal on web, Alert on native

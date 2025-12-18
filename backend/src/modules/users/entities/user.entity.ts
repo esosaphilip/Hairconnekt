@@ -15,6 +15,7 @@ export enum UserType {
   CLIENT = 'CLIENT',
   PROVIDER = 'PROVIDER',
   BOTH = 'BOTH',
+  ADMIN = 'ADMIN',
 }
 
 @Entity('users')

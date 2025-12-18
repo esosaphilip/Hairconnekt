@@ -51,6 +51,6 @@ export class CreateServiceDto {
   displayOrder?: number;
 
   @IsString()
-  @IsOptional()
-  categoryId?: string;
+  @IsNotEmpty()
+  categoryId: string;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, StyleSheet, ScrollView, Platform, ActivityIndicator } from 'react-native';
+import { View, Pressable, TouchableOpacity, StyleSheet, ScrollView, Platform, ActivityIndicator } from 'react-native';
 import Text from '../../components/Text';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '../../components/Card';
@@ -67,7 +67,7 @@ import { useNavigation } from '@react-navigation/native';
 
 export function ProviderProfileScreen() {
   const { tokens } = useAuth();
-  const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
+  const navigation = useNavigation<any>();
   type Dashboard = { todayAppointments?: unknown[]; stats?: { reviewCount?: number; ratingAverage?: number } };
   type PublicData = { rating?: number; reviews?: number; specialties?: string[] };
   type ProviderUser = {
@@ -87,6 +87,19 @@ export function ProviderProfileScreen() {
     acceptsSameDayBooking?: boolean;
     createdAt?: string;
     user?: ProviderUser;
+    specializations?: string[];
+    languages?: string[];
+    socialMedia?: {
+      instagram?: string;
+      facebook?: string;
+      website?: string;
+    };
+    certifications?: Array<{
+      id: string;
+      title: string;
+      institution: string;
+      year: string;
+    }>;
   };
   const [profile, setProfile] = React.useState<ProviderProfile | null>(null);
   const [dashboard, setDashboard] = React.useState<Dashboard | null>(null);
@@ -115,9 +128,9 @@ export function ProviderProfileScreen() {
     let mounted = true;
     async function load() {
       try {
-        setLoading(true);
+        setLoading(true); 
         setError(null);
-        // Ensure we have a token; http interceptor will attach it
+        
         if (!tokens?.accessToken) {
           throw new Error('Nicht authentifiziert');
         }
@@ -128,17 +141,14 @@ export function ProviderProfileScreen() {
           if (!mounted) return;
           setProfile(me);
         } catch (e: unknown) {
-          // Suppress the red error banner for "Provider profile not found" (404)
           const status = getStatus(e);
           const msg = getMessage(e, '');
           const isNotFound = status === 404 && typeof msg === 'string' && msg.toLowerCase().includes('provider profile not found');
           if (!isNotFound) {
             if (mounted) setError(getMessage(e));
           }
-          // If not found, we keep placeholders and continue without breaking the screen.
         }
 
-        // Only load dashboard and public info if we have a provider profile id
         if (me?.id) {
           const [dashRes, pubRes] = await Promise.all([
             http.get('/providers/dashboard'),
@@ -156,10 +166,16 @@ export function ProviderProfileScreen() {
       }
     }
     load();
+    
+    const unsubscribe = navigation.addListener('focus', () => {
+      load();
+    });
+    
     return () => {
       mounted = false;
+      unsubscribe();
     };
-  }, [tokens?.accessToken]);
+  }, [navigation, tokens?.accessToken]);
 
   const onBack = () => {
     try {
@@ -181,11 +197,26 @@ export function ProviderProfileScreen() {
     }
   };
 
-  const onEditAboutMe = () => navigation.navigate('EditAboutMeScreen');
-  const onEditSpecializations = () => navigation.navigate('EditSpecializationsScreen');
-  const onEditLanguages = () => navigation.navigate('EditLanguagesScreen');
-  const onEditSocialMedia = () => navigation.navigate('EditSocialMediaScreen');
-  const onEditCertifications = () => navigation.navigate('EditCertificationsScreen');
+  const onEditAboutMe = () => {
+    console.log('Navigating to EditAboutMeScreen');
+    navigation.navigate('EditAboutMeScreen');
+  };
+  const onEditSpecializations = () => {
+    console.log('Navigating to EditSpecializationsScreen');
+    navigation.navigate('EditSpecializationsScreen');
+  };
+  const onEditLanguages = () => {
+    console.log('Navigating to EditLanguagesScreen');
+    navigation.navigate('EditLanguagesScreen');
+  };
+  const onEditSocialMedia = () => {
+    console.log('Navigating to EditSocialMediaScreen');
+    navigation.navigate('EditSocialMediaScreen');
+  };
+  const onEditCertifications = () => {
+    console.log('Navigating to EditCertificationsScreen');
+    navigation.navigate('EditCertificationsScreen');
+  };
 
   const onOpenPublicProfile = () => {
     // Placeholder for navigation
@@ -307,9 +338,9 @@ export function ProviderProfileScreen() {
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
           <View style={styles.sectionHeader}> 
             <Text style={styles.sectionTitle}>Über mich</Text>
-            <Pressable onPress={onEditAboutMe} style={styles.iconBtn}>
+            <TouchableOpacity onPress={onEditAboutMe} style={styles.iconBtn} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
-            </Pressable>
+            </TouchableOpacity>
           </View>
           <Text style={{ fontSize: 14, color: colors.gray700 }}>
             {profile?.bio || 'Profilbeschreibung ist noch nicht hinterlegt.'}
@@ -320,9 +351,9 @@ export function ProviderProfileScreen() {
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Spezialisierungen</Text>
-            <Pressable onPress={onEditSpecializations} style={styles.iconBtn}>
+            <TouchableOpacity onPress={onEditSpecializations} style={styles.iconBtn} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
-            </Pressable>
+            </TouchableOpacity>
           </View>
           <View style={styles.badgeWrap}>
             {(Array.isArray(publicData?.specialties) && publicData.specialties.length > 0) ? (
@@ -339,9 +370,9 @@ export function ProviderProfileScreen() {
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Sprachen</Text>
-            <Pressable onPress={onEdit} style={styles.iconBtn}>
+            <TouchableOpacity onPress={onEditLanguages} style={styles.iconBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
-            </Pressable>
+            </TouchableOpacity>
           </View>
           <View style={styles.badgeWrap}>
             {/* Placeholder until languages are part of the profile schema */}
@@ -354,9 +385,9 @@ export function ProviderProfileScreen() {
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Social Media</Text>
-            <Pressable onPress={onEdit} style={styles.iconBtn}>
+            <TouchableOpacity onPress={onEditSocialMedia} style={styles.iconBtn} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
-            </Pressable>
+            </TouchableOpacity>
           </View>
           <View>
             <View style={[styles.infoRow, { marginBottom: spacing.sm }]}>
@@ -406,14 +437,18 @@ export function ProviderProfileScreen() {
             </Pressable>
           </View>
           <View>
-            <View style={{ marginBottom: spacing.sm }}>
-              <Text style={{ fontWeight: '600' }}>—</Text>
-              <Text style={{ color: colors.gray600 }}>—</Text>
-            </View>
-            <View>
-              <Text style={{ fontWeight: '600' }}>—</Text>
-              <Text style={{ color: colors.gray600 }}>—</Text>
-            </View>
+            {Array.isArray(profile?.certifications) && profile!.certifications!.length > 0 ? (
+              profile!.certifications!.map((cert) => (
+                <View key={cert.id} style={{ marginBottom: spacing.sm }}>
+                  <Text style={{ fontWeight: '600' }}>{cert.title}</Text>
+                  <Text style={{ color: colors.gray600 }}>{cert.institution} • {cert.year}</Text>
+                </View>
+              ))
+            ) : (
+              <View>
+                <Text style={{ color: colors.gray600 }}>Keine Zertifikate hinterlegt</Text>
+              </View>
+            )}
           </View>
         </Card>
       </ScrollView>

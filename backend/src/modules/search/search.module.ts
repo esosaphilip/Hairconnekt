@@ -7,8 +7,10 @@ import { User } from '../users/entities/user.entity';
 import { Service } from '../services/entities/service.entity';
 import { Review } from '../reviews/entities/review.entity';
 
+import { ServiceCategory } from '../services/entities/service-category.entity';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([ProviderProfile, User, Service, Review])],
+  imports: [TypeOrmModule.forFeature([ProviderProfile, User, Service, Review, ServiceCategory])],
   controllers: [SearchController],
   providers: [SearchService],
   exports: [SearchService],

@@ -137,12 +137,29 @@ export function SearchScreen() {
     setSearchTerm('');
   };
 
-  // Load persisted recent searches on mount
+  const [categories, setCategories] = useState<{id: string; name: string; slug: string}[]>([]);
+  
+  // Load persisted recent searches and categories on mount
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const recents = await getRecentSearches();
       if (!cancelled) setRecentSearches(recents);
+
+      // Fetch Categories
+      try {
+        const res = await http.get('/services/categories');
+        const items = Array.isArray(res.data) ? res.data : [];
+        if (!cancelled && items.length > 0) {
+            setCategories(items.map((c: any) => ({
+                id: c.id, 
+                name: c.nameDe || c.name, 
+                slug: c.slug
+            })));
+        }
+      } catch (e) {
+        // ignore
+      }
     })();
     return () => {
       cancelled = true;

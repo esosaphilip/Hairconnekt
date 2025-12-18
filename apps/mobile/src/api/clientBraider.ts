@@ -20,8 +20,19 @@ export const clientBraiderApi = {
     filters: { category?: string; sortBy?: string; providerTypes?: string[]; priceRanges?: number[]; rating?: number } = {},
   ): Promise<IBraider[]> {
     try {
-      const res = await http.get('/providers/search', { params: { term, ...filters } });
-      const items = Array.isArray(res.data) ? res.data : [];
+      // Use the dedicated SearchController
+      const res = await http.get('/search', { params: { q: term, ...filters } });
+      const items = Array.isArray(res.data?.results) ? res.data.results : (Array.isArray(res.data) ? res.data : []);
+      return items.map(BraiderAdapter.toDomain);
+    } catch (error) {
+      throw mapApiError(error);
+    }
+  },
+
+  async searchByCategory(slug: string): Promise<IBraider[]> {
+    try {
+      const res = await http.get(`/search/category/${slug}`);
+      const items = Array.isArray(res.data?.results) ? res.data.results : [];
       return items.map(BraiderAdapter.toDomain);
     } catch (error) {
       throw mapApiError(error);
