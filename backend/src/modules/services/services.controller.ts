@@ -9,7 +9,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators';
 import { UserType } from '../users/entities/user.entity';
 import { ServiceCategory } from './entities/service-category.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 
 @Controller('services')
 export class ServicesController {
