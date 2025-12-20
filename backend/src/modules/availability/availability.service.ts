@@ -44,7 +44,9 @@ export class AvailabilityService {
 
     await this.availabilitySlotRepository.save(slotEntities);
 
-    return this.availabilityRepository.findOne({ where: { id: savedAvailability.id }, relations: ['slots'] });
+    const result = await this.availabilityRepository.findOne({ where: { id: savedAvailability.id }, relations: ['slots'] });
+    if (!result) throw new NotFoundException('Failed to retrieve created availability');
+    return result;
   }
 
   async update(id: string, updateAvailabilityDto: UpdateAvailabilityDto): Promise<Availability> {

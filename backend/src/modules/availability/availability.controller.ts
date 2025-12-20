@@ -38,7 +38,7 @@ export class AvailabilityController {
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  async create(@Body() createAvailabilityDto: CreateAvailabilityDto, @Req() req) {
+  async create(@Body() createAvailabilityDto: CreateAvailabilityDto, @Req() req: any) {
     const providerId = await this.resolveProviderId(req);
     return this.availabilityService.create({ ...createAvailabilityDto, providerId });
   }

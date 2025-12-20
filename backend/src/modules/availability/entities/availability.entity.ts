@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
-import { ProviderProfile } from '../providers/entities/provider-profile.entity';
+import { ProviderProfile } from '../../providers/entities/provider-profile.entity';
 import { AvailabilitySlot } from './availability-slot.entity';
 
 @Entity('availabilities')
