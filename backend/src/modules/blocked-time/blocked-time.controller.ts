@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import type { Request } from 'express';
 
-@Controller('blocked-time')
+@Controller('providers/me/calendar/blocks')
 export class BlockedTimeController {
   private readonly logger = new Logger(BlockedTimeController.name);
 

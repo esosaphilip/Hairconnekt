@@ -25,7 +25,7 @@ export class ProvidersController {
     return { message: 'Not implemented - awaiting schemas' };
   }
 
-  @Patch()
+  @Patch('me')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)
   update(@Req() req: Request, @Body() dto: UpdateProviderDto) {
@@ -33,7 +33,7 @@ export class ProvidersController {
     return this.providersService.updateProfile(userId, dto);
   }
 
-  @Post('availability')
+  @Put('me/availability')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)
   setAvailability(@Req() req: Request, @Body() dto: AvailabilityDto) {
@@ -107,6 +107,37 @@ export class ProvidersController {
   getMyProfile(@Req() req: Request) {
     const userId = (req.user as any)?.sub;
     return this.providersService.getMyProfile(userId);
+  }
+
+  @Get('settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async getSettings(@Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    // For now, return default settings or map from profile if columns exist
+    // TODO: Implement actual settings persistence
+    return {
+      pushNotifications: true,
+      emailNotifications: true,
+      bookingAlerts: true,
+      messageAlerts: true,
+      reviewAlerts: true,
+      marketingEmails: false,
+      showPhoneNumber: true,
+      showEmail: false,
+      profileVisible: true,
+      autoAcceptBookings: false,
+      allowWalkIns: true,
+    };
+  }
+
+  @Patch('settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async updateSettings(@Req() req: Request, @Body() body: any) {
+    const userId = (req.user as any)?.sub;
+    // TODO: Save settings to DB
+    return { success: true, ...body };
   }
 
   @Get('dashboard')

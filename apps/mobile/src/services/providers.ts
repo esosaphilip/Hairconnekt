@@ -98,6 +98,15 @@ export const providersApi = {
     return payload;
   },
 
+  async updateProfile(body: any): Promise<any> {
+    const res = await http.patch('/providers/me', body);
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data;
+    }
+    return payload;
+  },
+
   async getDashboard(): Promise<unknown> {
     const res = await http.get('/providers/dashboard');
     const payload = res?.data;
@@ -168,7 +177,8 @@ export const providersApi = {
       repeatFrequency: body.recurring?.frequency,
       repeatEndDate: body.recurring?.endsOn ? toIsoString(body.recurring.endsOn) : undefined,
     };
-    const res = await http.post('/blocked-time', payload);
+    // Endpoint: POST /providers/me/calendar/blocks
+    const res = await http.post('/providers/me/calendar/blocks', payload);
     const data = res?.data;
     if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
       return (data as any).data ?? { blockId: '' };
@@ -193,7 +203,8 @@ export const providersApi = {
       repeatFrequency: body.recurring?.frequency,
       repeatEndDate: body.recurring?.endsOn ? toIsoString(body.recurring.endsOn) : undefined,
     };
-    const res = await http.patch(`/blocked-time/${id}`, payload);
+    // Endpoint: PATCH /providers/me/calendar/blocks/:id
+    const res = await http.patch(`/providers/me/calendar/blocks/${id}`, payload);
     const data = res?.data;
     if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
       return (data as any).data ?? { blockId: id };
@@ -202,7 +213,8 @@ export const providersApi = {
   },
 
   async blockTimeDelete(id: string): Promise<{ message?: string }> {
-    const res = await http.delete(`/blocked-time/${id}`);
+    // Endpoint: DELETE /providers/me/calendar/blocks/:id
+    const res = await http.delete(`/providers/me/calendar/blocks/${id}`);
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload) {
       return { message: (payload as any)?.message };
@@ -220,7 +232,8 @@ export const providersApi = {
   },
 
   async updateAvailabilitySettings(body: any): Promise<{ message?: string }> {
-    const res = await http.put('/providers/me/availability-settings', body);
+    // Endpoint: PUT /providers/me/availability
+    const res = await http.put('/providers/me/availability', body);
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
       return (payload as any).data ?? {};
