@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Service, PriceType } from './entities/service.entity';
@@ -21,11 +21,23 @@ export class ServicesService {
   }
 
   async getProviderIdByUserId(userId: string): Promise<string> {
-    const provider = await this.providerProfileRepository.findOne({ where: { user: { id: userId } } });
-    if (!provider) {
-      throw new NotFoundException('Provider profile not found for this user');
+    try {
+      // Use QueryBuilder for safer relation resolution by ID
+      const provider = await this.providerProfileRepository
+        .createQueryBuilder('profile')
+        .where('profile.user_id = :userId', { userId })
+        .getOne();
+
+      if (!provider) {
+        console.warn(`[ServicesService] Provider profile not found for userId: ${userId}`);
+        throw new NotFoundException('Provider profile not found for this user');
+      }
+      return provider.id;
+    } catch (error) {
+      console.error(`[ServicesService] Error resolving provider ID for userId ${userId}:`, error);
+      if (error instanceof NotFoundException) throw error;
+      throw new InternalServerErrorException('Failed to resolve provider profile');
     }
-    return provider.id;
   }
 
   async create(providerId: string, createServiceDto: any): Promise<Service> {
