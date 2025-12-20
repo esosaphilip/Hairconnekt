@@ -16,6 +16,7 @@ import { AppCacheModule } from './modules/cache/cache.module';
 import { ServicesModule } from './modules/services/services.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AdminModule } from './modules/admin/admin.module';
+import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { AdminModule } from './modules/admin/admin.module';
     ProvidersModule,
     ReviewsModule,
     ServicesModule,
+    BlockedTimeModule,
     // Register appointments API routes (client/provider listings, create, etc.)
     AppointmentsModule,
     AdminModule,
