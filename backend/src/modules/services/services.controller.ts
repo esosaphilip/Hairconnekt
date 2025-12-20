@@ -19,7 +19,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
 import { Request } from 'express';
 
-@Controller('api/v1/providers/me/services')
+@Controller('providers/me/services')
 export class ServicesController {
   private readonly logger = new Logger(ServicesController.name);
 

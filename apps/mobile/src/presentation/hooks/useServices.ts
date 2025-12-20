@@ -27,7 +27,7 @@ export function useServices() {
       const data = await serviceUseCases.listServices();
       setServices(data);
     } catch (err: unknown) {
-      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.LOAD_FAILED);
       
     } finally {
@@ -45,6 +45,7 @@ export function useServices() {
     priceCents: number;
     durationMinutes: number;
     isActive?: boolean;
+    allowOnlineBooking?: boolean;
     categoryId?: string;
   }): Promise<Service> => {
     setLoading(true);
@@ -57,6 +58,7 @@ export function useServices() {
       priceCents: data.priceCents,
       durationMinutes: data.durationMinutes,
       isActive: data.isActive ?? true,
+      allowOnlineBooking: data.allowOnlineBooking ?? true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -67,7 +69,7 @@ export function useServices() {
       return service;
     } catch (err: unknown) {
       setServices((prev) => prev.filter((s) => s.id !== temp.id));
-      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;
     } finally {
@@ -86,7 +88,7 @@ export function useServices() {
       return service;
     } catch (err: unknown) {
       setServices(before);
-      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;
     } finally {
@@ -103,7 +105,7 @@ export function useServices() {
       await serviceUseCases.deleteService(id);
     } catch (err: unknown) {
       setServices(before);
-      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.DELETE_FAILED);
       throw err;
     } finally {
@@ -122,7 +124,7 @@ export function useServices() {
       return service;
     } catch (err: unknown) {
       setServices(before);
-      const message = err instanceof DomainError ? err.message : getErrorMessage(err);
+      const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;
     } finally {

@@ -48,41 +48,26 @@ export function ServicesManagementScreen() {
   useEffect(() => {
     const normalize = (raw: any): Array<{ id: string; nameDe?: string; name_de?: string }> => {
       const arr = Array.isArray(raw) ? raw : (raw?.items ?? []);
-      return (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name_de ?? c.name }));
+      return (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
     };
     const fetchCategories = async () => {
       setCategoriesLoading(true);
       setCategoriesError(null);
       try {
-        // Try primary path
-        try {
-          const res = await http.get('/services/categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch {}
-        // Fall back to provider paths
-        try {
-          const res = await http.get('/provider/services/categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch {}
-        try {
-          const res = await http.get('/providers/services/categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch {}
-        // Generic fallbacks
-        try {
-          const res = await http.get('/service-categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch {}
-        try {
-          const res = await http.get('/categories', { params: { type: 'service', locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch {}
-        setCategoriesError('Keine Kategorien gefunden. Bitte versuche es erneut.');
+        // Single dedicated call as per Master Solution Contract
+        // Path: /providers/me/services/categories (http client adds base URL /api/v1)
+        const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
+        const items = normalize(res?.data);
+        if (items.length) { 
+          setCategories(items); 
+        } else {
+           // Fallback only if array is empty but call succeeded? Or just show error?
+           // Contract says "Replace it with exactly one call". I will respect that.
+           if (items.length === 0) setCategoriesError('Keine Kategorien gefunden.');
+        }
+      } catch (err) {
+         console.log('[ServicesManagement] Category Fetch Error:', err);
+         setCategoriesError('Kategorien konnten nicht geladen werden.');
       } finally {
         setCategoriesLoading(false);
       }
@@ -218,7 +203,7 @@ export function ServicesManagementScreen() {
                         // trigger reload by calling the same effect logic
                         (async () => {
                           try {
-                            const res = await http.get('/services/categories', { params: { locale: 'de' } });
+                            const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
                             const arr = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
                             const items = (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
                             setCategories(items);

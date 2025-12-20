@@ -17,6 +17,7 @@ export type Service = {
   priceCents: number;
   durationMinutes: number;
   isActive: boolean;
+  allowOnlineBooking: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -28,6 +29,7 @@ export function createService(data: {
   priceCents: number;
   durationMinutes: number;
   isActive?: boolean;
+  allowOnlineBooking?: boolean;
 }): Service {
   return {
     id: '', // Will be set by repository
@@ -37,6 +39,7 @@ export function createService(data: {
     priceCents: data.priceCents,
     durationMinutes: data.durationMinutes,
     isActive: data.isActive ?? true,
+    allowOnlineBooking: data.allowOnlineBooking ?? true,
     createdAt: new Date(),
     updatedAt: new Date(),
   };

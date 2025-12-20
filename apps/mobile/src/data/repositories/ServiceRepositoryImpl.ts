@@ -6,17 +6,15 @@
 import type { IServiceRepository } from '@/domain/repositories/IServiceRepository';
 import type { Service } from '@/domain/entities/Service';
 import { http } from '@/api/http';
-import { API_CONFIG } from '@/constants';
 import { createDomainError, ErrorType, mapApiError } from '@/domain/errors/DomainError';
-import { providersApi } from '@/services/providers';
 
 export class ServiceRepositoryImpl implements IServiceRepository {
   async list(): Promise<Service[]> {
     try {
-      // Use the correct endpoint as defined in API_CONFIG (/services/provider)
-      const res = await http.get('/services/provider');
+      // Endpoint: GET /providers/me/services (http client adds base URL /api/v1)
+      const res = await http.get('/providers/me/services');
       const payload = res?.data;
-      // Backend returns { success: true, data: [ ... ] } or just [ ... ]
+      
       const list = payload && typeof payload === 'object' && 'success' in payload && 'data' in payload
         ? (payload as any).data
         : (Array.isArray(payload) ? payload : (payload?.items ?? payload?.services ?? []));
@@ -26,9 +24,10 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         name: String(s.name || ''),
         description: s.description ?? null,
         category: s.category ? { id: String(s.category), nameDe: String(s.category), nameEn: String(s.category) } : null,
-        priceCents: typeof s.price === 'number' ? Math.round(s.price * 100) : 0,
-        durationMinutes: typeof s.duration === 'number' ? s.duration : 60,
+        priceCents: typeof s.price === 'number' ? Math.round(s.price * 100) : (s.priceCents || 0),
+        durationMinutes: typeof s.duration === 'number' ? s.duration : (s.durationMinutes || 60),
         isActive: s.isActive !== undefined ? !!s.isActive : true,
+        allowOnlineBooking: s.allowOnlineBooking !== undefined ? !!s.allowOnlineBooking : true,
         createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
         updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
       }));
@@ -61,10 +60,13 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         priceType: 'FIXED',
         description: service.description ?? undefined,
         isActive: service.isActive !== undefined ? Boolean(service.isActive) : true,
+        allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : true,
       };
-      // Correct endpoint: POST /services
-      const res = await http.post('/services', payload);
+      
+      // Endpoint: POST /providers/me/services (http client adds base URL /api/v1)
+      const res = await http.post('/providers/me/services', payload);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
+      
       const mapped: Service = {
         id: String(s.serviceId || s.id),
         name: String(s.name || service.name || ''),
@@ -73,6 +75,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         priceCents: Math.round(((s.priceCents as number) ?? payload.priceCents as number)),
         durationMinutes: Number((s.durationMinutes as number) ?? payload.durationMinutes as number),
         isActive: typeof s.isActive === 'boolean' ? s.isActive : !!payload.isActive,
+        allowOnlineBooking: typeof s.allowOnlineBooking === 'boolean' ? s.allowOnlineBooking : !!payload.allowOnlineBooking,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -94,17 +97,25 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       if (!existing) {
         throw createDomainError(ErrorType.NOT_FOUND, `Service with id ${id} not found`);
       }
-      const body: any = {
+      
+      // STRICT CONTRACT: Payload Construction
+      const body = {
         name: service.name,
-        categoryId: (service as any)?.category?.id || (service as any)?.categoryId,
-        durationMinutes: service.durationMinutes != null ? Math.max(0, parseInt(String(service.durationMinutes), 10)) : undefined,
-        priceCents: service.priceCents != null ? Math.max(0, parseInt(String(service.priceCents), 10)) : undefined,
         description: service.description,
+        priceCents: service.priceCents !== undefined ? Math.round(Number(service.priceCents)) : undefined,
+        durationMinutes: service.durationMinutes !== undefined ? Math.round(Number(service.durationMinutes)) : undefined,
+        categoryId: (service as any)?.category?.id || (service as any)?.categoryId,
         isActive: service.isActive !== undefined ? Boolean(service.isActive) : undefined,
+        allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : undefined,
       };
-      // Correct endpoint: PATCH /services/:id
-      const res = await http.patch(`/services/${id}`, body);
+      
+      // Remove undefined keys to avoid sending nulls where not intended, though backend ignores undefined
+      Object.keys(body).forEach(key => (body as any)[key] === undefined && delete (body as any)[key]);
+
+      // Endpoint: PATCH /providers/me/services/:id (http client appends to base URL /api/v1)
+      const res = await http.patch(`/providers/me/services/${id}`, body);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
+      
       const mapped: Service = {
         id: String(s.serviceId || id),
         name: String(s.name || existing.name || ''),
@@ -113,17 +124,23 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         priceCents: Math.round(((s.priceCents as number) ?? body.priceCents as number ?? existing.priceCents)),
         durationMinutes: Number((s.durationMinutes as number) ?? body.durationMinutes as number ?? existing.durationMinutes),
         isActive: typeof s.isActive === 'boolean' ? s.isActive : !!body.isActive,
+        allowOnlineBooking: typeof s.allowOnlineBooking === 'boolean' ? s.allowOnlineBooking : !!(body.allowOnlineBooking ?? existing.allowOnlineBooking),
         createdAt: existing.createdAt,
         updatedAt: new Date(),
       };
       return mapped;
     } catch (error: unknown) {
       if ((error as any)?.type === ErrorType.NOT_FOUND) throw error;
-      console.log('Update Service Error:', JSON.stringify((error as any)?.response?.data));
+      // ERROR HANDLING: Log exact URL and Payload
+      console.log(`[ServiceRepo] Update Error: PATCH /providers/me/services/${id}`);
+      console.log('[ServiceRepo] Payload:', JSON.stringify(service));
+      console.log('[ServiceRepo] Response:', JSON.stringify((error as any)?.response?.data));
+
       const status = (error as any)?.response?.status;
       const message = (error as any)?.response?.data?.message;
       if (status === 400) throw new Error(message || 'Ungültige Daten');
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
+      if (status === 404) throw new Error('Service nicht gefunden');
       if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
       throw new Error(message || 'Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
@@ -131,8 +148,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
   async delete(id: string): Promise<void> {
     try {
-      // Correct endpoint: DELETE /services/:id
-      await http.delete(`/services/${id}`);
+      // Endpoint: DELETE /providers/me/services/:id (http client appends to base URL /api/v1)
+      await http.delete(`/providers/me/services/${id}`);
       return;
     } catch (error: unknown) {
       const status = (error as any)?.response?.status;
@@ -146,8 +163,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
   async toggleActive(id: string, isActive: boolean): Promise<Service> {
     try {
-      // Correct endpoint: PATCH /services/:id
-      const res = await http.patch(`/services/${id}`, { isActive });
+      // Endpoint: PATCH /providers/me/services/:id (http client appends to base URL /api/v1)
+      const res = await http.patch(`/providers/me/services/${id}`, { isActive });
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
       const updated = await this.getById(id);
       if (!updated) throw createDomainError(ErrorType.NOT_FOUND, `Service with id ${id} not found`);
