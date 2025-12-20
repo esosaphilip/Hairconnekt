@@ -14,6 +14,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import ProviderCard from '@/components/ProviderCard';
 import { clientBraiderApi } from '@/api/clientBraider';
+import { http } from '@/api/http';
 import { IBraider } from '@/domain/models/braider';
 import { favoriteStatus, addFavorite, removeFavorite } from '@/services/favorites';
 import { getRecentSearches, addRecentSearch, clearRecentSearches } from '@/services/recentSearches';
