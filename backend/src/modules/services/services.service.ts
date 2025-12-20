@@ -20,6 +20,14 @@ export class ServicesService {
     return this.serviceCategoryRepository.find({ where: { isActive: true }, order: { nameDe: 'ASC' } });
   }
 
+  async getProviderIdByUserId(userId: string): Promise<string> {
+    const provider = await this.providerProfileRepository.findOne({ where: { user: { id: userId } } });
+    if (!provider) {
+      throw new NotFoundException('Provider profile not found for this user');
+    }
+    return provider.id;
+  }
+
   async create(providerId: string, createServiceDto: any): Promise<Service> {
     const { categoryId, ...rest } = createServiceDto;
 

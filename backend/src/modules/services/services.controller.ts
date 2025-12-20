@@ -28,9 +28,9 @@ export class ServicesController {
   private async resolveProviderId(req: Request & { user: any }): Promise<string> {
     const user = req.user;
     // In strict provider mode, the authenticated user IS the provider (or linked to it)
-    if (user.role === UserType.PROVIDER || user.role === UserType.BOTH) {
-      // Assuming user.sub maps to the provider ID or the user ID which is the provider ID
-      return user.sub;
+    if (user.userType === UserType.PROVIDER || user.userType === UserType.BOTH) {
+      // Fetch the actual ProviderProfile ID linked to this User ID
+      return this.servicesService.getProviderIdByUserId(user.sub);
     }
     throw new BadRequestException('User is not a provider');
   }
