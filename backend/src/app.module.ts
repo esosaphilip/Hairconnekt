@@ -17,6 +17,16 @@ import { ServicesModule } from './modules/services/services.module';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { AvailabilityModule } from './modules/availability/availability.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
+import { MessagesModule } from './modules/messages/messages.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { PortfolioModule } from './modules/portfolio/portfolio.module';
+import { SearchModule } from './modules/search/search.module';
+import { StorageModule } from './modules/storage/storage.module';
+import { TasksModule } from './modules/tasks/tasks.module';
 
 @Module({
   imports: [
@@ -46,6 +56,17 @@ import { BlockedTimeModule } from './modules/blocked-time/blocked-time.module';
     // Register appointments API routes (client/provider listings, create, etc.)
     AppointmentsModule,
     AdminModule,
+    // Additional Feature Modules
+    AnalyticsModule,
+    AvailabilityModule,
+    FavoritesModule,
+    MessagesModule,
+    NotificationsModule,
+    PaymentsModule,
+    PortfolioModule,
+    SearchModule,
+    StorageModule,
+    TasksModule,
   ],
   controllers: [],
   providers: [],
