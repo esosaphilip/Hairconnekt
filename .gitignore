@@ -30,3 +30,6 @@ apps/mobile/iosApp/Pods/
 .idea/
 .vscode/
 **/.swp
+
+# Trae AI
+.trae/documents/
