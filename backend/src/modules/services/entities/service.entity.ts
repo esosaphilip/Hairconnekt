@@ -55,6 +55,9 @@ export class Service {
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive: boolean;
 
+  @Column({ name: 'allow_online_booking', type: 'boolean', default: true })
+  allowOnlineBooking: boolean;
+
   @Column({ name: 'display_order', type: 'int', default: 0 })
   displayOrder: number;
 

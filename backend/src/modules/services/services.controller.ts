@@ -1,75 +1,86 @@
-import { Body, Controller, Post, UseGuards, Req, Get, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import type { Request } from 'express';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Delete,
+  Param,
+  UseGuards,
+  Req,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { ServicesService } from './services.service';
-import { CreateServiceDto } from './dto/create-service.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { Roles } from '../../common/decorators';
+import { Roles } from '../../common/decorators/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
-import { ServiceCategory } from './entities/service-category.entity';
-import { ProviderProfile } from '../providers/entities/provider-profile.entity';
+import { Request } from 'express';
 
-@Controller('services')
+@Controller('api/v1/providers/me/services')
 export class ServicesController {
   private readonly logger = new Logger(ServicesController.name);
 
-  constructor(
-    private readonly servicesService: ServicesService,
-    @InjectRepository(ProviderProfile)
-    private readonly providersRepo: Repository<ProviderProfile>,
-    @InjectRepository(ServiceCategory)
-    private readonly categoryRepo: Repository<ServiceCategory>,
-  ) {}
+  constructor(private readonly servicesService: ServicesService) {}
 
-  @Get('categories')
-  async listCategories() {
-    // Public endpoint to list all active categories
-    return this.categoryRepo.find({
-      where: { isActive: true },
-      order: { displayOrder: 'ASC', nameDe: 'ASC' },
-    });
-  }
-
-  private async resolveProviderId(req: any): Promise<string> {
+  private async resolveProviderId(req: Request & { user: any }): Promise<string> {
     const user = req.user;
-    if (user?.providerId) return user.providerId;
-    
-    const userId = user?.sub || user?.id;
-    if (!userId) throw new BadRequestException('User ID not found in request');
-
-    try {
-      const provider = await this.providersRepo.findOne({ where: { user: { id: userId } } });
-      if (!provider) {
-        throw new BadRequestException('User is not a registered provider');
-      }
-      return provider.id;
-    } catch (error) {
-      if (error instanceof BadRequestException) throw error;
-      this.logger.error(`Failed to resolve provider for user ${userId}`, error);
-      throw new InternalServerErrorException('Failed to resolve provider context');
+    // In strict provider mode, the authenticated user IS the provider (or linked to it)
+    if (user.role === UserType.PROVIDER || user.role === UserType.BOTH) {
+      // Assuming user.sub maps to the provider ID or the user ID which is the provider ID
+      return user.sub;
     }
+    throw new BadRequestException('User is not a provider');
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Post()
-  async create(
-    @Body() createServiceDto: CreateServiceDto,
-    @Req() req: Request & { user: any },
-  ) {
-    const providerId = await this.resolveProviderId(req);
-    return this.servicesService.create({ ...createServiceDto, providerId });
-  }
-
-  /**
-   * List services for the authenticated provider
-   */
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER, UserType.BOTH)
-  @Get('provider')
+  @Get('categories')
+  async listCategories() {
+    return this.servicesService.listCategories();
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER, UserType.BOTH)
+  @Get()
   async listForProvider(@Req() req: Request & { user: any }) {
     const providerId = await this.resolveProviderId(req);
     return this.servicesService.listForProvider(providerId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER, UserType.BOTH)
+  @Post()
+  async create(
+    @Body() createServiceDto: any,
+    @Req() req: Request & { user: any },
+  ) {
+    const providerId = await this.resolveProviderId(req);
+    return this.servicesService.create(providerId, createServiceDto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER, UserType.BOTH)
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateServiceDto: any,
+    @Req() req: Request & { user: any },
+  ) {
+    const providerId = await this.resolveProviderId(req);
+    return this.servicesService.update(id, providerId, updateServiceDto);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER, UserType.BOTH)
+  @Delete(':id')
+  async remove(
+    @Param('id') id: string,
+    @Req() req: Request & { user: any },
+  ) {
+    const providerId = await this.resolveProviderId(req);
+    return this.servicesService.delete(id, providerId);
   }
 }

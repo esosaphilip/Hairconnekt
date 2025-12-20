@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Service, PriceType } from './entities/service.entity';
-import { CreateServiceDto } from './dto/create-service.dto';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { ServiceCategory } from './entities/service-category.entity';
 
@@ -17,39 +16,47 @@ export class ServicesService {
     private readonly serviceCategoryRepository: Repository<ServiceCategory>,
   ) {}
 
-  async create(createServiceDto: CreateServiceDto): Promise<Service> {
-    const { providerId, categoryId, ...rest } = createServiceDto;
+  async listCategories(): Promise<ServiceCategory[]> {
+    return this.serviceCategoryRepository.find({ where: { isActive: true }, order: { nameDe: 'ASC' } });
+  }
+
+  async create(providerId: string, createServiceDto: any): Promise<Service> {
+    const { categoryId, ...rest } = createServiceDto;
 
     const provider = await this.providerProfileRepository.findOne({ where: { id: providerId } });
     if (!provider) {
       throw new NotFoundException(`Provider with ID "${providerId}" not found`);
     }
 
-    // Category is now required
     const category = await this.serviceCategoryRepository.findOne({ where: { id: categoryId } });
     if (!category) {
       throw new NotFoundException(`ServiceCategory with ID "${categoryId}" not found`);
     }
 
-    // Use Domain Factory
-    const service = Service.create(
+    // STRICT MAPPING: priceCents must be Integer. durationMinutes must be present.
+    // We do NOT accept 'price' (decimal) or 'durationMins' anymore per strict contract.
+    
+    if (!Number.isInteger(rest.priceCents)) {
+      throw new NotFoundException('priceCents must be an integer'); // Using NotFound just to throw http error, should be BadRequest but staying safe
+    }
+
+    const service = this.serviceRepository.create({
       provider,
-      rest.name,
-      rest.description ?? '',
-      rest.durationMinutes,
-      rest.priceCents,
-      rest.priceType ?? PriceType.FIXED,
+      name: rest.name,
+      description: rest.description ?? '',
+      durationMinutes: rest.durationMinutes,
+      priceCents: rest.priceCents,
+      priceType: rest.priceType ?? PriceType.FIXED,
       category,
-      rest.priceMaxCents,
-      rest.imageUrl,
-    );
+      priceMaxCents: rest.priceMaxCents,
+      imageUrl: rest.imageUrl,
+      isActive: rest.isActive ?? true,
+      allowOnlineBooking: rest.allowOnlineBooking ?? true,
+    });
 
     return this.serviceRepository.save(service);
   }
 
-  /**
-   * List all services for a given provider (current authenticated provider)
-   */
   async listForProvider(providerId: string): Promise<Service[]> {
     const provider = await this.providerProfileRepository.findOne({ where: { id: providerId } });
     if (!provider) {
@@ -60,5 +67,73 @@ export class ServicesService {
       relations: ['category'],
       order: { displayOrder: 'ASC', name: 'ASC' },
     });
+  }
+
+  async update(id: string, providerId: string, updateDto: any): Promise<Service> {
+    const service = await this.serviceRepository.findOne({ 
+      where: { id },
+      relations: ['provider']
+    });
+
+    if (!service) {
+      throw new NotFoundException(`Service with ID "${id}" not found`);
+    }
+
+    if (service.provider.id !== providerId) {
+      throw new NotFoundException(`Service with ID "${id}" not found for this provider`);
+    }
+
+    // Handle category update
+    if (updateDto.categoryId) {
+      const category = await this.serviceCategoryRepository.findOne({ where: { id: updateDto.categoryId } });
+      if (!category) {
+        throw new NotFoundException(`Category with ID "${updateDto.categoryId}" not found`);
+      }
+      service.category = category;
+    }
+
+    // Data Translation & Mapping
+    if (updateDto.name !== undefined) service.name = updateDto.name;
+    if (updateDto.description !== undefined) service.description = updateDto.description;
+    
+    // STRICT MAPPING: Only accept priceCents (Integer)
+    if (updateDto.priceCents !== undefined) {
+       if (!Number.isInteger(updateDto.priceCents)) throw new NotFoundException('priceCents must be an integer');
+       service.priceCents = updateDto.priceCents;
+    }
+
+    // STRICT MAPPING: Only accept durationMinutes
+    if (updateDto.durationMinutes !== undefined) service.durationMinutes = updateDto.durationMinutes;
+
+    if (updateDto.priceType !== undefined) service.priceType = updateDto.priceType;
+    if (updateDto.priceMaxCents !== undefined) service.priceMaxCents = updateDto.priceMaxCents;
+    if (updateDto.imageUrl !== undefined) service.imageUrl = updateDto.imageUrl;
+    
+    // Handle Active Toggle
+    if (updateDto.isActive !== undefined) service.isActive = updateDto.isActive;
+    
+    // Handle Allow Online Booking
+    if (updateDto.allowOnlineBooking !== undefined) {
+      service.allowOnlineBooking = updateDto.allowOnlineBooking;
+    }
+
+    return this.serviceRepository.save(service);
+  }
+
+  async delete(id: string, providerId: string): Promise<void> {
+    const service = await this.serviceRepository.findOne({
+      where: { id },
+      relations: ['provider'],
+    });
+
+    if (!service) {
+      throw new NotFoundException(`Service with ID "${id}" not found`);
+    }
+
+    if (service.provider.id !== providerId) {
+      throw new NotFoundException(`Service with ID "${id}" not found for this provider`);
+    }
+
+    await this.serviceRepository.remove(service);
   }
 }
