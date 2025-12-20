@@ -2,21 +2,25 @@ import { http } from './http';
 
 export const providerNotificationsApi = {
   async list(params: { filter?: 'all' | 'unread'; page?: number; limit?: number } = {}) {
-    const res = await http.get('/providers/notifications', { params });
+    // Corrected endpoint to match backend NotificationsController ('/notifications')
+    const res = await http.get('/notifications', { params });
     const payload = res?.data;
-    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-      return (payload as any).data;
+    // Backend returns { items: [], unreadCount: 0 } directly, or array depending on implementation
+    if (payload && typeof payload === 'object' && 'items' in payload) {
+        return payload.items;
     }
-    return payload;
+    return Array.isArray(payload) ? payload : [];
   },
 
   async markRead(notificationId: string) {
-    const res = await http.patch(`/notifications/${notificationId}/read`);
+    // Backend uses POST for this action
+    const res = await http.post(`/notifications/${notificationId}/read`);
     return res?.data;
   },
 
   async markAllRead() {
-    const res = await http.patch('/providers/notifications/read-all');
+    // Backend uses POST for this action
+    const res = await http.post('/notifications/read-all');
     return res?.data;
   },
 

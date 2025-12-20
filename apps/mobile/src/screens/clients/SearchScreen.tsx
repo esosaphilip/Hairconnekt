@@ -71,11 +71,23 @@ export function SearchScreen() {
   const isAuthenticated = !!tokens?.accessToken;
   const navigation = useNavigation();
   const route = useRoute();
-  const routeParams = route.params as { initialTerm?: string; styleName?: string; urgent?: boolean; mobileService?: boolean; newProviders?: boolean } | undefined;
+  const routeParams = route.params as { initialTerm?: string; styleName?: string; urgent?: boolean; mobileService?: boolean; newProviders?: boolean; initialFilter?: string } | undefined;
   const initialTerm = routeParams?.initialTerm || routeParams?.styleName || '';
   const [searchTerm, setSearchTerm] = useState<string>(initialTerm);
-  const [activeFilters, setActiveFilters] = useState<string[]>([]);
+  const [activeFilters, setActiveFilters] = useState<string[]>(routeParams?.initialFilter ? [routeParams.initialFilter] : []);
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'map'>('list');
+
+  // React to route params updates (e.g. navigation from AllStyles/PopularStyles while Search is already mounted)
+  useEffect(() => {
+    if (routeParams?.initialFilter) {
+      setActiveFilters([routeParams.initialFilter]);
+    } else if (routeParams?.initialTerm) {
+      // If we just have a term but no filter, clear filters (optional logic, depends on UX preference)
+      // setActiveFilters([]); 
+      setSearchTerm(routeParams.initialTerm);
+    }
+  }, [routeParams?.initialFilter, routeParams?.initialTerm]);
+
   const [favorites, setFavorites] = useState<string[]>([]);
   const [results, setResults] = useState<IBraider[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -179,18 +191,27 @@ export function SearchScreen() {
   useEffect(() => {
     let timeout;
     async function fetchResults() {
-      if (!searchTerm.trim()) {
+      // Allow search if term exists OR if a category filter is active
+      const categoryFilter = activeFilters.find(f => f.startsWith('cat:'));
+      const hasSearchTerm = !!searchTerm.trim();
+      
+      if (!hasSearchTerm && !categoryFilter) {
         setResults([]);
         setError(null);
         setLoading(false);
         return;
       }
+
       setLoading(true);
       setError(null);
       try {
-        // Map selected category filters to backend category param (first match wins)
-        const category = activeFilters.find((f) => ['salon', 'individual', 'mobile'].includes(f));
-        const data = await clientBraiderApi.search(searchTerm, { category });
+        // Extract pure category slug if present (remove "cat:" prefix)
+        const categorySlug = categoryFilter ? categoryFilter.replace('cat:', '') : undefined;
+        
+        // Also check for provider type filters
+        // const providerType = activeFilters.find((f) => ['salon', 'individual', 'mobile'].includes(f));
+
+        const data = await clientBraiderApi.search(searchTerm, { category: categorySlug });
         setResults(data);
       } catch (err) {
         const message =
@@ -229,9 +250,22 @@ export function SearchScreen() {
 
   const RenderListItem = ({ braider }: { braider: IBraider }) => {
     const isFavorite = favorites.includes(braider.id);
+    // Map IBraider to ProviderSummary expected by ProviderCard
+    const providerSummary = {
+        id: braider.id,
+        name: braider.name,
+        businessName: braider.businessName,
+        rating: braider.rating,
+        reviewCount: braider.reviews?.length || 0,
+        distance: braider.distance,
+        imageUrl: braider.profileImage, // Map profileImage to imageUrl
+        isVerified: braider.isVerified,
+        // Add other necessary fields if ProviderCard needs them
+    };
+
     return (
       <ProviderCard
-        data={braider}
+        data={providerSummary}
         isFavorite={isFavorite}
         onToggleFavorite={(id: string) => handleToggleFavorite(id, braider.name)}
         onPress={(id: string) => rootNavigationRef.current?.navigate('ProviderDetail', { id })}

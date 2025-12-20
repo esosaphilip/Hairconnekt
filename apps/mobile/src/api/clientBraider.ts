@@ -39,6 +39,21 @@ export const clientBraiderApi = {
     }
   },
 
+  async getCategories(): Promise<{ id: string; name: string; slug: string; iconUrl?: string }[]> {
+    try {
+      const res = await http.get('/services/categories');
+      const items = Array.isArray(res.data) ? res.data : [];
+      return items.map((c: any) => ({
+        id: c.id,
+        name: c.nameDe || c.name,
+        slug: c.slug,
+        iconUrl: c.iconUrl,
+      }));
+    } catch (error) {
+      return [];
+    }
+  },
+
   async getProfile(id: string): Promise<IBraider> {
     try {
       const res = await http.get(`/providers/${id}`);

@@ -21,12 +21,24 @@ import { spacing, colors } from '../../theme/tokens';
 // API
 import { providerProfileApi } from '../../api/providerProfile';
 
+import { clientBraiderApi } from '../../api/clientBraider';
+
 const AVAILABLE_SPECIALIZATIONS = [
-  "Box Braids", "Cornrows", "Senegalese Twists", "Knotless Braids",
-  "Passion Twists", "Faux Locs", "Fulani Braids", "Ghana Braids",
-  "Marley Twists", "Havana Twists", "Goddess Braids", "Crochet Braids",
-  "Feed-In Braids", "Stitch Braids", "Lemonade Braids", "Tribal Braids",
-  "Micro Braids", "Tree Braids",
+  'Knotless Braids',
+  'Box Braids',
+  'Cornrows',
+  'Twists',
+  'Locs',
+  'Faux Locs',
+  'Goddess Braids',
+  'Feed-in Braids',
+  'Sew-in Weave',
+  'Crochet Braids',
+  'Natural Hair Care',
+  'Silk Press',
+  'Wig Install',
+  'Coloring',
+  'Cuts'
 ];
 
 export default function EditSpecializationsScreen() {
@@ -54,6 +66,23 @@ export default function EditSpecializationsScreen() {
       setLoading(false);
     }
   };
+
+  const [availableSpecs, setAvailableSpecs] = useState<string[]>([]);
+  const [loadingSpecs, setLoadingSpecs] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setLoadingSpecs(true);
+      try {
+        const cats = await clientBraiderApi.getCategories();
+        setAvailableSpecs(cats.map(c => c.name));
+      } catch (e) {
+        // Fallback or empty
+      } finally {
+        setLoadingSpecs(false);
+      }
+    })();
+  }, []);
 
   const handleToggle = (spec: string) => {
     if (selectedSpecs.includes(spec)) {

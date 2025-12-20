@@ -118,12 +118,9 @@ export function ProviderPublicProfileScreen() {
       setLoadingPortfolio(true);
       setErrorPortfolio(null);
       try {
-        let res: any;
-        try {
-          res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 12, sort: 'latest' } });
-        } catch {
-          res = await http.get(`/provider/${providerId}/portfolio`, { params: { limit: 12, sort: 'latest' } });
-        }
+        // Use standard plural route
+        const res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 12, sort: 'latest' } });
+        
         type RawPortfolioItem = { id: string; imageUrl?: string; uploadedAt?: string };
         const items = Array.isArray(res?.data?.items) ? (res.data.items as RawPortfolioItem[]) : [];
         const mapped: PortfolioItem[] = items.map((it) => ({ id: it.id, imageUrl: it.imageUrl ?? '', uploadedAt: it.uploadedAt }));

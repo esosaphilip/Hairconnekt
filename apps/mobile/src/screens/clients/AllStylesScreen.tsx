@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,16 +9,15 @@ import {
   Image,
   StyleSheet,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
 import type { ListRenderItem } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import Button from '@/components/Button';
 import IconButton from '@/components/IconButton';
-import { Badge } from '@/components/badge';
 import Icon from '@/components/Icon';
 import { colors, spacing, typography, shadows, radii, FONT_SIZES } from '@/theme/tokens';
-import { logger } from '@/services/logger';
-import { MESSAGES } from '@/constants';
+import { clientBraiderApi } from '../../api/clientBraider';
 
 // Screen width for responsive grid calculation
 const screenWidth = Dimensions.get('window').width;
@@ -27,102 +26,31 @@ const cardMargin = spacing.sm;
 const cardPadding = spacing.md;
 const cardWidth = Math.floor((screenWidth - cardPadding * 2 - (numColumns - 1) * cardMargin) / numColumns);
 
-
-// --- Mock Data (Remains the same) ---
-type StyleItem = {
-  id: number;
+type CategoryItem = {
+  id: string;
   name: string;
-  category: string;
-  price: string;
-  duration: string;
-  popularity: string;
-  image: string;
+  slug: string;
+  iconUrl?: string;
 };
 
-const allStyles: StyleItem[] = [
-  {
-    id: 1,
-    name: "Box Braids",
-    category: "Braids",
-    price: "ab €45",
-    duration: "3-4 Std.",
-    popularity: "Sehr beliebt",
-    image: "https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-  {
-    id: 2,
-    name: "Cornrows",
-    category: "Braids",
-    price: "ab €35",
-    duration: "2-3 Std.",
-    popularity: "Beliebt",
-    image: "https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-  {
-    id: 3,
-    name: "Senegalese Twists",
-    category: "Twists",
-    price: "ab €55",
-    duration: "4-5 Std.",
-    popularity: "Sehr beliebt",
-    image: "https://images.unsplash.com/photo-1702236240794-58dc4c6895e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-  {
-    id: 4,
-    name: "Knotless Braids",
-    category: "Braids",
-    price: "ab €50",
-    duration: "4-5 Std.",
-    popularity: "Sehr beliebt",
-    image: "https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-  {
-    id: 5,
-    name: "Faux Locs",
-    category: "Locs",
-    price: "ab €65",
-    duration: "5-6 Std.",
-    popularity: "Beliebt",
-    image: "https://images.unsplash.com/photo-1702236240794-58dc4c6895e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-  {
-    id: 6,
-    name: "Passion Twists",
-    category: "Twists",
-    price: "ab €60",
-    duration: "4-5 Std.",
-    popularity: "Sehr beliebt",
-    image: "https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-  {
-    id: 7,
-    name: "Goddess Braids",
-    category: "Braids",
-    price: "ab €40",
-    duration: "2-3 Std.",
-    popularity: "Beliebt",
-    image: "https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-  {
-    id: 8,
-    name: "Fulani Braids",
-    category: "Braids",
-    price: "ab €45",
-    duration: "3-4 Std.",
-    popularity: "Sehr beliebt",
-    image: "https://images.unsplash.com/photo-1702236240794-58dc4c6895e5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400",
-  },
-];
+// --- CLIENT SIDE GROUPING LOGIC ---
+const CATEGORY_GROUPS = {
+  "Braids": ['box-braids', 'cornrows', 'knotless-braids', 'fulani-braids', 'goddess-braids', 'crochet-braids', 'tribal-braids', 'kids-braids'],
+  "Twists": ['twists', 'senegalese-twists', 'passion-twists', 'marley-twists'],
+  "Locs": ['locs', 'faux-locs'],
+  "Natural": ['natural-styling', 'silk-press', 'bantu-knots', 'ponytail'],
+  "Extensions": ['weave', 'wig-install', 'braided-updo'],
+};
 
-const categories = ["Alle", "Braids", "Twists", "Locs"];
+const FILTER_PILLS = ["Alle", "Braids", "Twists", "Locs", "Natural", "Extensions"];
 
-// --- Custom Component for Style Item (Replaces Card) ---
+// --- Custom Component for Category Item ---
 type StyleCardProps = {
-  style: StyleItem;
+  category: CategoryItem;
   onPress: () => void;
 };
 
-const StyleCard = ({ style, onPress }: StyleCardProps) => {
+const StyleCard = ({ category, onPress }: StyleCardProps) => {
   return (
     <TouchableOpacity
       style={styles.styleCard}
@@ -130,33 +58,19 @@ const StyleCard = ({ style, onPress }: StyleCardProps) => {
       activeOpacity={0.8}
     >
       <View style={styles.imageContainer}>
-        {/* Replaced ImageWithFallback with standard Image */}
         <Image
-          source={{ uri: style.image }}
+          source={{ uri: category.iconUrl || 'https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=800&q=80' }}
           style={styles.styleImage}
           resizeMode="cover"
         />
         <View style={styles.imageOverlay} />
         <View style={styles.imageContent}>
-          <Badge
-            title={style.category}
-            variant="secondary"
-            style={styles.categoryBadge}
-            textStyle={styles.categoryBadgeText}
-          />
-          <Text style={styles.styleName}>{style.name}</Text>
-          <View style={styles.styleMeta}>
-            <Text style={styles.stylePrice}>{style.price}</Text>
-            <View style={styles.styleDuration}>
-              <Icon name="clock" size={12} color={colors.white} />
-              <Text style={styles.styleDurationText}>{style.duration}</Text>
-            </View>
-          </View>
+          <Text style={styles.styleName}>{category.name}</Text>
         </View>
       </View>
 
       <View style={styles.styleFooter}>
-        <Text style={styles.popularityText}>{style.popularity}</Text>
+        <Text style={styles.popularityText}>Jetzt entdecken</Text>
         <Icon name="chevron-right" size={18} color={colors.gray600} />
       </View>
     </TouchableOpacity>
@@ -166,26 +80,53 @@ const StyleCard = ({ style, onPress }: StyleCardProps) => {
 
 // --- Main Component ---
 type NavParams = {
-  Tabs: { screen: 'Search'; params?: { initialTerm?: string } };
+  Tabs: { screen: 'Search'; params?: { initialTerm?: string; initialFilter?: string } };
 };
 
 export function AllStylesScreen() {
-  const navigation = useNavigation<NavigationProp<NavParams>>();
-  const [selectedCategory, setSelectedCategory] = useState("Alle");
+  const navigation = useNavigation<any>();
+  const [categories, setCategories] = useState<CategoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedFilter, setSelectedFilter] = useState("Alle");
 
-  const filteredStyles =
-    selectedCategory === "Alle"
-      ? allStyles
-      : allStyles.filter((style) => style.category === selectedCategory);
+  useEffect(() => {
+    (async () => {
+      try {
+        const cats = await clientBraiderApi.getCategories();
+        setCategories(cats);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  // Filter Logic
+  const filteredCategories = React.useMemo(() => {
+    if (selectedFilter === "Alle") return categories;
+    
+    // Get slugs allowed for this group
+    const allowedSlugs = CATEGORY_GROUPS[selectedFilter as keyof typeof CATEGORY_GROUPS] || [];
+    return categories.filter(c => allowedSlugs.includes(c.slug));
+  }, [categories, selectedFilter]);
+
 
   // Function to render each item in the FlatList
-  const renderStyleItem: ListRenderItem<StyleItem> = ({ item }) => (
+  const renderStyleItem: ListRenderItem<CategoryItem> = ({ item }) => (
     <StyleCard
-      style={item}
-      // Navigate into the client Tabs -> Search screen and pre-fill the term
-      onPress={() => navigation.navigate('Tabs', { screen: 'Search', params: { initialTerm: item.name } })}
+      category={item}
+      onPress={() => navigation.navigate('Search', { initialFilter: `cat:${item.slug}` })}
     />
   );
+
+  if (loading) {
+    return (
+      <View style={[styles.flexContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.flexContainer}>
@@ -194,47 +135,40 @@ export function AllStylesScreen() {
         <View style={styles.headerRow}>
           <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>Alle Styles</Text>
-          {/* Replace bare icon button with labeled button for better clarity */}
-          <Button
-            title="Filter"
-            size="sm"
-            variant="outline"
-            icon="filter"
-            onPress={() => { /* TODO: Open filter modal/screen */ }}
-          />
+          <View style={{ width: 40 }} /> 
         </View>
 
-        {/* Category Filter */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryFilterContainer}
-        >
-          {categories.map((category) => (
-            <Button
-              key={category}
-              title={category}
-              size="sm"
-              variant={selectedCategory === category ? "default" : "outline"}
-              onPress={() => setSelectedCategory(category)}
-              style={selectedCategory === category ? styles.activeCategoryButton : styles.inactiveCategoryButton}
-              textStyle={selectedCategory === category ? styles.activeCategoryText : styles.inactiveCategoryText}
-            />
-          ))}
-        </ScrollView>
+        {/* Horizontal Filter Pills (Restored) */}
+         <ScrollView
+           horizontal
+           showsHorizontalScrollIndicator={false}
+           contentContainerStyle={styles.categoryFilterContainer}
+         >
+           {FILTER_PILLS.map((filter) => (
+             <Button
+               key={filter}
+               title={filter}
+               size="sm"
+               variant={selectedFilter === filter ? "default" : "outline"}
+               onPress={() => setSelectedFilter(filter)}
+               style={selectedFilter === filter ? styles.activeCategoryButton : styles.inactiveCategoryButton}
+               textStyle={selectedFilter === filter ? styles.activeCategoryText : styles.inactiveCategoryText}
+             />
+           ))}
+         </ScrollView>
       </View>
 
       <View style={styles.contentContainer}>
         {/* Results Count */}
         <Text style={styles.resultsCount}>
-          {filteredStyles.length} Style{filteredStyles.length !== 1 ? "s" : ""} gefunden
+          {filteredCategories.length} Style{filteredCategories.length !== 1 ? "s" : ""} gefunden
         </Text>
 
         {/* Styles Grid using FlatList */}
         <FlatList
-          data={filteredStyles}
+          data={filteredCategories}
           renderItem={renderStyleItem}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={(item) => item.id}
           numColumns={numColumns}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.gridContent}

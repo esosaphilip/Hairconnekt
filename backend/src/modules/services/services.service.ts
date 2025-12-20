@@ -14,7 +14,7 @@ export class ServicesService {
     private readonly providerProfileRepository: Repository<ProviderProfile>,
     @InjectRepository(ServiceCategory)
     private readonly serviceCategoryRepository: Repository<ServiceCategory>,
-  ) {}
+  ) { }
 
   async listCategories(): Promise<ServiceCategory[]> {
     return this.serviceCategoryRepository.find({ where: { isActive: true }, order: { nameDe: 'ASC' } });
@@ -49,14 +49,21 @@ export class ServicesService {
       throw new NotFoundException(`Provider with ID "${providerId}" not found`);
     }
 
-    const category = await this.serviceCategoryRepository.findOne({ where: { id: categoryId } });
-    if (!category) {
-      throw new NotFoundException(`ServiceCategory with ID "${categoryId}" not found`);
+    let category: ServiceCategory | null = null;
+    if (categoryId) {
+      // Validate UUID to prevent DB 500 error
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(categoryId)) {
+        throw new NotFoundException(`Invalid Category ID format: "${categoryId}"`);
+      }
+      category = await this.serviceCategoryRepository.findOne({ where: { id: categoryId } });
+      if (!category) {
+        throw new NotFoundException(`ServiceCategory with ID "${categoryId}" not found`);
+      }
     }
 
     // STRICT MAPPING: priceCents must be Integer. durationMinutes must be present.
     // We do NOT accept 'price' (decimal) or 'durationMins' anymore per strict contract.
-    
     if (!Number.isInteger(rest.priceCents)) {
       throw new NotFoundException('priceCents must be an integer'); // Using NotFound just to throw http error, should be BadRequest but staying safe
     }
@@ -68,14 +75,19 @@ export class ServicesService {
       durationMinutes: rest.durationMinutes,
       priceCents: rest.priceCents,
       priceType: rest.priceType ?? PriceType.FIXED,
-      category,
+      category: category || null,
       priceMaxCents: rest.priceMaxCents,
       imageUrl: rest.imageUrl,
       isActive: rest.isActive ?? true,
       allowOnlineBooking: rest.allowOnlineBooking ?? true,
     });
 
-    return this.serviceRepository.save(service);
+    try {
+      return await this.serviceRepository.save(service);
+    } catch (error) {
+      console.error('Error creating service:', error);
+      throw new InternalServerErrorException('Failed to create service');
+    }
   }
 
   async listForProvider(providerId: string): Promise<Service[]> {
@@ -91,7 +103,7 @@ export class ServicesService {
   }
 
   async update(id: string, providerId: string, updateDto: any): Promise<Service> {
-    const service = await this.serviceRepository.findOne({ 
+    const service = await this.serviceRepository.findOne({
       where: { id },
       relations: ['provider']
     });
@@ -116,11 +128,11 @@ export class ServicesService {
     // Data Translation & Mapping
     if (updateDto.name !== undefined) service.name = updateDto.name;
     if (updateDto.description !== undefined) service.description = updateDto.description;
-    
+
     // STRICT MAPPING: Only accept priceCents (Integer)
     if (updateDto.priceCents !== undefined) {
-       if (!Number.isInteger(updateDto.priceCents)) throw new NotFoundException('priceCents must be an integer');
-       service.priceCents = updateDto.priceCents;
+      if (!Number.isInteger(updateDto.priceCents)) throw new NotFoundException('priceCents must be an integer');
+      service.priceCents = updateDto.priceCents;
     }
 
     // STRICT MAPPING: Only accept durationMinutes
@@ -129,10 +141,10 @@ export class ServicesService {
     if (updateDto.priceType !== undefined) service.priceType = updateDto.priceType;
     if (updateDto.priceMaxCents !== undefined) service.priceMaxCents = updateDto.priceMaxCents;
     if (updateDto.imageUrl !== undefined) service.imageUrl = updateDto.imageUrl;
-    
+
     // Handle Active Toggle
     if (updateDto.isActive !== undefined) service.isActive = updateDto.isActive;
-    
+
     // Handle Allow Online Booking
     if (updateDto.allowOnlineBooking !== undefined) {
       service.allowOnlineBooking = updateDto.allowOnlineBooking;

@@ -16,7 +16,7 @@ export class CreateServiceDto {
   providerId?: string;
 
   @IsString()
-  name: string;
+  name!: string;
 
   @IsString()
   @IsOptional()
@@ -24,7 +24,7 @@ export class CreateServiceDto {
 
   @IsNumber()
   @Min(0)
-  priceCents: number;
+  priceCents!: number;
 
   @IsEnum(PriceType)
   @IsOptional()
@@ -37,7 +37,7 @@ export class CreateServiceDto {
 
   @IsNumber()
   @Min(0)
-  durationMinutes: number;
+  durationMinutes!: number;
 
   @IsBoolean()
   @IsOptional()
@@ -53,5 +53,5 @@ export class CreateServiceDto {
 
   @IsString()
   @IsNotEmpty()
-  categoryId: string;
+  categoryId!: string;
 }

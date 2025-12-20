@@ -220,39 +220,44 @@ export class PortfolioService {
     providerId: string,
     options: { page?: number; limit?: number; styleFilter?: string; sort?: string },
   ) {
-    const page = Math.max(1, options.page ?? 1);
-    const limit = Math.min(100, Math.max(1, options.limit ?? 20));
-    const qb = this.imagesRepo
-      .createQueryBuilder('img')
-      .leftJoinAndSelect('img.category', 'category')
-      .where('img.provider_id = :pid', { pid: providerId });
+    try {
+      const page = Math.max(1, options.page ?? 1);
+      const limit = Math.min(100, Math.max(1, options.limit ?? 20));
+      const qb = this.imagesRepo
+        .createQueryBuilder('img')
+        .leftJoinAndSelect('img.category', 'category')
+        .where('img.provider_id = :pid', { pid: providerId });
 
-    if (options.styleFilter) {
-      const filter = `%${options.styleFilter}%`;
-      qb.andWhere(
-        '(img.caption ILIKE :filter OR CAST(img.custom_tags AS TEXT) ILIKE :filter OR category.nameDe ILIKE :filter OR COALESCE(category.nameEn, \'\') ILIKE :filter)',
-        { filter },
-      );
+      if (options.styleFilter) {
+        const filter = `%${options.styleFilter}%`;
+        qb.andWhere(
+          '(img.caption ILIKE :filter OR CAST(img.custom_tags AS TEXT) ILIKE :filter OR category.nameDe ILIKE :filter OR COALESCE(category.nameEn, \'\') ILIKE :filter)',
+          { filter },
+        );
+      }
+
+      switch ((options.sort || 'latest').toLowerCase()) {
+        case 'popular':
+          qb.orderBy('img.likeCount', 'DESC').addOrderBy('img.uploadedAt', 'DESC');
+          break;
+        case 'featured':
+          qb.orderBy('img.isFeatured', 'DESC').addOrderBy('img.uploadedAt', 'DESC');
+          break;
+        default:
+          qb.orderBy('img.uploadedAt', 'DESC');
+      }
+
+      const [items, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
+      return {
+        page,
+        limit,
+        total,
+        items,
+      };
+    } catch (error) {
+      console.error('Error listing provider portfolio:', error);
+      throw error;
     }
-
-    switch ((options.sort || 'latest').toLowerCase()) {
-      case 'popular':
-        qb.orderBy('img.likeCount', 'DESC').addOrderBy('img.uploadedAt', 'DESC');
-        break;
-      case 'featured':
-        qb.orderBy('img.isFeatured', 'DESC').addOrderBy('img.uploadedAt', 'DESC');
-        break;
-      default:
-        qb.orderBy('img.uploadedAt', 'DESC');
-    }
-
-    const [items, total] = await qb.skip((page - 1) * limit).take(limit).getManyAndCount();
-    return {
-      page,
-      limit,
-      total,
-      items,
-    };
   }
 
   // Upload via multipart file; returns created PortfolioImage

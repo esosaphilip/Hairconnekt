@@ -219,8 +219,11 @@ export function ProviderProfileScreen() {
   };
 
   const onOpenPublicProfile = () => {
-    // Placeholder for navigation
-    console.log('Navigate to /provider/more/public-profile (placeholder)');
+    if (profile?.id) {
+      // Navigate to the public profile screen with the provider ID
+      navigation.navigate('ProviderPublicProfileScreen', { id: profile.id });
+    }
+    
     if (Platform.OS === 'web') {
       try {
         const id = profile?.id;

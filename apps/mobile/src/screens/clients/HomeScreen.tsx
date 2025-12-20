@@ -16,6 +16,8 @@ import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Icon from "@/components/Icon";
 import { useAuth } from "@/auth/AuthContext";
 import { clientBraiderApi } from '@/api/clientBraider';
+// import { IBraider } from '@/domain/models/braider';
+// import { addFavorite, removeFavorite, favoriteStatus } from "@/services/favorites";
 import { IBraider } from '@/domain/models/braider';
 import { addFavorite, removeFavorite, favoriteStatus } from "@/services/favorites";
 import { showMessage } from "react-native-flash-message";
@@ -86,11 +88,10 @@ type NearbyItem = {
 */
 
 type PopularStyle = {
-  id: number;
+  id: string;
   name: string;
-  priceFrom: number; // in EUR
-  durationHoursRange: string; // e.g., "3-4"
-  image: string;
+  slug: string;
+  iconUrl?: string;
 };
 
 // --- Refactored Component ---
@@ -100,6 +101,21 @@ export function HomeScreen() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const { tokens, user } = useAuth();
   const isAuthenticated = !!tokens?.accessToken;
+  
+  const [popularCategories, setPopularCategories] = useState<PopularStyle[]>([]);
+  
+  // Load popular categories
+  useEffect(() => {
+    (async () => {
+        try {
+            const cats = await clientBraiderApi.getCategories();
+            // Take top 5 for horizontal list
+            setPopularCategories(cats.slice(0, 5));
+        } catch (e) {
+            // ignore
+        }
+    })();
+  }, []);
 
   const displayName = user?.firstName ? `${user.firstName}! 👋` : user?.email ? `${user.email}` : t('screens.home.welcomeTo');
   const initials = user?.firstName && user?.lastName
@@ -245,12 +261,12 @@ export function HomeScreen() {
   const renderPopularStyleItem = ({ item }: { item: PopularStyle }) => (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Search' })}
+      onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Search', params: { initialFilter: `cat:${item.slug}` } })}
       style={styles.popularStyleCard}
     >
       <View style={styles.popularStyleImageContainer}>
         <Image
-          source={{ uri: item.image }}
+          source={{ uri: item.iconUrl || 'https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=400&q=80' }}
           style={styles.popularStyleImage}
           // Fallback logic for Image is usually handled by onError or a custom wrapper
         />
@@ -258,15 +274,7 @@ export function HomeScreen() {
         <View style={styles.popularStyleTextContainer}>
           <Text style={styles.popularStyleName}>{item.name}</Text>
           <View style={styles.popularStyleDetails}>
-            <Text style={styles.popularStylePrice}>
-              {t('screens.home.popularStyles.priceFrom', { price: formatCurrency(item.priceFrom) })}
-            </Text>
-            <View style={styles.popularStyleDuration}>
-              <Icon name="clock" size={12} color={colors.white} />
-              <Text style={styles.popularStyleDurationText}>
-                {t('screens.home.duration.hoursRange', { hours: item.durationHoursRange })}
-              </Text>
-            </View>
+             <Text style={styles.popularStylePrice}>Jetzt entdecken</Text>
           </View>
         </View>
       </View>
@@ -275,7 +283,10 @@ export function HomeScreen() {
 
   const renderNearbyBraider = ({ item: braider }: { item: IBraider }) => (
     <ProviderCard
-      data={braider}
+      data={{
+        ...braider,
+        reviews: braider.reviews?.length || 0, // Convert review array to number count for ProviderSummary
+      }}
       isFavorite={favorites.includes(braider.id)}
       onToggleFavorite={handleToggleFavorite}
       onPress={() => rootNavigationRef.current?.navigate('ProviderDetail', { id: braider.id })}
@@ -322,7 +333,10 @@ export function HomeScreen() {
                 </Button>
               )}
               {isAuthenticated && (
-                <TouchableOpacity style={styles.notificationButton}>
+                <TouchableOpacity 
+                  style={styles.notificationButton}
+                  onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } })}
+                >
                   <Icon name="notifications" size={24} color={colors.gray700} />
                   <View style={styles.notificationBadge} />
                 </TouchableOpacity>
@@ -428,8 +442,8 @@ export function HomeScreen() {
             </TouchableOpacity>
           </View>
           <FlatList
-            data={popularStyles}
-            keyExtractor={(item) => item.id.toString()}
+            data={popularCategories}
+            keyExtractor={(item) => item.id}
             renderItem={renderPopularStyleItem}
             horizontal
             showsHorizontalScrollIndicator={false}
