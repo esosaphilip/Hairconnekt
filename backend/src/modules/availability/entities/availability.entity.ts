@@ -7,7 +7,7 @@ export class Availability {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => ProviderProfile, (provider) => provider.availabilities, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ProviderProfile, { onDelete: 'CASCADE' })
   provider: ProviderProfile;
 
   @Column({ type: 'int', default: 15 })
