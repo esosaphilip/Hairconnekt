@@ -23,9 +23,10 @@ export class ServicesService {
   async getProviderIdByUserId(userId: string): Promise<string> {
     try {
       // Use QueryBuilder for safer relation resolution by ID
+      // Note: 'profile.user' refers to the relation, and TypeORM maps this to the foreign key column
       const provider = await this.providerProfileRepository
         .createQueryBuilder('profile')
-        .where('profile.user_id = :userId', { userId })
+        .where('profile.user = :userId', { userId })
         .getOne();
 
       if (!provider) {
