@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsDateString, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsNumber, IsOptional, IsString, IsUUID, IsNotEmpty } from 'class-validator';
 
 export class CreateBlockedTimeDto {
   @IsUUID()
@@ -6,6 +6,7 @@ export class CreateBlockedTimeDto {
   providerId?: string;
 
   @IsString()
+  @IsNotEmpty()
   reason: string;
 
   @IsString()
