@@ -300,9 +300,12 @@ export class ProvidersService {
     const todayAppointments = todays.map((a) => {
       const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
       const serviceSummary = (a.appointmentServices || []).map((s) => s.serviceName).join(' + ');
-      const startStr = (a.startTime || '').slice(0, 5);
-      const endStr = (a.endTime || '').slice(0, 5);
-      const startDt = this.combineDateTimeLocal(a.appointmentDate, a.startTime);
+      const startDt = new Date(a.startTime);
+      const endDt = new Date(a.endTime);
+
+      const startStr = startDt.toISOString().substring(11, 16);
+      const endStr = endDt.toISOString().substring(11, 16);
+
       const diffMs = startDt.getTime() - now.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
       return {
@@ -404,12 +407,7 @@ export class ProvidersService {
       const id = c.id;
       const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.email || 'Kunde';
       const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
-      const visitIso = (() => {
-        // Combine date + end time when available, else start time
-        const time = a.endTime || a.startTime || '00:00:00';
-        const hhmmss = this.normalizeTime(time) || '00:00:00';
-        return `${a.appointmentDate}T${hhmmss}`;
-      })();
+      const visitIso = new Date(a.endTime || a.startTime).toISOString();
 
       const existing = byClient.get(id);
       if (!existing) {
