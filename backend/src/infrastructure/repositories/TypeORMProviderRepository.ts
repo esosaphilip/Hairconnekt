@@ -119,7 +119,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
     return this.appointmentsRepo.createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.client', 'client')
       .leftJoinAndSelect('appointment.appointmentServices', 'appointmentServices')
-      .where('appointment.provider_id = :providerId', { providerId })
+      .where('appointment.provider = :providerId', { providerId })
       .andWhere('appointment.appointment_date >= :startDate', { startDate })
       .andWhere('appointment.appointment_date <= :endDate', { endDate })
       .orderBy('appointment.start_time', 'ASC')
