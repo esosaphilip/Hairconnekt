@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Service, PriceType } from './entities/service.entity';
@@ -22,12 +22,10 @@ export class ServicesService {
 
   async getProviderIdByUserId(userId: string): Promise<string> {
     try {
-      // Use QueryBuilder for safer relation resolution by ID
-      // Note: 'profile.user' refers to the relation, and TypeORM maps this to the foreign key column
-      const provider = await this.providerProfileRepository
-        .createQueryBuilder('profile')
-        .where('profile.user = :userId', { userId })
-        .getOne();
+      // Use standard findOne with relation filtering for safety
+      const provider = await this.providerProfileRepository.findOne({
+        where: { user: { id: userId } }
+      });
 
       if (!provider) {
         console.warn(`[ServicesService] Provider profile not found for userId: ${userId}`);
@@ -65,7 +63,7 @@ export class ServicesService {
     // STRICT MAPPING: priceCents must be Integer. durationMinutes must be present.
     // We do NOT accept 'price' (decimal) or 'durationMins' anymore per strict contract.
     if (!Number.isInteger(rest.priceCents)) {
-      throw new NotFoundException('priceCents must be an integer'); // Using NotFound just to throw http error, should be BadRequest but staying safe
+      throw new BadRequestException('priceCents must be an integer');
     }
 
     const service = this.serviceRepository.create({
