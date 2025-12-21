@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -9,6 +10,7 @@ import {
   Alert,
   Dimensions,
   TouchableOpacity,
+  RefreshControl,
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
@@ -43,71 +45,65 @@ export function PortfolioManagementScreen() {
   const navigation = useNavigation<any>();
   const [portfolioData, setPortfolioData] = useState<PortfolioItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        let res;
-        try {
-          res = await http.get('/providers/me/portfolio', { params: { limit: 50, sort: 'latest' } });
-        } catch (err) {
-          const bundle = await getAuthBundle();
-          const providerId = bundle?.user?.id;
-          if (providerId) {
-            res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
-          } else {
-            throw err;
-          }
+  const fetchData = React.useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+
+    setError(null);
+    try {
+      const res = await http.get('/providers/me/portfolio', { params: { limit: 50, sort: 'latest' } });
+      const payload = res?.data;
+
+      let list = [];
+      if (payload && typeof payload === 'object') {
+        if ('data' in payload && (payload as any).data && 'items' in (payload as any).data) { // Standard backend response
+          list = (payload as any).data.items;
+        } else if ('items' in payload) { // Direct service response
+          list = (payload as any).items;
+        } else if (Array.isArray(payload)) {
+          list = payload;
         }
-
-        const payload = res?.data;
-        let list = [];
-        if (payload && typeof payload === 'object') {
-          if ('data' in payload && (payload as any).data && 'items' in (payload as any).data) {
-            list = (payload as any).data.items;
-          } else if ('items' in payload) {
-            list = (payload as any).items;
-          } else if (Array.isArray(payload)) {
-            list = payload;
-          }
-        }
-
-        type RawPortfolioItem = {
-          id: string;
-          imageUrl?: string;
-          caption?: string;
-          title?: string;
-          category?: any;
-          uploadedAt?: string;
-          viewCount?: number;
-          likeCount?: number;
-        };
-
-        const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
-        const mapped: PortfolioItem[] = items.map((it) => ({
-          id: it.id,
-          image: it.imageUrl || '',
-          title: it.caption || it.title || '',
-          category: typeof it.category === 'object' ? (it.category?.nameDe || it.category?.nameEn || '') : String(it.category || ''),
-          createdAt: it.uploadedAt,
-          views: it.viewCount || 0,
-          likes: it.likeCount || 0,
-        }));
-
-        if (active) setPortfolioData(mapped.filter((x) => !!x.image));
-      } catch (e) {
-        const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Fehler beim Laden des Portfolios';
-        if (active) setError(String(msg));
-      } finally {
-        if (active) setLoading(false);
       }
-    })();
-    return () => { active = false; };
+
+      type RawPortfolioItem = {
+        id: string;
+        imageUrl?: string;
+        caption?: string;
+        title?: string;
+        category?: any;
+        uploadedAt?: string;
+        viewCount?: number;
+        likeCount?: number;
+      };
+
+      const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
+      const mapped: PortfolioItem[] = items.map((it) => ({
+        id: it.id,
+        image: it.imageUrl || '',
+        title: it.caption || it.title || '',
+        category: typeof it.category === 'object' ? (it.category?.nameDe || it.category?.nameEn || '') : String(it.category || ''),
+        createdAt: it.uploadedAt,
+        views: it.viewCount || 0,
+        likes: it.likeCount || 0,
+      }));
+      setPortfolioData(mapped.filter((x) => !!x.image));
+    } catch (e) {
+      const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Fehler beim Laden des Portfolios';
+      setError(String(msg));
+    } finally {
+      if (isRefresh) setRefreshing(false);
+      else setLoading(false);
+    }
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchData();
+    }, [fetchData])
+  );
 
   // Calculate stats
   const totalViews = portfolioData.reduce((acc, item) => acc + item.views, 0);
@@ -252,6 +248,9 @@ export function PortfolioManagementScreen() {
         ListEmptyComponent={EmptyState}
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => fetchData(true)} tintColor={COLORS.primary} />
+        }
       />
     </SafeAreaView>
   );

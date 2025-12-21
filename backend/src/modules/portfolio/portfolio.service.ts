@@ -226,7 +226,8 @@ export class PortfolioService {
       const qb = this.imagesRepo
         .createQueryBuilder('img')
         .leftJoinAndSelect('img.category', 'category')
-        .where('img.provider.id = :pid', { pid: providerId });
+        .leftJoin('img.provider', 'p')
+        .where('p.id = :pid', { pid: providerId });
 
       if (options.styleFilter) {
         const filter = `%${options.styleFilter}%`;

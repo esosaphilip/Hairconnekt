@@ -57,6 +57,19 @@ export class ProviderPortfolioController {
     }
   }
 
+  // GET /api/v1/providers/me/portfolio
+  @Get('me/portfolio')
+  @UseGuards(JwtAuthGuard)
+  async listMyPortfolio(@Req() req: any, @Query() q: ProviderPortfolioListQuery) {
+    const providerId = await this.resolveProviderId(req);
+    return this.portfolioService.listProviderPortfolio(providerId, {
+      page: q.page,
+      limit: q.limit,
+      styleFilter: q.style_filter,
+      sort: q.sort,
+    });
+  }
+
   // GET /api/v1/providers/:id/portfolio
   @Get(':id/portfolio')
   list(@Param('id') providerId: string, @Query() q: ProviderPortfolioListQuery) {
