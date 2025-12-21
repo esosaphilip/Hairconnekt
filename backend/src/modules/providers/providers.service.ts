@@ -300,12 +300,10 @@ export class ProvidersService {
     const todayAppointments = todays.map((a) => {
       const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
       const serviceSummary = (a.appointmentServices || []).map((s) => s.serviceName).join(' + ');
-      const startDt = new Date(a.startTime);
-      const endDt = new Date(a.endTime);
+      const startStr = this.formatTime(a.startTime);
+      const endStr = this.formatTime(a.endTime);
 
-      const startStr = this.formatTime(startDt);
-      const endStr = this.formatTime(endDt);
-
+      const startDt = a.startTime instanceof Date ? a.startTime : new Date(a.startTime);
       const diffMs = startDt.getTime() - now.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
       return {
@@ -581,8 +579,8 @@ export class ProvidersService {
       return {
         id: a.id,
         date: a.appointmentDate,
-        startTime: startDt.toISOString().substring(11, 16), // HH:mm
-        endTime: endDt.toISOString().substring(11, 16), // HH:mm
+        startTime: this.formatTime(a.startTime), // HH:mm
+        endTime: this.formatTime(a.endTime), // HH:mm
         services: (a.appointmentServices || []).map(s => ({ name: s.serviceName, durationMinutes: s.durationMinutes })),
         totalPriceCents: totalPriceCents,
         client: a.client ? {
@@ -602,9 +600,20 @@ export class ProvidersService {
 
   // -------- Helpers --------
   private formatTime(d: any): string {
-    return d instanceof Date && !isNaN(d.getTime())
-      ? d.toISOString().substring(11, 16)
-      : "00:00";
+    if (d instanceof Date && !isNaN(d.getTime())) {
+      return d.toISOString().substring(11, 16);
+    }
+    // If it's a string, try to parse or just slice if it looks like ISO
+    if (typeof d === 'string') {
+      if (d.includes('T')) {
+        try {
+          return new Date(d).toISOString().substring(11, 16);
+        } catch { return "00:00"; }
+      }
+      // If it's already HH:mm:ss
+      return d.substring(0, 5);
+    }
+    return "00:00";
   }
 
   private formatDate(d: Date): string {

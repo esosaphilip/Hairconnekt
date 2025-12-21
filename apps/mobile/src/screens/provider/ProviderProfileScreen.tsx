@@ -107,6 +107,7 @@ export function ProviderProfileScreen() {
   const [publicData, setPublicData] = React.useState<PublicData | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = React.useState(0);
 
   function getMessage(err: unknown, fallback = 'Fehler beim Laden des Profils'): string {
     if (typeof err === 'string') return err;
@@ -172,7 +173,16 @@ export function ProviderProfileScreen() {
       return () => {
         mounted = false;
       };
-    }, [tokens?.accessToken])
+    }, [tokens?.accessToken, refreshKey])
+  );
+
+  // Increment refresh key when screen comes into focus
+  // Increment refresh key when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      setRefreshKey(prev => prev + 1);
+      return undefined;
+    }, [])
   );
 
   const onBack = () => {
@@ -212,9 +222,10 @@ export function ProviderProfileScreen() {
     navigation.navigate('EditSocialMediaScreen');
   };
   const onEditPhoto = () => {
-    // Navigate to profile edit screen where photo can be changed, or a dedicated photo screen if it existed
-    console.log('Navigating to EditProfileScreen for photo update');
-    navigation.navigate('EditProfileScreen');
+    // Navigate to dedicated photo screen
+    console.log('Navigating to ProviderPhotoUploadScreen');
+    // @ts-ignore - Route is definitely registered in App.tsx
+    navigation.navigate('ProviderPhotoUploadScreen');
   };
 
   const onEditCertifications = () => {

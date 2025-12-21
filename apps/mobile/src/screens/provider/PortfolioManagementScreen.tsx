@@ -161,7 +161,7 @@ export function PortfolioManagementScreen() {
             resizeMode="cover"
           />
           <TouchableOpacity onPress={() => confirmDelete(item)} style={styles.deleteButton}>
-            <Icon name="trash-2" size={16} color={COLORS.danger} />
+            <Icon name="trash" size={16} color={COLORS.danger} />
           </TouchableOpacity>
         </View>
 

@@ -138,6 +138,7 @@ export type ProviderMoreStackParamList = {
   EditSpecializationsScreen: undefined;
   AddressManagementScreen: undefined;
   AddEditAddressScreen: { id?: string } | undefined;
+  ProviderPhotoUploadScreen: undefined;
 };
 
 // Helper types for screen props

@@ -46,6 +46,7 @@ import { ProviderPublicProfileScreen } from '@/screens/provider/ProviderPublicPr
 import { ServicesManagementScreen } from '@/screens/provider/ServicesManagementScreen';
 import { PortfolioManagementScreen } from '@/screens/provider/PortfolioManagementScreen';
 import { UploadPortfolioScreen } from '@/screens/provider/UploadPortfolioScreen';
+import { ProviderPhotoUploadScreen } from '@/screens/provider/ProviderPhotoUploadScreen';
 import { ProviderAnalyticsScreen } from '@/screens/provider/ProviderAnalyticsScreen';
 import { ProviderVouchersScreen } from '@/screens/provider/ProviderVouchersScreen';
 import { CreateEditVoucherScreen } from '@/screens/provider/CreateEditVoucherScreen';
@@ -197,6 +198,7 @@ function ProviderMoreStackScreen() {
       <ProviderMoreStack.Screen name="AddEditServiceScreen" component={AddEditServiceScreen} options={{ title: 'Service bearbeiten' }} />
       <ProviderMoreStack.Screen name="ProviderPortfolioScreen" component={PortfolioManagementScreen} options={{ title: 'Portfolio verwalten' }} />
       <ProviderMoreStack.Screen name="UploadPortfolioScreen" component={UploadPortfolioScreen} options={{ title: 'Portfolio hochladen' }} />
+      <ProviderMoreStack.Screen name="ProviderPhotoUploadScreen" component={ProviderPhotoUploadScreen} options={{ title: 'Profilbild ändern' }} />
       {/* Booking & Chat */}
       {/* Alias route used by ChatScreen when navigating to booking */}
       <ProviderMoreStack.Screen name="Booking" component={BookingFlow} options={{ title: 'Buchung' }} />
