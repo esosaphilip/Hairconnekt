@@ -21,9 +21,7 @@ import Card from '../../components/Card';
 import Icon from '../../components/Icon';
 import Picker from '../../components/Picker'; // Custom component for dropdowns
 
-// NOTE: In a real RN app, you would use a library like 'react-native-image-picker'
-// or 'react-native-document-picker'. We'll mock the required functions.
-// import { launchImageLibrary } from 'react-native-image-picker';
+import * as ImagePicker from 'expo-image-picker';
 
 // --- Mock Data ---
 const categories = [
@@ -44,24 +42,40 @@ import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { getAuthBundle } from '../../auth/tokenStorage';
 import { providerPortfolioApi } from '@/api/providerPortfolio';
 
-// --- Mock Image Picker Implementation ---
-// In RN, images are objects containing 'uri', 'fileName', 'fileSize', etc.
+// --- Image Picker Implementation ---
 type ImageAsset = {
   uri: string;
   fileName?: string;
   type?: string;
   fileSize?: number;
 };
+// Removed duplicate ImageAsset type definition
 
-const mockLaunchImageLibrary = (callback: (assets: ImageAsset[]) => void) => {
-    // Mock user selecting 1-3 images with local URIs
-    const mockImages = [
-        { uri: 'https://picsum.photos/200/300?random=1', fileName: 'photo1.jpg', type: 'image/jpeg' },
-        { uri: 'https://picsum.photos/200/300?random=2', fileName: 'photo2.jpg', type: 'image/jpeg' },
-        { uri: 'https://picsum.photos/200/300?random=3', fileName: 'photo3.jpg', type: 'image/jpeg' },
-    ].slice(0, Math.floor(Math.random() * 3) + 1); // Select 1 to 3 random images
+const launchImageLibraryAsync = async (callback: (assets: ImageAsset[]) => void) => {
+  // Request permission
+  const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
-    callback(mockImages);
+  if (permissionResult.granted === false) {
+    Alert.alert("Zugriff verweigert", "Du hast den Zugriff auf deine Fotos verweigert.");
+    return;
+  }
+
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsMultipleSelection: true,
+    selectionLimit: 10,
+    quality: 0.8,
+  } as any);
+
+  if (!result.canceled && result.assets) {
+    const mappedAssets: ImageAsset[] = result.assets.map((asset: any) => ({
+      uri: asset.uri,
+      fileName: asset.fileName || `photo_${Date.now()}.jpg`,
+      type: asset.mimeType || 'image/jpeg',
+      fileSize: asset.fileSize,
+    }));
+    callback(mappedAssets);
+  }
 };
 
 // --- Main Component ---
@@ -76,23 +90,23 @@ export function UploadPortfolioScreen() {
   const [images, setImages] = useState<ImageAsset[]>([]);
 
   const handleImageSelect = () => {
-    mockLaunchImageLibrary((selectedAssets: ImageAsset[]) => {
+    launchImageLibraryAsync((selectedAssets: ImageAsset[]) => {
       if (selectedAssets && selectedAssets.length > 0) {
         const newImages = selectedAssets.map((asset: ImageAsset) => ({
-            uri: asset.uri,
-            fileName: asset.fileName,
-            type: asset.type,
-            // Mock file size validation:
-            fileSize: Math.floor(Math.random() * (1024 * 1024 * 5)) + 1, // 1MB to 6MB
+          uri: asset.uri,
+          fileName: asset.fileName,
+          type: asset.type,
+          // Mock file size validation:
+          fileSize: Math.floor(Math.random() * (1024 * 1024 * 5)) + 1, // 1MB to 6MB
         }));
-        
+
         if (newImages.length + images.length > 10) {
           Alert.alert("Fehler", "Maximal 10 Bilder pro Upload erlaubt");
           return;
         }
-        
+
         // In a real app, you would also check file size (e.g., max 10MB) here
-        
+
         setImages([...images, ...newImages]);
       }
     });
@@ -148,13 +162,13 @@ export function UploadPortfolioScreen() {
             <Icon name="upload" size={48} color={COLORS.textSecondary} style={styles.uploadIcon} />
             <Text style={styles.uploadText}>Bilder hier ablegen oder klicken zum Auswählen</Text>
             <Text style={styles.uploadHintText}>PNG, JPG bis zu 10MB pro Bild</Text>
-            
-            <Button 
-                title="Bilder auswählen"
-                variant="outline"
-                onPress={handleImageSelect}
-                icon="camera"
-                style={styles.selectButton}
+
+            <Button
+              title="Bilder auswählen"
+              variant="outline"
+              onPress={handleImageSelect}
+              icon="camera"
+              style={styles.selectButton}
             />
           </View>
 
@@ -182,39 +196,39 @@ export function UploadPortfolioScreen() {
 
         {/* Form Fields */}
         <View style={styles.formSection}>
-            {/* Title */}
-            <View style={styles.formGroup}>
+          {/* Title */}
+          <View style={styles.formGroup}>
             <Text style={styles.label}>Titel (optional)</Text>
             <Input
-                value={formData.title}
-                onChangeText={(value: string) => setFormData({ ...formData, title: value })}
-                placeholder="z.B. 'Lange Box Braids mit Ombré'"
+              value={formData.title}
+              onChangeText={(value: string) => setFormData({ ...formData, title: value })}
+              placeholder="z.B. 'Lange Box Braids mit Ombré'"
             />
-            </View>
+          </View>
 
-            {/* Category */}
-            <View style={styles.formGroup}>
+          {/* Category */}
+          <View style={styles.formGroup}>
             <Text style={styles.label}>Kategorie *</Text>
             <Picker
-                selectedValue={formData.category}
-                onValueChange={(value: string) => setFormData({ ...formData, category: value })}
-                items={categories.map((category: string) => ({ label: category, value: category }))}
+              selectedValue={formData.category}
+              onValueChange={(value: string) => setFormData({ ...formData, category: value })}
+              items={categories.map((category: string) => ({ label: category, value: category }))}
             />
-            </View>
+          </View>
 
-            {/* Description */}
-            <View style={styles.formGroup}>
+          {/* Description */}
+          <View style={styles.formGroup}>
             <Text style={styles.label}>Beschreibung (optional)</Text>
             <Textarea
-                value={formData.description}
-                onChangeText={(value: string) => setFormData({ ...formData, description: value })}
-                placeholder="Beschreibe den Style, verwendete Techniken, Dauer, etc."
-                numberOfLines={4}
+              value={formData.description}
+              onChangeText={(value: string) => setFormData({ ...formData, description: value })}
+              placeholder="Beschreibe den Style, verwendete Techniken, Dauer, etc."
+              numberOfLines={4}
             />
             <Text style={styles.hintText}>
-                Eine gute Beschreibung hilft Kunden, deine Arbeit besser zu verstehen
+              Eine gute Beschreibung hilft Kunden, deine Arbeit besser zu verstehen
             </Text>
-            </View>
+          </View>
         </View>
 
         {/* Tips Card */}
