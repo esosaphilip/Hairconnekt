@@ -8,6 +8,7 @@ import { Badge } from '../../components/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { http } from '../../api/http';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../auth/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 
@@ -124,67 +125,64 @@ export function ProviderProfileScreen() {
     return undefined;
   }
 
-  React.useEffect(() => {
-    let mounted = true;
-    async function load() {
-      try {
-        setLoading(true); 
-        setError(null);
-        
-        if (!tokens?.accessToken) {
-          throw new Error('Nicht authentifiziert');
-        }
-        let me = null;
+  useFocusEffect(
+    React.useCallback(() => {
+      let mounted = true;
+      async function load() {
         try {
-          const meRes = await http.get('/providers/me');
-          me = meRes.data;
-          if (!mounted) return;
-          setProfile(me);
-        } catch (e: unknown) {
-          const status = getStatus(e);
-          const msg = getMessage(e, '');
-          const isNotFound = status === 404 && typeof msg === 'string' && msg.toLowerCase().includes('provider profile not found');
-          if (!isNotFound) {
-            if (mounted) setError(getMessage(e));
-          }
-        }
+          setLoading(true);
+          setError(null);
 
-        if (me?.id) {
-          const [dashRes, pubRes] = await Promise.all([
-            http.get('/providers/dashboard'),
-            http.get(`/providers/public/${me.id}`),
-          ]);
-          if (!mounted) return;
-          setDashboard(dashRes.data);
-          setPublicData(pubRes.data);
+          if (!tokens?.accessToken) {
+            throw new Error('Nicht authentifiziert');
+          }
+          let me = null;
+          try {
+            const meRes = await http.get('/providers/me');
+            me = meRes.data;
+            if (!mounted) return;
+            setProfile(me);
+          } catch (e: unknown) {
+            const status = getStatus(e);
+            const msg = getMessage(e, '');
+            const isNotFound = status === 404 && typeof msg === 'string' && msg.toLowerCase().includes('provider profile not found');
+            if (!isNotFound) {
+              if (mounted) setError(getMessage(e));
+            }
+          }
+
+          if (me?.id) {
+            const [dashRes, pubRes] = await Promise.all([
+              http.get('/providers/dashboard'),
+              http.get(`/providers/public/${me.id}`),
+            ]);
+            if (!mounted) return;
+            setDashboard(dashRes.data);
+            setPublicData(pubRes.data);
+          }
+        } catch (e: unknown) {
+          const msg = getMessage(e);
+          if (mounted) setError(msg);
+        } finally {
+          if (mounted) setLoading(false);
         }
-      } catch (e: unknown) {
-        const msg = getMessage(e);
-        if (mounted) setError(msg);
-      } finally {
-        if (mounted) setLoading(false);
       }
-    }
-    load();
-    
-    const unsubscribe = navigation.addListener('focus', () => {
       load();
-    });
-    
-    return () => {
-      mounted = false;
-      unsubscribe();
-    };
-  }, [navigation, tokens?.accessToken]);
+
+      return () => {
+        mounted = false;
+      };
+    }, [tokens?.accessToken])
+  );
 
   const onBack = () => {
     try {
       navigation.goBack();
-    } catch {}
+    } catch { }
     if (Platform.OS === 'web') {
       try {
         window.history.back();
-      } catch {}
+      } catch { }
     }
   };
 
@@ -213,6 +211,12 @@ export function ProviderProfileScreen() {
     console.log('Navigating to EditSocialMediaScreen');
     navigation.navigate('EditSocialMediaScreen');
   };
+  const onEditPhoto = () => {
+    // Navigate to profile edit screen where photo can be changed, or a dedicated photo screen if it existed
+    console.log('Navigating to EditProfileScreen for photo update');
+    navigation.navigate('EditProfileScreen');
+  };
+
   const onEditCertifications = () => {
     console.log('Navigating to EditCertificationsScreen');
     navigation.navigate('EditCertificationsScreen');
@@ -223,12 +227,12 @@ export function ProviderProfileScreen() {
       // Navigate to the public profile screen with the provider ID
       navigation.navigate('ProviderPublicProfileScreen', { id: profile.id });
     }
-    
+
     if (Platform.OS === 'web') {
       try {
         const id = profile?.id;
         window.location.hash = id ? `/provider/more/public-profile?id=${id}` : '/provider/more/public-profile';
-      } catch {}
+      } catch { }
     }
   };
 
@@ -237,11 +241,11 @@ export function ProviderProfileScreen() {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerRow}>
-<Pressable onPress={onBack} style={styles.iconBtn} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
+          <Pressable onPress={onBack} style={styles.iconBtn} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
             <Ionicons name="chevron-back" size={24} color={colors.gray700} />
           </Pressable>
-<Text style={[typography.h3, styles.headerTitle]}>Mein Profil</Text>
-<Pressable onPress={onEdit} style={styles.iconBtn} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
+          <Text style={[typography.h3, styles.headerTitle]}>Mein Profil</Text>
+          <Pressable onPress={onEdit} style={styles.iconBtn} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
             <Ionicons name="pencil-outline" size={20} color={colors.gray700} />
           </Pressable>
         </View>
@@ -266,7 +270,7 @@ export function ProviderProfileScreen() {
                 <AvatarImage uri={(profile?.user?.profilePictureUrl || profile?.coverPhotoUrl) ?? undefined} />
                 <AvatarFallback label="AM" />
               </Avatar>
-<Pressable style={styles.cameraBtn} onPress={onEdit} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
+              <Pressable style={styles.cameraBtn} onPress={onEditPhoto} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
                 <Ionicons name="camera-outline" size={16} color={colors.white} />
               </Pressable>
             </View>
@@ -339,7 +343,7 @@ export function ProviderProfileScreen() {
 
         {/* Bio Section */}
         <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
-          <View style={styles.sectionHeader}> 
+          <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Über mich</Text>
             <TouchableOpacity onPress={onEditAboutMe} style={styles.iconBtn} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
               <Ionicons name="pencil-outline" size={18} color={colors.gray700} />

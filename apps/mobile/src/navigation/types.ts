@@ -110,6 +110,7 @@ export type ProviderMoreStackParamList = {
   ProviderServicesScreen: { mode?: 'add' | 'edit'; serviceId?: string } | undefined;
   AddEditServiceScreen: { serviceId?: string } | undefined;
   ProviderPortfolioScreen: undefined;
+  UploadPortfolioScreen: undefined;
   Booking: { providerId?: string } | undefined;
   // Allow passing a suggested service name for preselection
   BookingFlowScreen: { providerId?: string; serviceName?: string } | undefined;

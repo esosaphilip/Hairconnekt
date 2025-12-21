@@ -303,8 +303,8 @@ export class ProvidersService {
       const startDt = new Date(a.startTime);
       const endDt = new Date(a.endTime);
 
-      const startStr = startDt.toISOString().substring(11, 16);
-      const endStr = endDt.toISOString().substring(11, 16);
+      const startStr = this.formatTime(startDt);
+      const endStr = this.formatTime(endDt);
 
       const diffMs = startDt.getTime() - now.getTime();
       const diffHours = diffMs / (1000 * 60 * 60);
@@ -601,6 +601,12 @@ export class ProvidersService {
   }
 
   // -------- Helpers --------
+  private formatTime(d: any): string {
+    return d instanceof Date && !isNaN(d.getTime())
+      ? d.toISOString().substring(11, 16)
+      : "00:00";
+  }
+
   private formatDate(d: Date): string {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');

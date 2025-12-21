@@ -59,29 +59,29 @@ export function PortfolioManagementScreen() {
         try {
           res = await http.get('/providers/me/portfolio', { params: { limit: 50, sort: 'latest' } });
         } catch (err) {
-           // Fallback to explicit ID if 'me' fails (e.g. backend issue)
-           const bundle = await getAuthBundle();
-           const providerId = bundle?.user?.id;
-           if (providerId) {
-             res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
-           } else {
-             throw err;
-           }
+          // Fallback to explicit ID if 'me' fails (e.g. backend issue)
+          const bundle = await getAuthBundle();
+          const providerId = bundle?.user?.id;
+          if (providerId) {
+            res = await http.get(`/providers/${providerId}/portfolio`, { params: { limit: 50, sort: 'latest' } });
+          } else {
+            throw err;
+          }
         }
 
         const payload = res?.data;
         // Robust unpacking: check for { success: true, data: { items: [] } } vs { items: [] }
         let list = [];
         if (payload && typeof payload === 'object') {
-             if ('data' in payload && (payload as any).data && 'items' in (payload as any).data) {
-                 list = (payload as any).data.items;
-             } else if ('items' in payload) {
-                 list = (payload as any).items;
-             } else if (Array.isArray(payload)) {
-                 list = payload;
-             }
+          if ('data' in payload && (payload as any).data && 'items' in (payload as any).data) {
+            list = (payload as any).data.items;
+          } else if ('items' in payload) {
+            list = (payload as any).items;
+          } else if (Array.isArray(payload)) {
+            list = payload;
+          }
         }
-        
+
         type RawPortfolioItem = { id: string; imageUrl?: string; title?: string; category?: string; uploadedAt?: string };
         const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
         const mapped = items.map((it) => ({ id: it.id, image: it.imageUrl || '', title: it.title, category: it.category, createdAt: it.uploadedAt }));
@@ -99,7 +99,7 @@ export function PortfolioManagementScreen() {
   // Calculate stats
   const totalViews = portfolioData.length;
   const totalLikes = 0;
-  
+
   // --- Delete Logic (Replaces AlertDialog and toast) ---
   const confirmDelete = (item: PortfolioItem) => {
     Alert.alert(
@@ -155,7 +155,7 @@ export function PortfolioManagementScreen() {
             </TouchableOpacity> */}
           </View>
         </View>
-        
+
         <View style={styles.cardContent}>
           {!!item.title && <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>}
           {!!item.category && <Badge title={item.category} variant="outline" style={styles.itemBadge} />}
@@ -177,7 +177,10 @@ export function PortfolioManagementScreen() {
       </Text>
       <Button
         title="Erstes Bild hochladen"
-        onPress={() => navigation.navigate("UploadPortfolioScreen")}
+        onPress={() => {
+          console.log("Navigating to UploadPortfolioScreen from EmptyState...");
+          navigation.navigate("UploadPortfolioScreen");
+        }}
         style={styles.uploadButton}
       />
     </View>
@@ -199,7 +202,10 @@ export function PortfolioManagementScreen() {
           <Button
             title="Hinzufügen"
             icon="plus"
-            onPress={() => navigation.navigate("UploadPortfolioScreen")}
+            onPress={() => {
+              console.log("Navigating to UploadPortfolioScreen...");
+              navigation.navigate("UploadPortfolioScreen");
+            }}
             style={styles.addButton}
           />
         </View>

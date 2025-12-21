@@ -14,11 +14,11 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       // Endpoint: GET /providers/me/services (http client adds base URL /api/v1)
       const res = await http.get('/providers/me/services');
       const payload = res?.data;
-
+      
       // Backend returns direct array of Service objects
       // We prioritize checking for array first to match backend implementation
-      const list = Array.isArray(payload)
-        ? payload
+      const list = Array.isArray(payload) 
+        ? payload 
         : (payload && typeof payload === 'object' && 'data' in payload ? (payload as any).data : []);
 
       const items: Service[] = list.map((s: any) => ({
@@ -38,10 +38,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const status = (error as any)?.response?.status;
       const message = (error as any)?.response?.data?.message;
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
-      if (status === 500) {
-        console.error('[ServiceRepo] List 500 Error:', JSON.stringify((error as any)?.response?.data));
-        throw new Error('Serverfehler. Bitte versuche es später erneut.');
-      }
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
       throw new Error(message || 'Failed to fetch services');
     }
   }
@@ -67,11 +64,11 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         isActive: service.isActive !== undefined ? Boolean(service.isActive) : true,
         allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : true,
       };
-
+      
       // Endpoint: POST /providers/me/services (http client adds base URL /api/v1)
       const res = await http.post('/providers/me/services', payload);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
-
+      
       const mapped: Service = {
         id: String(s.serviceId || s.id),
         name: String(s.name || service.name || ''),
@@ -91,10 +88,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const message = (error as any)?.response?.data?.message;
       if (status === 400) throw new Error(message || 'Ungültige Daten');
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
-      if (status === 500) {
-        console.error('[ServiceRepo] Create 500 Error:', JSON.stringify((error as any)?.response?.data));
-        throw new Error('Serverfehler. Bitte versuche es später erneut.');
-      }
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
       throw new Error(message || 'Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
@@ -105,7 +99,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       if (!existing) {
         throw createDomainError(ErrorType.NOT_FOUND, `Service with id ${id} not found`);
       }
-
+      
       // STRICT CONTRACT: Payload Construction
       const body = {
         name: service.name,
@@ -116,14 +110,14 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         isActive: service.isActive !== undefined ? Boolean(service.isActive) : undefined,
         allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : undefined,
       };
-
+      
       // Remove undefined keys to avoid sending nulls where not intended, though backend ignores undefined
       Object.keys(body).forEach(key => (body as any)[key] === undefined && delete (body as any)[key]);
 
       // Endpoint: PATCH /providers/me/services/:id (http client appends to base URL /api/v1)
       const res = await http.patch(`/providers/me/services/${id}`, body);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
-
+      
       const mapped: Service = {
         id: String(s.serviceId || id),
         name: String(s.name || existing.name || ''),
@@ -149,10 +143,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       if (status === 400) throw new Error(message || 'Ungültige Daten');
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
       if (status === 404) throw new Error('Service nicht gefunden');
-      if (status === 500) {
-        console.error('[ServiceRepo] Update 500 Error:', JSON.stringify((error as any)?.response?.data));
-        throw new Error('Serverfehler. Bitte versuche es später erneut.');
-      }
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
       throw new Error(message || 'Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
@@ -167,10 +158,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const message = (error as any)?.response?.data?.message;
       if (status === 400) throw new Error(message || 'Ungültige Daten');
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
-      if (status === 500) {
-        console.error('[ServiceRepo] Delete 500 Error:', JSON.stringify((error as any)?.response?.data));
-        throw new Error('Serverfehler. Bitte versuche es später erneut.');
-      }
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
       throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
@@ -188,11 +176,8 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const message = (error as any)?.response?.data?.message;
       if (status === 400) throw new Error(message || 'Ungültige Daten');
       if (status === 401) throw new Error('Nicht autorisiert. Bitte erneut anmelden.');
-      if (status === 500) {
-        console.error('[ServiceRepo] 500 Error:', JSON.stringify((error as any)?.response?.data));
-        throw new Error('Serverfehler. Bitte versuche es später erneut.');
-      }
-      throw new Error(message || 'Netzwerkfehler. Überprüfe deine Internetverbindung.');
+      if (status === 500) throw new Error('Serverfehler. Bitte versuche es später erneut.');
+      throw new Error('Netzwerkfehler. Überprüfe deine Internetverbindung.');
     }
   }
 }
