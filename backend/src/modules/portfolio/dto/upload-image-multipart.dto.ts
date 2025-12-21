@@ -3,8 +3,9 @@ import { IsOptional, IsString, IsUUID } from 'class-validator';
 // Used for multipart form fields when uploading an image
 export class UploadImageMultipartDto {
   // Temporary until auth is wired: providerId is required to associate upload
+  @IsOptional()
   @IsUUID()
-  providerId: string;
+  providerId?: string;
 
   @IsOptional()
   @IsString()
