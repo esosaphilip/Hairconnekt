@@ -148,7 +148,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .createQueryBuilder('a')
       .leftJoin('a.appointmentServices', 'as')
       .select('COALESCE(SUM(as.price_cents), 0)', 'totalCents')
-      .where('a.provider = :providerId', { providerId })
+      .where('a.provider.id = :providerId', { providerId })
       .andWhere('a.status = :status', { status: 'COMPLETED' })
       .andWhere('a.appointment_date BETWEEN :start AND :end', {
         start: startStr,
