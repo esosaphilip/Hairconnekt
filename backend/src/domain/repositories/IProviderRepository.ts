@@ -14,7 +14,7 @@ export interface IProviderRepository {
   // Relations Updates
   updateSpecializations(providerId: string, specializations: string[]): Promise<void>;
   updateLanguages(providerId: string, languages: string[]): Promise<void>;
-  
+
   // Certifications
   countCertifications(providerId: string): Promise<number>;
   saveCertification(certification: ProviderCertification): Promise<ProviderCertification>;
@@ -26,10 +26,11 @@ export interface IProviderRepository {
 
   // Dashboard / Complex Queries
   findAppointmentsForDashboard(providerId: string, date: string): Promise<Appointment[]>;
+  findAppointmentsInDateRange(providerId: string, startDate: string, endDate: string): Promise<Appointment[]>;
   getReviewStats(providerId: string): Promise<{ avgRating: number; reviewCount: number }>;
   getWeekEarnings(providerId: string, start: Date, end: Date): Promise<number>;
   findRecentReviews(providerId: string, limit: number): Promise<Review[]>;
-  
+
   // Clients
   findAllAppointments(providerId: string): Promise<Appointment[]>; // For getClients aggregation
 
@@ -37,7 +38,7 @@ export interface IProviderRepository {
   findNearby(params: { lat: number; lon: number; radiusKm: number; limit: number }): Promise<any[]>; // Returns raw rows or partial entities
   getServicesForProviders(providerIds: string[]): Promise<any[]>; // Aggregate services
   getRatingsForProviders(providerIds: string[]): Promise<any[]>; // Aggregate ratings
-  
+
   // Public Profile
   findServiceStats(providerId: string): Promise<any[]>; // Aggregate service stats
 }

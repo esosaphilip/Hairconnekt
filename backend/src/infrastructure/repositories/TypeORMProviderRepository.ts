@@ -27,7 +27,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
     @InjectRepository(Service)
     private readonly servicesRepo: Repository<Service>,
     private readonly entityManager: EntityManager,
-  ) {}
+  ) { }
 
   async findById(id: string): Promise<ProviderProfile | null> {
     return this.providersRepo.findOne({
@@ -99,11 +99,11 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async replaceAvailability(providerId: string, slots: ProviderAvailability[]): Promise<ProviderAvailability[]> {
     // Transactional replace
     return await this.entityManager.transaction(async (manager) => {
-        const existing = await manager.find(ProviderAvailability, { where: { provider: { id: providerId } } });
-        if (existing.length) {
-            await manager.remove(existing);
-        }
-        return await manager.save(slots);
+      const existing = await manager.find(ProviderAvailability, { where: { provider: { id: providerId } } });
+      if (existing.length) {
+        await manager.remove(existing);
+      }
+      return await manager.save(slots);
     });
   }
 
@@ -113,6 +113,17 @@ export class TypeORMProviderRepository implements IProviderRepository {
       relations: ['client', 'appointmentServices'],
       order: { startTime: 'ASC' },
     });
+  }
+
+  async findAppointmentsInDateRange(providerId: string, startDate: string, endDate: string): Promise<Appointment[]> {
+    return this.appointmentsRepo.createQueryBuilder('appointment')
+      .leftJoinAndSelect('appointment.client', 'client')
+      .leftJoinAndSelect('appointment.appointmentServices', 'appointmentServices')
+      .where('appointment.provider_id = :providerId', { providerId })
+      .andWhere('appointment.appointment_date >= :startDate', { startDate })
+      .andWhere('appointment.appointment_date <= :endDate', { endDate })
+      .orderBy('appointment.start_time', 'ASC')
+      .getMany();
   }
 
   async getReviewStats(providerId: string): Promise<{ avgRating: number; reviewCount: number }> {
@@ -132,7 +143,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async getWeekEarnings(providerId: string, start: Date, end: Date): Promise<number> {
     const startStr = start.toISOString().split('T')[0];
     const endStr = end.toISOString().split('T')[0];
-    
+
     const earningsRows = await this.appointmentsRepo
       .createQueryBuilder('a')
       .leftJoin('a.appointmentServices', 'as')

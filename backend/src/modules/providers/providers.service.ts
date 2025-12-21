@@ -561,6 +561,45 @@ export class ProvidersService {
     };
   }
 
+  /**
+   * Calendar Data
+   */
+  async getCalendar(userId: string, params: { startDate: string; endDate: string; view?: string }) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const { startDate, endDate } = params;
+    const appointments = await this.providerRepo.findAppointmentsInDateRange(provider.id, startDate, endDate);
+
+    // Format for frontend
+    const items = appointments.map((a) => {
+      const startDt = new Date(a.startTime);
+      const endDt = new Date(a.endTime);
+
+      const totalPriceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
+
+      return {
+        id: a.id,
+        date: a.appointmentDate,
+        startTime: startDt.toISOString().substring(11, 16), // HH:mm
+        endTime: endDt.toISOString().substring(11, 16), // HH:mm
+        services: (a.appointmentServices || []).map(s => ({ name: s.serviceName, durationMinutes: s.durationMinutes })),
+        totalPriceCents: totalPriceCents,
+        client: a.client ? {
+          name: [a.client.firstName, a.client.lastName].filter(Boolean).join(' '),
+          image: a.client.profilePictureUrl
+        } : null,
+        status: a.status
+      };
+    });
+
+    return {
+      appointments: items,
+      blockedSlots: [], // TODO: implementations for blocks
+      availableSlots: [] // TODO: implementations if needed
+    };
+  }
+
   // -------- Helpers --------
   private formatDate(d: Date): string {
     const yyyy = d.getFullYear();

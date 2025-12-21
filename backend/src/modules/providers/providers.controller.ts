@@ -148,6 +148,15 @@ export class ProvidersController {
     return this.providersService.getAvailabilitySettings(userId);
   }
 
+  @Get('calendar')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async getCalendar(@Req() req: Request, @Query('startDate') startDate: string, @Query('endDate') endDate: string, @Query('view') view: string) {
+    const userId = (req.user as any)?.sub;
+    const data = await this.providersService.getCalendar(userId, { startDate, endDate, view });
+    return { success: true, data };
+  }
+
   @Get('dashboard')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)
@@ -155,9 +164,10 @@ export class ProvidersController {
   @CachePerUser()
   @CacheKeyBuilder((req) => `providers:dashboard:user:${req.user?.sub || req.user?.id}`)
   @CacheTTL(15)
-  getDashboard(@Req() req: Request) {
+  async getDashboard(@Req() req: Request) {
     const userId = (req.user as any)?.sub;
-    return this.providersService.getDashboard(userId);
+    const data = await this.providersService.getDashboard(userId);
+    return { success: true, data };
   }
 
   @Get('clients')
@@ -167,9 +177,10 @@ export class ProvidersController {
   @CachePerUser()
   @CacheKeyBuilder((req) => `providers:clients:user:${req.user?.sub || req.user?.id}`)
   @CacheTTL(60)
-  getClients(@Req() req: Request) {
+  async getClients(@Req() req: Request) {
     const userId = (req.user as any)?.sub;
-    return this.providersService.getClients(userId);
+    const data = await this.providersService.getClients(userId);
+    return { success: true, data };
   }
 
   // Public endpoint: nearby providers by lat/lon

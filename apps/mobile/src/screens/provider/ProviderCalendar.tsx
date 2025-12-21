@@ -15,7 +15,7 @@ import { colors, spacing } from '@/theme/tokens';
 import { useAuth } from '@/auth/AuthContext';
 import { logger } from '@/services/logger';
 import { MESSAGES } from '@/constants';
- 
+
 
 const daysOfWeek = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 
@@ -67,8 +67,8 @@ export function ProviderCalendar() {
           startTime: a.startTime,
           endTime: a.endTime,
           services: Array.isArray(a.services) ? a.services.map((s: any) => ({ name: s.name, durationMinutes: s.durationMinutes })) : [],
-          totalPriceCents: typeof a.totalPrice === 'number' ? Math.round(a.totalPrice * 100) : undefined,
-          client: a.client ? { name: a.client.name, avatarUrl: a.client.avatar } : undefined,
+          totalPriceCents: a.totalPriceCents ?? 0,
+          client: a.client ? { name: a.client.name, avatarUrl: a.client.image } : undefined,
           status: a.status,
         }));
         if (!cancelled) setAppointments(items);
@@ -111,7 +111,7 @@ export function ProviderCalendar() {
       } else if (status === 'not_provider') {
         navigation.navigate('ProviderWelcome');
       }
-    } catch {}
+    } catch { }
   }, [status, checked]);
 
   // Initialize from navigation params (targetDate: YYYY-MM-DD, viewMode: 'day'|'week'|'month')
@@ -261,7 +261,7 @@ export function ProviderCalendar() {
     const gridWidth = screenWidth - containerHPad * 2;
     const cellWidth = gridWidth / 7;
     return (
-      <View style={[styles.monthGridContainer, { paddingHorizontal: containerHPad }] }>
+      <View style={[styles.monthGridContainer, { paddingHorizontal: containerHPad }]}>
         <View style={styles.monthHeaderRow}>
           {daysOfWeek.map((day) => (
             <View key={day} style={[styles.monthDayCell, { width: cellWidth }]}>
@@ -327,7 +327,7 @@ export function ProviderCalendar() {
 
         {!loading && !error && (selectedDay.items.length > 0 ? (
           selectedDay.items.map((apt, idx) => (
-            <RNCard key={apt.id} style={[styles.baseCard, idx < selectedDay.items.length - 1 && styles.aptCardMargin]}> 
+            <RNCard key={apt.id} style={[styles.baseCard, idx < selectedDay.items.length - 1 && styles.aptCardMargin]}>
               <View style={styles.aptRow}>
                 <Text style={styles.timeText}>{apt.time}</Text>
                 <View style={styles.aptRight}>
