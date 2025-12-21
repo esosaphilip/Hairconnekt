@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Appointment, AppointmentStatus } from './entities/appointment.entity';
@@ -6,7 +6,7 @@ import { AppointmentService as AppointmentServiceEntity } from './entities/appoi
 import { ProviderLocation } from '../providers/entities/provider-location.entity';
 import { Address } from '../users/entities/address.entity';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
-import { User } from '../users/entities/user.entity';
+import { User, UserType } from '../users/entities/user.entity';
 import { Service } from '../services/entities/service.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 
@@ -23,21 +23,48 @@ export class AppointmentsService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Service)
     private readonly serviceRepository: Repository<Service>,
-  ) {}
+  ) { }
 
   private readonly logger = new Logger(AppointmentsService.name);
 
   async create(createAppointmentDto: CreateAppointmentDto): Promise<Appointment> {
-    const { providerId, clientId, serviceIds, startTime, endTime, notes } = createAppointmentDto;
+    const { providerId, clientId, newClient, serviceIds, startTime, endTime, notes } = createAppointmentDto;
 
     const provider = await this.providerProfileRepository.findOne({ where: { id: providerId } });
     if (!provider) {
       throw new NotFoundException(`Provider with ID "${providerId}" not found`);
     }
 
-    const client = await this.userRepository.findOne({ where: { id: clientId } });
-    if (!client) {
-      throw new NotFoundException(`Client with ID "${clientId}" not found`);
+    let client: User | null = null;
+    if (clientId) {
+      client = await this.userRepository.findOne({ where: { id: clientId } });
+      if (!client) {
+        throw new NotFoundException(`Client with ID "${clientId}" not found`);
+      }
+    } else if (newClient) {
+      // Logic for new client: Find by phone or create
+      client = await this.userRepository.findOne({ where: { phone: newClient.phone } });
+
+      if (!client) {
+        // Create new guest/user
+        client = new User();
+        client.phone = newClient.phone;
+        // Generate placeholder email if not provided
+        client.email = newClient.email || `guest-${newClient.phone.replace(/\D/g, '')}${Date.now().toString().slice(-4)}@hairconnekt.app`;
+
+        const parts = newClient.name.trim().split(' ');
+        client.firstName = parts[0] || 'Guest';
+        client.lastName = parts.length > 1 ? parts.slice(1).join(' ') : 'Client';
+
+        client.passwordHash = 'guest_placeholder'; // Should be handled by auth module ideally
+        client.userType = UserType.CLIENT;
+        client.isActive = true;
+        // client.isGuest = true; // Field doesn't exist yet
+
+        client = await this.userRepository.save(client);
+      }
+    } else {
+      throw new BadRequestException('Client ID or New Client details required');
     }
 
     const services = await this.serviceRepository.findBy({ id: In(serviceIds) });
@@ -195,10 +222,10 @@ export class AppointmentsService {
           ...dto,
           client: clientUser
             ? {
-                id: clientUser.id,
-                name: `${clientUser.firstName} ${clientUser.lastName}`,
-                avatarUrl: clientUser.profilePictureUrl || undefined,
-              }
+              id: clientUser.id,
+              name: `${clientUser.firstName} ${clientUser.lastName}`,
+              avatarUrl: clientUser.profilePictureUrl || undefined,
+            }
             : undefined,
         };
       });

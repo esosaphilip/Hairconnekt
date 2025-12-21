@@ -6,7 +6,15 @@ export class CreateAppointmentDto {
   providerId?: string;
 
   @IsUUID()
-  clientId: string;
+  @IsOptional()
+  clientId?: string;
+
+  @IsOptional()
+  newClient?: {
+    name: string;
+    phone: string;
+    email?: string;
+  };
 
   @IsArray()
   @IsUUID(undefined, { each: true })
