@@ -46,7 +46,8 @@ export class ServicesController {
   @Roles(UserType.PROVIDER, UserType.BOTH)
   @Get()
   async listForProvider(@Req() req: Request & { user: any }) {
-    const providerId = await this.resolveProviderId(req);
+    const userId = req.user.sub || req.user.id;
+    const providerId = await this.servicesService.getProviderIdByUserId(userId);
     return this.servicesService.listForProvider(providerId);
   }
 

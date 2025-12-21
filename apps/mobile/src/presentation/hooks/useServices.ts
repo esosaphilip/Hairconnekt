@@ -50,25 +50,12 @@ export function useServices() {
   }): Promise<Service> => {
     setLoading(true);
     setError(null);
-    const temp: Service = {
-      id: `temp_${Date.now()}`,
-      name: data.name,
-      description: data.description ?? null,
-      category: data.categoryId ? ({ id: data.categoryId } as any) : null,
-      priceCents: data.priceCents,
-      durationMinutes: data.durationMinutes,
-      isActive: data.isActive ?? true,
-      allowOnlineBooking: data.allowOnlineBooking ?? true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    setServices((prev) => [temp, ...prev]);
+    // Optimistic update disabled to prevent UI glitch on error
     try {
       const service = await serviceUseCases.createService(data);
-      setServices((prev) => [service, ...prev.filter((s) => s.id !== temp.id)]);
+      setServices((prev) => [service, ...prev]);
       return service;
     } catch (err: unknown) {
-      setServices((prev) => prev.filter((s) => s.id !== temp.id));
       const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;
@@ -80,14 +67,12 @@ export function useServices() {
   const updateService = useCallback(async (id: string, data: Partial<Service>): Promise<Service> => {
     setLoading(true);
     setError(null);
-    const before = services;
-    setServices((prev) => prev.map((s) => (s.id === id ? { ...s, ...data, updatedAt: new Date() } : s)));
+    // Optimistic update disabled to prevent UI glitch on error
     try {
       const service = await serviceUseCases.updateService(id, data);
       setServices((prev) => prev.map((s) => (s.id === id ? service : s)));
       return service;
     } catch (err: unknown) {
-      setServices(before);
       const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.SAVE_FAILED);
       throw err;

@@ -15,11 +15,13 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       const res = await http.get('/providers/me/services');
       const payload = res?.data;
       
-      const list = payload && typeof payload === 'object' && 'success' in payload && 'data' in payload
-        ? (payload as any).data
-        : (Array.isArray(payload) ? payload : (payload?.items ?? payload?.services ?? []));
+      // Backend returns direct array of Service objects
+      // We prioritize checking for array first to match backend implementation
+      const list = Array.isArray(payload) 
+        ? payload 
+        : (payload && typeof payload === 'object' && 'data' in payload ? (payload as any).data : []);
 
-      const items: Service[] = (Array.isArray(list) ? list : []).map((s: any) => ({
+      const items: Service[] = list.map((s: any) => ({
         id: String(s.id || s.serviceId),
         name: String(s.name || ''),
         description: s.description ?? null,
