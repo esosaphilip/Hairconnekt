@@ -219,10 +219,11 @@ export class TypeORMProviderRepository implements IProviderRepository {
     if (providerIds.length === 0) return [];
     return await this.servicesRepo
       .createQueryBuilder('svc')
-      .select('svc.provider_id', 'provider_id')
+      .leftJoin('svc.provider', 'p')
+      .select('p.id', 'provider_id')
       .addSelect('svc.name', 'name')
       .addSelect('svc.price_cents', 'price_cents')
-      .where('svc.provider_id IN (:...ids)', { ids: providerIds })
+      .where('p.id IN (:...ids)', { ids: providerIds })
       .andWhere('svc.is_active = :active', { active: true })
       .orderBy('svc.display_order', 'ASC')
       .limit(200) // Safety limit
@@ -233,11 +234,12 @@ export class TypeORMProviderRepository implements IProviderRepository {
     if (providerIds.length === 0) return [];
     return await this.reviewsRepo
       .createQueryBuilder('r')
-      .select('r.provider_id', 'provider_id')
+      .leftJoin('r.provider', 'p')
+      .select('p.id', 'provider_id')
       .addSelect('AVG(r.rating)', 'avg_rating')
       .addSelect('COUNT(*)', 'reviews')
-      .where('r.provider_id IN (:...ids)', { ids: providerIds })
-      .groupBy('r.provider_id')
+      .where('p.id IN (:...ids)', { ids: providerIds })
+      .groupBy('p.id')
       .getRawMany();
   }
 
@@ -246,7 +248,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .createQueryBuilder('svc')
       .select('svc.name', 'name')
       .addSelect('svc.price_cents', 'price_cents')
-      .where('svc.provider_id = :id', { id: providerId })
+      .where('svc.provider = :id', { id: providerId })
       .andWhere('svc.is_active = :active', { active: true })
       .orderBy('svc.display_order', 'ASC')
       .limit(200)

@@ -30,7 +30,7 @@ export class PortfolioService {
     @InjectRepository(Appointment)
     private readonly apptRepo: Repository<Appointment>,
     private readonly cache: AppCacheService,
-  ) {}
+  ) { }
 
   // Creates a new portfolio image entry for a provider. Image storage integration
   // can be added later; for now we accept a direct imageUrl in the DTO.
@@ -43,7 +43,7 @@ export class PortfolioService {
     // Compute next display order for this provider (1-based)
     const raw = await this.imagesRepo
       .createQueryBuilder('img')
-      .where('img.provider_id = :pid', { pid: provider.id })
+      .where('img.provider = :pid', { pid: provider.id })
       .select('MAX(img.display_order)', 'max')
       .getRawOne<{ max: string | null }>();
     const nextDisplayOrder = raw?.max ? Number(raw.max) + 1 : 1;
@@ -226,7 +226,7 @@ export class PortfolioService {
       const qb = this.imagesRepo
         .createQueryBuilder('img')
         .leftJoinAndSelect('img.category', 'category')
-        .where('img.provider_id = :pid', { pid: providerId });
+        .where('img.provider = :pid', { pid: providerId });
 
       if (options.styleFilter) {
         const filter = `%${options.styleFilter}%`;
@@ -275,7 +275,7 @@ export class PortfolioService {
     // Compute next display order
     const raw = await this.imagesRepo
       .createQueryBuilder('img')
-      .where('img.provider_id = :pid', { pid: provider.id })
+      .where('img.provider = :pid', { pid: provider.id })
       .select('MAX(img.display_order)', 'max')
       .getRawOne<{ max: string | null }>();
     const nextDisplayOrder = raw?.max ? Number(raw.max) + 1 : 1;
