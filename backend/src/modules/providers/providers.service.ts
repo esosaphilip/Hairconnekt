@@ -179,6 +179,52 @@ export class ProvidersService {
   }
 
   /**
+   * Get availability settings including schedule and booking rules
+   */
+  async getAvailabilitySettings(userId: string) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const availability = provider.availability || [];
+    const weeklySchedule: Record<string, any> = {};
+
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+    days.forEach((day, index) => {
+      const daySlots = availability.filter((a) => a.dayOfWeek === index);
+      // Sort by start time
+      daySlots.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
+
+      if (daySlots.length === 0) {
+        weeklySchedule[day] = { isAvailable: false };
+      } else {
+        const first = daySlots[0];
+        const breaks = daySlots.slice(1).map((s) => ({
+          start: (s.startTime || '').slice(0, 5),
+          end: (s.endTime || '').slice(0, 5),
+        }));
+
+        weeklySchedule[day] = {
+          isAvailable: true,
+          startTime: (first.startTime || '').slice(0, 5),
+          endTime: (first.endTime || '').slice(0, 5),
+          breaks: breaks.length > 0 ? breaks : undefined,
+        };
+      }
+    });
+
+    return {
+      weeklySchedule,
+      bufferTimeBetweenAppointments: provider.bufferTimeMinutes || 0,
+      advanceBooking: {
+        minimumNotice: 2, // Default or fetch if stored
+        maximumWindow: provider.advanceBookingDays || 30,
+      },
+      autoBlockHolidays: false,
+    };
+  }
+
+  /**
    * Replace availability slots for the current provider
    */
   async setAvailability(userId: string, dto: AvailabilityDto) {

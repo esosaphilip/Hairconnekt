@@ -1,8 +1,25 @@
-import { IsArray, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class AvailabilitySlotDto {
+  @IsString()
+  @IsNotEmpty()
+  weekday: string;
+
+  @IsString()
+  @IsNotEmpty()
+  start: string;
+
+  @IsString()
+  @IsNotEmpty()
+  end: string;
+}
 
 export class AvailabilityDto {
   @IsArray()
-  slots: Array<{ weekday: string; start: string; end: string }>;
+  @ValidateNested({ each: true })
+  @Type(() => AvailabilitySlotDto)
+  slots: AvailabilitySlotDto[];
 
   @IsOptional()
   @IsString()

@@ -30,11 +30,11 @@ export const API_CONFIG = {
     // NOTE: Backend currently only has POST /services and GET /services/provider
     // UPDATE, DELETE, and PATCH endpoints need to be added to backend
     SERVICES: {
-      LIST: '/services/provider', // GET - exists in backend
-      CREATE: '/services', // POST - exists in backend
-      UPDATE: (id: string) => `/services/${id}`, // PATCH - TODO: needs backend implementation
-      DELETE: (id: string) => `/services/${id}`, // DELETE - TODO: needs backend implementation
-      TOGGLE: (id: string) => `/services/${id}`, // PATCH - TODO: needs backend implementation
+      LIST: '/providers/me/services', // GET - Correct endpoint
+      CREATE: '/providers/me/services', // POST - Correct endpoint
+      UPDATE: (id: string) => `/providers/me/services/${id}`, // PATCH
+      DELETE: (id: string) => `/providers/me/services/${id}`, // DELETE
+      TOGGLE: (id: string) => `/providers/me/services/${id}`, // PATCH
     },
     // Appointments
     APPOINTMENTS: {

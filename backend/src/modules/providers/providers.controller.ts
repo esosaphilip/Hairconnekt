@@ -18,7 +18,7 @@ import { AppCacheInterceptor, CacheKeyBuilder, CachePerUser } from '../cache/app
 
 @Controller('providers')
 export class ProvidersController {
-  constructor(private readonly providersService: ProvidersService) {}
+  constructor(private readonly providersService: ProvidersService) { }
 
   @Post()
   create(@Body() dto: CreateProviderDto) {
@@ -138,6 +138,14 @@ export class ProvidersController {
     const userId = (req.user as any)?.sub;
     // TODO: Save settings to DB
     return { success: true, ...body };
+  }
+
+  @Get('me/availability-settings')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  getAvailabilitySettings(@Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.getAvailabilitySettings(userId);
   }
 
   @Get('dashboard')

@@ -21,15 +21,17 @@ import { logger } from '@/services/logger';
 import { MESSAGES } from '@/constants';
 import { http } from '@/api/http';
 import { providerClientsApi } from '@/api/providerClients';
-import { API_CONFIG } from '@/constants';
 import { providersApi } from '@/services/providers';
 import type { Service } from '@/domain/entities/Service';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
+import { ServiceRepositoryImpl } from '@/data/repositories/ServiceRepositoryImpl';
 
 type Client = { id: string; name: string; phone?: string | null };
 
 type Nav = { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
 type CreateAppointmentParams = { clientId?: string };
+
+const serviceRepository = new ServiceRepositoryImpl();
 
 export function CreateAppointmentScreen() {
   const navigation = useNavigation<Nav>();
@@ -80,19 +82,8 @@ export function CreateAppointmentScreen() {
         logger.error('Failed to load clients', e);
       }
       try {
-        const svcRes = await http.get(API_CONFIG.ENDPOINTS.SERVICES.LIST);
-        const svcItems: any[] = (Array.isArray(svcRes.data) ? svcRes.data : (svcRes?.data?.items ?? [])) as any[];
-        const mapped = svcItems.map((s) => ({
-          id: String(s.id),
-          name: String(s.name || ''),
-          description: s.description ?? null,
-          priceCents: typeof s.priceCents === 'number' ? s.priceCents : 0,
-          durationMinutes: typeof s.durationMinutes === 'number' ? s.durationMinutes : 60,
-          isActive: !!s.isActive,
-          createdAt: s.createdAt ? new Date(s.createdAt) : new Date(),
-          updatedAt: s.updatedAt ? new Date(s.updatedAt) : new Date(),
-        })) as Service[];
-        if (mounted) setServices(mapped);
+        const svcItems = await serviceRepository.list();
+        if (mounted) setServices(svcItems);
       } catch (e) {
         logger.error('Failed to load services', e);
       }
@@ -299,8 +290,8 @@ const styles = StyleSheet.create({
   buttonRow: { flexDirection: 'row', gap: SPACING.xs, marginBottom: SPACING.sm },
   card: { gap: SPACING.sm, padding: SPACING.md },
   cardTitle: { fontSize: FONT_SIZES.h5 || 16, fontWeight: 'bold', marginBottom: SPACING.xs },
-  checkboxChecked: { alignItems: 'center', backgroundColor: COLORS.primary, borderRadius: 10, height: 20, justifyContent: 'center', width: 20 },
-  checkboxUnchecked: { borderColor: COLORS.border, borderRadius: 10, borderWidth: 2, height: 20, width: 20 },
+  checkboxChecked: { alignItems: 'center', backgroundColor: COLORS.primary, borderRadius: 4, height: 20, justifyContent: 'center', width: 20 },
+  checkboxUnchecked: { borderColor: COLORS.border, borderRadius: 4, borderWidth: 2, height: 20, width: 20 },
   clientItem: { borderColor: COLORS.border, borderRadius: 8, borderWidth: 2, padding: SPACING.sm },
   clientItemSelected: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
   clientList: { gap: SPACING.xs, maxHeight: 240, overflow: 'hidden' },
