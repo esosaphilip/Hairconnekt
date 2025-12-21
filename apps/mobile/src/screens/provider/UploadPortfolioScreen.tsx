@@ -129,9 +129,11 @@ export function UploadPortfolioScreen() {
       // Alert.alert("Upload gestartet", "Portfolio-Bilder werden hochgeladen...");
       const meta = images.map(() => ({ serviceCategory: formData.category, caption: formData.title || undefined, isBeforeAfter: false }));
       const response = await providerPortfolioApi.upload(images.map((img, i) => ({ uri: img.uri, name: `upload_${i}.jpg`, type: 'image/jpeg' })), meta);
-      const msg = response?.message || 'Portfolio aktualisiert!'; // Backend returns { message: ... } on success
-      Alert.alert("Erfolg", String(msg));
-      navigation.navigate("ProviderPortfolioScreen");
+      const msg = response?.message || 'Portfolio aktualisiert!';
+      if (response) {
+        Alert.alert("Erfolg", String(msg));
+        navigation.navigate("ProviderPortfolioScreen");
+      }
     } catch (e: any) {
       const msg = e?.response?.data?.message || e?.message || 'Upload fehlgeschlagen';
       Alert.alert("Fehler", String(msg));

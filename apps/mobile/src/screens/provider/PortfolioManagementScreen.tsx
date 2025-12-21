@@ -82,9 +82,15 @@ export function PortfolioManagementScreen() {
           }
         }
 
-        type RawPortfolioItem = { id: string; imageUrl?: string; title?: string; category?: string; uploadedAt?: string };
+        type RawPortfolioItem = { id: string; imageUrl?: string; caption?: string; title?: string; category?: any; uploadedAt?: string };
         const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
-        const mapped = items.map((it) => ({ id: it.id, image: it.imageUrl || '', title: it.title, category: it.category, createdAt: it.uploadedAt }));
+        const mapped = items.map((it) => ({
+          id: it.id,
+          image: it.imageUrl || '',
+          title: it.caption || it.title || '',
+          category: typeof it.category === 'object' ? (it.category?.nameDe || it.category?.nameEn || '') : String(it.category || ''),
+          createdAt: it.uploadedAt
+        }));
         if (active) setPortfolioData(mapped.filter((x) => !!x.image));
       } catch (e) {
         const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Fehler beim Laden des Portfolios';

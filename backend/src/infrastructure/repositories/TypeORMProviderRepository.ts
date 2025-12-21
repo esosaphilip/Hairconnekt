@@ -119,7 +119,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
     return this.appointmentsRepo.createQueryBuilder('appointment')
       .leftJoinAndSelect('appointment.client', 'client')
       .leftJoinAndSelect('appointment.appointmentServices', 'appointmentServices')
-      .where('appointment.provider = :providerId', { providerId })
+      .where('appointment.provider.id = :providerId', { providerId })
       .andWhere('appointment.appointment_date >= :startDate', { startDate })
       .andWhere('appointment.appointment_date <= :endDate', { endDate })
       .orderBy('appointment.start_time', 'ASC')
@@ -131,7 +131,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .createQueryBuilder('r')
       .select('AVG(r.rating)', 'avgRating')
       .addSelect('COUNT(r.id)', 'reviewCount')
-      .where('r.provider = :providerId', { providerId })
+      .where('r.provider.id = :providerId', { providerId })
       .getRawOne<{ avgRating: string; reviewCount: string }>()
       .then((row) => ({
         avgRating: row?.avgRating ? parseFloat(row.avgRating) : 0,
@@ -248,7 +248,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .createQueryBuilder('svc')
       .select('svc.name', 'name')
       .addSelect('svc.price_cents', 'price_cents')
-      .where('svc.provider = :id', { id: providerId })
+      .where('svc.provider.id = :id', { id: providerId })
       .andWhere('svc.is_active = :active', { active: true })
       .orderBy('svc.display_order', 'ASC')
       .limit(200)
