@@ -47,11 +47,11 @@ export class Appointment {
   @Column({ name: 'appointment_date', type: 'date' })
   appointmentDate: string;
 
-  @Column({ name: 'start_time', type: 'time' })
-  startTime: string;
+  @Column({ name: 'start_time', type: 'timestamptz' })
+  startTime: Date;
 
-  @Column({ name: 'end_time', type: 'time' })
-  endTime: string;
+  @Column({ name: 'end_time', type: 'timestamptz' })
+  endTime: Date;
 
   @Column({ name: 'total_duration_minutes', type: 'int' })
   totalDurationMinutes: number;
@@ -110,8 +110,8 @@ export class Appointment {
     provider: ProviderProfile,
     client: User,
     services: Service[],
-    startTime: string,
-    endTime: string,
+    startTimeIso: string,
+    endTimeIso: string,
     notes?: string,
   ): Appointment {
     if (!services || services.length === 0) {
@@ -119,13 +119,23 @@ export class Appointment {
     }
 
     const totalDurationMinutes = services.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
-    const appointmentDate = new Date().toISOString().split('T')[0];
+
+    // Parse ISO strings to Dates
+    const startDate = new Date(startTimeIso);
+    const endDate = new Date(endTimeIso);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new BadRequestException('Invalid start or end time format');
+    }
+
+    // Correctly derive appointment date from the start time (YYYY-MM-DD)
+    const appointmentDate = startDate.toISOString().split('T')[0];
 
     const appointment = new Appointment();
     appointment.provider = provider;
     appointment.client = client;
-    appointment.startTime = startTime;
-    appointment.endTime = endTime;
+    appointment.startTime = startDate;
+    appointment.endTime = endDate;
     appointment.clientNotes = notes;
     appointment.status = AppointmentStatus.PENDING;
     appointment.appointmentDate = appointmentDate;
@@ -152,9 +162,9 @@ export class Appointment {
    */
   get hoursUntil(): number {
     try {
-      const [year, month, day] = this.appointmentDate.split('-').map((s) => parseInt(s, 10));
-      const [hours, minutes, seconds] = this.startTime.split(':').map((s) => parseInt(s, 10));
-      const start = new Date(year, (month || 1) - 1, day, hours || 0, minutes || 0, seconds || 0);
+      if (!this.startTime) return 0;
+      // If startTime is already a Date object (due to timestamptz)
+      const start = this.startTime instanceof Date ? this.startTime : new Date(this.startTime);
       const now = new Date();
       const diffMs = start.getTime() - now.getTime();
       return Math.round(diffMs / (1000 * 60 * 60));

@@ -111,23 +111,27 @@ export function CreateAppointmentScreen() {
         Alert.alert('Fehler', 'Bitte wähle mindestens einen Service');
         return;
       }
-      // Calculate total duration in minutes
-      const totalDurationMinutes = services
-        .filter((s) => selectedServices.includes(s.id))
-        .reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
 
+      // Calculate total duration and end time
+      const selectedServiceObjects = services.filter(s => selectedServices.includes(s.id));
+      const totalDurationMinutes = selectedServiceObjects.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+      
       // Construct ISO strings
-      const startIso = new Date(`${date}T${time}:00`).toISOString();
-      const startDate = new Date(startIso);
-      const endDate = new Date(startDate.getTime() + totalDurationMinutes * 60000);
-      const endIso = endDate.toISOString();
+      // Ensure date/time format is valid for Date constructor
+      const startDateTime = new Date(`${date}T${time}:00`);
+      if (isNaN(startDateTime.getTime())) {
+        Alert.alert('Fehler', 'Ungültiges Datum oder Uhrzeit');
+        return;
+      }
+      
+      const endDateTime = new Date(startDateTime.getTime() + totalDurationMinutes * 60000);
 
       const body: any = {
         clientId: clientMode === 'existing' ? selectedClient : undefined,
         newClient: clientMode === 'new' ? { name: newClient.name, phone: newClient.phone, email: newClient.email || undefined } : undefined,
         serviceIds: selectedServices,
-        startTime: startIso,
-        endTime: endIso,
+        startTime: startDateTime.toISOString(),
+        endTime: endDateTime.toISOString(),
         notes: notes || undefined,
       };
 
