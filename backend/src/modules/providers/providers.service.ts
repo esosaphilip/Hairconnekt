@@ -10,6 +10,10 @@ import { UpdateLanguagesDto } from './dto/update-languages.dto';
 import { UpdateSocialMediaDto } from './dto/update-social-media.dto';
 import { CreateCertificationDto } from './dto/create-certification.dto';
 import { AppCacheService } from '../cache/cache.service';
+import { StorageService } from '../storage/storage.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
 
 import { ProviderCertification } from './entities/provider-certification.entity';
 
@@ -19,6 +23,9 @@ export class ProvidersService {
     @Inject('IProviderRepository')
     private readonly providerRepo: IProviderRepository,
     private readonly cache: AppCacheService,
+    private readonly storage: StorageService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) { }
 
   /**
@@ -176,6 +183,40 @@ export class ProvidersService {
     await this.cache.del(`providers:dashboard:user:${uid}`);
     await this.cache.del(`providers:me:user:${uid}`);
     return this.sanitizeProvider(saved);
+  }
+
+  /**
+   * Upload and update profile picture
+   */
+  async uploadProfilePicture(userId: string, file: any) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    if (!file?.buffer || !file?.originalname) {
+      throw new BadRequestException('Image file is required');
+    }
+
+    // Upload to storage
+    const { url } = await this.storage.uploadImage(provider.id, file.buffer, file.originalname);
+
+    // Update User entity (primary profile picture)
+    if (provider.user) {
+      await this.userRepo.update(provider.user.id, { profilePictureUrl: url });
+    }
+
+    // Update Provider entity (cover/business photo - optional, but good for sync)
+    // Decide if we want to overwrite cover photo or not. 
+    // Usually "Profile Picture" = User Avatar, "Cover Photo" = Banner.
+    // ProviderProfileScreen seems to try both.
+    // Let's stick to updating User profile picture primarily.
+
+    // Invalidate caches
+    await this.invalidateProviderCache(provider.id, userId);
+
+    return {
+      success: true,
+      profilePictureUrl: url
+    };
   }
 
   /**

@@ -3,6 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProvidersController } from './providers.controller';
 import { ProvidersService } from './providers.service';
 import { ProviderProfile } from './entities/provider-profile.entity';
+import { User } from '../users/entities/user.entity'; // Add User import
+import { StorageModule } from '../storage/storage.module'; // Add StorageModule import
 import { ProviderLocation } from './entities/provider-location.entity';
 import { ProviderLanguage } from './entities/provider-language.entity';
 import { ProviderAvailability } from './entities/provider-availability.entity';
@@ -36,11 +38,13 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
       ServiceCategory,
       PortfolioImage,
       Review,
+      User,
     ]),
+    StorageModule,
   ],
   controllers: [ProvidersController],
   providers: [
-    ProvidersService, 
+    ProvidersService,
     RolesGuard,
     {
       provide: 'IProviderRepository',
@@ -49,4 +53,4 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
   ],
   exports: [ProvidersService, 'IProviderRepository'],
 })
-export class ProvidersModule {}
+export class ProvidersModule { }

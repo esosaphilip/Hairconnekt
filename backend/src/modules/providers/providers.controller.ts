@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Patch, Post, Put, Delete, Req, UseGuards, Query, Param, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Put, Delete, Req, UseGuards, Query, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { ProvidersService } from './providers.service';
 import { CreateProviderDto } from './dto/create-provider.dto';
@@ -47,6 +48,15 @@ export class ProvidersController {
   updateBio(@Req() req: Request, @Body() dto: UpdateBioDto) {
     const userId = (req.user as any)?.sub;
     return this.providersService.updateBio(userId, dto);
+  }
+
+  @Post('profile-picture')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadProfilePicture(@Req() req: Request, @UploadedFile() file: any) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.uploadProfilePicture(userId, file);
   }
 
   @Put('profile/specializations')
