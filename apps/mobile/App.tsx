@@ -102,10 +102,10 @@ function Tabs() {
   const { t } = useI18n();
   const getClientTabKey = (name: string) => (
     name === 'Home' ? 'home' :
-    name === 'Search' ? 'search' :
-    name === 'Appointments' ? 'appointments' :
-    name === 'Messages' ? 'messages' :
-    'profile'
+      name === 'Search' ? 'search' :
+        name === 'Appointments' ? 'appointments' :
+          name === 'Messages' ? 'messages' :
+            'profile'
   );
   return (
     <Tab.Navigator
@@ -114,10 +114,10 @@ function Tabs() {
         tabBarIcon: ({ color, size }) => {
           const iconName =
             route.name === 'Home' ? 'home' :
-            route.name === 'Search' ? 'search' :
-            route.name === 'Appointments' ? 'calendar' :
-            route.name === 'Messages' ? 'chatbubble' :
-            'person';
+              route.name === 'Search' ? 'search' :
+                route.name === 'Appointments' ? 'calendar' :
+                  route.name === 'Messages' ? 'chatbubble' :
+                    'person';
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarLabel: t(`tabs.${getClientTabKey(route.name)}`),
@@ -138,7 +138,7 @@ function Tabs() {
           tabPress: () => {
             try {
               navigation.navigate('Profile', { screen: 'Profile' });
-            } catch {}
+            } catch { }
           },
         })}
       />
@@ -351,16 +351,16 @@ function ProviderTabs() {
       }
     })();
     return () => {
-      try { clearTimeout(watchdog); } catch {}
+      try { clearTimeout(watchdog); } catch { }
     };
   }, []);
   const gateResolved = checked;
   const getProviderTabKey = (name: string) => (
     name === 'Dashboard' ? 'dashboard' :
-    name === 'Kalender' ? 'calendar' :
-    name === 'Kunden' ? 'clients' :
-    name === 'Nachrichten' ? 'messages' :
-    'more'
+      name === 'Kalender' ? 'calendar' :
+        name === 'Kunden' ? 'clients' :
+          name === 'Nachrichten' ? 'messages' :
+            'more'
   );
   if (!gateResolved) {
     return (
@@ -382,10 +382,10 @@ function ProviderTabs() {
         tabBarIcon: ({ color, size }) => {
           const iconName =
             route.name === 'Dashboard' ? 'grid-outline' :
-            route.name === 'Kalender' ? 'calendar-outline' :
-            route.name === 'Kunden' ? 'people-outline' :
-            route.name === 'Nachrichten' ? 'chatbubble-ellipses-outline' :
-            'menu-outline';
+              route.name === 'Kalender' ? 'calendar-outline' :
+                route.name === 'Kunden' ? 'people-outline' :
+                  route.name === 'Nachrichten' ? 'chatbubble-ellipses-outline' :
+                    'menu-outline';
           // Use dynamic iconName without TypeScript assertions for JS compatibility
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -393,19 +393,54 @@ function ProviderTabs() {
         headerTitle: t(`providerTabs.${getProviderTabKey(route.name)}`),
       })}
     >
-      <Tab.Screen name="Dashboard" component={ProviderDashboard} />
-      <Tab.Screen name="Kalender" component={ProviderCalendarStackScreen} options={{ headerShown: false }} />
-      <Tab.Screen name="Kunden" component={ProviderClientsStackScreen} options={{ headerShown: false }} />
+      <Tab.Screen
+        name="Dashboard"
+        component={ProviderDashboard}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            navigation.navigate('Dashboard');
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Kalender"
+        component={ProviderCalendarStackScreen}
+        options={{ headerShown: false }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            // Reset to the root of the stack
+            navigation.navigate('Kalender', { screen: 'ProviderCalendar' });
+          },
+        })}
+      />
+      <Tab.Screen
+        name="Kunden"
+        component={ProviderClientsStackScreen}
+        options={{ headerShown: false }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            // Reset to the root of the stack
+            navigation.navigate('Kunden', { screen: 'ProviderClients' });
+          },
+        })}
+      />
       <Tab.Screen name="Nachrichten" component={MessagesScreen} />
-      <Tab.Screen 
-        name="Mehr" 
-        component={ProviderMoreStackScreen} 
-        options={{ 
+      <Tab.Screen
+        name="Mehr"
+        component={ProviderMoreStackScreen}
+        options={{
           headerShown: false,
-          // Reset the stack when leaving the tab, so it always starts at the Menu when returning
-          // @ts-ignore: unmountOnBlur exists in v7 but types might be mismatching
-          unmountOnBlur: true 
-        }} 
+        }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => {
+            e.preventDefault();
+            // Reset to the root of the stack
+            navigation.navigate('Mehr', { screen: 'ProviderMore' });
+          },
+        })}
       />
     </Tab.Navigator>
   );
@@ -415,7 +450,7 @@ function RootNavigator() {
   const { user, loading } = useAuth();
   const { mode } = useUserMode();
   // Shared root navigation ref is used for imperative navigation (web hash-based routing)
-  
+
   // Ensure that after logout (user becomes null) we immediately reset to Welcome on the root navigator.
   // This avoids race conditions where nested screens attempt to reset to a route not present in the logged-in stack.
   useEffect(() => {
@@ -426,11 +461,11 @@ function RootNavigator() {
           rootNavigationRef.current?.dispatch(
             CommonActions.reset({ index: 0, routes: [{ name: 'Welcome' }] })
           );
-        } catch {}
+        } catch { }
       }, 0);
     }
   }, [user, loading]);
-  
+
   // Minimal web hash router to keep backward-compat with existing window.location.hash paths
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -566,7 +601,7 @@ function RootNavigator() {
   return (
     <NavigationContainer ref={rootNavigationRef}>
       {user ? (
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
           {/* Route to provider vs client app based on userType */}
           {(() => {
             const userType = String(user?.userType || '').toLowerCase();
@@ -661,7 +696,7 @@ function LoginRoute({ route, navigation }: RootStackScreenProps<'Login'>) {
       onRegisterPress={(userType) => {
         navigation.navigate('Register', { userType });
       }}
-      onForgotPasswordPress={() => {}}
+      onForgotPasswordPress={() => { }}
       onLoginSuccess={() => {
         // No-op: the RootNavigator will re-render to the authenticated stack
         // based on the updated auth context.
@@ -671,4 +706,4 @@ function LoginRoute({ route, navigation }: RootStackScreenProps<'Login'>) {
 }
 import { UserModeProvider, useUserMode } from '@/state/UserModeContext';
 import ModeSwitcher from '@/components/ModeSwitcher';
-      <ClientProfileStack.Screen name="BecomeProvider" component={BecomeProviderScreen} options={{ title: 'Anbieter werden' }} />
+<ClientProfileStack.Screen name="BecomeProvider" component={BecomeProviderScreen} options={{ title: 'Anbieter werden' }} />
