@@ -3,19 +3,19 @@ import {
   View,
   Text,
   SafeAreaView,
-  TouchableOpacity,
   FlatList,
   Image,
   StyleSheet,
   Alert,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
 import { useNavigation } from '@react-navigation/native';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
-import { Badge } from '../../components/badge';
+
 import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
@@ -25,21 +25,18 @@ import { getAuthBundle } from '../../auth/tokenStorage';
 // Screen width for responsive grid calculation
 const screenWidth = Dimensions.get('window').width;
 const numColumns = 2;
-const cardMargin = SPACING.xs; // Margin around the card
-const listPadding = SPACING.md; // Padding inside the main scroll view
+const cardMargin = SPACING.sm;
+const listPadding = SPACING.md;
 const cardWidth = (screenWidth - listPadding * 2 - (numColumns - 1) * cardMargin) / numColumns;
 
-
-// Load portfolio items from backend
-
-
-// --- Main Component ---
 type PortfolioItem = {
   id: string;
   image: string;
   title?: string;
   category?: string;
   createdAt?: string;
+  views: number;
+  likes: number;
 };
 
 export function PortfolioManagementScreen() {
@@ -54,12 +51,10 @@ export function PortfolioManagementScreen() {
       setLoading(true);
       setError(null);
       try {
-        // Try 'me' endpoint first, fallback to ID-based if needed (though me should work)
         let res;
         try {
           res = await http.get('/providers/me/portfolio', { params: { limit: 50, sort: 'latest' } });
         } catch (err) {
-          // Fallback to explicit ID if 'me' fails (e.g. backend issue)
           const bundle = await getAuthBundle();
           const providerId = bundle?.user?.id;
           if (providerId) {
@@ -70,7 +65,6 @@ export function PortfolioManagementScreen() {
         }
 
         const payload = res?.data;
-        // Robust unpacking: check for { success: true, data: { items: [] } } vs { items: [] }
         let list = [];
         if (payload && typeof payload === 'object') {
           if ('data' in payload && (payload as any).data && 'items' in (payload as any).data) {
@@ -82,15 +76,28 @@ export function PortfolioManagementScreen() {
           }
         }
 
-        type RawPortfolioItem = { id: string; imageUrl?: string; caption?: string; title?: string; category?: any; uploadedAt?: string };
+        type RawPortfolioItem = {
+          id: string;
+          imageUrl?: string;
+          caption?: string;
+          title?: string;
+          category?: any;
+          uploadedAt?: string;
+          viewCount?: number;
+          likeCount?: number;
+        };
+
         const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
-        const mapped = items.map((it) => ({
+        const mapped: PortfolioItem[] = items.map((it) => ({
           id: it.id,
           image: it.imageUrl || '',
           title: it.caption || it.title || '',
           category: typeof it.category === 'object' ? (it.category?.nameDe || it.category?.nameEn || '') : String(it.category || ''),
-          createdAt: it.uploadedAt
+          createdAt: it.uploadedAt,
+          views: it.viewCount || 0,
+          likes: it.likeCount || 0,
         }));
+
         if (active) setPortfolioData(mapped.filter((x) => !!x.image));
       } catch (e) {
         const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Fehler beim Laden des Portfolios';
@@ -103,14 +110,14 @@ export function PortfolioManagementScreen() {
   }, []);
 
   // Calculate stats
-  const totalViews = portfolioData.length;
-  const totalLikes = 0;
+  const totalViews = portfolioData.reduce((acc, item) => acc + item.views, 0);
+  const totalLikes = portfolioData.reduce((acc, item) => acc + item.likes, 0);
+  const totalImages = portfolioData.length;
 
-  // --- Delete Logic (Replaces AlertDialog and toast) ---
   const confirmDelete = (item: PortfolioItem) => {
     Alert.alert(
       "Bild löschen?",
-      `Möchtest du das Bild "${item.title}" wirklich aus deinem Portfolio löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
+      `Möchtest du das Bild "${item.title || 'Portfolio Bild'}" wirklich aus deinem Portfolio löschen?`,
       [
         { text: "Abbrechen", style: "cancel" },
         {
@@ -139,7 +146,6 @@ export function PortfolioManagementScreen() {
     }
   };
 
-  // --- Render Item for FlatList ---
   const renderItem = ({ item }: { item: PortfolioItem }) => (
     <View style={styles.gridItemWrapper}>
       <Card style={styles.portfolioCard}>
@@ -149,29 +155,34 @@ export function PortfolioManagementScreen() {
             style={styles.portfolioImage}
             resizeMode="cover"
           />
-          {/* Action Buttons Overlay */}
-          <View style={styles.imageOverlayButtons}>
-            {/* Delete Button (Wraps native action) */}
-            <TouchableOpacity onPress={() => confirmDelete(item)} style={styles.deleteButton}>
-              <Icon name="trash-2" size={16} color={COLORS.danger} />
-            </TouchableOpacity>
-            {/* Optional: Edit Button */}
-            {/* <TouchableOpacity onPress={() => navigate("UploadPortfolioScreen", { id: item.id })} style={styles.editButton}>
-              <Icon name="edit" size={16} color={COLORS.text} />
-            </TouchableOpacity> */}
-          </View>
+          <TouchableOpacity onPress={() => confirmDelete(item)} style={styles.deleteButton}>
+            <Icon name="trash-2" size={16} color={COLORS.danger} />
+          </TouchableOpacity>
         </View>
 
         <View style={styles.cardContent}>
           {!!item.title && <Text style={styles.itemTitle} numberOfLines={1}>{item.title}</Text>}
-          {!!item.category && <Badge title={item.category} variant="outline" style={styles.itemBadge} />}
+          {!!item.category && (
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeText}>{item.category}</Text>
+            </View>
+          )}
+
+          <View style={styles.metricsRow}>
+            <View style={styles.metricItem}>
+              <Icon name="eye" size={14} color={COLORS.textSecondary} />
+              <Text style={styles.metricText}>{item.views}</Text>
+            </View>
+            <View style={styles.metricItem}>
+              <Icon name="heart" size={14} color={COLORS.danger} />
+              <Text style={styles.metricText}>{item.likes}</Text>
+            </View>
+          </View>
         </View>
       </Card>
     </View>
   );
 
-
-  // --- Empty State Component ---
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
       <View style={styles.emptyIconCircle}>
@@ -183,15 +194,11 @@ export function PortfolioManagementScreen() {
       </Text>
       <Button
         title="Erstes Bild hochladen"
-        onPress={() => {
-          console.log("Navigating to UploadPortfolioScreen from EmptyState...");
-          navigation.navigate("UploadPortfolioScreen");
-        }}
+        onPress={() => navigation.navigate("UploadPortfolioScreen")}
         style={styles.uploadButton}
       />
     </View>
   );
-
 
   return (
     <SafeAreaView style={styles.flexContainer}>
@@ -202,24 +209,37 @@ export function PortfolioManagementScreen() {
             <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
             <View>
               <Text style={styles.headerTitle}>Portfolio</Text>
-              <Text style={styles.headerSubtitle}>{portfolioData.length} Bilder</Text>
+              <Text style={styles.headerSubtitle}>{totalImages} Bilder</Text>
             </View>
           </View>
           <Button
             title="Hinzufügen"
             icon="plus"
-            onPress={() => {
-              console.log("Navigating to UploadPortfolioScreen...");
-              navigation.navigate("UploadPortfolioScreen");
-            }}
+            onPress={() => navigation.navigate("UploadPortfolioScreen")}
             style={styles.addButton}
           />
         </View>
       </View>
 
+      {/* Stats Bar */}
+      <View style={styles.statsContainer}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{totalViews}</Text>
+          <Text style={styles.statLabel}>Aufrufe gesamt</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{totalLikes}</Text>
+          <Text style={styles.statLabel}>Likes gesamt</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{totalImages}</Text>
+          <Text style={styles.statLabel}>Bilder</Text>
+        </View>
+      </View>
+
       {error && (
-        <View style={styles.statsContainer}>
-          <Text style={styles.statLabel}>{error}</Text>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
         </View>
       )}
 
@@ -237,26 +257,17 @@ export function PortfolioManagementScreen() {
   );
 }
 
-
-// --- React Native Stylesheet ---
 const styles = StyleSheet.create({
   flexContainer: {
     flex: 1,
     backgroundColor: COLORS.background || '#F9FAFB',
   },
-  // --- Header Styles ---
   header: {
     backgroundColor: COLORS.white || '#FFFFFF',
     paddingHorizontal: SPACING.md || 16,
     paddingVertical: SPACING.md || 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border || '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 1,
-    elevation: 2,
-    zIndex: 10,
   },
   headerRow: {
     flexDirection: 'row',
@@ -278,137 +289,148 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: COLORS.primary || '#8B4513',
+    height: 40,
+    borderRadius: 8,
   },
-  // --- Stats Styles ---
   statsContainer: {
     backgroundColor: COLORS.white,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    marginBottom: SPACING.sm,
   },
   statItem: {
     alignItems: 'center',
-    flex: 1,
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
     color: COLORS.primary || '#8B4513',
-    marginBottom: SPACING.xs / 2,
+    marginBottom: 4,
   },
   statLabel: {
-    fontSize: FONT_SIZES.small || 12,
+    fontSize: FONT_SIZES.body || 14,
     color: COLORS.textSecondary || '#6B7280',
   },
-  // --- Portfolio Grid Styles ---
   listContent: {
-    padding: SPACING.md,
+    paddingHorizontal: SPACING.md,
+    paddingTop: SPACING.sm,
+    paddingBottom: SPACING.xl,
   },
   columnWrapper: {
     justifyContent: 'space-between',
-    marginBottom: SPACING.sm, // Add vertical spacing between rows
+    marginBottom: SPACING.md,
   },
   gridItemWrapper: {
     width: cardWidth,
   },
   portfolioCard: {
-    borderRadius: 8,
+    borderRadius: 12,
     overflow: 'hidden',
     backgroundColor: COLORS.white,
+    padding: 0,
+    borderWidth: 1,
+    borderColor: COLORS.border,
   },
   imageContainer: {
     width: '100%',
-    aspectRatio: 1, // aspect-square
+    aspectRatio: 1,
     position: 'relative',
   },
   portfolioImage: {
     width: '100%',
     height: '100%',
   },
-  imageOverlayButtons: {
-    position: 'absolute',
-    top: SPACING.xs,
-    right: SPACING.xs,
-    flexDirection: 'row',
-    gap: SPACING.xs,
-  },
   deleteButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
     width: 32,
     height: 32,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', // white/90
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#eee',
   },
   cardContent: {
     padding: SPACING.sm,
   },
   itemTitle: {
     fontSize: FONT_SIZES.body || 14,
-    fontWeight: '600',
-    marginBottom: SPACING.xs / 2,
+    fontWeight: 'bold',
+    marginBottom: 6,
+    color: '#111',
   },
-  itemBadge: {
+  badgeContainer: {
     alignSelf: 'flex-start',
-    marginBottom: SPACING.xs,
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
   },
-  itemStats: {
+  badgeText: {
+    fontSize: 12,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  metricsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    fontSize: FONT_SIZES.small || 12,
-    color: COLORS.textSecondary,
   },
-  statRow: {
+  metricItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: SPACING.xs / 2,
+    gap: 4,
   },
-  statText: {
-    fontSize: FONT_SIZES.small || 12,
+  metricText: {
+    fontSize: 12,
     color: COLORS.textSecondary,
+    fontWeight: '500',
   },
-  heartIcon: {
-    fontSize: FONT_SIZES.small || 12,
+  errorContainer: {
+    padding: SPACING.md,
+    alignItems: 'center',
   },
-  // --- Empty State Styles ---
+  errorText: {
+    color: COLORS.danger,
+  },
   emptyContainer: {
-    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: SPACING.lg,
     paddingTop: SPACING.xl * 2,
   },
   emptyIconCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: COLORS.border || '#F3F4F6',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: SPACING.md,
   },
   emptyTitle: {
-    fontSize: FONT_SIZES.h4 || 18,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: SPACING.xs,
+    marginBottom: 8,
   },
   emptySubtitle: {
-    fontSize: FONT_SIZES.body || 14,
-    color: COLORS.textSecondary || '#6B7280',
+    fontSize: 14,
+    color: COLORS.textSecondary,
     textAlign: 'center',
-    marginBottom: SPACING.lg,
+    marginBottom: 24,
   },
   uploadButton: {
-    backgroundColor: COLORS.primary || '#8B4513',
-    height: 48,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 24,
   },
 });
