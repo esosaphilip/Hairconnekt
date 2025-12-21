@@ -22,6 +22,7 @@ import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { http } from '../../api/http';
+import { API_BASE_URL } from '../../config';
 import { getAuthBundle } from '../../auth/tokenStorage';
 
 // Screen width for responsive grid calculation
@@ -39,6 +40,14 @@ type PortfolioItem = {
   createdAt?: string;
   views: number;
   likes: number;
+};
+
+const resolveImageUrl = (path: string | undefined) => {
+  if (!path) return 'https://via.placeholder.com/300';
+  if (path.startsWith('http')) return path;
+  // API_BASE_URL ends with /api/v1, usually. We want the root '.../uploads'
+  const origin = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
+  return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
 };
 
 export function PortfolioManagementScreen() {
@@ -82,7 +91,7 @@ export function PortfolioManagementScreen() {
       const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
       const mapped: PortfolioItem[] = items.map((it) => ({
         id: it.id,
-        image: it.imageUrl || '',
+        image: resolveImageUrl(it.imageUrl),
         title: it.caption || it.title || '',
         category: typeof it.category === 'object' ? (it.category?.nameDe || it.category?.nameEn || '') : String(it.category || ''),
         createdAt: it.uploadedAt,

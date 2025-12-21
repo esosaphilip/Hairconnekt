@@ -99,12 +99,16 @@ export class ProviderPortfolioController {
   }
 
   // PUT /api/v1/providers/portfolio/:id
+  // PUT /api/v1/providers/portfolio/:id
   @Put('portfolio/:id')
+  @UseGuards(JwtAuthGuard)
   async update(
     @Param('id') imageId: string,
     @Body() body: UpdatePortfolioImageDto,
+    @Req() req: any,
   ) {
-    return this.portfolioService.updateImage(imageId, body.providerId, {
+    const providerId = await this.resolveProviderId(req);
+    return this.portfolioService.updateImage(imageId, providerId, {
       caption: body.caption,
       tags: body.tags,
       metadata: body.metadata,
@@ -112,11 +116,14 @@ export class ProviderPortfolioController {
   }
 
   // DELETE /api/v1/providers/portfolio/:id
+  // DELETE /api/v1/providers/portfolio/:id
   @Delete('portfolio/:id')
+  @UseGuards(JwtAuthGuard)
   async remove(
     @Param('id') imageId: string,
-    @Body() body: ProviderContextDto,
+    @Req() req: any,
   ) {
-    return this.portfolioService.deleteImage(imageId, body.providerId);
+    const providerId = await this.resolveProviderId(req);
+    return this.portfolioService.deleteImage(imageId, providerId);
   }
 }
