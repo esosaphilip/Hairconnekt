@@ -22,9 +22,8 @@ export class ServicesService {
 
   async getProviderIdByUserId(userId: string): Promise<string> {
     try {
-      // Use standard findOne with relation filtering for safety
       const provider = await this.providerProfileRepository.findOne({
-        where: { user: { id: userId } }
+        where: { user: { id: userId } },
       });
 
       if (!provider) {
@@ -148,7 +147,12 @@ export class ServicesService {
       service.allowOnlineBooking = updateDto.allowOnlineBooking;
     }
 
-    return this.serviceRepository.save(service);
+    try {
+      return await this.serviceRepository.save(service);
+    } catch (error) {
+      console.error('SQL Error Details:', error);
+      throw new InternalServerErrorException('Failed to update service');
+    }
   }
 
   async delete(id: string, providerId: string): Promise<void> {

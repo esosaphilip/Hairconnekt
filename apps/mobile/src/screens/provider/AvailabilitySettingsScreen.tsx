@@ -85,7 +85,7 @@ export function AvailabilitySettingsScreen() {
         if (typeof data?.autoBlockHolidays === 'boolean') {
           // reserved for future toggle
         }
-      } catch {}
+      } catch { }
       setLoading(false);
     };
     fetchAvailability();
@@ -188,31 +188,22 @@ export function AvailabilitySettingsScreen() {
     });
 
     try {
-      const weeklySchedule = ((): any => {
-        const obj: any = {};
-        (Object.entries(schedule) as [DayKey, DaySchedule][]).forEach(([day, d]) => {
-          obj[day] = {
-            isAvailable: !!d.isWorkday,
-            startTime: d.slots[0]?.start,
-            endTime: d.slots[0]?.end,
-            breaks: d.slots.slice(1).map((s) => ({ start: s.start, end: s.end })),
-          };
-        });
-        return obj;
-      })();
-      const body = {
-        weeklySchedule,
-        bufferTimeBetweenAppointments: bufferTime,
-        advanceBooking: { minimumNotice: minAdvanceHours, maximumWindow: advanceBookingDays },
-        autoBlockHolidays: false,
-      };
-      await providersApi.updateAvailabilitySettings(body);
+      // 1. Update availability slots (strict contract: slots only)
+      await providersApi.updateAvailabilitySettings({ slots });
+
+      // 2. Update booking settings via profile
+      await providersApi.updateProfile({
+        bufferTimeMinutes: bufferTime,
+        advanceBookingDays: advanceBookingDays,
+        acceptsSameDayBooking: sameDayBooking,
+      });
+
       setMessage('Verfügbarkeit gespeichert');
       if (Platform.OS === 'web') {
         try {
           // Navigate back to More screen on web
           window.location.hash = '/provider/more';
-        } catch {}
+        } catch { }
       }
     } catch (err) {
       let msg = 'Ein Fehler ist aufgetreten.';
@@ -235,7 +226,7 @@ export function AvailabilitySettingsScreen() {
 
   const onOpenMore = () => {
     if (Platform.OS === 'web') {
-      try { window.location.hash = '/provider/more'; } catch {}
+      try { window.location.hash = '/provider/more'; } catch { }
       return;
     }
     try {
@@ -249,7 +240,7 @@ export function AvailabilitySettingsScreen() {
       } else {
         rootNavigationRef.current?.navigate('ProviderTabs', { screen: 'Mehr', params: { screen: 'ProviderMore' } });
       }
-    } catch {}
+    } catch { }
   };
 
   const increment = (value: number, delta: number, min: number, max: number) => {
@@ -415,7 +406,7 @@ export function AvailabilitySettingsScreen() {
               title="Urlaub/Auszeit planen"
               onPress={() => {
                 if (Platform.OS === 'web') {
-                  try { window.location.hash = '/provider/calendar/block'; } catch {}
+                  try { window.location.hash = '/provider/calendar/block'; } catch { }
                 }
               }}
             />
@@ -426,7 +417,7 @@ export function AvailabilitySettingsScreen() {
               title="Kalender ansehen"
               onPress={() => {
                 if (Platform.OS === 'web') {
-                  try { window.location.hash = '/provider/calendar'; } catch {}
+                  try { window.location.hash = '/provider/calendar'; } catch { }
                 }
               }}
             />

@@ -8,4 +8,13 @@ export class UpdateProviderDto {
   @IsOptional()
   @IsString()
   bio?: string;
+
+  @IsOptional()
+  bufferTimeMinutes?: number;
+
+  @IsOptional()
+  advanceBookingDays?: number;
+
+  @IsOptional()
+  acceptsSameDayBooking?: boolean;
 }

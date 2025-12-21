@@ -19,7 +19,7 @@ export class ProvidersService {
     @Inject('IProviderRepository')
     private readonly providerRepo: IProviderRepository,
     private readonly cache: AppCacheService,
-  ) {}
+  ) { }
 
   /**
    * Update provider bio with sanitization
@@ -30,7 +30,7 @@ export class ProvidersService {
 
     provider.updateBio(dto);
     await this.providerRepo.save(provider);
-    
+
     await this.invalidateProviderCache(provider.id, userId);
     return { bio: provider.bio };
   }
@@ -72,7 +72,7 @@ export class ProvidersService {
 
     await this.providerRepo.save(provider);
     await this.invalidateProviderCache(provider.id, userId);
-    
+
     return {
       website: provider.website,
       instagram: provider.instagram,
@@ -110,22 +110,22 @@ export class ProvidersService {
     // Wait, IProviderRepository.saveCertification expects a ProviderCertification entity.
     // I should probably add a factory to ProviderCertification or use "new ProviderCertification()".
     // Let's assume for now we construct it manually as we did with Entity.create pattern.
-    
+
     // Using a plain object cast for now as we don't have a factory on ProviderCertification yet.
     // Actually, `TypeORMProviderRepository` uses `certificationsRepo.save`.
     // We should construct it.
-    
+
     const cert = new ProviderCertification(); // Assuming we import it? No, imports removed. 
     // Wait, I need to import ProviderCertification entity class to instantiate it.
     // I added it to imports at the top.
-    
+
     Object.assign(cert, {
       provider: { id: provider.id },
       ...dto
     });
 
     const saved = await this.providerRepo.saveCertification(cert);
-    
+
     await this.invalidateProviderCache(provider.id, userId);
     return saved;
   }
@@ -196,8 +196,8 @@ export class ProvidersService {
         // Manually construct entity or use partial
         const entity = new ProviderAvailability();
         Object.assign(entity, {
-           provider: { id: provider.id },
-           ...availabilityData
+          provider: { id: provider.id },
+          ...availabilityData
         });
         newRows.push(entity);
       } catch (error: any) {
@@ -206,12 +206,12 @@ export class ProvidersService {
     });
 
     const saved = await this.providerRepo.replaceAvailability(provider.id, newRows);
-    
+
     // Availability changes can affect nearby search and dashboard data
     await this.cache.deleteByPrefix('providers:nearby');
     const uid = userId;
     await this.cache.del(`providers:dashboard:user:${uid}`);
-    
+
     return {
       providerId: provider.id,
       slots: saved.map((r) => ({
@@ -249,7 +249,7 @@ export class ProvidersService {
 
     // Today's appointments
     const todays = await this.providerRepo.findAppointmentsForDashboard(provider.id, todayStr);
-    
+
     const now = new Date();
     const todayAppointments = todays.map((a) => {
       const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
@@ -619,13 +619,13 @@ export class ProvidersService {
       updatedAt: p.updatedAt,
       user: p.user
         ? {
-            id: p.user.id,
-            email: p.user.email,
-            phone: p.user.phone,
-            firstName: p.user.firstName,
-            lastName: p.user.lastName,
-            profilePictureUrl: p.user.profilePictureUrl || null,
-          }
+          id: p.user.id,
+          email: p.user.email,
+          phone: p.user.phone,
+          firstName: p.user.firstName,
+          lastName: p.user.lastName,
+          profilePictureUrl: p.user.profilePictureUrl || null,
+        }
         : undefined,
     };
   }
