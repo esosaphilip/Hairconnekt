@@ -147,16 +147,21 @@ export const providersApi = {
     clientId?: string;
     newClient?: { name: string; phone: string; email?: string };
     serviceIds: string[];
-    date: string;
     startTime: string;
+    endTime: string;
     notes?: string;
   }): Promise<{ appointmentId: string; message?: string; clientNotified?: boolean }> {
-    const res = await http.post('/appointments/provider-create', body);
-    const payload = res?.data;
-    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-      return (payload as any).data ?? { appointmentId: '' };
+    const payload = {
+      ...body,
+      startTime: toIsoString(body.startTime),
+      endTime: toIsoString(body.endTime),
+    };
+    const res = await http.post('/appointments/provider-create', payload);
+    const data = res?.data;
+    if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+      return (data as any).data ?? { appointmentId: '' };
     }
-    return (payload as any) ?? { appointmentId: '' };
+    return (data as any) ?? { appointmentId: '' };
   },
 
 

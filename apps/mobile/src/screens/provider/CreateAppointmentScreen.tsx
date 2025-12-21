@@ -111,12 +111,23 @@ export function CreateAppointmentScreen() {
         Alert.alert('Fehler', 'Bitte wähle mindestens einen Service');
         return;
       }
+      // Calculate total duration in minutes
+      const totalDurationMinutes = services
+        .filter((s) => selectedServices.includes(s.id))
+        .reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+
+      // Construct ISO strings
+      const startIso = new Date(`${date}T${time}:00`).toISOString();
+      const startDate = new Date(startIso);
+      const endDate = new Date(startDate.getTime() + totalDurationMinutes * 60000);
+      const endIso = endDate.toISOString();
+
       const body: any = {
         clientId: clientMode === 'existing' ? selectedClient : undefined,
         newClient: clientMode === 'new' ? { name: newClient.name, phone: newClient.phone, email: newClient.email || undefined } : undefined,
         serviceIds: selectedServices,
-        date,
-        startTime: time,
+        startTime: startIso,
+        endTime: endIso,
         notes: notes || undefined,
       };
 
@@ -221,7 +232,7 @@ export function CreateAppointmentScreen() {
                   <View style={styles.serviceItemContent}>
                     <View style={styles.serviceTextContainer}>
                       <Text style={styles.serviceName}>{service.name}</Text>
-                      <Text style={styles.serviceDetails}>{Math.max(30, service.durationMinutes)} Min • €{Math.round((service.priceCents || 0)/100)}</Text>
+                      <Text style={styles.serviceDetails}>{Math.max(30, service.durationMinutes)} Min • €{Math.round((service.priceCents || 0) / 100)}</Text>
                     </View>
                     <View style={selectedServices.includes(service.id) ? styles.checkboxChecked : styles.checkboxUnchecked}>
                       {selectedServices.includes(service.id) && <Icon name="check" size={12} color={COLORS.white} />}
