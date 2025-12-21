@@ -60,6 +60,19 @@ const provider = await this.providerProfileRepository.findOne({
 });
 ```
 
+### Problem: 500 Error when Saving Appointments
+**Symptoms:**
+* Frontend receives `500 Internal Server Error` when creating an appointment.
+* Backend logs show `invalid input syntax for type time`.
+
+**Root Cause:**
+The database column type was set to `time` (Postgres time without date), but the frontend was sending a full ISO Date string (`YYYY-MM-DDTHH:mm:ss.sssZ`). Or, the backend entity was defined as `string` while TypeORM expected a Date object for `timestamptz`.
+
+**Solution:**
+1. **Migration:** Change the column type from `time` to `timestamptz` (timestamp with time zone) to store the full date and time.
+2. **Entity:** Update the TypeORM entity to use `type: 'timestamptz'` and TypeScript type `Date`.
+3. **Frontend:** Ensure the payload sends a valid ISO string (`new Date().toISOString()`).
+
 ---
 
 ## 📱 Mobile App UI Glitches
@@ -76,6 +89,17 @@ const provider = await this.providerProfileRepository.findOne({
 **Solution:**
 1. Fix the underlying Backend 500 error first.
 2. Temporarily **disable optimistic updates** in the hook (`useServices.ts`) to make debugging easier. Wait for the `await apiCall()` to succeed before updating the state.
+
+### Problem: "Manage Services" Button instead of List
+**Symptoms:**
+* In "Create Appointment", the user sees a "Manage Services" button instead of the list of services they created.
+* No error is shown, but the list is empty.
+
+**Root Cause:**
+**Incorrect API Endpoint**. The frontend was calling an old or non-existent endpoint (e.g., `/services/provider`) instead of the correct one (`/providers/me/services`).
+
+**Solution:**
+Update `API_CONFIG` in `constants/api.ts` to point to the correct endpoint.
 
 ### Problem: Crash on Search Screen
 **Error Message:**
