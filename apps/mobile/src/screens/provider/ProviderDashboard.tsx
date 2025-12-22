@@ -537,7 +537,7 @@ const styles = StyleSheet.create({
   appointmentIndicator: {
     backgroundColor: colors.green600,
     borderRadius: 1,
-    height: '100%',
+    flex: 1,
     width: 2,
   },
   centered: {

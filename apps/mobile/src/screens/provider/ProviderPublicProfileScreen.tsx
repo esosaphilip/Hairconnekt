@@ -176,7 +176,31 @@ export function ProviderPublicProfileScreen() {
     }, [providerId, isAuthenticated])
   );
 
-  // ... (renderAboutTab remains mostly same, using publicData.profile.bio)
+  // ... (useFocusEffect)
+
+  const renderAboutTab = () => (
+    <View style={styles.tabContentContainer}>
+      <Card style={styles.tabCard}>
+        <Text style={styles.cardTitle}>Über uns</Text>
+        <Text style={styles.bodyText}>
+          {publicData?.profile?.bio || 'Keine Beschreibung verfügbar.'}
+        </Text>
+      </Card>
+
+      {publicData?.specialties && publicData.specialties.length > 0 && (
+        <Card style={styles.tabCard}>
+          <Text style={styles.cardTitle}>Spezialgebiete</Text>
+          <View style={styles.badgeWrap}>
+            {publicData.specialties.map((spec, i) => (
+              <Badge key={i} title={spec} variant="outline" />
+            ))}
+          </View>
+        </Card>
+      )}
+
+      {/* Additional details could go here */}
+    </View>
+  );
 
   const ownerName = publicData?.profile?.user?.firstName
     ? `${publicData.profile.user.firstName} ${publicData.profile.user.lastName || ''}`.trim()

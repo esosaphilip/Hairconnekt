@@ -21,13 +21,29 @@ import { http } from "../../api/http";
 
 // ... existing imports
 
+// ... existing imports
+
+const mockChats: Record<string, any> = {
+  "1": {
+    provider: { id: "1", name: "Support", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100", isOnline: true },
+    messages: [
+      { id: "1", text: "Hallo! Wie kann ich dir helfen?", sender: "provider", timestamp: new Date().toISOString() }
+    ]
+  }
+};
+
 export function ChatScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const params = route.params || {};
-  const id = params.id;
+  const params = (route.params || {}) as { id?: string; userId?: string };
+  // Support both id (conversationId) and userId (direct chat)
+  const id = params.id || params.userId || "1";
 
-  const chat = mockChats[id || "1"];
+  // Fallback to mock chat if id not found, or create a temporary structure
+  const chat = mockChats[id] || {
+    provider: { id: id, name: "Chat", avatar: null, isOnline: false },
+    messages: []
+  };
 
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(chat?.messages || []);
