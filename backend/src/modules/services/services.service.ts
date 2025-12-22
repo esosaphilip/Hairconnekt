@@ -22,10 +22,11 @@ export class ServicesService {
 
   async getProviderIdByUserId(userId: string): Promise<string> {
     try {
-      // Use QueryBuilder to avoid relation traversal issues
+      // Use QueryBuilder with property path to avoid column name ambiguity or raw SQL issues
       const provider = await this.providerProfileRepository
         .createQueryBuilder('p')
-        .where('p.user_id = :userId', { userId })
+        .leftJoinAndSelect('p.user', 'user')
+        .where('user.id = :userId', { userId })
         .getOne();
 
       if (!provider) {
@@ -94,7 +95,8 @@ export class ServicesService {
     // Use QueryBuilder for robust querying
     return this.serviceRepository.createQueryBuilder('s')
       .leftJoinAndSelect('s.category', 'c')
-      .where('s.provider = :providerId', { providerId })
+      .leftJoinAndSelect('s.provider', 'p')
+      .where('p.id = :providerId', { providerId })
       .orderBy('s.displayOrder', 'ASC')
       .addOrderBy('s.name', 'ASC')
       .getMany();

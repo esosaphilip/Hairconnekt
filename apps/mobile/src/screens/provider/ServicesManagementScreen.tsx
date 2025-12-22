@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, Platform, Alert, ScrollView, KeyboardAvoidingView } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Platform, Alert, ScrollView, KeyboardAvoidingView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
@@ -19,7 +19,14 @@ import type { Service } from '@/domain/entities/Service';
 
 export function ServicesManagementScreen() {
   const navigation = useNavigation();
-  const { services, loading, error, toggleServiceActive, deleteService, createService } = useServices();
+  const { services, loading, error, toggleServiceActive, deleteService, createService, loadServices } = useServices();
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    await loadServices();
+    setRefreshing(false);
+  }, [loadServices]);
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState('');
@@ -58,16 +65,16 @@ export function ServicesManagementScreen() {
         // Path: /providers/me/services/categories (http client adds base URL /api/v1)
         const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
         const items = normalize(res?.data);
-        if (items.length) { 
-          setCategories(items); 
+        if (items.length) {
+          setCategories(items);
         } else {
-           // Fallback only if array is empty but call succeeded? Or just show error?
-           // Contract says "Replace it with exactly one call". I will respect that.
-           if (items.length === 0) setCategoriesError('Keine Kategorien gefunden.');
+          // Fallback only if array is empty but call succeeded? Or just show error?
+          // Contract says "Replace it with exactly one call". I will respect that.
+          if (items.length === 0) setCategoriesError('Keine Kategorien gefunden.');
         }
       } catch (err) {
-         console.log('[ServicesManagement] Category Fetch Error:', err);
-         setCategoriesError('Kategorien konnten nicht geladen werden.');
+        console.log('[ServicesManagement] Category Fetch Error:', err);
+        setCategoriesError('Kategorien konnten nicht geladen werden.');
       } finally {
         setCategoriesLoading(false);
       }
@@ -168,251 +175,256 @@ export function ServicesManagementScreen() {
       </View>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.flex1}>
-      <ScrollView contentContainerStyle={styles.contentScrollContainer}>
-        {adding && (
-          <Card style={styles.card}>
-            <Text style={styles.sectionTitle}>Neuen Service hinzufügen</Text>
-            <View style={{ gap: spacing.sm }}>
-              <View>
-                <Text style={styles.label}>Service-Kategorie *</Text>
-            {categoriesLoading ? (
-              <Text style={{ color: colors.gray600 }}>Kategorien werden geladen…</Text>
-            ) : (
-                  <Picker
-                    selectedValue={categories.length ? selectedCategoryId : selectedCategoryName}
-                    onValueChange={(v: string) => {
-                      if (categories.length) setSelectedCategoryId(v);
-                      else setSelectedCategoryName(v);
-                    }}
-                    items={
-                      [{ label: 'Kategorie wählen...', value: '' }].concat(
-                        categories.length
-                          ? categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))
-                          : defaultCategoryNames.map((name) => ({ label: name, value: name }))
-                      )
-                    }
-                  />
-            )}
-            {categoriesError && (
-              <View style={{ marginTop: spacing.xs }}>
-                <Text style={{ color: colors.error }}>{categoriesError}</Text>
-                    <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
-                      <Button title="Neu laden" variant="outline" onPress={() => {
-                        setCategoriesError(null);
-                        setCategoriesLoading(true);
-                        // trigger reload by calling the same effect logic
-                        (async () => {
-                          try {
-                            const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
-                            const arr = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
-                            const items = (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
-                            setCategories(items);
-                          } catch {}
-                          setCategoriesLoading(false);
-                        })();
-                      }} />
-                    </View>
-                  </View>
-                )}
-                {/* Fallback ID input removed to keep flow simple */}
-              </View>
-              <View>
-                <Text style={styles.label}>Name *</Text>
-                <Input value={name} onChangeText={setName} placeholder="z. B. Box Braids" />
-              </View>
-              <View>
-                <Text style={styles.label}>Preis (in €) *</Text>
-                <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={price} onChangeText={setPrice} placeholder="z. B. 55" />
-              </View>
-              <View>
-                <Text style={styles.label}>Dauer (Minuten) *</Text>
-                <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={duration} onChangeText={setDuration} placeholder="z. B. 60" />
-              </View>
-              <View>
-                <Text style={styles.label}>Beschreibung (optional)</Text>
-                <Textarea value={description} onChangeText={setDescription} placeholder="Kurzbeschreibung" numberOfLines={3} />
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Text style={styles.label}>Aktiv</Text>
-                <Switch value={active} onValueChange={setActive} />
-              </View>
-              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                <Button
-                  title="Speichern"
-                  onPress={async () => {
-                    if (!name.trim()) {
-                      Alert.alert('Fehler', 'Bitte einen Namen eingeben');
-                      return;
-                    }
-                    const finalCategoryId = selectedCategoryId;
-                    if (categories.length > 0 && !finalCategoryId) {
-                      Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
-                      return;
-                    }
-                    const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100) || 0;
-                    const durationMinutes = parseInt(duration, 10) || 60;
-                    if (priceCents <= 0) {
-                      Alert.alert('Fehler', 'Bitte einen gültigen Preis eingeben');
-                      return;
-                    }
-                    if (durationMinutes <= 0) {
-                      Alert.alert('Fehler', 'Bitte eine gültige Dauer eingeben');
-                      return;
-                    }
-                    try {
-                      setSaving(true);
-                      await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: finalCategoryId || undefined });
-                      setAdding(false);
-                      setName('');
-                      setPrice('');
-                      setDuration('60');
-                      setDescription('');
-                      setActive(true);
-                      setSelectedCategoryId('');
-                      setManualCategoryId('');
-                      showSuccess(MESSAGES.SUCCESS.SAVE);
-                    } catch (err: unknown) {
-                      const msg = (err as any)?.response?.data?.message || (err instanceof Error ? err.message : 'Fehler beim Speichern');
-                      if (typeof msg === 'string' && msg.includes('must be a number')) {
-                        // Suppress technical validation errors with user friendly one
-                        Alert.alert('Fehler', 'Bitte überprüfe deine Eingaben (Preis und Dauer müssen Zahlen sein)');
-                      } else if (typeof msg === 'string' && msg.includes('priceCents must not be less than')) {
-                        Alert.alert('Fehler', 'Ungültiger Preis oder Dauer');
-                      } else {
-                         // Only show if not a 500 error
-                        if ((err as any)?.response?.status !== 500) {
-                          Alert.alert('Fehler', typeof msg === 'string' ? msg : 'Service konnte nicht gespeichert werden');
-                        } else {
-                          Alert.alert('Fehler', 'Service konnte nicht gespeichert werden. Bitte versuche es später erneut.');
-                        }
+        <ScrollView
+          contentContainerStyle={styles.contentScrollContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
+          }
+        >
+          {adding && (
+            <Card style={styles.card}>
+              <Text style={styles.sectionTitle}>Neuen Service hinzufügen</Text>
+              <View style={{ gap: spacing.sm }}>
+                <View>
+                  <Text style={styles.label}>Service-Kategorie *</Text>
+                  {categoriesLoading ? (
+                    <Text style={{ color: colors.gray600 }}>Kategorien werden geladen…</Text>
+                  ) : (
+                    <Picker
+                      selectedValue={categories.length ? selectedCategoryId : selectedCategoryName}
+                      onValueChange={(v: string) => {
+                        if (categories.length) setSelectedCategoryId(v);
+                        else setSelectedCategoryName(v);
+                      }}
+                      items={
+                        [{ label: 'Kategorie wählen...', value: '' }].concat(
+                          categories.length
+                            ? categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))
+                            : defaultCategoryNames.map((name) => ({ label: name, value: name }))
+                        )
                       }
-                    } finally {
-                      setSaving(false);
-                    }
-                  }}
-                  style={{ backgroundColor: colors.primary, flex: 1 }}
-                />
-                <Button title="Abbrechen" variant="outline" onPress={() => setAdding(false)} style={{ flex: 1 }} />
+                    />
+                  )}
+                  {categoriesError && (
+                    <View style={{ marginTop: spacing.xs }}>
+                      <Text style={{ color: colors.error }}>{categoriesError}</Text>
+                      <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
+                        <Button title="Neu laden" variant="outline" onPress={() => {
+                          setCategoriesError(null);
+                          setCategoriesLoading(true);
+                          // trigger reload by calling the same effect logic
+                          (async () => {
+                            try {
+                              const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
+                              const arr = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
+                              const items = (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
+                              setCategories(items);
+                            } catch { }
+                            setCategoriesLoading(false);
+                          })();
+                        }} />
+                      </View>
+                    </View>
+                  )}
+                  {/* Fallback ID input removed to keep flow simple */}
+                </View>
+                <View>
+                  <Text style={styles.label}>Name *</Text>
+                  <Input value={name} onChangeText={setName} placeholder="z. B. Box Braids" />
+                </View>
+                <View>
+                  <Text style={styles.label}>Preis (in €) *</Text>
+                  <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={price} onChangeText={setPrice} placeholder="z. B. 55" />
+                </View>
+                <View>
+                  <Text style={styles.label}>Dauer (Minuten) *</Text>
+                  <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={duration} onChangeText={setDuration} placeholder="z. B. 60" />
+                </View>
+                <View>
+                  <Text style={styles.label}>Beschreibung (optional)</Text>
+                  <Textarea value={description} onChangeText={setDescription} placeholder="Kurzbeschreibung" numberOfLines={3} />
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={styles.label}>Aktiv</Text>
+                  <Switch value={active} onValueChange={setActive} />
+                </View>
+                <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                  <Button
+                    title="Speichern"
+                    onPress={async () => {
+                      if (!name.trim()) {
+                        Alert.alert('Fehler', 'Bitte einen Namen eingeben');
+                        return;
+                      }
+                      const finalCategoryId = selectedCategoryId;
+                      if (categories.length > 0 && !finalCategoryId) {
+                        Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
+                        return;
+                      }
+                      const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100) || 0;
+                      const durationMinutes = parseInt(duration, 10) || 60;
+                      if (priceCents <= 0) {
+                        Alert.alert('Fehler', 'Bitte einen gültigen Preis eingeben');
+                        return;
+                      }
+                      if (durationMinutes <= 0) {
+                        Alert.alert('Fehler', 'Bitte eine gültige Dauer eingeben');
+                        return;
+                      }
+                      try {
+                        setSaving(true);
+                        await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: finalCategoryId || undefined });
+                        setAdding(false);
+                        setName('');
+                        setPrice('');
+                        setDuration('60');
+                        setDescription('');
+                        setActive(true);
+                        setSelectedCategoryId('');
+                        setManualCategoryId('');
+                        showSuccess(MESSAGES.SUCCESS.SAVE);
+                      } catch (err: unknown) {
+                        const msg = (err as any)?.response?.data?.message || (err instanceof Error ? err.message : 'Fehler beim Speichern');
+                        if (typeof msg === 'string' && msg.includes('must be a number')) {
+                          // Suppress technical validation errors with user friendly one
+                          Alert.alert('Fehler', 'Bitte überprüfe deine Eingaben (Preis und Dauer müssen Zahlen sein)');
+                        } else if (typeof msg === 'string' && msg.includes('priceCents must not be less than')) {
+                          Alert.alert('Fehler', 'Ungültiger Preis oder Dauer');
+                        } else {
+                          // Only show if not a 500 error
+                          if ((err as any)?.response?.status !== 500) {
+                            Alert.alert('Fehler', typeof msg === 'string' ? msg : 'Service konnte nicht gespeichert werden');
+                          } else {
+                            Alert.alert('Fehler', 'Service konnte nicht gespeichert werden. Bitte versuche es später erneut.');
+                          }
+                        }
+                      } finally {
+                        setSaving(false);
+                      }
+                    }}
+                    style={{ backgroundColor: colors.primary, flex: 1 }}
+                  />
+                  <Button title="Abbrechen" variant="outline" onPress={() => setAdding(false)} style={{ flex: 1 }} />
+                </View>
+                {saving ? <Text style={{ color: colors.gray600 }}>Speichern...</Text> : null}
               </View>
-              {saving ? <Text style={{ color: colors.gray600 }}>Speichern...</Text> : null}
-            </View>
-          </Card>
-        )}
-        {/* Active Services */}
-        {activeServices.length > 0 && (
-          <View style={{ marginBottom: spacing.lg }}>
-            <Text style={styles.sectionTitle}>Aktive Services</Text>
-            <View>
-              {activeServices.map((service) => (
-                <Card key={service.id} style={styles.card}>
-                  <View style={styles.cardHeader}>
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.titleRow}>
-                        <Text style={styles.serviceName}>{service.name}</Text>
-                        {service.category ? (
-                          <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                            {service.category.nameDe || service.category.nameEn}
-                          </Badge>
-                        ) : null}
+            </Card>
+          )}
+          {/* Active Services */}
+          {activeServices.length > 0 && (
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text style={styles.sectionTitle}>Aktive Services</Text>
+              <View>
+                {activeServices.map((service) => (
+                  <Card key={service.id} style={styles.card}>
+                    <View style={styles.cardHeader}>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.titleRow}>
+                          <Text style={styles.serviceName}>{service.name}</Text>
+                          {service.category ? (
+                            <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
+                              {typeof service.category === 'object' ? (service.category.nameDe || service.category.nameEn || service.category.name) : service.category}
+                            </Badge>
+                          ) : null}
+                        </View>
+                        {!!service.description && (
+                          <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
+                        )}
                       </View>
-                      {!!service.description && (
-                        <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
-                      )}
+                      <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
                     </View>
-                    <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
-                  </View>
 
-                  <View style={styles.metaRow}>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="logo-euro" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{service.priceCents != null ? formatPrice(service.priceCents) : '-'}</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="time-outline" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{formatDuration(service.durationMinutes || 0)}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.actionsRow}>
-                    <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
-                    <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
-                  </View>
-                </Card>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {/* Inactive Services */}
-        {inactiveServices.length > 0 && (
-          <View style={{ marginBottom: spacing.lg }}>
-            <Text style={[styles.sectionTitle, { color: colors.gray600 }]}>Inaktive Services</Text>
-            <View>
-              {inactiveServices.map((service) => (
-                <Card key={service.id} style={[styles.card, { opacity: 0.6 }]}> 
-                  <View style={styles.cardHeader}>
-                    <View style={{ flex: 1 }}>
-                      <View style={styles.titleRow}>
-                        <Text style={styles.serviceName}>{service.name}</Text>
-                        {service.category ? (
-                          <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                            {service.category.nameDe || service.category.nameEn}
-                          </Badge>
-                        ) : null}
+                    <View style={styles.metaRow}>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="logo-euro" size={16} color={colors.black} />
+                        <Text style={styles.metaText}>{service.priceCents != null ? formatPrice(service.priceCents) : '-'}</Text>
                       </View>
-                      {!!service.description && (
-                        <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
-                      )}
+                      <View style={styles.metaItem}>
+                        <Ionicons name="time-outline" size={16} color={colors.black} />
+                        <Text style={styles.metaText}>{formatDuration(service.durationMinutes || 0)}</Text>
+                      </View>
                     </View>
-                    <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
-                  </View>
 
-                  <View style={styles.metaRow}>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="logo-euro" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{service.priceCents != null ? formatPrice(service.priceCents) : '-'}</Text>
+                    <View style={styles.actionsRow}>
+                      <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
+                      <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
                     </View>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="time-outline" size={16} color={colors.black} />
-                      <Text style={styles.metaText}>{formatDuration(service.durationMinutes || 0)}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.actionsRow}>
-                    <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
-                    <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
-                  </View>
-                </Card>
-              ))}
+                  </Card>
+                ))}
+              </View>
             </View>
-          </View>
-        )}
+          )}
 
-        {/* Empty State */}
-        {services.length === 0 && !loading && !error && (
-          <View style={styles.emptyWrap}>
-            <View style={styles.emptyIcon}>
-              <Ionicons name="add" size={48} color={colors.gray400} />
+          {/* Inactive Services */}
+          {inactiveServices.length > 0 && (
+            <View style={{ marginBottom: spacing.lg }}>
+              <Text style={[styles.sectionTitle, { color: colors.gray600 }]}>Inaktive Services</Text>
+              <View>
+                {inactiveServices.map((service) => (
+                  <Card key={service.id} style={[styles.card, { opacity: 0.6 }]}>
+                    <View style={styles.cardHeader}>
+                      <View style={{ flex: 1 }}>
+                        <View style={styles.titleRow}>
+                          <Text style={styles.serviceName}>{service.name}</Text>
+                          {service.category ? (
+                            <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
+                              {typeof service.category === 'object' ? (service.category.nameDe || service.category.nameEn) : service.category}
+                            </Badge>
+                          ) : null}
+                        </View>
+                        {!!service.description && (
+                          <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
+                        )}
+                      </View>
+                      <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
+                    </View>
+
+                    <View style={styles.metaRow}>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="logo-euro" size={16} color={colors.black} />
+                        <Text style={styles.metaText}>{service.priceCents != null ? formatPrice(service.priceCents) : '-'}</Text>
+                      </View>
+                      <View style={styles.metaItem}>
+                        <Ionicons name="time-outline" size={16} color={colors.black} />
+                        <Text style={styles.metaText}>{formatDuration(service.durationMinutes || 0)}</Text>
+                      </View>
+                    </View>
+
+                    <View style={styles.actionsRow}>
+                      <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
+                      <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
+                    </View>
+                  </Card>
+                ))}
+              </View>
             </View>
-            <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Noch keine Services</Text>
-            <Text style={{ color: colors.gray600, textAlign: 'center', marginBottom: spacing.md }}>
-              Füge deine ersten Services hinzu, damit Kunden dich buchen können
-            </Text>
-            <Button title="Service hinzufügen" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
-          </View>
-        )}
+          )}
 
-        {!!error && (
-          <Card style={{ padding: spacing.md }}>
-            <Text style={{ color: colors.error }}>{error}</Text>
-          </Card>
-        )}
-        {loading && (
-          <Card style={{ padding: spacing.md }}>
-            <Text style={{ color: colors.gray600 }}>Lade Services...</Text>
-          </Card>
-        )}
-      </ScrollView>
+          {/* Empty State */}
+          {services.length === 0 && !loading && !error && (
+            <View style={styles.emptyWrap}>
+              <View style={styles.emptyIcon}>
+                <Ionicons name="add" size={48} color={colors.gray400} />
+              </View>
+              <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Noch keine Services</Text>
+              <Text style={{ color: colors.gray600, textAlign: 'center', marginBottom: spacing.md }}>
+                Füge deine ersten Services hinzu, damit Kunden dich buchen können
+              </Text>
+              <Button title="Service hinzufügen" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
+            </View>
+          )}
+
+          {!!error && (
+            <Card style={{ padding: spacing.md }}>
+              <Text style={{ color: colors.error }}>{error}</Text>
+            </Card>
+          )}
+          {loading && (
+            <Card style={{ padding: spacing.md }}>
+              <Text style={{ color: colors.gray600 }}>Lade Services...</Text>
+            </Card>
+          )}
+        </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -445,7 +457,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   headerTitle: {
-        ...typography.h3,
+    ...typography.h3,
     marginBottom: 2,
   },
   headerSubtitle: {
