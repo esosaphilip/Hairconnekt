@@ -29,7 +29,7 @@ export function useServices() {
     } catch (err: unknown) {
       const message = getErrorMessage(err);
       setError(message || MESSAGES.ERROR.LOAD_FAILED);
-      
+
     } finally {
       setLoading(false);
     }
@@ -62,7 +62,7 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, [loadServices]);
+  }, []);
 
   const updateService = useCallback(async (id: string, data: Partial<Service>): Promise<Service> => {
     setLoading(true);
@@ -79,7 +79,7 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, [loadServices]);
+  }, []);
 
   const deleteService = useCallback(async (id: string): Promise<void> => {
     setLoading(true);
@@ -96,7 +96,7 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, [loadServices]);
+  }, [services]);
 
   const toggleServiceActive = useCallback(async (id: string, isActive: boolean): Promise<Service> => {
     setLoading(true);
@@ -115,7 +115,7 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, [loadServices]);
+  }, [services]);
 
   return {
     services,

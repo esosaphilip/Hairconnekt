@@ -14,18 +14,22 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       // Endpoint: GET /providers/me/services (http client adds base URL /api/v1)
       const res = await http.get('/providers/me/services');
       const payload = res?.data;
-      
+
       // Backend returns direct array of Service objects
       // We prioritize checking for array first to match backend implementation
-      const list = Array.isArray(payload) 
-        ? payload 
+      const list = Array.isArray(payload)
+        ? payload
         : (payload && typeof payload === 'object' && 'data' in payload ? (payload as any).data : []);
 
       const items: Service[] = list.map((s: any) => ({
         id: String(s.id || s.serviceId),
         name: String(s.name || ''),
         description: s.description ?? null,
-        category: s.category ? { id: String(s.category), nameDe: String(s.category), nameEn: String(s.category) } : null,
+        category: s.category && typeof s.category === 'object'
+          ? { id: String(s.category.id), nameDe: String(s.category.nameDe || s.category.name || ''), nameEn: String(s.category.nameEn || s.category.name || '') }
+          : s.category
+            ? { id: String(s.category), nameDe: String(s.category), nameEn: String(s.category) }
+            : null,
         priceCents: typeof s.price === 'number' ? Math.round(s.price * 100) : (s.priceCents || 0),
         durationMinutes: typeof s.duration === 'number' ? s.duration : (s.durationMinutes || 60),
         isActive: s.isActive !== undefined ? !!s.isActive : true,
@@ -64,11 +68,11 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         isActive: service.isActive !== undefined ? Boolean(service.isActive) : true,
         allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : true,
       };
-      
+
       // Endpoint: POST /providers/me/services (http client adds base URL /api/v1)
       const res = await http.post('/providers/me/services', payload);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
-      
+
       const mapped: Service = {
         id: String(s.serviceId || s.id),
         name: String(s.name || service.name || ''),
@@ -99,7 +103,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       if (!existing) {
         throw createDomainError(ErrorType.NOT_FOUND, `Service with id ${id} not found`);
       }
-      
+
       // STRICT CONTRACT: Payload Construction
       const body = {
         name: service.name,
@@ -110,14 +114,14 @@ export class ServiceRepositoryImpl implements IServiceRepository {
         isActive: service.isActive !== undefined ? Boolean(service.isActive) : undefined,
         allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : undefined,
       };
-      
+
       // Remove undefined keys to avoid sending nulls where not intended, though backend ignores undefined
       Object.keys(body).forEach(key => (body as any)[key] === undefined && delete (body as any)[key]);
 
       // Endpoint: PATCH /providers/me/services/:id (http client appends to base URL /api/v1)
       const res = await http.patch(`/providers/me/services/${id}`, body);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
-      
+
       const mapped: Service = {
         id: String(s.serviceId || id),
         name: String(s.name || existing.name || ''),
