@@ -189,7 +189,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .leftJoin('p.locations', 'pl')
       .leftJoin('pl.address', 'addr')
       .where('addr.latitude IS NOT NULL AND addr.longitude IS NOT NULL')
-      .andWhere('p.user_id IS NOT NULL')
+      .andWhere('u.id IS NOT NULL')
       .select('p.id', 'id')
       .addSelect('u.first_name', 'first_name')
       .addSelect('u.last_name', 'last_name')
