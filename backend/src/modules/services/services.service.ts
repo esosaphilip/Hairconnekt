@@ -22,9 +22,11 @@ export class ServicesService {
 
   async getProviderIdByUserId(userId: string): Promise<string> {
     try {
-      const provider = await this.providerProfileRepository.findOne({
-        where: { user: { id: userId } },
-      });
+      // Use QueryBuilder to avoid relation traversal issues
+      const provider = await this.providerProfileRepository
+        .createQueryBuilder('p')
+        .where('p.user_id = :userId', { userId })
+        .getOne();
 
       if (!provider) {
         console.warn(`[ServicesService] Provider profile not found for userId: ${userId}`);
@@ -88,15 +90,14 @@ export class ServicesService {
   }
 
   async listForProvider(providerId: string): Promise<Service[]> {
-    const provider = await this.providerProfileRepository.findOne({ where: { id: providerId } });
-    if (!provider) {
-      throw new NotFoundException(`Provider with ID "${providerId}" not found`);
-    }
-    return this.serviceRepository.find({
-      where: { provider: { id: providerId } },
-      relations: ['category'],
-      order: { displayOrder: 'ASC', name: 'ASC' },
-    });
+    // Redundant check removed since getProviderIdByUserId already verifies user->provider link
+    // Use QueryBuilder for robust querying
+    return this.serviceRepository.createQueryBuilder('s')
+      .leftJoinAndSelect('s.category', 'c')
+      .where('s.provider = :providerId', { providerId })
+      .orderBy('s.displayOrder', 'ASC')
+      .addOrderBy('s.name', 'ASC')
+      .getMany();
   }
 
   async update(id: string, providerId: string, updateDto: any): Promise<Service> {
