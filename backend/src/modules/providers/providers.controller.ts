@@ -227,4 +227,13 @@ export class ProvidersController {
   getPublicProfile(@Param('id') id: string) {
     return this.providersService.getPublicProfileById(id);
   }
+
+  @Get(':id/services')
+  @UseInterceptors(AppCacheInterceptor)
+  @CacheKeyBuilder((req) => `providers:services:${req.params.id}`)
+  @CacheTTL(300)
+  getServices(@Param('id') id: string) {
+    // Public endpoint to get active services for a provider
+    return this.providersService.getPublicServices(id);
+  }
 }

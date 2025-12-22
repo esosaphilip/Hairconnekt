@@ -1,5 +1,4 @@
 // @ts-nocheck
-import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -11,218 +10,118 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Alert,
+  Modal,
+  ScrollView,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
-import {
-  ArrowLeft,
-  Send,
-  Paperclip,
-  Image as ImageIcon,
-  Phone,
-  Video,
-  MoreVertical,
-  Calendar,
-  User,
-} from "lucide-react-native";
-import { showMessage } from "react-native-flash-message";
+// ... imports
+import { http } from "../../api/http";
 
-// Assuming these custom RN components exist
-import { Button } from "../../ui/Button";
-import { Avatar } from "../../ui/Avatar";
-import ActionSheet from "react-native-actions-sheet"; // Common RN component for menus/dropdowns
-
-// Mock chat data
-// In a real RN app, the data would likely be managed by a state/data layer.
-const mockChats = {
-  // ... (mock data remains the same)
-  "1": {
-    provider: {
-      id: "1",
-      name: "Sarah Mueller",
-      avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150",
-      isOnline: true,
-    },
-    messages: [
-      {
-        id: "1",
-        sender: "them",
-        text: "Hallo! Ich freue mich auf deinen Termin morgen 😊",
-        time: "10:30",
-        status: "read",
-      },
-      {
-        id: "2",
-        sender: "me",
-        text: "Vielen Dank! Ich freue mich auch. Kann ich meine eigenen Extensions mitbringen?",
-        time: "10:32",
-        status: "read",
-      },
-      {
-        id: "3",
-        sender: "them",
-        text: "Natürlich! Das ist kein Problem. Bitte bring sie morgen mit.",
-        time: "10:35",
-        status: "read",
-      },
-      {
-        id: "4",
-        sender: "me",
-        text: "Super, bis morgen dann!",
-        time: "10:40",
-        status: "read",
-      },
-    ],
-  },
-  "2": {
-    provider: {
-      id: "2",
-      name: "Marcus Johnson",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-      isOnline: false,
-    },
-    messages: [
-      {
-        id: "1",
-        sender: "them",
-        text: "Guten Tag! Danke für deine Buchung.",
-        time: "14:20",
-        status: "read",
-      },
-      {
-        id: "2",
-        sender: "me",
-        text: "Hallo! Wie lange dauert die Behandlung ungefähr?",
-        time: "14:25",
-        status: "delivered",
-      },
-    ],
-  },
-};
-
-// --- Custom Message Component (replacing the complex conditional divs) ---
-const MessageBubble = React.memo(({ message, providerAvatar, providerName }) => {
-  const isMe = message.sender === "me";
-  const { text, time, status } = message;
-
-  const getStatusIcon = (currentStatus) => {
-    switch (currentStatus) {
-      case "delivered":
-        return <Text style={styles.statusIcon}>✓✓</Text>;
-      case "read":
-        return <Text style={[styles.statusIcon, styles.statusRead]}>✓✓</Text>;
-      case "sent":
-      default:
-        return <Text style={styles.statusIcon}>✓</Text>;
-    }
-  };
-
-  return (
-    <View style={[styles.messageRow, isMe ? styles.messageRowMe : styles.messageRowThem]}>
-      <View style={[styles.messageContent, isMe ? styles.messageContentMe : styles.messageContentThem]}>
-        {!isMe && (
-          <Avatar size={32} style={styles.avatar}>
-            <Image source={{ uri: providerAvatar }} style={styles.avatarImage} />
-          </Avatar>
-        )}
-        <View style={styles.bubbleWrapper}>
-          <View
-            style={[
-              styles.bubble,
-              isMe ? styles.bubbleMe : styles.bubbleThem,
-            ]}
-          >
-            <Text style={[styles.messageText, isMe ? styles.messageTextMe : styles.messageTextThem]}>{text}</Text>
-          </View>
-          <View style={[styles.timeStatusContainer, isMe ? styles.timeStatusContainerMe : styles.timeStatusContainerThem]}>
-            <Text style={styles.timeText}>{time}</Text>
-            {isMe && status && getStatusIcon(status)}
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-});
-
-// --- Refactored Component ---
+// ... existing imports
 
 export function ChatScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const params = route.params || {};
-  const id = params.id; // Use useRoute to get params
-  
+  const id = params.id;
+
   const chat = mockChats[id || "1"];
-  
+
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState(chat?.messages || []);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [reportModalVisible, setReportModalVisible] = useState(false);
+  const [reportReason, setReportReason] = useState("");
   const actionSheetRef = useRef(null);
   const flatListRef = useRef(null);
 
-  // Scroll to bottom on load and when new message is sent
-  useEffect(() => {
-    // Timeout ensures scroll happens after rendering the new message
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, [messages]);
+  // ... useEffects
 
-  if (!chat) {
-    return (
-      <View style={styles.notFoundContainer}>
-        <Text style={styles.notFoundTitle}>Chat nicht gefunden</Text>
-        <Button onPress={() => navigation.navigate("Messages")}>
-          Zurück zu Nachrichten
-        </Button>
-      </View>
+  const handleBlockUser = () => {
+    actionSheetRef.current?.hide();
+    Alert.alert(
+      "Nutzer blockieren?",
+      "Ihr werdet euch keine Nachrichten mehr senden können.",
+      [
+        { text: "Abbrechen", style: "cancel" },
+        {
+          text: "Blockieren",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Assuming chat.provider.id is the target user ID
+              await http.post(`/users/${chat.provider.id}/block`);
+              setIsBlocked(true);
+              Alert.alert("Erfolg", "Nutzer wurde blockiert.");
+              navigation.goBack();
+            } catch (error) {
+              Alert.alert("Fehler", "Blockieren fehlugeschlagen.");
+            }
+          }
+        }
+      ]
     );
-  }
+  };
 
-  const handleSend = () => {
-    if (message.trim()) {
-      const newMessage = {
-        id: Date.now().toString(),
-        sender: "me",
-        text: message.trim(),
-        time: new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }),
-        status: "sent",
-      };
-      setMessages((prev) => [...prev, newMessage]);
-      setMessage("");
+  const handleReportUser = () => {
+    actionSheetRef.current?.hide();
+    setReportModalVisible(true);
+  };
 
-      // Simulate message delivery
-      setTimeout(() => {
-        setMessages(prev =>
-          prev.map(msg =>
-            msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
-          )
-        );
-      }, 1000);
-      
-      // Ensure smooth scroll after send
-      flatListRef.current?.scrollToEnd({ animated: true });
+  const submitReport = async (reason: string) => {
+    try {
+      await http.post(`/users/${chat.provider.id}/report`, {
+        reason,
+        details: "Reported from ChatScreen",
+      });
+      setReportModalVisible(false);
+      Alert.alert("Danke", "Dein Bericht wurde gesendet und wird überprüft.");
+    } catch (error) {
+      Alert.alert("Fehler", "Melden fehlgeschlagen.");
+      setReportModalVisible(false);
     }
   };
 
-  const handleAttachment = () => {
-    showMessage({
-      message: "Anhang-Funktion",
-      description: "Anhang-Funktion kommt bald",
-      type: "info",
-    });
-  };
+  const ReportModal = () => (
+    <Modal
+      visible={reportModalVisible}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setReportModalVisible(false)}
+    >
+      <TouchableWithoutFeedback onPress={() => setReportModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Nutzer melden</Text>
+            <Text style={styles.modalSubtitle}>Bitte wähle einen Grund:</Text>
 
-  const handleCall = (type: "voice" | "video") => {
-    showMessage({
-      message: `${type === "voice" ? "Sprach" : "Video"}anruf`,
-      description: `${type === "voice" ? "Sprach" : "Video"}anruf kommt bald`,
-      type: "info",
-    });
-  };
+            {['SPAM', 'HARASSMENT', 'INAPPROPRIATE', 'OTHER'].map((reason) => (
+              <TouchableOpacity
+                key={reason}
+                style={styles.modalOption}
+                onPress={() => submitReport(reason)}
+              >
+                <Text style={styles.modalOptionText}>
+                  {reason === 'HARASSMENT' ? 'Belästigung' :
+                    reason === 'INAPPROPRIATE' ? 'Unangemessener Inhalt' :
+                      reason === 'SPAM' ? 'Spam' : 'Sonstiges'}
+                </Text>
+              </TouchableOpacity>
+            ))}
 
-  const handleBooking = () => {
-    actionSheetRef.current?.hide();
-    navigation.navigate("Booking", { providerId: chat.provider.id });
-  };
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setReportModalVisible(false)}
+            >
+              <Text style={styles.modalCancelText}>Abbrechen</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </TouchableWithoutFeedback>
+    </Modal>
+  );
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -236,9 +135,9 @@ export function ChatScreen() {
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
             <ArrowLeft size={24} color="#1F2937" />
           </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.userInfoContainer} 
+
+          <TouchableOpacity
+            style={styles.userInfoContainer}
             onPress={() => navigation.navigate("ProviderProfile", { id: chat.provider.id })}
             activeOpacity={0.7}
           >
@@ -277,10 +176,10 @@ export function ChatScreen() {
           data={messages}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <MessageBubble 
-              message={item} 
-              providerAvatar={chat.provider.avatar} 
-              providerName={chat.provider.name} 
+            <MessageBubble
+              message={item}
+              providerAvatar={chat.provider.avatar}
+              providerName={chat.provider.name}
             />
           )}
           contentContainerStyle={styles.messagesList}
@@ -308,8 +207,9 @@ export function ChatScreen() {
               value={message}
               onChangeText={setMessage}
               onSubmitEditing={handleSend} // Send on Enter key press
-              placeholder="Nachricht schreiben..."
-              style={styles.textInput}
+              placeholder={isBlocked ? "Du hast diesen Nutzer blockiert." : "Nachricht schreiben..."}
+              editable={!isBlocked}
+              style={[styles.textInput, isBlocked && styles.textInputDisabled]}
               multiline={false} // Ensure single line for chat
             />
             <Button
@@ -321,13 +221,14 @@ export function ChatScreen() {
             </Button>
           </View>
         </View>
+        <ReportModal />
       </KeyboardAvoidingView>
-      
+
       {/* RN Action Sheet (Dropdown Menu Replacement) */}
       <ActionSheet ref={actionSheetRef} containerStyle={styles.actionSheet}>
         <View style={styles.actionSheetContent}>
-          <TouchableOpacity 
-            style={styles.actionSheetItem} 
+          <TouchableOpacity
+            style={styles.actionSheetItem}
             onPress={() => {
               actionSheetRef.current?.hide();
               navigation.navigate("ProviderProfile", { id: chat.provider.id });
@@ -336,21 +237,21 @@ export function ChatScreen() {
             <User size={20} color="#1F2937" style={styles.actionSheetIcon} />
             <Text style={styles.actionSheetText}>Profil ansehen</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionSheetItem} 
+          <TouchableOpacity
+            style={styles.actionSheetItem}
             onPress={handleBooking}
           >
             <Calendar size={20} color="#1F2937" style={styles.actionSheetIcon} />
             <Text style={styles.actionSheetText}>Termin buchen</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionSheetItem} 
+          <TouchableOpacity
+            style={styles.actionSheetItem}
             onPress={() => showMessage({ message: "Chat stummschalten", type: "info" })}
           >
             <Text style={styles.actionSheetText}>Chat stummschalten</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.actionSheetItem} 
+          <TouchableOpacity
+            style={styles.actionSheetItem}
             onPress={() => showMessage({ message: "Chat löschen", type: "info" })}
           >
             <Text style={[styles.actionSheetText, styles.actionSheetTextDanger]}>Chat löschen</Text>
@@ -590,7 +491,53 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1F2937',
   },
+},
   actionSheetTextDanger: {
-    color: '#DC2626', // red-600
-  }
+  color: '#DC2626', // red-600
+},
+  textInputDisabled: {
+  backgroundColor: '#E5E7EB',
+  color: '#9CA3AF',
+},
+  modalOverlay: {
+  flex: 1,
+  backgroundColor: 'rgba(0,0,0,0.5)',
+  justifyContent: 'center',
+  padding: 24,
+},
+  modalContent: {
+  backgroundColor: '#fff',
+  borderRadius: 16,
+  padding: 24,
+},
+  modalTitle: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  marginBottom: 16,
+  textAlign: 'center',
+},
+  modalSubtitle: {
+  fontSize: 16,
+  marginBottom: 16,
+  color: '#4B5563',
+},
+  modalOption: {
+  paddingVertical: 12,
+  borderBottomWidth: 1,
+  borderBottomColor: '#E5E7EB',
+},
+  modalOptionText: {
+  fontSize: 16,
+  color: '#1F2937',
+},
+  modalCancelButton: {
+  marginTop: 16,
+  paddingVertical: 12,
+  alignItems: 'center',
+},
+  modalCancelText: {
+  fontSize: 16,
+  fontWeight: '600',
+  color: '#EF4444',
+}
 });

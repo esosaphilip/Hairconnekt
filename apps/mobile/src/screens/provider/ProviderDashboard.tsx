@@ -61,7 +61,7 @@ function formatEuro(cents: number) {
     if (typeof Intl !== 'undefined' && Intl.NumberFormat) {
       return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(euros);
     }
-  } catch {}
+  } catch { }
   // Fallback formatting
   const value = Math.round((euros + Number.EPSILON));
   return `€${value.toString()}`;
@@ -118,33 +118,21 @@ export function ProviderDashboard() {
       try {
         const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
         if (!mounted) return;
+
+        // Use standard backend payload directly
         const payload = d?.data;
-        let mapped: DashboardData | null = null;
-        if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-          const data = (payload as any).data || {};
-          const summary = data.summary || {};
-          const next = data.nextAppointment || null;
-          const todayCount = Number(summary.todayAppointments || 0);
-          const nextAppointment = next ? {
-            time: String(next.startTime || ''),
-            client: String(next?.client?.name || ''),
-            hoursUntil: (() => {
-              try { const start = new Date(String(next.startTime)); return Math.max(0, (start.getTime() - Date.now()) / (1000 * 60 * 60)); } catch { return 0; }
-            })(),
-          } : null;
-          mapped = {
-            stats: {
-              todayCount,
-              nextAppointment,
-              weekEarningsCents: 0,
-              ratingAverage: Number(summary.averageRating || 0),
-              reviewCount: Number(data?.recentActivity?.filter?.((x: any) => x?.type === 'review')?.length || 0),
-            },
-            todayAppointments: [],
-            recentReviews: [],
-          };
+        if (payload?.success && payload?.data) {
+          setDashboard(payload.data);
+        } else {
+          // Fallback or explicit set if format differs slightly
+          // If the backend returns the data root directly (e.g. wrapper middleware handles it)
+          // Adjust based on observation. ProvidersController returns { success: true, data: ... }
+          // so d.data is { success: true, data: ... }.
+          // Thus payload.data is the dashboard object.
+          if (payload?.stats) {
+            setDashboard(payload);
+          }
         }
-        setDashboard(mapped || (payload as any) || null);
       } catch (err) {
         // Fallback to analytics if dashboard fails
         try {
@@ -166,7 +154,7 @@ export function ProviderDashboard() {
     }
     load();
     return () => { mounted = false; };
-  }, []);
+  }, [profile?.id]); // Added dependency to retry if profile loads late, although profile is state. logic is inside useEffect.
 
   // Gate non-approved/non-provider users away from provider dashboard
   const { status, checked } = useProviderGate();
@@ -178,7 +166,7 @@ export function ProviderDashboard() {
       } else if (status === 'not_provider') {
         navigation.navigate('ProviderWelcome');
       }
-    } catch {}
+    } catch { }
   }, [status, checked]);
 
   const todayLabel = useMemo(() => safeLocaleDateString(new Date(), 'de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), []);
@@ -227,7 +215,10 @@ export function ProviderDashboard() {
                 >
                   <Ionicons name="notifications-outline" size={22} color={colors.gray700} />
                 </Pressable>
-                <Pressable style={styles.headerActionButton}>
+                <Pressable
+                  style={styles.headerActionButton}
+                  onPress={() => navigation.navigate('Mehr', { screen: 'ProviderSettingsScreen' })}
+                >
                   <Ionicons name="settings-outline" size={22} color={colors.gray700} />
                 </Pressable>
               </View>
@@ -251,7 +242,7 @@ export function ProviderDashboard() {
                     try {
                       const r = await (await import('@/services/providers')).providersApi.setOnlineStatus(v);
                       if (r?.isOnline !== undefined) setIsAvailable(!!r.isOnline);
-                    } catch {}
+                    } catch { }
                   }}
                 />
               </View>
@@ -340,7 +331,7 @@ export function ProviderDashboard() {
             </View>
 
             {/* Today's Schedule */}
-                <View style={styles.mbMd}>
+            <View style={styles.mbMd}>
               <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionTitle}>Heutiger Zeitplan</Text>
                 <Pressable onPress={() => rootNavigationRef.current?.navigate('Kalender', { screen: 'ProviderCalendar', params: { targetDate: todayYmd, viewMode: 'day' } })}>
@@ -410,7 +401,7 @@ export function ProviderDashboard() {
             </View>
 
             {/* Quick Actions */}
-              <View style={styles.mbMd}>
+            <View style={styles.mbMd}>
               <Text style={[styles.sectionTitle, styles.mbSm]}>Schnellaktionen</Text>
               <View style={styles.quickActionsRow}>
                 {quickActions.map((qa) => (
@@ -442,7 +433,7 @@ export function ProviderDashboard() {
                   </Card>
                 ))}
               </View>
-              </View>
+            </View>
 
             {/* Recent Reviews */}
             <View>

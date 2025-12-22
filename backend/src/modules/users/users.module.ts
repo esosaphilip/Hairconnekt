@@ -6,6 +6,8 @@ import { UsersService } from './users.service';
 import { User } from './entities/user.entity';
 import { Address } from './entities/address.entity';
 import { ClientProfile } from './entities/client-profile.entity';
+import { BlockedUser } from './entities/blocked-user.entity';
+import { UserReport } from './entities/report.entity';
 import { AddressesService } from './addresses.service';
 import { ClientProfilesService } from './client-profiles.service';
 import { PreferencesController } from './preferences.controller';
@@ -15,12 +17,12 @@ import { TypeORMAddressRepository } from '../../infrastructure/repositories/Type
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Address, ClientProfile]),
+    TypeOrmModule.forFeature([User, Address, ClientProfile, BlockedUser, UserReport]),
   ],
   controllers: [UsersController, AddressesController, PreferencesController],
   providers: [
-    UsersService, 
-    AddressesService, 
+    UsersService,
+    AddressesService,
     ClientProfilesService,
     {
       provide: 'IUserRepository',
@@ -33,4 +35,4 @@ import { TypeORMAddressRepository } from '../../infrastructure/repositories/Type
   ],
   exports: [UsersService, 'IUserRepository', 'IAddressRepository'],
 })
-export class UsersModule {}
+export class UsersModule { }

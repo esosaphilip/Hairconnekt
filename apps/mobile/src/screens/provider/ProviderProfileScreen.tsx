@@ -128,9 +128,17 @@ export function ProviderProfileScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
+      setRefreshKey(prev => prev + 1);
+      return () => { };
+    }, [])
+  );
+
+  useFocusEffect(
+    React.useCallback(() => {
       let mounted = true;
       async function load() {
         try {
+          console.log(`ProviderProfileScreen: Loading profile (attempt ${refreshKey})...`);
           setLoading(true);
           setError(null);
 
@@ -174,15 +182,6 @@ export function ProviderProfileScreen() {
         mounted = false;
       };
     }, [tokens?.accessToken, refreshKey])
-  );
-
-  // Increment refresh key when screen comes into focus
-  // Increment refresh key when screen comes into focus
-  useFocusEffect(
-    React.useCallback(() => {
-      setRefreshKey(prev => prev + 1);
-      return undefined;
-    }, [])
   );
 
   const onBack = () => {

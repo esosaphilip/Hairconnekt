@@ -9,6 +9,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { ClientProfile } from './client-profile.entity';
+import { BlockedUser } from './blocked-user.entity';
 import { Address } from './address.entity';
 
 export enum UserType {
@@ -79,4 +80,7 @@ export class User {
 
   @OneToMany(() => Address, (address) => address.user, { cascade: true })
   addresses?: Address[];
+
+  @OneToMany(() => BlockedUser, (blocked) => blocked.blocker)
+  blockedUsers: BlockedUser[];
 }

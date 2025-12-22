@@ -9,7 +9,7 @@ export class ReviewsService {
   constructor(
     @InjectRepository(Review)
     private readonly reviewsRepo: Repository<Review>,
-  ) {}
+  ) { }
 
   private readonly logger = new Logger(ReviewsService.name);
 
@@ -35,10 +35,10 @@ export class ReviewsService {
         appointmentId: r.appointment?.id,
         provider: r.provider
           ? {
-              id: r.provider.id,
-              name: `${r.provider.user?.firstName ?? ''} ${r.provider.user?.lastName ?? ''}`.trim(),
-              avatarUrl: r.provider.user?.profilePictureUrl ?? null,
-            }
+            id: r.provider.id,
+            name: `${r.provider.user?.firstName ?? ''} ${r.provider.user?.lastName ?? ''}`.trim(),
+            avatarUrl: r.provider.user?.profilePictureUrl ?? null,
+          }
           : null,
         images: (r.images ?? []).map((img) => ({ id: img.id, url: img.imageUrl, order: img.displayOrder })),
       }));
@@ -96,20 +96,20 @@ export class ReviewsService {
         appointmentId: r.appointment?.id,
         appointment: r.appointment
           ? {
-              id: r.appointment.id,
-              date: r.appointment.appointmentDate,
-              startTime: r.appointment.startTime,
-              endTime: r.appointment.endTime,
-              services: (r.appointment.appointmentServices || []).map((s) => ({ name: s.serviceName, priceCents: s.priceCents })),
-            }
+            id: r.appointment.id,
+            date: r.appointment.appointmentDate,
+            startTime: r.appointment.startTime,
+            endTime: r.appointment.endTime,
+            services: (r.appointment.appointmentServices || []).map((s) => ({ name: s.serviceName, priceCents: s.priceCents })),
+          }
           : null,
         client: r.isAnonymous
           ? null
           : {
-              id: r.client?.id,
-              name: `${r.client?.firstName ?? ''} ${r.client?.lastName ?? ''}`.trim(),
-              avatarUrl: r.client?.profilePictureUrl ?? null,
-            },
+            id: r.client?.id,
+            name: `${r.client?.firstName ?? ''} ${r.client?.lastName ?? ''}`.trim(),
+            avatarUrl: r.client?.profilePictureUrl ?? null,
+          },
         images: (r.images ?? []).map((img) => ({ id: img.id, url: img.imageUrl, order: img.displayOrder })),
       }));
     } catch (err: any) {
@@ -142,10 +142,60 @@ export class ReviewsService {
     review.respond(dto.response ?? '');
     await this.reviewsRepo.save(review);
 
+
     return {
       id: review.id,
       providerResponse: review.providerResponse,
       providerRespondedAt: review.providerRespondedAt,
     };
+  }
+
+  async listPublicReviews(providerId: string, query?: any) {
+    try {
+      const qb = this.reviewsRepo
+        .createQueryBuilder('r')
+        .leftJoinAndSelect('r.appointment', 'a')
+        .leftJoinAndSelect('a.appointmentServices', 'as')
+        .leftJoinAndSelect('r.provider', 'p')
+        .leftJoinAndSelect('r.client', 'c')
+        .leftJoinAndSelect('r.images', 'ri')
+        .where('p.id = :providerId', { providerId })
+        .orderBy('r.createdAt', 'DESC');
+
+      // Optional filters
+      const filter = (query?.filter || '').toString();
+      if (filter === '5stars') {
+        qb.andWhere('r.rating = :five', { five: 5 });
+      } else if (filter === 'with-photos') {
+        qb.andWhere('ri.id IS NOT NULL');
+      }
+
+      // Pagination
+      const limitNum = Math.max(1, Math.min(100, parseInt(query?.limit ?? '20', 10) || 20));
+      const pageNum = Math.max(1, parseInt(query?.page ?? '1', 10) || 1);
+      qb.take(limitNum).skip((pageNum - 1) * limitNum);
+
+      const reviews = await qb.getMany();
+
+      return reviews.map((r) => ({
+        id: r.id,
+        rating: r.rating,
+        comment: r.comment,
+        isAnonymous: r.isAnonymous,
+        providerResponse: r.providerResponse,
+        createdAt: r.createdAt,
+        client: r.isAnonymous
+          ? null
+          : {
+            id: r.client?.id,
+            name: `${r.client?.firstName ?? ''} ${r.client?.lastName ?? ''}`.trim(),
+            avatarUrl: r.client?.profilePictureUrl ?? null,
+          },
+        images: (r.images ?? []).map((img) => ({ id: img.id, url: img.imageUrl, order: img.displayOrder })),
+      }));
+    } catch (err: any) {
+      this.logger.warn(`Failed to list public reviews for provider ${providerId}: ${err.message}`);
+      return [];
+    }
   }
 }

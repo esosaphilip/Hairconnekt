@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Param, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { UsersService } from './users.service';
@@ -6,7 +6,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService) { }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
@@ -30,4 +30,24 @@ export class UsersController {
   }
 
   // Avatar upload endpoint temporarily disabled until StorageModule is ready
+
+  @Post(':id/block')
+  @UseGuards(JwtAuthGuard)
+  async blockUser(@Req() req: Request, @Param('id') blockedId: string) {
+    const userId = (req.user as any)?.sub;
+    await this.usersService.blockUser(userId, blockedId);
+    return { success: true, message: 'User blocked' };
+  }
+
+  @Post(':id/report')
+  @UseGuards(JwtAuthGuard)
+  async reportUser(
+    @Req() req: Request,
+    @Param('id') reportedId: string,
+    @Body() body: { reason: string; details?: string },
+  ) {
+    const userId = (req.user as any)?.sub;
+    await this.usersService.reportUser(userId, reportedId, body.reason, body.details);
+    return { success: true, message: 'User reported' };
+  }
 }

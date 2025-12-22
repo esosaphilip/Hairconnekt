@@ -11,6 +11,7 @@ import {
   Dimensions,
   TouchableOpacity,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 
 // Replaced web imports with assumed custom/community React Native components
@@ -254,13 +255,20 @@ export function PortfolioManagementScreen() {
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         numColumns={numColumns}
-        ListEmptyComponent={EmptyState}
+        ListEmptyComponent={loading ? null : EmptyState}
         columnWrapperStyle={styles.columnWrapper}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => fetchData(true)} tintColor={COLORS.primary} />
         }
       />
+
+      {/* Loading Overlay */}
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={COLORS.primary} />
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -440,5 +448,12 @@ const styles = StyleSheet.create({
   uploadButton: {
     backgroundColor: COLORS.primary,
     paddingHorizontal: 24,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
   },
 });

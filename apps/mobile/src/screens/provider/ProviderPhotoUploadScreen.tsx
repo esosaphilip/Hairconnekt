@@ -60,8 +60,12 @@ export function ProviderPhotoUploadScreen() {
                 },
             });
 
-            Alert.alert('Erfolg', 'Profilbild erfolgreich aktualisiert');
-            navigation.goBack();
+            // The backend returns 201 Created on success
+            Alert.alert(
+                'Erfolg',
+                'Profilbild erfolgreich aktualisiert',
+                [{ text: 'OK', onPress: () => navigation.goBack() }]
+            );
         } catch (e: any) {
             console.error('Upload failed', e);
             Alert.alert('Fehler', 'Upload fehlgeschlagen: ' + (e.message || 'Unbekannter Fehler'));

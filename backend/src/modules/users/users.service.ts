@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IAddressRepository } from '../../domain/repositories/IAddressRepository';
 import { User } from './entities/user.entity';
+import { BlockedUser } from './entities/blocked-user.entity';
+import { UserReport } from './entities/report.entity';
 
 @Injectable()
 export class UsersService {
@@ -10,7 +14,47 @@ export class UsersService {
     private readonly userRepo: IUserRepository,
     @Inject('IAddressRepository')
     private readonly addressesRepo: IAddressRepository,
-  ) {}
+    @InjectRepository(BlockedUser)
+    private readonly blockedUserRepo: Repository<BlockedUser>,
+    @InjectRepository(UserReport)
+    private readonly reportRepo: Repository<UserReport>,
+  ) { }
+
+  async blockUser(blockerId: string, blockedId: string): Promise<void> {
+    if (blockerId === blockedId) throw new Error('Cannot block self');
+
+    // Check if already blocked
+    const existing = await this.blockedUserRepo.findOne({
+      where: { blocker: { id: blockerId }, blocked: { id: blockedId } },
+    });
+
+    if (existing) return;
+
+    await this.blockedUserRepo.save({
+      blocker: { id: blockerId } as any,
+      blocked: { id: blockedId } as any,
+    });
+  }
+
+  async reportUser(reporterId: string, reportedId: string, reason: string, details?: string): Promise<void> {
+    await this.reportRepo.save({
+      reporter: { id: reporterId } as any,
+      reported: { id: reportedId } as any,
+      reason: reason as any,
+      details,
+      status: 'PENDING' as any,
+    });
+  }
+
+  async isBlocked(userA: string, userB: string): Promise<boolean> {
+    const count = await this.blockedUserRepo.count({
+      where: [
+        { blocker: { id: userA }, blocked: { id: userB } },
+        { blocker: { id: userB }, blocked: { id: userA } },
+      ],
+    });
+    return count > 0;
+  }
 
   async getMe(userId: string) {
     const user = await this.userRepo.findById(userId);

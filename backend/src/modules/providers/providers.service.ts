@@ -26,6 +26,8 @@ export class ProvidersService {
     private readonly storage: StorageService,
     @InjectRepository(User)
     private readonly userRepo: Repository<User>,
+    @InjectRepository(ProviderProfile)
+    private readonly providerEntityRepo: Repository<ProviderProfile>,
   ) { }
 
   /**
@@ -573,16 +575,22 @@ export class ProvidersService {
    * Public: Get provider's public profile/details by id
    */
   async getPublicProfileById(id: string) {
-    const provider = await this.providerRepo.findById(id);
+    // Use QueryBuilder to fetch profile with specific relations and filtering
+    const provider = await this.providerEntityRepo.createQueryBuilder('p')
+      .leftJoinAndSelect('p.user', 'u')
+      .leftJoinAndSelect('p.certifications', 'c')
+      .leftJoinAndSelect('p.services', 's', 's.isActive = :isActive', { isActive: true }) // Only active services
+      .where('p.id = :id', { id })
+      .getOne();
+
     if (!provider) throw new NotFoundException('Provider profile not found');
 
     // Aggregate rating and review count
     const { avgRating, reviewCount } = await this.providerRepo.getReviewStats(id);
 
-    // Aggregate specialties and min price from services
-    const svcRows = await this.providerRepo.getServicesForProviders([id]);
-    const specialties = svcRows.slice(0, 5).map((r) => r.name);
-    const priceFromCents = svcRows.reduce((min, r) => (min == null || r.price_cents < min ? r.price_cents : min), null as number | null);
+    // Aggregate specialties from ACTIVE services
+    const specialties = (provider.services || []).map((s) => s.name).slice(0, 5);
+    const priceFromCents = (provider.services || []).reduce((min, r) => (min == null || r.priceCents < min ? r.priceCents : min), null as number | null);
 
     const name = [provider.user?.firstName, provider.user?.lastName].filter(Boolean).join(' ').trim();
 
@@ -591,13 +599,39 @@ export class ProvidersService {
       name: name || provider.businessName || 'Provider',
       business: provider.businessName || null,
       verified: provider.isVerified || false,
-      imageUrl: provider.coverPhotoUrl || null,
+      imageUrl: provider.coverPhotoUrl || null, // Or user.profilePictureUrl?
       rating: Math.round(avgRating * 10) / 10,
       reviews: reviewCount,
       specialties,
       priceFromCents,
-      profile: this.sanitizeProvider(provider),
+      profile: {
+        ...this.sanitizeProvider(provider),
+        bio: provider.bio, // Explicitly ensure bio is present
+        certifications: provider.certifications,
+        services: (provider.services || []).map(s => ({
+          id: s.id,
+          name: s.name,
+          priceCents: s.priceCents,
+          durationMinutes: s.durationMinutes,
+          description: s.description
+        }))
+      },
     };
+  }
+
+  /**
+   * Public: Get provider's active services
+   */
+  async getPublicServices(providerId: string) {
+    const provider = await this.providerEntityRepo.createQueryBuilder('p')
+      .leftJoinAndSelect('p.services', 's')
+      .where('p.id = :id', { id: providerId })
+      .andWhere('s.isActive = :isActive', { isActive: true })
+      .orderBy('s.name', 'ASC')
+      .getOne();
+
+    if (!provider) return [];
+    return provider.services || [];
   }
 
   /**
