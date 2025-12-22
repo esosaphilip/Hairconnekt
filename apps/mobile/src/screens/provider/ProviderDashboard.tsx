@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
+import { SafeAreaView, ScrollView, View, Text, ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -35,7 +35,7 @@ type Appointment = {
   time: string;
   hoursUntil: number;
   status: string;
-  client: { name: string; image?: string | null };
+  client: { id?: string; name: string; image?: string | null };
   service: string;
   priceCents: number;
 };
@@ -195,7 +195,7 @@ export function ProviderDashboard() {
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
-        <ScrollView>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTop}>
@@ -382,11 +382,36 @@ export function ProviderDashboard() {
                         </View>
 
                         <View style={styles.row}>
-                          {appointment.hoursUntil <= 0.5 && (
-                            <Button title="Starten" style={[styles.actionButton, { backgroundColor: colors.green600 }]} />
-                          )}
-                          <Button title="Nachricht" variant="ghost" style={styles.ghostButtonWide} />
-                          <Button title="Mehr" variant="ghost" />
+                          <Button
+                            title="Starten"
+                            style={[styles.actionButton, { backgroundColor: colors.green600, flex: 2 }]}
+                            onPress={() => {
+                              // Placeholder for status update
+                              Alert.alert('Termin starten', 'Möchtest du diesen Termin jetzt starten?', [
+                                { text: 'Abbrechen', style: 'cancel' },
+                                { text: 'Starten', onPress: () => console.log('Starting appointment ' + appointment.id) }
+                              ]);
+                            }}
+                          />
+                          <Button
+                            title="Nachricht"
+                            variant="ghost"
+                            style={styles.ghostButtonWide}
+                            onPress={() => {
+                              navigation.navigate('Mehr', {
+                                screen: 'ChatScreen',
+                                params: {
+                                  userId: typeof appointment.client.id === 'string' ? appointment.client.id : undefined
+                                }
+                              });
+                            }}
+                          />
+                          <Pressable
+                            style={styles.iconButton}
+                            onPress={() => { /* Open more options */ }}
+                          >
+                            <Ionicons name="ellipsis-vertical" size={20} color={colors.gray600} />
+                          </Pressable>
                         </View>
                       </View>
                     </View>
@@ -503,6 +528,11 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     marginRight: spacing.sm,
+  },
+  iconButton: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 8,
   },
   appointmentIndicator: {
     backgroundColor: colors.green600,

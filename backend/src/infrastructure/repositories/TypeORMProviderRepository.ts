@@ -248,7 +248,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .createQueryBuilder('svc')
       .select('svc.name', 'name')
       .addSelect('svc.price_cents', 'price_cents')
-      .where('svc.provider.id = :id', { id: providerId })
+      .where('svc.provider = :id', { id: providerId })
       .andWhere('svc.is_active = :active', { active: true })
       .orderBy('svc.display_order', 'ASC')
       .limit(200)

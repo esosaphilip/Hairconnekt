@@ -89,6 +89,13 @@ export function ProviderPublicProfileScreen() {
 
   const [isFavorite, setIsFavorite] = useState(false);
 
+  // Share functionality
+  const handleShare = () => {
+    const url = `https://hairconnekt.app/provider/${providerId}`;
+    Clipboard.setString(url);
+    Alert.alert('Link kopiert!', 'Der Profil-Link wurde kopiert.');
+  };
+
   // ... (useFocusEffect)
   useFocusEffect(
     React.useCallback(() => {
@@ -171,6 +178,28 @@ export function ProviderPublicProfileScreen() {
 
   // ... (renderAboutTab remains mostly same, using publicData.profile.bio)
 
+  const ownerName = publicData?.profile?.user?.firstName
+    ? `${publicData.profile.user.firstName} ${publicData.profile.user.lastName || ''}`.trim()
+    : null;
+
+  const handleToggleFavorite = async () => {
+    if (!isAuthenticated) {
+      Alert.alert('Anmelden', 'Bitte melde dich an, um diesen Anbieter zu favorisieren.');
+      return;
+    }
+    const newStatus = !isFavorite;
+    setIsFavorite(newStatus);
+    try {
+      if (newStatus) {
+        await addFavorite(providerId!);
+      } else {
+        await removeFavorite(providerId!);
+      }
+    } catch {
+      setIsFavorite(!newStatus); // Revert
+    }
+  };
+
   const renderServicesTab = () => (
     <View style={styles.tabContentContainer}>
       {loadingServices ? (
@@ -197,7 +226,7 @@ export function ProviderPublicProfileScreen() {
             <Button
               title="Buchen"
               size="sm"
-              onPress={() => navigation.navigate('BookingFlowScreen', { providerId, serviceId: service.id, serviceName: service.name })}
+              onPress={() => navigation.navigate('BookingFlowScreen', { providerId, serviceName: service.name })}
               style={styles.bookButton}
             />
           </Card>
@@ -298,7 +327,6 @@ export function ProviderPublicProfileScreen() {
                 </TouchableOpacity>
               </View>
               {!!ownerName && <Text style={styles.ownerName}>{ownerName}</Text>}
-
               <View style={styles.badgeRow}>
                 <Badge title="Pro" color="amber" />
                 {publicData?.verified ? (
@@ -322,8 +350,8 @@ export function ProviderPublicProfileScreen() {
           </View>
 
           <View style={styles.actionButtons}>
-            <Button title="Jetzt buchen" onPress={() => navigation.navigate("BookingFlowScreen")} style={styles.bookNowButton} />
-            <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen")} style={styles.iconButtonOutline} color={COLORS.textSecondary} />
+            <Button title="Jetzt buchen" onPress={() => navigation.navigate("BookingFlowScreen", { providerId })} style={styles.bookNowButton} />
+            <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen", { userId: providerId })} style={styles.iconButtonOutline} color={COLORS.textSecondary} />
             <IconButton name={isFavorite ? 'heart' : 'heart'} onPress={handleToggleFavorite} style={styles.iconButtonOutline} color={isFavorite ? COLORS.primary : COLORS.textSecondary} />
           </View>
         </View>
