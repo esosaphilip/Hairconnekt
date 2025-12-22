@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   Index,
+  JoinColumn,
 } from 'typeorm';
 import { BadRequestException } from '@nestjs/common';
 import { ProviderProfile } from '../../providers/entities/provider-profile.entity';
@@ -23,11 +24,13 @@ export class Service {
   id: string;
 
   @ManyToOne(() => ProviderProfile, (provider) => provider.services, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'provider_id' })
   provider: ProviderProfile;
 
   // Make category optional to match CreateServiceDto where categoryId is optional
   // Note: DB constraint may still be NOT NULL; creation without category should be avoided
   @ManyToOne(() => ServiceCategory, { onDelete: 'RESTRICT', nullable: true })
+  @JoinColumn({ name: 'category_id' })
   category?: ServiceCategory | null;
 
   @Index()
