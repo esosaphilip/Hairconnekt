@@ -40,7 +40,62 @@ export class ServicesService {
     }
   }
 
-  // ... (create method remains)
+
+  async create(providerId: string, createDto: any): Promise<Service> {
+    // Validate provider exists
+    const provider = await this.providerProfileRepository.findOne({
+      where: { id: providerId },
+    });
+
+    if (!provider) {
+      throw new NotFoundException('Provider profile not found');
+    }
+
+    // Validate and fetch category if provided
+    let category: ServiceCategory | null = null;
+    if (createDto.categoryId) {
+      category = await this.serviceCategoryRepository.findOne({
+        where: { id: createDto.categoryId },
+      });
+      if (!category) {
+        throw new BadRequestException(`Category with ID "${createDto.categoryId}" not found`);
+      }
+    }
+
+    // Validate price and duration are integers
+    if (createDto.priceCents !== undefined && !Number.isInteger(createDto.priceCents)) {
+      throw new BadRequestException('priceCents must be an integer');
+    }
+
+    if (createDto.durationMinutes !== undefined && !Number.isInteger(createDto.durationMinutes)) {
+      throw new BadRequestException('durationMinutes must be an integer');
+    }
+
+    // Create the service entity
+    const service = this.serviceRepository.create({
+      name: createDto.name,
+      description: createDto.description ?? null,
+      priceCents: createDto.priceCents || 0,
+      durationMinutes: createDto.durationMinutes || 60,
+      priceType: createDto.priceType || PriceType.FIXED,
+      priceMaxCents: createDto.priceMaxCents ?? null,
+      imageUrl: createDto.imageUrl ?? null,
+      isActive: createDto.isActive !== undefined ? createDto.isActive : true,
+      allowOnlineBooking: createDto.allowOnlineBooking !== undefined ? createDto.allowOnlineBooking : true,
+      displayOrder: createDto.displayOrder ?? 0,
+      provider: provider,
+      category: category,
+    });
+
+    try {
+      const saved = await this.serviceRepository.save(service);
+      console.log('[ServicesService] Service created successfully:', saved.id);
+      return saved;
+    } catch (error) {
+      console.error('[ServicesService] Create service error:', error);
+      throw new InternalServerErrorException('Failed to create service');
+    }
+  }
 
   async listForProvider(providerId: string): Promise<Service[]> {
     try {
