@@ -60,6 +60,8 @@ export class ServicesService {
   }
 
   async update(id: string, providerId: string, updateDto: any): Promise<Service> {
+    console.log('[Backend] UPDATE Request:', { id, providerId, updateDto: JSON.stringify(updateDto) });
+
     const service = await this.serviceRepository.findOne({
       where: { id },
       relations: ['provider']
@@ -88,7 +90,7 @@ export class ServicesService {
 
     // STRICT MAPPING: Only accept priceCents (Integer)
     if (updateDto.priceCents !== undefined) {
-      if (!Number.isInteger(updateDto.priceCents)) throw new NotFoundException('priceCents must be an integer');
+      if (!Number.isInteger(updateDto.priceCents)) throw new BadRequestException('priceCents must be an integer');
       service.priceCents = updateDto.priceCents;
     }
 

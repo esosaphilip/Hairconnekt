@@ -60,14 +60,16 @@ export class ServiceRepositoryImpl implements IServiceRepository {
     try {
       const payload = {
         name: service.name,
-        categoryId: (service as any)?.category?.id || (service as any)?.categoryId,
-        durationMinutes: Math.max(0, parseInt(String(service.durationMinutes || 0), 10)),
-        priceCents: Math.max(0, parseInt(String(service.priceCents || 0), 10)),
+        categoryId: (service as any)?.category?.id || (service as any)?.categoryId || null,
+        durationMinutes: Number.isInteger(service.durationMinutes) ? service.durationMinutes : parseInt(String(service.durationMinutes || 60), 10),
+        priceCents: Number.isInteger(service.priceCents) ? service.priceCents : parseInt(String(service.priceCents || 0), 10),
         priceType: 'FIXED',
-        description: service.description ?? undefined,
-        isActive: service.isActive !== undefined ? Boolean(service.isActive) : true,
-        allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : true,
+        description: service.description ?? null,
+        isActive: Boolean(service.isActive ?? true),
+        allowOnlineBooking: Boolean((service as any)?.allowOnlineBooking ?? true),
       };
+
+      console.log('[ServiceRepo] CREATE Payload:', JSON.stringify(payload, null, 2));
 
       // Endpoint: POST /providers/me/services (http client adds base URL /api/v1)
       const res = await http.post('/providers/me/services', payload);
@@ -105,18 +107,25 @@ export class ServiceRepositoryImpl implements IServiceRepository {
       }
 
       // STRICT CONTRACT: Payload Construction
-      const body = {
-        name: service.name,
-        description: service.description,
-        priceCents: service.priceCents !== undefined ? Math.round(Number(service.priceCents)) : undefined,
-        durationMinutes: service.durationMinutes !== undefined ? Math.round(Number(service.durationMinutes)) : undefined,
-        categoryId: (service as any)?.category?.id || (service as any)?.categoryId,
-        isActive: service.isActive !== undefined ? Boolean(service.isActive) : undefined,
-        allowOnlineBooking: (service as any)?.allowOnlineBooking !== undefined ? Boolean((service as any).allowOnlineBooking) : undefined,
-      };
+      const body: any = {};
+      if (service.name !== undefined) body.name = service.name;
+      if (service.description !== undefined) body.description = service.description;
+      if (service.priceCents !== undefined) {
+        body.priceCents = Number.isInteger(service.priceCents) ? service.priceCents : parseInt(String(service.priceCents), 10);
+      }
+      if (service.durationMinutes !== undefined) {
+        body.durationMinutes = Number.isInteger(service.durationMinutes) ? service.durationMinutes : parseInt(String(service.durationMinutes), 10);
+      }
+      if ((service as any)?.category?.id || (service as any)?.categoryId) {
+        body.categoryId = (service as any)?.category?.id || (service as any)?.categoryId;
+      }
+      if (service.isActive !== undefined) body.isActive = Boolean(service.isActive);
+      if ((service as any)?.allowOnlineBooking !== undefined) {
+        body.allowOnlineBooking = Boolean((service as any).allowOnlineBooking);
+      }
 
-      // Remove undefined keys to avoid sending nulls where not intended, though backend ignores undefined
-      Object.keys(body).forEach(key => (body as any)[key] === undefined && delete (body as any)[key]);
+      console.log('[ServiceRepo] UPDATE Request URL:', `/providers/me/services/${id}`);
+      console.log('[ServiceRepo] UPDATE Payload:', JSON.stringify(body, null, 2));
 
       // Endpoint: PATCH /providers/me/services/:id (http client appends to base URL /api/v1)
       const res = await http.patch(`/providers/me/services/${id}`, body);
