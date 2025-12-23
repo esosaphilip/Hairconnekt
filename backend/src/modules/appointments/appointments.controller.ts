@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Query, Req, UseGuards, BadRequestException, InternalServerErrorException, Logger, Param } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppointmentsService } from './appointments.service';
@@ -131,6 +131,14 @@ export class AppointmentsController {
 
     const providerId = await this.resolveProviderId(req);
     return this.appointmentsService.create({ ...createAppointmentDto, providerId });
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async updateStatus(@Param('id') id: string, @Body('status') status: any, @Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    return this.appointmentsService.updateStatus(id, status, userId);
   }
 
   @Patch()

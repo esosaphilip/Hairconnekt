@@ -91,15 +91,20 @@ export class ServicesService {
   }
 
   async listForProvider(providerId: string): Promise<Service[]> {
-    // Redundant check removed since getProviderIdByUserId already verifies user->provider link
-    // Use QueryBuilder for robust querying
-    return this.serviceRepository.createQueryBuilder('s')
-      .leftJoinAndSelect('s.category', 'c')
-      .leftJoinAndSelect('s.provider', 'p')
-      .where('p.id = :providerId', { providerId })
-      .orderBy('s.displayOrder', 'ASC')
-      .addOrderBy('s.name', 'ASC')
-      .getMany();
+    try {
+      // Redundant check removed since getProviderIdByUserId already verifies user->provider link
+      // Use QueryBuilder for robust querying
+      return await this.serviceRepository.createQueryBuilder('s')
+        .leftJoinAndSelect('s.category', 'c')
+        .leftJoinAndSelect('s.provider', 'p')
+        .where('p.id = :providerId', { providerId })
+        .orderBy('s.displayOrder', 'ASC')
+        .addOrderBy('s.name', 'ASC')
+        .getMany();
+    } catch (error) {
+      console.error('[ServicesService] listForProvider Error:', error);
+      throw new InternalServerErrorException('Failed to fetch services for provider');
+    }
   }
 
   async update(id: string, providerId: string, updateDto: any): Promise<Service> {

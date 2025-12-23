@@ -120,9 +120,9 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .leftJoinAndSelect('appointment.client', 'client')
       .leftJoinAndSelect('appointment.appointmentServices', 'appointmentServices')
       .where('appointment.provider.id = :providerId', { providerId })
-      .andWhere('appointment.appointment_date >= :startDate', { startDate })
-      .andWhere('appointment.appointment_date <= :endDate', { endDate })
-      .orderBy('appointment.start_time', 'ASC')
+      .andWhere('appointment.appointmentDate >= :startDate', { startDate })
+      .andWhere('appointment.appointmentDate <= :endDate', { endDate })
+      .orderBy('appointment.startTime', 'ASC')
       .getMany();
   }
 
@@ -147,10 +147,10 @@ export class TypeORMProviderRepository implements IProviderRepository {
     const earningsRows = await this.appointmentsRepo
       .createQueryBuilder('a')
       .leftJoin('a.appointmentServices', 'as')
-      .select('COALESCE(SUM(as.price_cents), 0)', 'totalCents')
+      .select('COALESCE(SUM(as.priceCents), 0)', 'totalCents')
       .where('a.provider.id = :providerId', { providerId })
       .andWhere('a.status = :status', { status: 'COMPLETED' })
-      .andWhere('a.appointment_date BETWEEN :start AND :end', {
+      .andWhere('a.appointmentDate BETWEEN :start AND :end', {
         start: startStr,
         end: endStr,
       })
@@ -191,24 +191,24 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .where('addr.latitude IS NOT NULL AND addr.longitude IS NOT NULL')
       .andWhere('u.id IS NOT NULL')
       .select('p.id', 'id')
-      .addSelect('u.first_name', 'first_name')
-      .addSelect('u.last_name', 'last_name')
-      .addSelect('p.business_name', 'business_name')
-      .addSelect('p.cover_photo_url', 'cover_photo_url')
-      .addSelect('p.is_verified', 'is_verified')
-      .addSelect('p.accepts_same_day_booking', 'accepts_same_day_booking')
-      .addSelect(`(${distanceExpr})`, 'distance_km')
+      .addSelect('u.firstName', 'firstName')
+      .addSelect('u.lastName', 'lastName')
+      .addSelect('p.businessName', 'businessName')
+      .addSelect('p.coverPhotoUrl', 'coverPhotoUrl')
+      .addSelect('p.isVerified', 'isVerified')
+      .addSelect('p.acceptsSameDayBooking', 'acceptsSameDayBooking')
+      .addSelect(`(${distanceExpr})`, 'distanceKm')
       .groupBy('p.id')
-      .addGroupBy('u.first_name')
-      .addGroupBy('u.last_name')
-      .addGroupBy('p.business_name')
-      .addGroupBy('p.cover_photo_url')
-      .addGroupBy('p.is_verified')
-      .addGroupBy('p.accepts_same_day_booking')
+      .addGroupBy('u.firstName')
+      .addGroupBy('u.lastName')
+      .addGroupBy('p.businessName')
+      .addGroupBy('p.coverPhotoUrl')
+      .addGroupBy('p.isVerified')
+      .addGroupBy('p.acceptsSameDayBooking')
       .addGroupBy('addr.latitude')
       .addGroupBy('addr.longitude')
       .having(`(${distanceExpr}) <= :radiusKm`)
-      .orderBy('distance_km', 'ASC')
+      .orderBy('distanceKm', 'ASC')
       .limit(limit)
       .setParameters({ lat, lon, radiusKm });
 
@@ -220,12 +220,12 @@ export class TypeORMProviderRepository implements IProviderRepository {
     return await this.servicesRepo
       .createQueryBuilder('svc')
       .leftJoin('svc.provider', 'p')
-      .select('p.id', 'provider_id')
+      .select('p.id', 'providerId')
       .addSelect('svc.name', 'name')
-      .addSelect('svc.price_cents', 'price_cents')
+      .addSelect('svc.priceCents', 'priceCents')
       .where('p.id IN (:...ids)', { ids: providerIds })
-      .andWhere('svc.is_active = :active', { active: true })
-      .orderBy('svc.display_order', 'ASC')
+      .andWhere('svc.isActive = :active', { active: true })
+      .orderBy('svc.displayOrder', 'ASC')
       .limit(200) // Safety limit
       .getRawMany();
   }
@@ -235,8 +235,8 @@ export class TypeORMProviderRepository implements IProviderRepository {
     return await this.reviewsRepo
       .createQueryBuilder('r')
       .leftJoin('r.provider', 'p')
-      .select('p.id', 'provider_id')
-      .addSelect('AVG(r.rating)', 'avg_rating')
+      .select('p.id', 'providerId')
+      .addSelect('AVG(r.rating)', 'avgRating')
       .addSelect('COUNT(*)', 'reviews')
       .where('p.id IN (:...ids)', { ids: providerIds })
       .groupBy('p.id')
@@ -247,10 +247,10 @@ export class TypeORMProviderRepository implements IProviderRepository {
     return await this.servicesRepo
       .createQueryBuilder('svc')
       .select('svc.name', 'name')
-      .addSelect('svc.price_cents', 'price_cents')
+      .addSelect('svc.priceCents', 'priceCents')
       .where('svc.provider.id = :id', { id: providerId })
-      .andWhere('svc.is_active = :active', { active: true })
-      .orderBy('svc.display_order', 'ASC')
+      .andWhere('svc.isActive = :active', { active: true })
+      .orderBy('svc.displayOrder', 'ASC')
       .limit(200)
       .getRawMany();
   }

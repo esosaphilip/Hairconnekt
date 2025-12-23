@@ -240,4 +240,22 @@ export class AppointmentsService {
       return { items: [], count: 0 };
     }
   }
+
+  async updateStatus(id: string, status: AppointmentStatus, userId: string): Promise<Appointment> {
+    const appt = await this.appointmentRepo.findOne({
+      where: { id },
+      relations: ['provider', 'provider.user']
+    });
+
+    if (!appt) {
+      throw new NotFoundException(`Appointment with ID "${id}" not found`);
+    }
+
+    if (appt.provider?.user?.id !== userId) {
+       throw new NotFoundException('Appointment not found for this provider'); 
+    }
+
+    appt.status = status;
+    return this.appointmentRepo.save(appt);
+  }
 }

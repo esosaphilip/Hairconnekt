@@ -10,6 +10,7 @@ import { UpdateSpecializationsDto } from './dto/update-specializations.dto';
 import { UpdateLanguagesDto } from './dto/update-languages.dto';
 import { UpdateSocialMediaDto } from './dto/update-social-media.dto';
 import { CreateCertificationDto } from './dto/create-certification.dto';
+import { CreateTimeOffDto } from './dto/create-time-off.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -204,7 +205,7 @@ export class ProvidersController {
     return `providers:nearby:${lat ?? ''}:${lon ?? ''}:${radiusKm ?? ''}:${limit ?? ''}`;
   })
   @CacheTTL(60)
-  getNearby(
+  async getNearby(
     @Query('lat') lat?: string,
     @Query('lon') lon?: string,
     @Query('radiusKm') radiusKm?: string,
@@ -216,7 +217,8 @@ export class ProvidersController {
       radiusKm: radiusKm != null ? Number(radiusKm) : undefined,
       limit: limit != null ? Number(limit) : undefined,
     };
-    return this.providersService.getNearbyProviders(params);
+    const data = await this.providersService.getNearbyProviders(params);
+    return { success: true, data };
   }
 
   // Public endpoint: provider public profile/details by id
@@ -224,16 +226,18 @@ export class ProvidersController {
   @UseInterceptors(AppCacheInterceptor)
   @CacheKeyBuilder((req) => `providers:public:${req.params.id}`)
   @CacheTTL(300)
-  getPublicProfile(@Param('id') id: string) {
-    return this.providersService.getPublicProfileById(id);
+  async getPublicProfile(@Param('id') id: string) {
+    const data = await this.providersService.getPublicProfileById(id);
+    return { success: true, data };
   }
 
   @Get(':id/services')
   @UseInterceptors(AppCacheInterceptor)
   @CacheKeyBuilder((req) => `providers:services:${req.params.id}`)
   @CacheTTL(300)
-  getServices(@Param('id') id: string) {
+  async getServices(@Param('id') id: string) {
     // Public endpoint to get active services for a provider
-    return this.providersService.getPublicServices(id);
+    const data = await this.providersService.getPublicServices(id);
+    return { success: true, data };
   }
 }

@@ -17,6 +17,9 @@ import { User } from '../users/entities/user.entity';
 
 import { ProviderCertification } from './entities/provider-certification.entity';
 
+import { CreateTimeOffDto } from './dto/create-time-off.dto';
+import { ProviderTimeOff } from './entities/provider-time-off.entity';
+
 @Injectable()
 export class ProvidersService {
   constructor(
@@ -28,6 +31,8 @@ export class ProvidersService {
     private readonly userRepo: Repository<User>,
     @InjectRepository(ProviderProfile)
     private readonly providerEntityRepo: Repository<ProviderProfile>,
+    @InjectRepository(ProviderTimeOff)
+    private readonly timeOffRepo: Repository<ProviderTimeOff>,
   ) { }
 
   /**
@@ -528,8 +533,8 @@ export class ProvidersService {
     const ratingRows = await this.providerRepo.getRatingsForProviders(ids);
     const ratingMap = new Map<string, { rating: number; reviews: number }>();
     for (const row of ratingRows) {
-      ratingMap.set(row.provider_id, {
-        rating: Number(row.avg_rating) || 0,
+      ratingMap.set(row.providerId, {
+        rating: Number(row.avgRating) || 0,
         reviews: Number(row.reviews) || 0,
       });
     }
@@ -539,32 +544,32 @@ export class ProvidersService {
     const specialties = new Map<string, string[]>();
     const minPrice = new Map<string, number>();
     for (const r of svcRows) {
-      const list = specialties.get(r.provider_id) || [];
+      const list = specialties.get(r.providerId) || [];
       if (list.length < 5) list.push(r.name);
-      specialties.set(r.provider_id, list);
-      const existing = minPrice.get(r.provider_id);
-      if (existing == null || r.price_cents < existing) {
-        minPrice.set(r.provider_id, r.price_cents);
+      specialties.set(r.providerId, list);
+      const existing = minPrice.get(r.providerId);
+      if (existing == null || r.priceCents < existing) {
+        minPrice.set(r.providerId, r.priceCents);
       }
     }
 
     const items = rows.map((r) => {
       const rating = ratingMap.get(r.id) || { rating: 0, reviews: 0 };
       const priceFromCents = minPrice.get(r.id) ?? null;
-      const dist = typeof r.distance_km === 'string' ? parseFloat(r.distance_km) : (r.distance_km as number);
-      const name = [r.first_name, r.last_name].filter(Boolean).join(' ').trim();
+      const dist = typeof r.distanceKm === 'string' ? parseFloat(r.distanceKm) : (r.distanceKm as number);
+      const name = [r.firstName, r.lastName].filter(Boolean).join(' ').trim();
       return {
         id: r.id,
-        name: name || r.business_name || 'Provider',
-        business: r.business_name || null,
+        name: name || r.businessName || 'Provider',
+        business: r.businessName || null,
         rating: rating.rating,
         reviews: rating.reviews,
         distanceKm: Math.round(dist * 10) / 10,
         specialties: (specialties.get(r.id) || []).slice(0, 3),
         priceFromCents,
-        available: r.accepts_same_day_booking || false,
-        verified: r.is_verified || false,
-        imageUrl: r.cover_photo_url || null,
+        available: r.acceptsSameDayBooking || false,
+        verified: r.isVerified || false,
+        imageUrl: r.coverPhotoUrl || null,
       };
     });
 
@@ -671,6 +676,70 @@ export class ProvidersService {
       blockedSlots: [], // TODO: implementations for blocks
       availableSlots: [] // TODO: implementations if needed
     };
+  }
+
+  /**
+   * Create a time-off block
+   */
+  async createTimeOff(userId: string, dto: CreateTimeOffDto) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const block = new ProviderTimeOff();
+    Object.assign(block, {
+      provider: { id: provider.id },
+      startDate: dto.startDate,
+      endDate: dto.endDate,
+      startTime: dto.allDay ? null : dto.startTime,
+      endTime: dto.allDay ? null : dto.endTime,
+      reason: dto.reason,
+    });
+
+    const saved = await this.timeOffRepo.save(block);
+    await this.invalidateProviderCache(provider.id, userId);
+    return { blockId: saved.id, message: 'Blockzeit erstellt' };
+  }
+
+  /**
+   * Update a time-off block
+   */
+  async updateTimeOff(userId: string, blockId: string, dto: CreateTimeOffDto) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const block = await this.timeOffRepo.findOne({
+      where: { id: blockId },
+      relations: ['provider']
+    });
+
+    if (!block) throw new NotFoundException('Blockzeit nicht gefunden');
+    if (block.provider.id !== provider.id) throw new ForbiddenException('Zugriff verweigert');
+
+    block.startDate = dto.startDate;
+    block.endDate = dto.endDate;
+    block.startTime = dto.allDay ? null : dto.startTime;
+    block.endTime = dto.allDay ? null : dto.endTime;
+    block.reason = dto.reason;
+
+    await this.timeOffRepo.save(block);
+    await this.invalidateProviderCache(provider.id, userId);
+    return { blockId: block.id, message: 'Blockzeit aktualisiert' };
+  }
+
+  /**
+   * Remove a time-off block
+   */
+  async removeTimeOff(userId: string, blockId: string) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const block = await this.timeOffRepo.findOne({ where: { id: blockId }, relations: ['provider'] });
+    if (!block) throw new NotFoundException('Blockzeit nicht gefunden');
+    if (block.provider.id !== provider.id) throw new ForbiddenException('Zugriff verweigert');
+
+    await this.timeOffRepo.remove(block);
+    await this.invalidateProviderCache(provider.id, userId);
+    return { success: true };
   }
 
   // -------- Helpers --------
