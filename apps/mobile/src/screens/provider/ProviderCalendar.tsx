@@ -29,6 +29,7 @@ export function ProviderCalendar() {
   const [error, setError] = useState<string | null>(null);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [appointments, setAppointments] = useState<AppointmentListItem[]>([]);
+  const [blockedSlots, setBlockedSlots] = useState<any[]>([]);
   const route = useRoute() as { params?: { targetDate?: string; viewMode?: 'day' | 'week' | 'month' } };
   const authCtx = useAuth();
   const user = authCtx?.user ?? null;
@@ -142,7 +143,26 @@ export function ProviderCalendar() {
     return map;
   }, [appointments]);
 
-  const getAppointmentDots = (day: number): string[] => (apptsByDay.get(day) || []).map((a) => String(a.status || ''));
+  const blocksByDay = useMemo(() => {
+    const map = new Map<number, any[]>();
+    blockedSlots.forEach((b) => {
+      // Simplified: assume block belongs to start date's day
+      const d = new Date(b.startDate + 'T00:00:00');
+      // If block is in current displayed month/year
+      if (d.getMonth() === month && d.getFullYear() === year) {
+        const day = d.getDate();
+        if (!map.has(day)) map.set(day, []);
+        map.get(day)?.push(b);
+      }
+    });
+    return map;
+  }, [blockedSlots, month, year]);
+
+  const getAppointmentDots = (day: number): string[] => {
+    const appts = (apptsByDay.get(day) || []).map((a) => String(a.status || ''));
+    const blocks = (blocksByDay.get(day) || []).map(() => 'BLOCKED');
+    return [...appts, ...blocks];
+  };
 
   const selectedDateLabel = useMemo(() => {
     const d = new Date(year, month, selectedDate);
@@ -168,12 +188,26 @@ export function ProviderCalendar() {
         status: a.status,
       };
     });
+
+    // Add blocked slots
+    const blocks = blocksByDay.get(selectedDate) || [];
+    const blockItems = blocks.map((b) => ({
+      id: b.id,
+      time: b.startTime ? `${b.startTime.slice(0, 5)} - ${b.endTime ? b.endTime.slice(0, 5) : '??'}` : 'Ganztägig',
+      client: { name: 'Blockiert', image: '' },
+      service: b.reason || 'Pause',
+      price: '',
+      status: 'BLOCKED',
+    }));
+
+    const combined = [...items, ...blockItems].sort((a, b) => a.time.localeCompare(b.time));
+
     const totalRevenueEuro = items.reduce((sum, i) => {
       const num = Number(i.price.replace(/[^\d]/g, ''));
       return sum + (isNaN(num) ? 0 : num);
     }, 0);
-    return { items, totalRevenueEuro };
-  }, [apptsByDay, selectedDate]);
+    return { items: combined, totalRevenueEuro };
+  }, [apptsByDay, blocksByDay, selectedDate]);
 
   const statusColor = (status: string) => {
     switch (status) {
@@ -183,6 +217,8 @@ export function ProviderCalendar() {
         return '#EAB308';
       case 'IN_PROGRESS':
         return '#3B82F6';
+      case 'BLOCKED':
+        return '#9CA3AF'; // Gray for blocked
       default:
         return '#D1D5DB';
     }

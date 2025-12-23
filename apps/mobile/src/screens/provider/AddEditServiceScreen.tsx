@@ -167,7 +167,7 @@ export function AddEditServiceScreen() {
 
     try {
       if (isEditing && serviceId) {
-        await http.put(`/providers/me/services/${serviceId}`, body);
+        await http.patch(`/providers/me/services/${serviceId}`, body);
         setMessage('Dienst aktualisiert');
       } else {
         const res = await http.post('/providers/me/services', body);

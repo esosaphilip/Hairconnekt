@@ -121,7 +121,8 @@ export function ProviderPublicProfileScreen() {
           if (mounted) {
             // Profile
             if (profileRes.status === 'fulfilled') {
-              setPublicData(profileRes.value.data as PublicProfile);
+              const payload = profileRes.value.data;
+              setPublicData((payload?.success && payload?.data) ? payload.data : payload as PublicProfile);
             } else {
               console.warn('Profile fetch failed', profileRes.reason);
               setErrorPublic('Profil konnte nicht geladen werden.');
@@ -129,12 +130,19 @@ export function ProviderPublicProfileScreen() {
 
             // Services
             if (servicesRes.status === 'fulfilled') {
-              setServices(Array.isArray(servicesRes.value.data) ? servicesRes.value.data : []);
+              const payload = servicesRes.value.data;
+              const items = (payload?.success && payload?.data) ? payload.data : payload;
+              setServices(Array.isArray(items) ? items : []);
             }
 
             // Portfolio
             if (portfolioRes.status === 'fulfilled') {
-              const items = Array.isArray(portfolioRes.value.data?.items) ? portfolioRes.value.data.items : [];
+              const payload = portfolioRes.value.data;
+              // Portfolio usually returns { items: [...] } or { success: true, data: { items: [...] } }
+              // Let's handle both
+              const dataRoot = (payload?.success && payload?.data) ? payload.data : payload;
+              const items = Array.isArray(dataRoot?.items) ? dataRoot.items : [];
+              
               setPortfolioItems(items.map((it: any) => ({
                 id: it.id,
                 imageUrl: it.imageUrl,
@@ -146,7 +154,9 @@ export function ProviderPublicProfileScreen() {
 
             // Reviews
             if (reviewsRes.status === 'fulfilled') {
-              setReviews(Array.isArray(reviewsRes.value.data) ? reviewsRes.value.data : []);
+              const payload = reviewsRes.value.data;
+              const items = (payload?.success && payload?.data) ? payload.data : payload;
+              setReviews(Array.isArray(items) ? items : []);
             }
           }
         } catch (err) {

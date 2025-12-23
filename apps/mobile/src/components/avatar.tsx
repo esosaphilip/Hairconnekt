@@ -13,7 +13,7 @@ export type AvatarProps = {
  */
 export function Avatar({ size = 40, style, children }: AvatarProps) {
   return (
-    <View style={[styles.container, { width: size, height: size, borderRadius: size / 2 }, style]}> 
+    <View style={[styles.container, { width: size, height: size, borderRadius: size / 2 }, style]}>
       {children}
     </View>
   );
@@ -26,15 +26,24 @@ export type AvatarImageProps = ImageProps & {
   source?: ImageSourcePropType;
 };
 
+import { BASE_URL } from '../config';
+
 /**
  * Avatar image
  */
 export function AvatarImage({ size, style, uri, source, ...rest }: AvatarImageProps) {
   const dim = size ?? 40;
+
+  // Handle relative URLs (from local backend storage)
+  let finalUri = uri;
+  if (finalUri && typeof finalUri === 'string' && finalUri.startsWith('/')) {
+    finalUri = `${BASE_URL}${finalUri}`;
+  }
+
   return (
     <Image
       {...rest}
-      source={uri ? { uri } : source}
+      source={finalUri ? { uri: finalUri } : source}
       style={[styles.image, { borderRadius: dim / 2, height: dim, width: dim }, style]}
     />
   );
@@ -53,7 +62,7 @@ export type AvatarFallbackProps = {
 export function AvatarFallback({ label = '', size = 40, style, textStyle }: AvatarFallbackProps) {
   const initials = label ? label.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() : '';
   return (
-    <View style={[styles.fallback, { width: size, height: size, borderRadius: size / 2 }, style]}> 
+    <View style={[styles.fallback, { width: size, height: size, borderRadius: size / 2 }, style]}>
       <Text style={[styles.fallbackText, textStyle]}>{initials}</Text>
     </View>
   );

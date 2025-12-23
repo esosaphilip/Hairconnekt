@@ -383,13 +383,25 @@ export function ProviderDashboard() {
 
                         <View style={styles.row}>
                           <Button
-                            title="Starten"
-                            style={[styles.actionButton, { backgroundColor: colors.green600, flex: 2 }]}
+                            title={appointment.status === 'IN_PROGRESS' ? "Abschließen" : "Starten"}
+                            style={[styles.actionButton, { backgroundColor: appointment.status === 'IN_PROGRESS' ? colors.gray600 : colors.green600, flex: 2 }]}
                             onPress={() => {
-                              // Placeholder for status update
-                              Alert.alert('Termin starten', 'Möchtest du diesen Termin jetzt starten?', [
+                              const isStarted = appointment.status === 'IN_PROGRESS';
+                              const newStatus = isStarted ? 'COMPLETED' : 'IN_PROGRESS';
+                              const actionLabel = isStarted ? 'abschließen' : 'starten';
+                              Alert.alert(`Termin ${actionLabel}`, `Möchtest du diesen Termin jetzt ${actionLabel}?`, [
                                 { text: 'Abbrechen', style: 'cancel' },
-                                { text: 'Starten', onPress: () => console.log('Starting appointment ' + appointment.id) }
+                                {
+                                  text: isStarted ? 'Abschließen' : 'Starten',
+                                  onPress: async () => {
+                                    try {
+                                      await http.patch(`/appointments/${appointment.id}/status`, { status: newStatus });
+                                      Alert.alert('Erfolg', `Termin wurde aktualisiert. Bitte aktualisieren.`);
+                                    } catch (e) {
+                                      Alert.alert('Fehler', 'Konnte Status nicht aktualisieren.');
+                                    }
+                                  }
+                                }
                               ]);
                             }}
                           />

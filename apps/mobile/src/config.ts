@@ -15,7 +15,7 @@ function resolveDevHostFromRN(): string | null {
         return `http://${host}:3000`;
       }
     }
-  } catch {}
+  } catch { }
   return null;
 }
 
@@ -27,7 +27,9 @@ const envUrl = process.env.EXPO_PUBLIC_API_URL;
 const envTimeout = process.env.EXPO_PUBLIC_API_TIMEOUT;
 
 const base = (envUrl && envUrl.trim()) || resolveDevHostFromRN() || emulatorDefault;
-export const API_BASE_URL = `${base.replace(/\/$/, '')}/api/v1`;
+// Export the raw base URL (without /api/v1) for static assets
+export const BASE_URL = base.replace(/\/$/, '');
+export const API_BASE_URL = `${BASE_URL}/api/v1`;
 export const API_TIMEOUT = envTimeout ? Number(envTimeout) : 15000;
 export const GOOGLE_MAPS_API_KEY = (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '').trim();
 
@@ -45,5 +47,5 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
     } else {
       console.log('[Hairconnekt] Google Maps key is NOT set');
     }
-  } catch {}
+  } catch { }
 }

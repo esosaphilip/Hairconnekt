@@ -166,8 +166,16 @@ export function ProviderProfileScreen() {
               http.get(`/providers/public/${me.id}`),
             ]);
             if (!mounted) return;
-            setDashboard(dashRes.data);
-            setPublicData(pubRes.data);
+            
+            // Unwrap dashboard data
+            const dashPayload = dashRes.data;
+            const dashData = (dashPayload?.success && dashPayload?.data) ? dashPayload.data : dashPayload;
+            setDashboard(dashData);
+
+            // Unwrap public profile data
+            const pubPayload = pubRes.data;
+            const pubData = (pubPayload?.success && pubPayload?.data) ? pubPayload.data : pubPayload;
+            setPublicData(pubData);
           }
         } catch (e: unknown) {
           const msg = getMessage(e);
