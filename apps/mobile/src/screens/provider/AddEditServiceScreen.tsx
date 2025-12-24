@@ -156,13 +156,13 @@ export function AddEditServiceScreen() {
 
     const body: any = {
       name: formData.name,
-      category: formData.category,
-      duration: Number(formData.duration || 0),
-      durationUnit: 'fixed',
-      price: Number(formData.price || 0),
-      priceType: 'fixed',
+      categoryId: formData.category,
+      durationMinutes: Number(formData.duration || 0),
+      priceCents: Math.round(Number(formData.price || 0) * 100),
       description: formData.description || undefined,
       isActive: !!formData.isActive,
+      allowOnlineBooking: !!formData.allowOnlineBooking,
+      requiresConsultation: !!formData.requiresConsultation,
     };
 
     try {
