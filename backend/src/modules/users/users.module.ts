@@ -8,6 +8,8 @@ import { Address } from './entities/address.entity';
 import { ClientProfile } from './entities/client-profile.entity';
 import { BlockedUser } from './entities/blocked-user.entity';
 import { UserReport } from './entities/report.entity';
+import { Appointment } from '../appointments/entities/appointment.entity';
+import { Favorite } from '../favorites/entities/favorite.entity';
 import { AddressesService } from './addresses.service';
 import { ClientProfilesService } from './client-profiles.service';
 import { PreferencesController } from './preferences.controller';
@@ -17,7 +19,15 @@ import { TypeORMAddressRepository } from '../../infrastructure/repositories/Type
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Address, ClientProfile, BlockedUser, UserReport]),
+    TypeOrmModule.forFeature([
+      User, 
+      Address, 
+      ClientProfile, 
+      BlockedUser, 
+      UserReport,
+      Appointment,
+      Favorite
+    ]),
   ],
   controllers: [UsersController, AddressesController, PreferencesController],
   providers: [

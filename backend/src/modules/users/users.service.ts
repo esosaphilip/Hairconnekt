@@ -5,7 +5,9 @@ import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IAddressRepository } from '../../domain/repositories/IAddressRepository';
 import { User } from './entities/user.entity';
 import { BlockedUser } from './entities/blocked-user.entity';
-import { UserReport } from './entities/report.entity';
+import { UserReport, ReportStatus, ReportReason } from './entities/report.entity';
+import { Appointment, AppointmentStatus } from '../appointments/entities/appointment.entity';
+import { Favorite } from '../favorites/entities/favorite.entity';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +20,10 @@ export class UsersService {
     private readonly blockedUserRepo: Repository<BlockedUser>,
     @InjectRepository(UserReport)
     private readonly reportRepo: Repository<UserReport>,
+    @InjectRepository(Appointment)
+    private readonly appointmentRepo: Repository<Appointment>,
+    @InjectRepository(Favorite)
+    private readonly favoriteRepo: Repository<Favorite>,
   ) { }
 
   async blockUser(blockerId: string, blockedId: string): Promise<void> {
@@ -30,20 +36,22 @@ export class UsersService {
 
     if (existing) return;
 
-    await this.blockedUserRepo.save({
-      blocker: { id: blockerId } as any,
-      blocked: { id: blockedId } as any,
+    const block = this.blockedUserRepo.create({
+      blocker: { id: blockerId } as User,
+      blocked: { id: blockedId } as User,
     });
+    await this.blockedUserRepo.save(block);
   }
 
   async reportUser(reporterId: string, reportedId: string, reason: string, details?: string): Promise<void> {
-    await this.reportRepo.save({
-      reporter: { id: reporterId } as any,
-      reported: { id: reportedId } as any,
-      reason: reason as any,
+    const report = this.reportRepo.create({
+      reporter: { id: reporterId } as User,
+      reported: { id: reportedId } as User,
+      reason: reason as ReportReason,
       details,
-      status: 'PENDING' as any,
+      status: ReportStatus.PENDING,
     });
+    await this.reportRepo.save(report);
   }
 
   async isBlocked(userA: string, userB: string): Promise<boolean> {
@@ -60,21 +68,33 @@ export class UsersService {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');
 
-    // Compute appointment stats for client view (be resilient to errors)
-    let upcoming = { items: [], count: 0 } as any;
-    let completed = { items: [], count: 0 } as any;
-    let cancelled = { items: [], count: 0 } as any;
-    // Temporarily omit appointments stats to reduce module dependencies
-    upcoming = { items: [], count: 0 } as any;
-    completed = { items: [], count: 0 } as any;
-    cancelled = { items: [], count: 0 } as any;
+    // Compute appointment stats
+    const upcomingCount = await this.appointmentRepo.count({
+      where: {
+        client: { id: userId },
+        status: AppointmentStatus.CONFIRMED // or PENDING | CONFIRMED
+      }
+    });
+
+    const completedCount = await this.appointmentRepo.count({
+      where: {
+        client: { id: userId },
+        status: AppointmentStatus.COMPLETED
+      }
+    });
+
+    const cancelledCount = await this.appointmentRepo.count({
+      where: {
+        client: { id: userId },
+        status: AppointmentStatus.CANCELLED_BY_CLIENT // or both cancelled statuses
+      }
+    });
 
     // Favorites count
-    let favoritesCount = 0;
-    // Temporarily omit favorites stats to reduce module dependencies
-    favoritesCount = 0;
+    const favoritesCount = await this.favoriteRepo.count({
+      where: { client: { id: userId } }
+    });
 
-    // Build response DTO
     // Addresses count (avoid joining addresses in the main query to prevent FK naming issues)
     let addressesCount = 0;
     try {
@@ -101,10 +121,10 @@ export class UsersService {
       addressesCount,
       clientProfile: user.clientProfile || null,
       stats: {
-        appointments: upcoming.count + completed.count + cancelled.count,
-        upcoming: upcoming.count,
-        completed: completed.count,
-        cancelled: cancelled.count,
+        appointments: upcomingCount + completedCount + cancelledCount,
+        upcoming: upcomingCount,
+        completed: completedCount,
+        cancelled: cancelledCount,
         favorites: favoritesCount,
         reviews: 0, // Reviews not implemented yet
       },
@@ -132,6 +152,19 @@ export class UsersService {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');
     user.preferredLanguage = preferredLanguage;
+    await this.userRepo.save(user);
+    return { success: true };
+  }
+
+  async deactivateUser(userId: string) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    user.isActive = false;
+    // Optional: Anonymize or clear sensitive data if required by policy
+    // user.email = `deleted_${Date.now()}_${user.email}`;
+    // user.phone = `deleted_${Date.now()}_${user.phone}`;
+
     await this.userRepo.save(user);
     return { success: true };
   }

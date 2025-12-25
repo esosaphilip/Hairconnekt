@@ -52,7 +52,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       await manager.delete(ProviderSpecialization, { provider: { id: providerId } });
       const newSpecs = specializations.map((spec) =>
         manager.create(ProviderSpecialization, {
-          provider: { id: providerId } as any,
+          provider: { id: providerId } as ProviderProfile,
           specialization: spec,
         })
       );
@@ -67,7 +67,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       await manager.delete(ProviderLanguage, { provider: { id: providerId } });
       const newLangs = languages.map((lang) =>
         manager.create(ProviderLanguage, {
-          provider: { id: providerId } as any,
+          provider: { id: providerId } as ProviderProfile,
           language: lang,
         })
       );

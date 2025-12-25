@@ -9,6 +9,7 @@ import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { User, UserType } from '../users/entities/user.entity';
 import { Service } from '../services/entities/service.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import * as crypto from 'crypto';
 
 type StatusGroup = 'upcoming' | 'completed' | 'cancelled';
 
@@ -56,7 +57,8 @@ export class AppointmentsService {
         client.firstName = parts[0] || 'Guest';
         client.lastName = parts.length > 1 ? parts.slice(1).join(' ') : 'Client';
 
-        client.passwordHash = 'guest_placeholder'; // Should be handled by auth module ideally
+        // Securely random password for guest accounts to prevent unauthorized access
+        client.passwordHash = crypto.randomBytes(32).toString('hex');
         client.userType = UserType.CLIENT;
         client.isActive = true;
         // client.isGuest = true; // Field doesn't exist yet
@@ -112,14 +114,14 @@ export class AppointmentsService {
   }
 
   private mapAppointmentToDto(appt: Appointment) {
-    const providerUser: User | undefined = (appt.provider as any)?.user;
+    const providerUser: User | undefined = appt.provider?.user;
     const providerName = providerUser ? `${providerUser.firstName} ${providerUser.lastName}` : undefined;
     // Prefer mobile service address if provided, otherwise provider's primary location
     let addressStr: string | undefined = this.formatAddress(appt.serviceAddress || undefined);
     if (!addressStr) {
-      const locations: ProviderLocation[] | undefined = (appt.provider as any)?.locations;
+      const locations: ProviderLocation[] | undefined = appt.provider?.locations;
       const primaryLoc = locations?.find((l) => l.isPrimary);
-      const primaryAddress = (primaryLoc as any)?.address as Address | undefined;
+      const primaryAddress = primaryLoc?.address;
       addressStr = this.formatAddress(primaryAddress);
     }
 

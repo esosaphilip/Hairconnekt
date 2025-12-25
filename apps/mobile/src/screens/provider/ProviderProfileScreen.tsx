@@ -138,7 +138,7 @@ export function ProviderProfileScreen() {
       let mounted = true;
       async function load() {
         try {
-          console.log(`ProviderProfileScreen: Loading profile (attempt ${refreshKey})...`);
+
           setLoading(true);
           setError(null);
 
@@ -166,7 +166,7 @@ export function ProviderProfileScreen() {
               http.get(`/providers/public/${me.id}`),
             ]);
             if (!mounted) return;
-            
+
             // Unwrap dashboard data
             const dashPayload = dashRes.data;
             const dashData = (dashPayload?.success && dashPayload?.data) ? dashPayload.data : dashPayload;
@@ -208,35 +208,35 @@ export function ProviderProfileScreen() {
     try {
       navigation.navigate('EditProfileScreen');
     } catch (e) {
-      console.log('Navigation to EditProfileScreen failed', e);
+
     }
   };
 
   const onEditAboutMe = () => {
-    console.log('Navigating to EditAboutMeScreen');
+
     navigation.navigate('EditAboutMeScreen');
   };
   const onEditSpecializations = () => {
-    console.log('Navigating to EditSpecializationsScreen');
+
     navigation.navigate('EditSpecializationsScreen');
   };
   const onEditLanguages = () => {
-    console.log('Navigating to EditLanguagesScreen');
+
     navigation.navigate('EditLanguagesScreen');
   };
   const onEditSocialMedia = () => {
-    console.log('Navigating to EditSocialMediaScreen');
+
     navigation.navigate('EditSocialMediaScreen');
   };
   const onEditPhoto = () => {
     // Navigate to dedicated photo screen
-    console.log('Navigating to ProviderPhotoUploadScreen');
+
     // @ts-ignore - Route is definitely registered in App.tsx
     navigation.navigate('ProviderPhotoUploadScreen');
   };
 
   const onEditCertifications = () => {
-    console.log('Navigating to EditCertificationsScreen');
+
     navigation.navigate('EditCertificationsScreen');
   };
 

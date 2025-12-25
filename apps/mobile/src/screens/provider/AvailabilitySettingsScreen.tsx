@@ -407,6 +407,10 @@ export function AvailabilitySettingsScreen() {
               onPress={() => {
                 if (Platform.OS === 'web') {
                   try { window.location.hash = '/provider/calendar/block'; } catch { }
+                } else {
+                  // Connect to BlockTimeScreen for mobile
+                  // @ts-ignore
+                  navigation.navigate('ProviderTabs', { screen: 'Kalender', params: { screen: 'BlockTimeScreen' } });
                 }
               }}
             />

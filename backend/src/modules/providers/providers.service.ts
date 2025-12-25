@@ -118,25 +118,11 @@ export class ProvidersService {
 
     provider.canAddCertification();
 
-    // Create a new certification instance (we can't use Repo.create here, so we instantiate or use a factory)
-    // Ideally ProviderCertification.create(...) exists.
-    // For now we pass a partial object and let the repo handle it or assume TypeORM repo.create behavior is needed.
-    // Wait, IProviderRepository.saveCertification expects a ProviderCertification entity.
-    // I should probably add a factory to ProviderCertification or use "new ProviderCertification()".
-    // Let's assume for now we construct it manually as we did with Entity.create pattern.
-
-    // Using a plain object cast for now as we don't have a factory on ProviderCertification yet.
-    // Actually, `TypeORMProviderRepository` uses `certificationsRepo.save`.
-    // We should construct it.
-
-    const cert = new ProviderCertification(); // Assuming we import it? No, imports removed. 
-    // Wait, I need to import ProviderCertification entity class to instantiate it.
-    // I added it to imports at the top.
-
-    Object.assign(cert, {
-      provider: { id: provider.id },
-      ...dto
-    });
+    const cert = new ProviderCertification();
+    cert.provider = provider;
+    cert.title = dto.title;
+    cert.institution = dto.institution;
+    cert.year = dto.year;
 
     const saved = await this.providerRepo.saveCertification(cert);
 

@@ -14,6 +14,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { ProviderMoreStackParamList } from '@/navigation/types';
+import { useAuth } from '../../auth/AuthContext';
 import Card from '../../components/Card';
 import IconButton from '../../components/IconButton';
 import Icon from '../../components/Icon';
@@ -62,8 +63,8 @@ type LinkItemProps = {
 };
 
 const LinkItem = ({ icon, title, subtitle, onPress, isDestructive = false }: LinkItemProps) => (
-  <TouchableOpacity 
-    style={[styles.listItem, styles.linkItem, isDestructive && styles.dangerLink]} 
+  <TouchableOpacity
+    style={[styles.listItem, styles.linkItem, isDestructive && styles.dangerLink]}
     onPress={onPress}
   >
     <View style={styles.itemContent}>
@@ -82,7 +83,8 @@ const LinkItem = ({ icon, title, subtitle, onPress, isDestructive = false }: Lin
 // --- Main Component ---
 export function ProviderSettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<ProviderMoreStackParamList>>();
-  
+  const { logout } = useAuth();
+
   // --- Notification States ---
   const [pushNotifications, setPushNotifications] = useState(true);
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -119,7 +121,7 @@ export function ProviderSettingsScreen() {
         if (typeof s.profileVisible === 'boolean') setProfileVisible(s.profileVisible);
         if (typeof s.autoAcceptBookings === 'boolean') setAutoAcceptBookings(s.autoAcceptBookings);
         if (typeof s.allowWalkIns === 'boolean') setAllowWalkIns(s.allowWalkIns);
-      } catch {}
+      } catch { }
     })();
     return () => { active = false; };
   }, []);
@@ -127,7 +129,7 @@ export function ProviderSettingsScreen() {
   const saveSetting = async (key: string, value: boolean) => {
     try {
       await http.patch('/providers/settings', { [key]: value });
-    } catch {}
+    } catch { }
   };
 
   // --- Functions ---
@@ -137,9 +139,19 @@ export function ProviderSettingsScreen() {
       "Möchtest du dein Konto wirklich deaktivieren? Dies ist eine einmalige Aktion.",
       [
         { text: "Abbrechen", style: "cancel" },
-        { 
-          text: "Deaktivieren", 
-          onPress: () => Alert.alert("Erfolg", "Konto deaktivieren - Funktion in Entwicklung"),
+        {
+          text: "Deaktivieren",
+          onPress: async () => {
+            try {
+              // Call API to deactivate/delete user
+              await http.delete('/users/me');
+              Alert.alert("Erfolg", "Dein Konto wurde deaktiviert.");
+              // Logout to clear state and redirect to login
+              await logout();
+            } catch (error) {
+              Alert.alert("Fehler", "Konto konnte nicht deaktiviert werden. Bitte versuche es später erneut.");
+            }
+          },
           style: "destructive",
         },
       ]
@@ -218,7 +230,7 @@ export function ProviderSettingsScreen() {
             <LinkItem
               icon="lock"
               title="Passwort ändern"
-              onPress={() => {}}
+              onPress={() => { }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -248,7 +260,7 @@ export function ProviderSettingsScreen() {
             <LinkItem
               icon="shield"
               title="Datenschutzeinstellungen"
-              onPress={() => {}}
+              onPress={() => { }}
             />
           </Card>
         </View>
@@ -295,7 +307,7 @@ export function ProviderSettingsScreen() {
               icon="globe"
               title="Sprache"
               subtitle="Deutsch"
-              onPress={() => {}}
+              onPress={() => { }}
             />
             <View style={styles.divider} />
             <ToggleItem
@@ -303,7 +315,7 @@ export function ProviderSettingsScreen() {
               title="Dunkler Modus"
               subtitle="Bald verfügbar"
               checked={false}
-              onToggle={() => {}} // Disabled logic handled in the component itself via styling
+              onToggle={() => { }} // Disabled logic handled in the component itself via styling
             />
           </Card>
         </View>
@@ -314,12 +326,12 @@ export function ProviderSettingsScreen() {
           <Card style={styles.cardContainer}>
             <LinkItem
               title="Nutzungsbedingungen"
-              onPress={() => {}}
+              onPress={() => { }}
             />
             <View style={styles.divider} />
             <LinkItem
               title="Datenschutzerklärung"
-              onPress={() => {}}
+              onPress={() => { }}
             />
             <View style={styles.divider} />
             <View style={styles.versionContainer}>
@@ -433,7 +445,7 @@ const styles = StyleSheet.create({
   itemTextContainer: {
     flexShrink: 1,
     // Add opacity for disabled item (Dark Mode)
-    opacity: 1, 
+    opacity: 1,
   },
   itemTitle: {
     fontSize: FONT_SIZES.body || 14,

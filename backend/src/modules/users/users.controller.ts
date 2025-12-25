@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Param, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Delete, Param, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { UsersService } from './users.service';
@@ -49,5 +49,13 @@ export class UsersController {
     const userId = (req.user as any)?.sub;
     await this.usersService.reportUser(userId, reportedId, body.reason, body.details);
     return { success: true, message: 'User reported' };
+  }
+
+  @Delete('me')
+  @UseGuards(JwtAuthGuard)
+  async deleteMe(@Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    await this.usersService.deactivateUser(userId);
+    return { success: true, message: 'User account deactivated' };
   }
 }

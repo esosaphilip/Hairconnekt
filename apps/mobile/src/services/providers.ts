@@ -165,23 +165,18 @@ export const providersApi = {
   },
 
 
-  async blockTimeCreate(body: {
-    startDate: string; endDate?: string; isAllDay: boolean; startTime?: string; endTime?: string;
-    reason: string; notes?: string;
-    recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
-  }): Promise<{ blockId: string; message?: string }> {
+  async blockTimeCreate(body: any): Promise<{ blockId: string; message?: string }> {
+    // Pass through body but ensure dates are ISO strings if needed
+    // The checking logic in BlockTimeScreen seems robust for dates.
+    // We'll trust the caller (Screen) to format largely, but we can ensure basic fields.
     const payload = {
+      ...body,
       startDate: toIsoString(body.startDate),
       endDate: body.endDate ? toIsoString(body.endDate) : toIsoString(body.startDate),
-      allDay: Boolean(body.isAllDay),
-      startTime: body.startTime,
-      endTime: body.endTime,
-      reason: body.reason,
-      notes: body.notes,
-      repeat: Boolean(body.recurring),
-      repeatFrequency: body.recurring?.frequency,
-      repeatEndDate: body.recurring?.endsOn ? toIsoString(body.recurring.endsOn) : undefined,
+      startTime: body.allDay ? undefined : body.startTime,
+      endTime: body.allDay ? undefined : body.endTime,
     };
+
     // Endpoint: POST /providers/me/calendar/blocks
     const res = await http.post('/providers/me/calendar/blocks', payload);
     const data = res?.data;
@@ -191,22 +186,13 @@ export const providersApi = {
     return (data as any) ?? { blockId: '' };
   },
 
-  async blockTimeUpdate(id: string, body: {
-    startDate: string; endDate?: string; isAllDay: boolean; startTime?: string; endTime?: string;
-    reason: string; notes?: string;
-    recurring?: { frequency: 'daily' | 'weekly' | 'monthly'; endsOn: string };
-  }): Promise<{ blockId: string; message?: string }> {
+  async blockTimeUpdate(id: string, body: any): Promise<{ blockId: string; message?: string }> {
     const payload = {
+      ...body,
       startDate: toIsoString(body.startDate),
       endDate: body.endDate ? toIsoString(body.endDate) : toIsoString(body.startDate),
-      allDay: Boolean(body.isAllDay),
-      startTime: body.startTime,
-      endTime: body.endTime,
-      reason: body.reason,
-      notes: body.notes,
-      repeat: Boolean(body.recurring),
-      repeatFrequency: body.recurring?.frequency,
-      repeatEndDate: body.recurring?.endsOn ? toIsoString(body.recurring.endsOn) : undefined,
+      startTime: body.allDay ? undefined : body.startTime,
+      endTime: body.allDay ? undefined : body.endTime,
     };
     // Endpoint: PATCH /providers/me/calendar/blocks/:id
     const res = await http.patch(`/providers/me/calendar/blocks/${id}`, payload);
