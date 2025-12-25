@@ -49,9 +49,9 @@ import { TasksModule } from './modules/tasks/tasks.module';
     SmsModule,
     HealthModule,
     // Feature modules required by provider dashboard and reviews screens
+    ServicesModule, // Moved BEFORE ProvidersModule to prevent route collision (providers/me/services vs providers/:id/services)
     ProvidersModule,
     ReviewsModule,
-    ServicesModule,
     BlockedTimeModule,
     // Register appointments API routes (client/provider listings, create, etc.)
     AppointmentsModule,
@@ -71,4 +71,4 @@ import { TasksModule } from './modules/tasks/tasks.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
