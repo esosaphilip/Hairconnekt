@@ -122,7 +122,8 @@ export class ServicesService {
         .getMany();
     } catch (error) {
       console.error('[ServicesService] listForProvider Error:', error);
-      throw new InternalServerErrorException('Failed to fetch services for provider');
+      // DEBUG: Return actual error message to frontend to identify the SQL issue
+      throw new BadRequestException(`DB Error: ${(error as any).message}`);
     }
   }
 
