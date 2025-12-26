@@ -235,6 +235,10 @@ export function ProviderProfileScreen() {
     navigation.navigate('ProviderPhotoUploadScreen');
   };
 
+  const onEditPortfolio = () => {
+    navigation.navigate('ProviderPortfolioScreen');
+  };
+
   const onEditCertifications = () => {
 
     navigation.navigate('EditCertificationsScreen');
@@ -388,6 +392,27 @@ export function ProviderProfileScreen() {
             ) : (
               <Text style={{ color: colors.gray600 }}>Noch keine Spezialisierungen hinterlegt.</Text>
             )}
+          </View>
+        </Card>
+
+        {/* Portfolio */}
+        <Card style={{ padding: spacing.md, marginTop: spacing.md }}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Portfolio</Text>
+            <TouchableOpacity onPress={onEditPortfolio} style={styles.iconBtn} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
+              <Ionicons name="pencil-outline" size={18} color={colors.gray700} />
+            </TouchableOpacity>
+          </View>
+          <View>
+            <Button
+              variant="outline"
+              title="Portfolio verwalten"
+              onPress={onEditPortfolio}
+              style={{ marginTop: spacing.sm }}
+            />
+            <Text style={{ marginTop: spacing.sm, color: colors.gray600, fontSize: 12 }}>
+              Lade Bilder deiner Arbeit hoch, um Kunden zu gewinnen.
+            </Text>
           </View>
         </Card>
 
