@@ -415,8 +415,9 @@ export function ServicesManagementScreen() {
           )}
 
           {!!error && (
-            <Card style={{ padding: spacing.md }}>
-              <Text style={{ color: colors.error }}>{error}</Text>
+            <Card style={{ padding: spacing.md, alignItems: 'center' }}>
+              <Text style={{ color: colors.error, marginBottom: spacing.md, textAlign: 'center' }}>{error}</Text>
+              <Button title="Erneut versuchen" onPress={onRefresh} style={{ backgroundColor: colors.primary, minWidth: 120 }} />
             </Card>
           )}
           {loading && (

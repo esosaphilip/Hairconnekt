@@ -113,15 +113,13 @@ export class ServicesService {
 
   async listForProvider(providerId: string): Promise<Service[]> {
     try {
-      // Use standard repository find which handles relations cleaner than QueryBuilder in many cases
-      return await this.serviceRepository.find({
-        where: { provider: { id: providerId } },
-        relations: ['category', 'provider'],
-        order: {
-          displayOrder: 'ASC',
-          name: 'ASC',
-        },
-      });
+      return await this.serviceRepository.createQueryBuilder('s')
+        .leftJoinAndSelect('s.category', 'category')
+        .leftJoinAndSelect('s.provider', 'provider')
+        .where('provider.id = :providerId', { providerId })
+        .orderBy('s.displayOrder', 'ASC')
+        .addOrderBy('s.name', 'ASC')
+        .getMany();
     } catch (error) {
       console.error('[ServicesService] listForProvider Error:', error);
       throw new InternalServerErrorException('Failed to fetch services for provider');
