@@ -113,14 +113,14 @@ export class ServicesService {
 
   async listForProvider(providerId: string): Promise<Service[]> {
     try {
-      return await this.serviceRepository.createQueryBuilder('s')
-        .leftJoinAndSelect('s.category', 'category')
-        .leftJoinAndSelect('s.category', 'category')
-        // .leftJoinAndSelect('s.provider', 'provider') // Optimization: No need to join provider if we only filter by ID
-        .where('s.providerId = :providerId', { providerId })
-        .orderBy('s.displayOrder', 'ASC')
-        .addOrderBy('s.name', 'ASC')
-        .getMany();
+      return await this.serviceRepository.find({
+        where: { providerId },
+        relations: ['category'],
+        order: {
+          displayOrder: 'ASC',
+          name: 'ASC',
+        },
+      });
     } catch (error) {
       console.error('[ServicesService] listForProvider Error:', error);
       // DEBUG: Return actual error message to frontend to identify the SQL issue
