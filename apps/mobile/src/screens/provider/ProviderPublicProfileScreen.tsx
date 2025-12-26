@@ -49,6 +49,7 @@ type PublicProfile = {
       lastName?: string;
       profilePictureUrl?: string | null;
     };
+    availability?: { weekday: string; start: string; end: string }[];
   };
 };
 
@@ -142,7 +143,7 @@ export function ProviderPublicProfileScreen() {
               // Let's handle both
               const dataRoot = (payload?.success && payload?.data) ? payload.data : payload;
               const items = Array.isArray(dataRoot?.items) ? dataRoot.items : [];
-              
+
               setPortfolioItems(items.map((it: any) => ({
                 id: it.id,
                 imageUrl: it.imageUrl,
@@ -204,6 +205,26 @@ export function ProviderPublicProfileScreen() {
             {publicData.specialties.map((spec, i) => (
               <Badge key={i} title={spec} variant="outline" />
             ))}
+          </View>
+        </Card>
+      )}
+
+      {publicData?.profile?.availability && publicData.profile.availability.length > 0 && (
+        <Card style={styles.tabCard}>
+          <Text style={styles.cardTitle}>Öffnungszeiten</Text>
+          <View style={styles.featureList}>
+            {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((dayEn, idx) => {
+              const dayDe = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'][idx];
+              const slot = publicData.profile?.availability?.find(a => a.weekday?.toLowerCase() === dayEn.toLowerCase());
+              return (
+                <View key={dayEn} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                  <Text style={styles.bodyText}>{dayDe}</Text>
+                  <Text style={[styles.bodyText, { color: slot ? COLORS.text : COLORS.textSecondary }]}>
+                    {slot ? `${slot.start} - ${slot.end}` : 'Geschlossen'}
+                  </Text>
+                </View>
+              );
+            })}
           </View>
         </Card>
       )}
@@ -325,7 +346,9 @@ export function ProviderPublicProfileScreen() {
               </TouchableOpacity>
             ))
           ) : (
-            <Text style={styles.bodyText}>Noch keine Portfolio-Bilder.</Text>
+          <Text style={[styles.bodyText, { textAlign: 'center', marginTop: SPACING.xl, color: COLORS.textSecondary }]}>
+            Noch keine Portfolio-Bilder vorhanden.
+          </Text>
           )}
         </View>
       )}

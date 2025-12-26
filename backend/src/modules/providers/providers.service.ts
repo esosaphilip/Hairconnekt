@@ -571,6 +571,7 @@ export class ProvidersService {
       .leftJoinAndSelect('p.user', 'u')
       .leftJoinAndSelect('p.certifications', 'c')
       .leftJoinAndSelect('p.services', 's', 's.isActive = :isActive', { isActive: true }) // Only active services
+      .leftJoinAndSelect('p.availability', 'av')
       .where('p.id = :id', { id })
       .getOne();
 
@@ -599,6 +600,11 @@ export class ProvidersService {
         ...this.sanitizeProvider(provider),
         bio: provider.bio, // Explicitly ensure bio is present
         certifications: provider.certifications,
+        availability: (provider.availability || []).map((r) => ({
+          weekday: this.numberToWeekday(r.dayOfWeek), // Reuse existing helper
+          start: (r.startTime || '').slice(0, 5),
+          end: (r.endTime || '').slice(0, 5),
+        })),
         services: (provider.services || []).map(s => ({
           id: s.id,
           name: s.name,
