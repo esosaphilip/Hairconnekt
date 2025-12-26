@@ -23,8 +23,8 @@ export class Service {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'provider_id', type: 'uuid', insert: false, update: false })
-  providerId: string;
+  @Column({ name: 'provider_id', type: 'uuid', nullable: true, insert: false, update: false })
+  providerId?: string;
 
   @ManyToOne(() => ProviderProfile, (provider) => provider.services, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'provider_id' })
