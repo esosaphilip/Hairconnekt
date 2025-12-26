@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Put, Delete, Req, UseGuards, Query, Param, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Put, Delete, Req, UseGuards, Query, Param, UseInterceptors, UploadedFile, ParseUUIDPipe } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { ProvidersService } from './providers.service';
@@ -108,7 +108,7 @@ export class ProvidersController {
   @Delete('profile/certifications/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)
-  removeCertification(@Req() req: Request, @Param('id') id: string) {
+  removeCertification(@Req() req: Request, @Param('id', new ParseUUIDPipe()) id: string) {
     const userId = (req.user as any)?.sub;
     return this.providersService.removeCertification(userId, id);
   }
@@ -137,7 +137,7 @@ export class ProvidersController {
   @Patch('me/services/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)
-  async updateService(@Req() req: Request, @Param('id') id: string, @Body() body: any) {
+  async updateService(@Req() req: Request, @Param('id', new ParseUUIDPipe()) id: string, @Body() body: any) {
     const userId = (req.user as any)?.sub;
     console.log(`[FIRE-DEBUG] ProvidersController PATCH /providers/me/services/${id} HIT (Direct Route)`);
     const providerId = await this.servicesService.getProviderIdByUserId(userId);
@@ -147,7 +147,7 @@ export class ProvidersController {
   @Delete('me/services/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)
-  async deleteService(@Req() req: Request, @Param('id') id: string) {
+  async deleteService(@Req() req: Request, @Param('id', new ParseUUIDPipe()) id: string) {
     const userId = (req.user as any)?.sub;
     console.log(`[FIRE-DEBUG] ProvidersController DELETE /providers/me/services/${id} HIT (Direct Route)`);
     const providerId = await this.servicesService.getProviderIdByUserId(userId);
@@ -268,12 +268,11 @@ export class ProvidersController {
     return { success: true, data };
   }
 
-  // Public endpoint: provider public profile/details by id
   @Get('public/:id')
   @UseInterceptors(AppCacheInterceptor)
   @CacheKeyBuilder((req) => `providers:public:${req.params.id}`)
   @CacheTTL(300)
-  async getPublicProfile(@Param('id') id: string) {
+  async getPublicProfile(@Param('id', new ParseUUIDPipe()) id: string) {
     const data = await this.providersService.getPublicProfileById(id);
     return { success: true, data };
   }
@@ -282,7 +281,7 @@ export class ProvidersController {
   @UseInterceptors(AppCacheInterceptor)
   @CacheKeyBuilder((req) => `providers:services:${req.params.id}`)
   @CacheTTL(300)
-  async getServices(@Param('id') id: string) {
+  async getServices(@Param('id', new ParseUUIDPipe()) id: string) {
     // Public endpoint to get active services for a provider
     const data = await this.providersService.getPublicServices(id);
     return { success: true, data };

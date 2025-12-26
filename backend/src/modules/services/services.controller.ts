@@ -11,6 +11,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   Logger,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -78,7 +79,7 @@ export class ServicesController {
   @Roles(UserType.PROVIDER, UserType.BOTH)
   @Patch(':id')
   async update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() updateServiceDto: any,
     @Req() req: Request & { user: any },
   ) {
@@ -90,7 +91,7 @@ export class ServicesController {
   @Roles(UserType.PROVIDER, UserType.BOTH)
   @Delete(':id')
   async remove(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Req() req: Request & { user: any },
   ) {
     const providerId = await this.resolveProviderId(req);

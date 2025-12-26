@@ -14,6 +14,7 @@ import {
   BadRequestException,
   InternalServerErrorException,
   Logger,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -72,7 +73,7 @@ export class ProviderPortfolioController {
 
   // GET /api/v1/providers/:id/portfolio
   @Get(':id/portfolio')
-  list(@Param('id') providerId: string, @Query() q: ProviderPortfolioListQuery) {
+  list(@Param('id', new ParseUUIDPipe()) providerId: string, @Query() q: ProviderPortfolioListQuery) {
     return this.portfolioService.listProviderPortfolio(providerId, {
       page: q.page,
       limit: q.limit,
@@ -103,7 +104,7 @@ export class ProviderPortfolioController {
   @Put('portfolio/:id')
   @UseGuards(JwtAuthGuard)
   async update(
-    @Param('id') imageId: string,
+    @Param('id', new ParseUUIDPipe()) imageId: string,
     @Body() body: UpdatePortfolioImageDto,
     @Req() req: any,
   ) {
@@ -120,7 +121,7 @@ export class ProviderPortfolioController {
   @Delete('portfolio/:id')
   @UseGuards(JwtAuthGuard)
   async remove(
-    @Param('id') imageId: string,
+    @Param('id', new ParseUUIDPipe()) imageId: string,
     @Req() req: any,
   ) {
     const providerId = await this.resolveProviderId(req);

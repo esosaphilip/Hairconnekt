@@ -24,7 +24,7 @@ export class ServicesService {
     try {
       // Simplified lookup using standard findOne which is more robust
       const provider = await this.providerProfileRepository.findOne({
-        where: { user: { id: userId } },
+        where: { userId }, // using explicit column
         select: ['id'], // We only need the ID
       });
 
@@ -115,8 +115,9 @@ export class ServicesService {
     try {
       return await this.serviceRepository.createQueryBuilder('s')
         .leftJoinAndSelect('s.category', 'category')
-        .leftJoinAndSelect('s.provider', 'provider')
-        .where('provider.id = :providerId', { providerId })
+        .leftJoinAndSelect('s.category', 'category')
+        // .leftJoinAndSelect('s.provider', 'provider') // Optimization: No need to join provider if we only filter by ID
+        .where('s.providerId = :providerId', { providerId })
         .orderBy('s.displayOrder', 'ASC')
         .addOrderBy('s.name', 'ASC')
         .getMany();
@@ -139,7 +140,7 @@ export class ServicesService {
       throw new NotFoundException(`Service with ID "${id}" not found`);
     }
 
-    if (service.provider.id !== providerId) {
+    if (service.providerId !== providerId) {
       throw new NotFoundException(`Service with ID "${id}" not found for this provider`);
     }
 
@@ -195,7 +196,7 @@ export class ServicesService {
       throw new NotFoundException(`Service with ID "${id}" not found`);
     }
 
-    if (service.provider.id !== providerId) {
+    if (service.providerId !== providerId) {
       throw new NotFoundException(`Service with ID "${id}" not found for this provider`);
     }
 

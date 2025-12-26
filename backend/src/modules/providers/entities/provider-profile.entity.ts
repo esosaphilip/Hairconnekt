@@ -37,6 +37,9 @@ export class ProviderProfile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'user_id', type: 'uuid' })
+  userId: string;
+
   // Do not reference inverse property to avoid requiring it on User during startup
   @OneToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })

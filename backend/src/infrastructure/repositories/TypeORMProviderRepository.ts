@@ -38,7 +38,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
 
   async findByUserId(userId: string): Promise<ProviderProfile | null> {
     return this.providersRepo.findOne({
-      where: { user: { id: userId } },
+      where: { userId },
       relations: ['user', 'certifications', 'availability'],
     });
   }
@@ -129,10 +129,9 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async getReviewStats(providerId: string): Promise<{ avgRating: number; reviewCount: number }> {
     const { avgRating, reviewCount } = await this.reviewsRepo
       .createQueryBuilder('r')
-      .leftJoin('r.provider', 'p')
       .select('AVG(r.rating)', 'avgRating')
       .addSelect('COUNT(r.id)', 'reviewCount')
-      .where('p.id = :providerId', { providerId })
+      .where('r.provider.id = :providerId', { providerId }) // Assuming Review entity has provider relation. If explicit column added there, use r.providerId
       .getRawOne<{ avgRating: string; reviewCount: string }>()
       .then((row) => ({
         avgRating: row?.avgRating ? parseFloat(row.avgRating) : 0,
@@ -221,11 +220,11 @@ export class TypeORMProviderRepository implements IProviderRepository {
     if (providerIds.length === 0) return [];
     return await this.servicesRepo
       .createQueryBuilder('svc')
-      .leftJoin('svc.provider', 'p')
-      .select('p.id', 'providerId')
+      // Removed join to provider, using providerId directly
+      .select('svc.providerId', 'providerId')
       .addSelect('svc.name', 'name')
       .addSelect('svc.priceCents', 'priceCents')
-      .where('p.id IN (:...ids)', { ids: providerIds })
+      .where('svc.providerId IN (:...ids)', { ids: providerIds })
       .andWhere('svc.isActive = :active', { active: true })
       .orderBy('svc.displayOrder', 'ASC')
       .limit(200) // Safety limit
@@ -248,10 +247,10 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async findServiceStats(providerId: string): Promise<any[]> {
     return await this.servicesRepo
       .createQueryBuilder('svc')
-      .leftJoin('svc.provider', 'p')
+      // Removed join to provider, using providerId directly
       .select('svc.name', 'name')
       .addSelect('svc.priceCents', 'priceCents')
-      .where('p.id = :id', { id: providerId })
+      .where('svc.providerId = :id', { id: providerId })
       .andWhere('svc.isActive = :active', { active: true })
       .orderBy('svc.displayOrder', 'ASC')
       .limit(200)
