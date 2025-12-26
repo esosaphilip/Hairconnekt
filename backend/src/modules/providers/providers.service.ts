@@ -855,6 +855,18 @@ export class ProvidersService {
           profilePictureUrl: p.user.profilePictureUrl || null,
         }
         : undefined,
+      // Map relations to simple arrays/objects for frontend
+      specializations: p.specializations?.map(s => s.specialization) || [],
+      languages: p.languages?.map(l => l.languageCode) || [],
+      certifications: p.certifications || [],
+      socialMedia: {
+        website: p.website || null,
+        instagram: p.instagram || null,
+        facebook: p.facebook || null,
+        twitter: p.twitter || null,
+        youtube: p.youtube || null,
+        linkedin: p.linkedin || null,
+      }
     };
   }
 }

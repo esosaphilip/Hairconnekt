@@ -32,14 +32,14 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async findById(id: string): Promise<ProviderProfile | null> {
     return this.providersRepo.findOne({
       where: { id },
-      relations: ['user', 'certifications', 'availability'],
+      relations: ['user', 'certifications', 'availability', 'languages', 'specializations'],
     });
   }
 
   async findByUserId(userId: string): Promise<ProviderProfile | null> {
     return this.providersRepo.findOne({
       where: { userId },
-      relations: ['user', 'certifications', 'availability'],
+      relations: ['user', 'certifications', 'availability', 'languages', 'specializations'],
     });
   }
 
@@ -68,8 +68,9 @@ export class TypeORMProviderRepository implements IProviderRepository {
       const newLangs = languages.map((lang) =>
         manager.create(ProviderLanguage, {
           provider: { id: providerId } as ProviderProfile,
-          language: lang,
-        })
+          languageCode: lang,
+          proficiency: 'NATIVE', // Default proficiency
+        } as unknown as ProviderLanguage)
       );
       if (newLangs.length > 0) {
         await manager.save(newLangs);

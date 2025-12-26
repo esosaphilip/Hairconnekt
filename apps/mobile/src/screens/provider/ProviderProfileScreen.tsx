@@ -381,8 +381,8 @@ export function ProviderProfileScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.badgeWrap}>
-            {(Array.isArray(publicData?.specialties) && publicData.specialties.length > 0) ? (
-              publicData.specialties.slice(0, 6).map((s, idx) => (
+            {(Array.isArray(profile?.specializations) && profile!.specializations!.length > 0) ? (
+              profile!.specializations!.map((s, idx) => (
                 <Badge key={`${s}-${idx}`} variant="secondary" style={styles.badgeItem}>{s}</Badge>
               ))
             ) : (
@@ -400,9 +400,13 @@ export function ProviderProfileScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.badgeWrap}>
-            {/* Placeholder until languages are part of the profile schema */}
-            <Badge variant="outline" style={styles.badgeItem}>Deutsch</Badge>
-            <Badge variant="outline" style={styles.badgeItem}>Englisch</Badge>
+            {(Array.isArray(profile?.languages) && profile!.languages!.length > 0) ? (
+              profile!.languages!.map((lang, idx) => (
+                <Badge key={`${lang}-${idx}`} variant="outline" style={styles.badgeItem}>{lang}</Badge>
+              ))
+            ) : (
+              <Text style={{ color: colors.gray600 }}>Noch keine Sprachen hinterlegt.</Text>
+            )}
           </View>
         </Card>
 
@@ -417,15 +421,15 @@ export function ProviderProfileScreen() {
           <View>
             <View style={[styles.infoRow, { marginBottom: spacing.sm }]}>
               <Ionicons name="globe-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>—</Text>
+              <Text style={styles.infoText}>{profile?.socialMedia?.website || '—'}</Text>
             </View>
             <View style={[styles.infoRow, { marginBottom: spacing.sm }]}>
               <Ionicons name="logo-instagram" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>—</Text>
+              <Text style={styles.infoText}>{profile?.socialMedia?.instagram || '—'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="logo-facebook" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>—</Text>
+              <Text style={styles.infoText}>{profile?.socialMedia?.facebook || '—'}</Text>
             </View>
           </View>
         </Card>
