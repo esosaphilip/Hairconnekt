@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServicesModule } from '../services/services.module';
 import { ProvidersController } from './providers.controller';
 import { ProvidersService } from './providers.service';
 import { ProviderProfile } from './entities/provider-profile.entity';
@@ -41,6 +42,7 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
       User,
     ]),
     StorageModule,
+    ServicesModule, // Imported to expose ServicesService to ProvidersController for direct routing fix
   ],
   controllers: [ProvidersController],
   providers: [

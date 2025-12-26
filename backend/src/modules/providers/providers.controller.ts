@@ -18,9 +18,14 @@ import { UserType } from '../users/entities/user.entity';
 import { Request } from 'express';
 import { AppCacheInterceptor, CacheKeyBuilder, CachePerUser } from '../cache/app-cache.interceptor';
 
+import { ServicesService } from '../services/services.service';
+
 @Controller('providers')
 export class ProvidersController {
-  constructor(private readonly providersService: ProvidersService) { }
+  constructor(
+    private readonly providersService: ProvidersService,
+    private readonly servicesService: ServicesService,
+  ) { }
 
   @Post()
   create(@Body() dto: CreateProviderDto) {
@@ -107,6 +112,48 @@ export class ProvidersController {
     const userId = (req.user as any)?.sub;
     return this.providersService.removeCertification(userId, id);
   }
+
+  @Get('me/services')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async getMyServices(@Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    console.log('[FIRE-DEBUG] ProvidersController GET /providers/me/services HIT (Direct Route)');
+    const providerId = await this.servicesService.getProviderIdByUserId(userId);
+    return this.servicesService.listForProvider(providerId);
+  }
+
+  @Post('me/services')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async createService(@Req() req: Request, @Body() body: any) {
+    const userId = (req.user as any)?.sub;
+    console.log('[FIRE-DEBUG] ProvidersController POST /providers/me/services HIT (Direct Route)');
+    // Resolve provider ID internally
+    const providerId = await this.servicesService.getProviderIdByUserId(userId);
+    return this.servicesService.create(providerId, body);
+  }
+
+  @Patch('me/services/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async updateService(@Req() req: Request, @Param('id') id: string, @Body() body: any) {
+    const userId = (req.user as any)?.sub;
+    console.log(`[FIRE-DEBUG] ProvidersController PATCH /providers/me/services/${id} HIT (Direct Route)`);
+    const providerId = await this.servicesService.getProviderIdByUserId(userId);
+    return this.servicesService.update(id, providerId, body);
+  }
+
+  @Delete('me/services/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async deleteService(@Req() req: Request, @Param('id') id: string) {
+    const userId = (req.user as any)?.sub;
+    console.log(`[FIRE-DEBUG] ProvidersController DELETE /providers/me/services/${id} HIT (Direct Route)`);
+    const providerId = await this.servicesService.getProviderIdByUserId(userId);
+    return this.servicesService.delete(id, providerId);
+  }
+
 
   @Get('me')
   @UseGuards(JwtAuthGuard, RolesGuard)
