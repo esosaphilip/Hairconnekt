@@ -1,4 +1,4 @@
-import { IsArray, IsEnum, ArrayMinSize } from 'class-validator';
+import { IsArray, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum SpecializationEnum {
@@ -23,8 +23,8 @@ export enum SpecializationEnum {
 }
 
 export class UpdateSpecializationsDto {
-  @ApiProperty({ description: 'List of specializations', enum: SpecializationEnum, isArray: true })
+  @ApiProperty({ description: 'List of specializations', isArray: true, type: String })
   @IsArray({ message: 'Spezialisierungen müssen eine Liste sein' })
-  @IsEnum(SpecializationEnum, { each: true, message: 'Ungültige Spezialisierung: $value' })
-  specializations: SpecializationEnum[];
+  @IsString({ each: true, message: 'Spezialisierungen müssen Text sein' })
+  specializations: string[];
 }
