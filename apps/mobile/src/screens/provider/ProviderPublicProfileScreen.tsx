@@ -370,10 +370,9 @@ export function ProviderPublicProfileScreen() {
     <SafeAreaView style={styles.flexContainer}>
       {/* Header (Always Visible) */}
       <View style={styles.fixedHeader}>
-        <View style={styles.headerRow}>
           <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>Öffentliches Profil</Text>
-          <IconButton name="share-2" onPress={handleShare} />
+          <IconButton name="copy" onPress={handleShare} />
         </View>
         <Text style={styles.headerSubtitle}>So sehen dich potenzielle Kunden</Text>
       </View>
@@ -456,7 +455,7 @@ export function ProviderPublicProfileScreen() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }
 
