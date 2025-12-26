@@ -215,7 +215,17 @@ export function ProviderPublicProfileScreen() {
           <View style={styles.featureList}>
             {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((dayEn, idx) => {
               const dayDe = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'][idx];
-              const slot = publicData.profile?.availability?.find(a => a.weekday?.toLowerCase() === dayEn.toLowerCase());
+              // Backend returns 3-letter codes (mon, tue, wed...)
+              const shortCode = dayEn.substring(0, 3).toLowerCase();
+              // Handle 'thu' vs 'thursday' (first 3 chars match). 'tue' match.
+              // 'wed' match. 'fri' match. 'sat' match. 'sun' match. 'mon' match.
+              // Wait, 'Thursday' substring(0,3) is 'Thu'. 'Tuesday' is 'Tue'.
+              // Backend uses 'thu', 'tue'. So substring(0,3).toLowerCase() works for all except maybe... 
+              // 'Sunday' -> 'sun'. 'Saturday' -> 'sat'. 'Friday' -> 'fri'. 'Wednesday' -> 'wed'.
+              // All seem to align with standard 3-letter codes.
+              // Let's verify 'Thursday' -> 'thu'. Yes.
+
+              const slot = publicData.profile?.availability?.find(a => a.weekday?.toLowerCase() === shortCode);
               return (
                 <View key={dayEn} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                   <Text style={styles.bodyText}>{dayDe}</Text>
@@ -346,9 +356,9 @@ export function ProviderPublicProfileScreen() {
               </TouchableOpacity>
             ))
           ) : (
-          <Text style={[styles.bodyText, { textAlign: 'center', marginTop: SPACING.xl, color: COLORS.textSecondary }]}>
-            Noch keine Portfolio-Bilder vorhanden.
-          </Text>
+            <Text style={[styles.bodyText, { textAlign: 'center', marginTop: SPACING.xl, color: COLORS.textSecondary }]}>
+              Noch keine Portfolio-Bilder vorhanden.
+            </Text>
           )}
         </View>
       )}
