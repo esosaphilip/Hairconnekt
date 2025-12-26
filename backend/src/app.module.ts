@@ -38,7 +38,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
       url: process.env.DATABASE_URL,
       ssl: process.env.DATABASE_SSL ? { rejectUnauthorized: false } : false,
       autoLoadEntities: true,
-      synchronize: false,
+      synchronize: true, // Auto-schema sync enabled for dev
     }),
     // Global cache module (Redis) for caching interceptors and services
     AppCacheModule,

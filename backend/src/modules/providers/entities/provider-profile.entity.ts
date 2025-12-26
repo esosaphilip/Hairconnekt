@@ -37,7 +37,7 @@ export class ProviderProfile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'user_id', type: 'uuid' })
+  @Column({ name: 'user_id', type: 'uuid', insert: false, update: false })
   userId: string;
 
   // Do not reference inverse property to avoid requiring it on User during startup

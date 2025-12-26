@@ -23,7 +23,7 @@ export class Service {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'provider_id', type: 'uuid' })
+  @Column({ name: 'provider_id', type: 'uuid', insert: false, update: false })
   providerId: string;
 
   @ManyToOne(() => ProviderProfile, (provider) => provider.services, { onDelete: 'CASCADE' })
@@ -32,7 +32,7 @@ export class Service {
 
   // Make category optional to match CreateServiceDto where categoryId is optional
   // Note: DB constraint may still be NOT NULL; creation without category should be avoided
-  @Column({ name: 'category_id', type: 'uuid', nullable: true })
+  @Column({ name: 'category_id', type: 'uuid', nullable: true, insert: false, update: false })
   categoryId?: string | null;
 
   @ManyToOne(() => ServiceCategory, { onDelete: 'RESTRICT', nullable: true })
