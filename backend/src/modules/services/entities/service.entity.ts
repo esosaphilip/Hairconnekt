@@ -52,8 +52,8 @@ export class Service {
   @Column({ name: 'price_cents', type: 'int' })
   priceCents: number;
 
-  @Column({ name: 'price_type', type: 'enum', enum: PriceType })
-  priceType: PriceType;
+  @Column({ name: 'price_type', type: 'varchar', default: 'fixed' })
+  priceType: string;
 
   @Column({ name: 'price_max_cents', type: 'int', nullable: true })
   priceMaxCents?: number | null;
