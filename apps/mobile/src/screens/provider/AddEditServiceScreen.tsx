@@ -42,7 +42,7 @@ export function AddEditServiceScreen() {
     if (Platform.OS === 'web') {
       try {
         return typeof window !== 'undefined' && window.location.hash.includes('/provider/services/edit');
-      } catch {}
+      } catch { }
     }
     return !!serviceId;
   }, []);
@@ -70,7 +70,7 @@ export function AddEditServiceScreen() {
   const onBack = () => {
     // Placeholder navigation
     if (Platform.OS === 'web') {
-      try { window.history.back(); } catch {}
+      try { window.history.back(); } catch { }
     }
   };
 
@@ -95,7 +95,7 @@ export function AddEditServiceScreen() {
             requiresConsultation: false,
           });
         }
-      } catch {}
+      } catch { }
     })();
   }, [serviceId]);
 
@@ -112,27 +112,27 @@ export function AddEditServiceScreen() {
           const res = await http.get('/services/categories', { params: { locale: 'de' } });
           const items = normalize(res?.data);
           if (items.length) { setCategories(items); return; }
-        } catch {}
+        } catch { }
         try {
           const res = await http.get('/provider/services/categories', { params: { locale: 'de' } });
           const items = normalize(res?.data);
           if (items.length) { setCategories(items); return; }
-        } catch {}
+        } catch { }
         try {
           const res = await http.get('/providers/services/categories', { params: { locale: 'de' } });
           const items = normalize(res?.data);
           if (items.length) { setCategories(items); return; }
-        } catch {}
+        } catch { }
         try {
           const res = await http.get('/service-categories', { params: { locale: 'de' } });
           const items = normalize(res?.data);
           if (items.length) { setCategories(items); return; }
-        } catch {}
+        } catch { }
         try {
           const res = await http.get('/categories', { params: { type: 'service', locale: 'de' } });
           const items = normalize(res?.data);
           if (items.length) { setCategories(items); return; }
-        } catch {}
+        } catch { }
         setCategoriesError('Keine Kategorien gefunden.');
       } finally {
         setCategoriesLoading(false);
@@ -176,7 +176,7 @@ export function AddEditServiceScreen() {
       }
 
       if (Platform.OS === 'web') {
-        try { window.location.hash = '/provider/services'; } catch {}
+        try { window.location.hash = '/provider/services'; } catch { }
       }
     } catch (err) {
       let msg = 'Ein Fehler ist aufgetreten.';
@@ -240,10 +240,10 @@ export function AddEditServiceScreen() {
             {categoriesLoading ? (
               <Text style={styles.mutedNote}>Lade Kategorien…</Text>
             ) : (
-            <Picker
+              <Picker
                 selectedValue={formData.category}
                 onValueChange={(v: string) => setFormData({ ...formData, category: v })}
-                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.nameDe ?? 'Kategorie', value: (c.nameDe ?? c.name ?? '') }))]}
+                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.nameDe ?? 'Kategorie', value: c.id }))]}
               />
             )}
             {categoriesError && <Text style={styles.feedbackError}>{categoriesError}</Text>}

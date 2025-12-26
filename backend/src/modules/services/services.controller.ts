@@ -23,7 +23,7 @@ import { Request } from 'express';
 export class ServicesController {
   private readonly logger = new Logger(ServicesController.name);
 
-  constructor(private readonly servicesService: ServicesService) {}
+  constructor(private readonly servicesService: ServicesService) { }
 
   private async resolveProviderId(req: Request & { user: any }): Promise<string> {
     const user = req.user;
@@ -46,9 +46,19 @@ export class ServicesController {
   @Roles(UserType.PROVIDER, UserType.BOTH)
   @Get()
   async listForProvider(@Req() req: Request & { user: any }) {
+    console.log('[FIRE-DEBUG] GET /providers/me/services HIT');
     const userId = req.user.sub || req.user.id;
+    console.log(`[FIRE-DEBUG] User ID from token: ${userId}`);
     const providerId = await this.servicesService.getProviderIdByUserId(userId);
-    return this.servicesService.listForProvider(providerId);
+    console.log(`[FIRE-DEBUG] Resolved Provider ID: ${providerId}`);
+    try {
+      const services = await this.servicesService.listForProvider(providerId);
+      console.log(`[FIRE-DEBUG] Found ${services.length} services`);
+      return services;
+    } catch (e) {
+      console.error('[FIRE-DEBUG] listForProvider FAILED:', e);
+      throw e;
+    }
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -58,6 +68,8 @@ export class ServicesController {
     @Body() createServiceDto: any,
     @Req() req: Request & { user: any },
   ) {
+    console.log('[FIRE-DEBUG] POST /providers/me/services HIT');
+    console.log('[FIRE-DEBUG] Payload:', JSON.stringify(createServiceDto));
     const providerId = await this.resolveProviderId(req);
     return this.servicesService.create(providerId, createServiceDto);
   }

@@ -129,9 +129,10 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async getReviewStats(providerId: string): Promise<{ avgRating: number; reviewCount: number }> {
     const { avgRating, reviewCount } = await this.reviewsRepo
       .createQueryBuilder('r')
+      .leftJoin('r.provider', 'p')
       .select('AVG(r.rating)', 'avgRating')
       .addSelect('COUNT(r.id)', 'reviewCount')
-      .where('r.provider.id = :providerId', { providerId })
+      .where('p.id = :providerId', { providerId })
       .getRawOne<{ avgRating: string; reviewCount: string }>()
       .then((row) => ({
         avgRating: row?.avgRating ? parseFloat(row.avgRating) : 0,
@@ -146,9 +147,10 @@ export class TypeORMProviderRepository implements IProviderRepository {
 
     const earningsRows = await this.appointmentsRepo
       .createQueryBuilder('a')
+      .leftJoin('a.provider', 'p')
       .leftJoin('a.appointmentServices', 'as')
       .select('COALESCE(SUM(as.priceCents), 0)', 'totalCents')
-      .where('a.provider.id = :providerId', { providerId })
+      .where('p.id = :providerId', { providerId })
       .andWhere('a.status = :status', { status: 'COMPLETED' })
       .andWhere('a.appointmentDate BETWEEN :start AND :end', {
         start: startStr,
@@ -246,9 +248,10 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async findServiceStats(providerId: string): Promise<any[]> {
     return await this.servicesRepo
       .createQueryBuilder('svc')
+      .leftJoin('svc.provider', 'p')
       .select('svc.name', 'name')
       .addSelect('svc.priceCents', 'priceCents')
-      .where('svc.provider.id = :id', { id: providerId })
+      .where('p.id = :id', { id: providerId })
       .andWhere('svc.isActive = :active', { active: true })
       .orderBy('svc.displayOrder', 'ASC')
       .limit(200)

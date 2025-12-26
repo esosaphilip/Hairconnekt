@@ -323,7 +323,7 @@ export function ServicesManagementScreen() {
                           <Text style={styles.serviceName}>{service.name}</Text>
                           {service.category ? (
                             <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                              {typeof service.category === 'object' ? (service.category.nameDe || service.category.nameEn || 'Allgemein') : service.category}
+                              {typeof service.category === 'object' ? (service.category.nameDe ?? service.category.nameEn ?? 'Allgemein') : service.category}
                             </Badge>
                           ) : null}
                         </View>
@@ -368,7 +368,7 @@ export function ServicesManagementScreen() {
                           <Text style={styles.serviceName}>{service.name}</Text>
                           {service.category ? (
                             <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                              {typeof service.category === 'object' ? (service.category.nameDe || service.category.nameEn || 'Allgemein') : service.category}
+                              {typeof service.category === 'object' ? (service.category.nameDe ?? service.category.nameEn ?? 'Allgemein') : service.category}
                             </Badge>
                           ) : null}
                         </View>
