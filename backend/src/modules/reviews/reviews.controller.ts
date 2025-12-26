@@ -33,6 +33,18 @@ export class ReviewsController {
    * - If providerId query param is present, creates a public listing for that provider.
    * - If no providerId, assumes 'my' provider profile (requires auth).
    */
+  @Get('provider/me')
+  @UseGuards(JwtAuthGuard)
+  async myProviderReviews(@Req() req: Request, @Query() query: any) {
+    const userId = (req.user as any)?.sub;
+    return this.reviewsService.listProviderReviews(userId, query);
+  }
+
+  /**
+   * Reviews received by a provider.
+   * - If providerId query param is present, creates a public listing for that provider.
+   * - If no providerId, assumes 'my' provider profile (requires auth).
+   */
   @Get('provider')
   async providerReviews(@Req() req: Request, @Query() query: any) {
     if (query.providerId) {

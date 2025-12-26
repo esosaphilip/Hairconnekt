@@ -184,7 +184,7 @@ export function ProviderMore() {
           const sinceTs = now - 30 * 24 * 60 * 60 * 1000;
           const res = await getProviderAppointments('completed');
           if (!isActive) return;
-          
+
           const items = res?.items || [];
           const total = items.reduce((sum, a) => {
             const d = new Date((a.appointmentDate || '').trim() + 'T' + ((a.startTime || '').trim() || '00:00:00'));
@@ -269,9 +269,9 @@ export function ProviderMore() {
           >
             <Card style={styles.profileCard}>
               <View style={styles.profileSummary}>
-            <Avatar size={64}>
-              <AvatarImage source={{ uri: getAvatarUrl(user, profile) }} />
-            </Avatar>
+                <Avatar size={64}>
+                  <AvatarImage source={{ uri: getAvatarUrl(user, profile) }} />
+                </Avatar>
                 <View style={styles.profileTextContainer}>
                   <Text style={styles.profileName}>{[user?.firstName, user?.lastName].filter(Boolean).join(' ') || profile?.user?.firstName || 'Profil'}</Text>
                   <Text style={styles.profileStudio}>{profile?.businessName || 'Studio'}</Text>
@@ -301,7 +301,16 @@ export function ProviderMore() {
                       : item;
                   return (
                     <React.Fragment key={itemIndex}>
-                      <MenuItem item={displayItem} onPress={(path) => navigation.navigate(path)} />
+                      <MenuItem
+                        item={displayItem}
+                        onPress={(path) => {
+                          if (path === 'ProviderPublicProfileScreen' && profile?.id) {
+                            navigation.navigate(path, { id: profile.id });
+                          } else {
+                            navigation.navigate(path);
+                          }
+                        }}
+                      />
                       {itemIndex < section.items.length - 1 && <View style={styles.divider} />}
                     </React.Fragment>
                   );
@@ -321,17 +330,17 @@ export function ProviderMore() {
           <Card style={styles.logoutCard}>
             <TouchableOpacity
               onPress={handleLogout}
-            style={styles.logoutButton}
-            activeOpacity={0.7}
-          >
-            <View style={styles.logoutIconCircle}>
-              <Icon name="log-out" size={20} color={COLORS.danger} />
-            </View>
-            <Text style={styles.logoutLabel}>Abmelden</Text>
-          </TouchableOpacity>
-        </Card>
+              style={styles.logoutButton}
+              activeOpacity={0.7}
+            >
+              <View style={styles.logoutIconCircle}>
+                <Icon name="log-out" size={20} color={COLORS.danger} />
+              </View>
+              <Text style={styles.logoutLabel}>Abmelden</Text>
+            </TouchableOpacity>
+          </Card>
         </View>
-        
+
         {/* App Version */}
         <View style={styles.versionContainer}>
           <Text style={styles.versionText}>HairConnekt Provider v1.0.0</Text>

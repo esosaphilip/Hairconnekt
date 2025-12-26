@@ -193,7 +193,7 @@ export function ProviderReviews() {
       setLoading(true);
       setError(null);
       try {
-        const res = await http.get('/reviews/provider');
+        const res = await http.get('/reviews/provider/me');
         const payload = res?.data;
         let list = [];
         if (Array.isArray(payload)) {
@@ -207,7 +207,7 @@ export function ProviderReviews() {
             list = (payload as any).reviews;
           }
         }
-        
+
         const mapped: Review[] = list.map((r: any) => ({
           id: r.id,
           client: r.isAnonymous
@@ -271,103 +271,103 @@ export function ProviderReviews() {
       Alert.alert('Fehler', String(msg));
     }
   };
-  
+
   // Header component including the overall stats and filter chips
   const ListHeader = () => (
-      <View style={{ paddingHorizontal: SPACING.md }}>
-        {/* Overall Rating Card */}
-        <Card style={styles.overallRatingCard}>
-          <View style={styles.overallRatingContent}>
-            <View style={styles.ratingSummary}>
-              <Text style={styles.averageRating}>4.8</Text>
-              <View style={styles.starRow}>
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Icon
-                    key={i}
-                    name="star"
-                    size={16}
-                    color={i <= 4.8 ? COLORS.amber : COLORS.border}
-                    fill={i <= 4.8 ? COLORS.amber : 'transparent'}
-                  />
-                ))}
-              </View>
-              <Text style={styles.reviewCount}>234 Bewertungen</Text>
-            </View>
-
-            <View style={styles.ratingDistribution}>
-              {/* Rating Distribution */}
-              {[5, 4, 3, 2, 1].map((stars) => {
-                const percentage = stars === 5 ? 77 : stars === 4 ? 17 : stars === 3 ? 4 : 1;
-                return (
-                  <View key={stars} style={styles.distributionRow}>
-                    <Text style={styles.distributionStars}>{stars}★</Text>
-                    <View style={styles.progressBarBackground}>
-                      <View
-                        style={[
-                          styles.progressBarFill,
-                          { width: `${percentage}%` },
-                        ]}
-                      />
-                    </View>
-                    <Text style={styles.distributionPercent}>{percentage}%</Text>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-
-          <View style={styles.trendingRow}>
-            <Icon name="trending-up" size={16} color={COLORS.success} />
-            <Text style={styles.trendingText}>+0.2 diesen Monat</Text>
-          </View>
-        </Card>
-
-        {/* Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterChipsContainer}
-        >
-          {(() => {
-            const labels = ["Alle", "Unbeantwortet", "5 Sterne", "Mit Fotos"] as const;
-            const map: Record<typeof labels[number], string> = {
-              "Alle": "all",
-              "Unbeantwortet": "unresponded",
-              "5 Sterne": "5stars",
-              "Mit Fotos": "with-photos",
-            };
-            return labels.map((label) => {
-              const key = map[label];
-              const isActive = filter === key;
-              return (
-                <Button
-                  key={key}
-                  title={label}
-                  size="sm"
-                  variant={isActive ? "default" : "outline"}
-                  onPress={() => setFilter(key)}
-                  style={isActive ? styles.activeButton : styles.inactiveButton}
+    <View style={{ paddingHorizontal: SPACING.md }}>
+      {/* Overall Rating Card */}
+      <Card style={styles.overallRatingCard}>
+        <View style={styles.overallRatingContent}>
+          <View style={styles.ratingSummary}>
+            <Text style={styles.averageRating}>4.8</Text>
+            <View style={styles.starRow}>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Icon
+                  key={i}
+                  name="star"
+                  size={16}
+                  color={i <= 4.8 ? COLORS.amber : COLORS.border}
+                  fill={i <= 4.8 ? COLORS.amber : 'transparent'}
                 />
+              ))}
+            </View>
+            <Text style={styles.reviewCount}>234 Bewertungen</Text>
+          </View>
+
+          <View style={styles.ratingDistribution}>
+            {/* Rating Distribution */}
+            {[5, 4, 3, 2, 1].map((stars) => {
+              const percentage = stars === 5 ? 77 : stars === 4 ? 17 : stars === 3 ? 4 : 1;
+              return (
+                <View key={stars} style={styles.distributionRow}>
+                  <Text style={styles.distributionStars}>{stars}★</Text>
+                  <View style={styles.progressBarBackground}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        { width: `${percentage}%` },
+                      ]}
+                    />
+                  </View>
+                  <Text style={styles.distributionPercent}>{percentage}%</Text>
+                </View>
               );
-            });
-          })()}
-        </ScrollView>
-      </View>
+            })}
+          </View>
+        </View>
+
+        <View style={styles.trendingRow}>
+          <Icon name="trending-up" size={16} color={COLORS.success} />
+          <Text style={styles.trendingText}>+0.2 diesen Monat</Text>
+        </View>
+      </Card>
+
+      {/* Filter Chips */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterChipsContainer}
+      >
+        {(() => {
+          const labels = ["Alle", "Unbeantwortet", "5 Sterne", "Mit Fotos"] as const;
+          const map: Record<typeof labels[number], string> = {
+            "Alle": "all",
+            "Unbeantwortet": "unresponded",
+            "5 Sterne": "5stars",
+            "Mit Fotos": "with-photos",
+          };
+          return labels.map((label) => {
+            const key = map[label];
+            const isActive = filter === key;
+            return (
+              <Button
+                key={key}
+                title={label}
+                size="sm"
+                variant={isActive ? "default" : "outline"}
+                onPress={() => setFilter(key)}
+                style={isActive ? styles.activeButton : styles.inactiveButton}
+              />
+            );
+          });
+        })()}
+      </ScrollView>
+    </View>
   );
 
   // Empty State Component
   const EmptyState = () => (
     <View style={styles.emptyContainer}>
-        <Icon name="star" size={64} color={COLORS.border} style={styles.emptyIcon} />
-        <Text style={styles.emptyTitle}>Keine Bewertungen gefunden</Text>
-        <Text style={styles.emptySubtitle}>
-            {filter === "all"
-              ? "Noch keine Bewertungen vorhanden"
-              : "Keine Bewertungen in dieser Kategorie"}
-        </Text>
-        {filter !== "all" && (
-            <Button title="Alle Bewertungen anzeigen" variant="outline" onPress={() => setFilter("all")} style={{ marginTop: SPACING.md }} />
-        )}
+      <Icon name="star" size={64} color={COLORS.border} style={styles.emptyIcon} />
+      <Text style={styles.emptyTitle}>Keine Bewertungen gefunden</Text>
+      <Text style={styles.emptySubtitle}>
+        {filter === "all"
+          ? "Noch keine Bewertungen vorhanden"
+          : "Keine Bewertungen in dieser Kategorie"}
+      </Text>
+      {filter !== "all" && (
+        <Button title="Alle Bewertungen anzeigen" variant="outline" onPress={() => setFilter("all")} style={{ marginTop: SPACING.md }} />
+      )}
     </View>
   );
 
@@ -646,22 +646,22 @@ const styles = StyleSheet.create({
   },
   // --- Empty State Styles ---
   emptyContainer: {
-      paddingVertical: SPACING.xl * 2,
-      paddingHorizontal: SPACING.md,
-      alignItems: 'center',
+    paddingVertical: SPACING.xl * 2,
+    paddingHorizontal: SPACING.md,
+    alignItems: 'center',
   },
   emptyIcon: {
-      color: COLORS.border || '#D1D5DB',
-      marginBottom: SPACING.md,
+    color: COLORS.border || '#D1D5DB',
+    marginBottom: SPACING.md,
   },
   emptyTitle: {
-      fontSize: FONT_SIZES.h4 || 18,
-      fontWeight: 'bold',
-      marginBottom: SPACING.xs,
+    fontSize: FONT_SIZES.h4 || 18,
+    fontWeight: 'bold',
+    marginBottom: SPACING.xs,
   },
   emptySubtitle: {
-      fontSize: FONT_SIZES.body || 14,
-      color: COLORS.textSecondary || '#6B7280',
-      textAlign: 'center',
+    fontSize: FONT_SIZES.body || 14,
+    color: COLORS.textSecondary || '#6B7280',
+    textAlign: 'center',
   },
 });

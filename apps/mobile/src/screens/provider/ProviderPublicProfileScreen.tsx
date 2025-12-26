@@ -25,6 +25,7 @@ import Avatar, { AvatarImage } from '../../components/avatar';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { http } from '@/api/http';
+import { BASE_URL } from '../../config';
 import { addFavorite, removeFavorite, favoriteStatus } from '@/services/favorites';
 import { useAuth } from '@/auth/AuthContext';
 
@@ -346,19 +347,29 @@ export function ProviderPublicProfileScreen() {
       ) : (
         <View style={styles.portfolioGrid}>
           {portfolioItems.length > 0 ? (
-            portfolioItems.map((item, index) => (
-              <TouchableOpacity key={item.id || index} style={styles.portfolioItem} onPress={() => { /* View Image Modal */ }}>
-                <Image
-                  source={{ uri: item.imageUrl }}
-                  style={styles.portfolioImage}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            ))
+            portfolioItems.map((item, index) => {
+              const imageUrl = item.imageUrl?.startsWith('http')
+                ? item.imageUrl
+                : `${BASE_URL}${item.imageUrl}`;
+
+              return (
+                <TouchableOpacity key={item.id || index} style={styles.portfolioItem} onPress={() => { /* View Image Modal */ }}>
+                  <Image
+                    source={{ uri: imageUrl }}
+                    style={styles.portfolioImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              );
+            })
           ) : (
-            <Text style={[styles.bodyText, { textAlign: 'center', marginTop: SPACING.xl, color: COLORS.textSecondary }]}>
-              Noch keine Portfolio-Bilder vorhanden.
-            </Text>
+            <View style={{ width: '100%', alignItems: 'center', padding: SPACING.xl }}>
+              <Text style={[styles.bodyText, { textAlign: 'center', color: COLORS.textSecondary }]}>
+                Noch keine Portfolio-Bilder vorhanden.
+              </Text>
+              {/* Debug Info: remove later */}
+              {/* <Text style={{ fontSize: 10, color: 'red' }}>Count: {portfolioItems.length}</Text> */}
+            </View>
           )}
         </View>
       )}
@@ -370,6 +381,7 @@ export function ProviderPublicProfileScreen() {
     <SafeAreaView style={styles.flexContainer}>
       {/* Header (Always Visible) */}
       <View style={styles.fixedHeader}>
+        <View style={styles.headerRow}>
           <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>Öffentliches Profil</Text>
           <IconButton name="copy" onPress={handleShare} />
@@ -682,6 +694,7 @@ const styles = StyleSheet.create({
   portfolioItem: {
     width: (Dimensions.get('window').width - SPACING.md * 2 - SPACING.sm) / 2, // Calculate for 2 columns
     aspectRatio: 1,
+    backgroundColor: '#f3f4f6', // Placeholder color
     borderRadius: 8,
     overflow: 'hidden',
   },
