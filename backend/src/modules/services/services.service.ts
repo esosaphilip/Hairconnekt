@@ -71,21 +71,30 @@ export class ServicesService {
       throw new BadRequestException('durationMinutes must be an integer');
     }
 
-    // Create the service entity
-    const service = this.serviceRepository.create({
-      name: createDto.name,
-      description: createDto.description ?? null,
-      priceCents: createDto.priceCents || 0,
-      durationMinutes: createDto.durationMinutes || 60,
-      priceType: createDto.priceType || PriceType.FIXED,
-      priceMaxCents: createDto.priceMaxCents ?? null,
-      imageUrl: createDto.imageUrl ?? null,
-      isActive: createDto.isActive !== undefined ? createDto.isActive : true,
-      allowOnlineBooking: createDto.allowOnlineBooking !== undefined ? createDto.allowOnlineBooking : true,
-      displayOrder: createDto.displayOrder ?? 0,
-      provider: provider,
-      category: category,
-    });
+    // Create the service entity using the domain factory
+    let service: Service;
+    try {
+      service = Service.create(
+        provider,
+        createDto.name,
+        createDto.description || '', // Ensure valid string if entity logic requires it, though DB allows null now
+        createDto.durationMinutes !== undefined ? createDto.durationMinutes : 60,
+        createDto.priceCents !== undefined ? createDto.priceCents : 0,
+        createDto.priceType || PriceType.FIXED,
+        category ?? undefined,
+        createDto.priceMaxCents ?? undefined,
+        createDto.imageUrl ?? undefined,
+      );
+    } catch (error) {
+      // Catch domain validation errors (e.g. negative price) and rethrow as 400
+      if (error instanceof BadRequestException) throw error;
+      throw new BadRequestException(error instanceof Error ? error.message : 'Invalid service data');
+    }
+
+    // Override defaults if explicitly provided in DTO
+    if (createDto.isActive !== undefined) service.isActive = createDto.isActive;
+    if (createDto.allowOnlineBooking !== undefined) service.allowOnlineBooking = createDto.allowOnlineBooking;
+    if (createDto.displayOrder !== undefined) service.displayOrder = createDto.displayOrder;
 
     try {
       const saved = await this.serviceRepository.save(service);
@@ -93,6 +102,11 @@ export class ServicesService {
       return saved;
     } catch (error) {
       console.error('[ServicesService] Create service error:', error);
+      // Handle known DB errors
+      const errCode = (error as any)?.code;
+      if (errCode === '23502') throw new BadRequestException('Missing required fields');
+      if (errCode === '23505') throw new BadRequestException('Service name already exists');
+
       throw new InternalServerErrorException('Failed to create service');
     }
   }

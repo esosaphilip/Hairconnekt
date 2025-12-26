@@ -13,9 +13,9 @@ import { ProviderProfile } from '../../providers/entities/provider-profile.entit
 import { ServiceCategory } from './service-category.entity';
 
 export enum PriceType {
-  FIXED = 'FIXED',
-  FROM = 'FROM',
-  RANGE = 'RANGE',
+  FIXED = 'fixed',
+  FROM = 'from',
+  RANGE = 'range',
 }
 
 @Entity('services')
@@ -37,7 +37,7 @@ export class Service {
   @Column({ type: 'varchar', length: 255 })
   name: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   description: string;
 
   @Column({ name: 'duration_minutes', type: 'int' })
