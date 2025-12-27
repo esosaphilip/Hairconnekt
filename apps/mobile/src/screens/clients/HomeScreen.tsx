@@ -23,7 +23,8 @@ import { addFavorite, removeFavorite, favoriteStatus } from "@/services/favorite
 import { showMessage } from "react-native-flash-message";
 import { Avatar, Badge, Card, Input, Button } from "@/ui";
 import ProviderCard from "@/components/ProviderCard";
-import * as Location from "expo-location";
+// import * as Location from "expo-location";
+import { useLocation } from "@/context/LocationContext";
 import { useI18n } from "@/i18n";
 import { colors, spacing, typography, radii } from "@/theme/tokens";
 import { API_CONFIG, MESSAGES } from "@/constants";
@@ -101,19 +102,19 @@ export function HomeScreen() {
   const [favorites, setFavorites] = useState<string[]>([]);
   const { tokens, user } = useAuth();
   const isAuthenticated = !!tokens?.accessToken;
-  
+
   const [popularCategories, setPopularCategories] = useState<PopularStyle[]>([]);
-  
+
   // Load popular categories
   useEffect(() => {
     (async () => {
-        try {
-            const cats = await clientBraiderApi.getCategories();
-            // Take top 5 for horizontal list
-            setPopularCategories(cats.slice(0, 5));
-        } catch (e) {
-            // ignore
-        }
+      try {
+        const cats = await clientBraiderApi.getCategories();
+        // Take top 5 for horizontal list
+        setPopularCategories(cats.slice(0, 5));
+      } catch (e) {
+        // ignore
+      }
     })();
   }, []);
 
@@ -122,7 +123,7 @@ export function HomeScreen() {
     ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
     : (user?.email ? user.email[0].toUpperCase() : "U");
 
-  const [locationLabel, setLocationLabel] = useState<string>(t('screens.home.location.detecting'));
+  const { location, setLocation } = useLocation();
   const [nearby, setNearby] = useState<IBraider[] | null>(null);
   const [nearbyLoading, setNearbyLoading] = useState<boolean>(false);
   const [nearbyError, setNearbyError] = useState<string | null>(null);
@@ -134,7 +135,7 @@ export function HomeScreen() {
         const currencyLocale = locale === 'de' ? 'de-DE' : 'en-GB';
         return new Intl.NumberFormat(currencyLocale, { style: 'currency', currency: 'EUR' }).format(euros);
       }
-    } catch {}
+    } catch { }
     // Fallback: simple formatting
     const value = Math.round((euros + Number.EPSILON) * 100) / 100;
     return `€${value.toFixed(2)}`;
@@ -157,30 +158,15 @@ export function HomeScreen() {
   const fetchNearbyData = useCallback(async (latitude: number, longitude: number) => {
     setNearbyLoading(true);
     setNearbyError(null);
-    let cityLabel = t('screens.home.location.currentLocation');
-    
-    // Reverse Geocoding (RN often uses a dedicated library, but fetch works for Nominatim)
-    try {
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
-      const resp = await fetch(url);
-      const data = await resp.json().catch(() => null);
-      const city = data?.address?.city || data?.address?.town || data?.address?.village || data?.address?.county;
-      const state = data?.address?.state || data?.address?.region;
-      cityLabel = [city, state].filter(Boolean).join(', ') || cityLabel;
-    } catch {
-      // Ignore geocoding failure, keep current location label
-    } finally {
-      setLocationLabel(cityLabel);
-    }
 
     // API Call
     try {
       // Use the new clientBraiderApi instead of direct http call
-      const items = await clientBraiderApi.getNearby({ 
-        lat: latitude, 
-        lon: longitude, 
-        radiusKm: 25, 
-        limit: 10 
+      const items = await clientBraiderApi.getNearby({
+        lat: latitude,
+        lon: longitude,
+        radiusKm: 25,
+        limit: 10
       });
       setNearby(items);
       // Re-initialize favorites after loading nearby
@@ -195,40 +181,22 @@ export function HomeScreen() {
     }
   }, [initFavStatus, t]);
 
-  const getLocation = useCallback(async () => {
-    setLocationLabel(t('screens.home.location.detecting'));
-    setNearbyError(null);
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationLabel(t('screens.home.location.disabled'));
-        setNearbyError(t('screens.home.location.permissionRequired'));
-        setNearby([]);
-        return;
-      }
-
-      const pos = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      const { latitude, longitude } = pos.coords;
-      fetchNearbyData(latitude, longitude);
-    } catch (err: unknown) {
-      logger.warn('Geolocation error:', err);
-      setLocationLabel(t('screens.home.location.disabled'));
-      setNearbyError(t('screens.home.location.permissionRequired'));
-      setNearby([]);
-    }
-  }, [fetchNearbyData, t]);
-
   // Use useFocusEffect for fetching data when the screen is focused
   useFocusEffect(
     useCallback(() => {
-      // Only fetch if location is available on mount/focus
-      getLocation();
-      // Cleanup is not strictly necessary for Geolocation but good practice
-      return () => {};
-    }, [getLocation])
+      // Fetch if location is available
+      if (location) {
+        fetchNearbyData(location.lat, location.lon);
+      } else {
+        // If no location, maybe prompt? Or default?
+        // For now, let's trigger search if we want, or leave empty.
+      }
+    }, [location, fetchNearbyData])
   );
+
+  const handleLocationPress = () => {
+    rootNavigationRef.current?.navigate('LocationSelection');
+  };
 
   const handleToggleFavorite = async (id: string) => {
     if (!isAuthenticated) {
@@ -268,13 +236,13 @@ export function HomeScreen() {
         <Image
           source={{ uri: item.iconUrl || 'https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=400&q=80' }}
           style={styles.popularStyleImage}
-          // Fallback logic for Image is usually handled by onError or a custom wrapper
+        // Fallback logic for Image is usually handled by onError or a custom wrapper
         />
         <View style={styles.imageOverlay} />
         <View style={styles.popularStyleTextContainer}>
           <Text style={styles.popularStyleName}>{item.name}</Text>
           <View style={styles.popularStyleDetails}>
-             <Text style={styles.popularStylePrice}>Jetzt entdecken</Text>
+            <Text style={styles.popularStylePrice}>Jetzt entdecken</Text>
           </View>
         </View>
       </View>
@@ -333,7 +301,7 @@ export function HomeScreen() {
                 </Button>
               )}
               {isAuthenticated && (
-                <TouchableOpacity 
+                <TouchableOpacity
                   style={styles.notificationButton}
                   onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } })}
                 >
@@ -345,12 +313,14 @@ export function HomeScreen() {
           </View>
 
           <TouchableOpacity
-            onPress={getLocation}
+            onPress={handleLocationPress}
             style={styles.locationButton}
             activeOpacity={0.7}
           >
             <Icon name="map-pin" size={16} color={colors.gray700} />
-            <Text style={styles.locationText}>{locationLabel}</Text>
+            <Text style={styles.locationText}>
+              {location?.label || location?.city || t('screens.home.location.select')}
+            </Text>
             <Icon name="chevron-right" size={16} color={colors.gray700} />
           </TouchableOpacity>
 
