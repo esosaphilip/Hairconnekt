@@ -83,6 +83,7 @@ export function ProviderProfileScreen() {
     id: string;
     businessName: string | null;
     bio?: string | null;
+    address?: string | null; // Added address
     coverPhotoUrl?: string | null;
     isVerified: boolean;
     acceptsSameDayBooking?: boolean;
@@ -339,7 +340,7 @@ export function ProviderProfileScreen() {
           <View style={{ marginTop: spacing.md }}>
             <View style={styles.infoRow}>
               <Ionicons name="location-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>{/* Address not yet available in API */}Adresse nicht hinterlegt</Text>
+              <Text style={styles.infoText}>{profile?.address || 'Adresse nicht hinterlegt'}</Text>
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="call-outline" size={20} color={colors.gray400} />

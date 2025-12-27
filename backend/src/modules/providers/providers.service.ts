@@ -872,7 +872,11 @@ export class ProvidersService {
         twitter: p.twitter || null,
         youtube: p.youtube || null,
         linkedin: p.linkedin || null,
-      }
+      },
+      // Extract main address from locations
+      address: p.locations?.find(l => l.isPrimary)?.address?.street
+        ? `${p.locations.find(l => l.isPrimary)?.address?.street}, ${p.locations.find(l => l.isPrimary)?.address?.city}`
+        : (p.locations?.[0]?.address?.street ? `${p.locations[0].address.street}, ${p.locations[0].address.city}` : null)
     };
   }
 }
