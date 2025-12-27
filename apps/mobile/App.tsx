@@ -6,7 +6,10 @@ import { SafeAreaView, Text, Platform, StyleSheet } from 'react-native';
 import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthProvider, useAuth } from '@/auth/AuthContext';
+import { UserModeProvider, useUserMode } from '@/state/UserModeContext';
+import { LocationProvider } from '@/context/LocationContext';
 import { I18nProvider, useI18n } from '@/i18n';
+import ModeSwitcher from '@/components/ModeSwitcher';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { LoginScreen } from '@/screens/shared/UserManualScreen';
 import RegisterScreen from '@/screens/shared/RegisterScreen';
@@ -674,12 +677,14 @@ export default function App() {
   return (
     <AuthProvider>
       <UserModeProvider>
-        <I18nProvider>
-          <ErrorBoundary>
-            <ModeSwitcher />
-            <RootNavigator />
-          </ErrorBoundary>
-        </I18nProvider>
+        <LocationProvider>
+          <I18nProvider>
+            <ErrorBoundary>
+              <ModeSwitcher />
+              <RootNavigator />
+            </ErrorBoundary>
+          </I18nProvider>
+        </LocationProvider>
       </UserModeProvider>
     </AuthProvider>
   );
@@ -713,6 +718,4 @@ function LoginRoute({ route, navigation }: RootStackScreenProps<'Login'>) {
     />
   );
 }
-import { UserModeProvider, useUserMode } from '@/state/UserModeContext';
-import ModeSwitcher from '@/components/ModeSwitcher';
-<ClientProfileStack.Screen name="BecomeProvider" component={BecomeProviderScreen} options={{ title: 'Anbieter werden' }} />
+
