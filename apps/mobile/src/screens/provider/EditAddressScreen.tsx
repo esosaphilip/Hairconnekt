@@ -46,34 +46,50 @@ export default function EditAddressScreen() {
         const loadData = async () => {
             try {
                 const profile: any = await providersApi.getMyProfile();
-                const address = profile?.address;
+                // Use addressDetails if available (added to sanitizeProvider), else fallback to parsing or empty
+                const address = profile?.addressDetails || profile?.address;
 
                 let street = "";
                 let houseNumber = "";
 
-                if (address?.streetAddress) {
-                    // Simple split logic: assumes last part is number if it's digit-like
-                    const match = address.streetAddress.match(/^(.+?)\s+(\d+(\w)?(\s?[-/]\s?\d+\w?)?)$/);
-                    if (match) {
-                        street = match[1];
-                        houseNumber = match[2];
-                    } else {
-                        street = address.streetAddress;
-                        houseNumber = ""; // User might need to fix manually
+                // If address is an object (addressDetails from backend)
+                if (address && typeof address === 'object') {
+                    if (address.streetAddress) {
+                        const match = address.streetAddress.match(/^(.+?)\s+(\d+(\w)?(\s?[-/]\s?\d+\w?)?)$/);
+                        if (match) {
+                            street = match[1];
+                            houseNumber = match[2];
+                        } else {
+                            street = address.streetAddress;
+                            houseNumber = "";
+                        }
                     }
+                    setFormData({
+                        street: street,
+                        houseNumber: houseNumber,
+                        postalCode: address.postalCode || "",
+                        city: address.city || "",
+                        state: address.state || "",
+                        showOnMap: true,
+                    });
+                    setOriginalData({
+                        street: street,
+                        houseNumber: houseNumber,
+                        postalCode: address.postalCode || "",
+                        city: address.city || "",
+                        state: address.state || "",
+                        showOnMap: true,
+                    });
+                } else if (typeof address === 'string') {
+                    // Fallback for string address "Street 123, City" (legacy/formatted)
+                    // Hard to parse reliably without structure.
+                    // Try best effort or leave empty.
+                    setFormData(prev => ({ ...prev })); // Leave defaults
+                    setOriginalData(prev => ({ ...prev }));
+                } else {
+                    setOriginalData(formData);
                 }
 
-                const data = {
-                    street: street,
-                    houseNumber: houseNumber,
-                    postalCode: address?.postalCode || "",
-                    city: address?.city || "",
-                    state: address?.state || "",
-                    showOnMap: true, // Not currently persisted in address entity
-                };
-
-                setFormData(data);
-                setOriginalData(data);
             } catch (e) {
                 console.error("Failed to load address", e);
                 Alert.alert("Fehler", "Adresse konnte nicht geladen werden.");
