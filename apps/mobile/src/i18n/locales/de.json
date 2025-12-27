@@ -82,7 +82,8 @@
         "detecting": "Standort wird ermittelt…",
         "disabled": "Standort deaktiviert",
         "permissionRequired": "Standortzugriff erforderlich.",
-        "currentLocation": "Mein Standort"
+        "currentLocation": "Mein Standort",
+        "select": "Standort wählen"
       },
       "quickActions": {
         "urgent": "Notfall-Termin",
@@ -232,8 +233,7 @@
         "subtitle": "Entdecke ähnliche Braider in deiner Nähe"
       }
     }
-  }
-  ,
+  },
   "tabs": {
     "home": "Startseite",
     "search": "Suche",
