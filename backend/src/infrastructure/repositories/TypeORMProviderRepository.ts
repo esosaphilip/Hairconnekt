@@ -180,8 +180,17 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async findNearby(params: { lat: number; lon: number; radiusKm: number; limit: number }): Promise<any[]> {
     const { lat, lon, radiusKm, limit } = params;
     // Haversine formula (in kilometers) using Postgres math functions
-    // Interpolate values directly to avoid parameter binding issues in SELECT clause
-    // (inputs are validated as finite numbers in service layer)
+    // Calculate Bounding Box for initial filtering (optimizes query and avoids math errors on full table)
+    // 1 degree latitude ~ 111km
+    // 1 degree longitude ~ 111km * cos(latitude)
+    const latDelta = radiusKm / 111;
+    const lonDelta = radiusKm / (111 * Math.cos(lat * (Math.PI / 180)));
+
+    const minLat = lat - latDelta;
+    const maxLat = lat + latDelta;
+    const minLon = lon - lonDelta;
+    const maxLon = lon + lonDelta;
+
     const distanceExpr =
       `6371 * 2 * ASIN(SQRT(POWER(SIN((CAST(addr.latitude AS double precision) - ${lat}) * pi() / 180 / 2), 2) ` +
       `+ COS(${lat} * pi() / 180) * COS(CAST(addr.latitude AS double precision) * pi() / 180) ` +
@@ -193,6 +202,9 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .leftJoin('p.locations', 'pl')
       .leftJoin('pl.address', 'addr')
       .where('addr.latitude IS NOT NULL AND addr.longitude IS NOT NULL')
+      // Apply Bounding Box Filter
+      .andWhere('CAST(addr.latitude AS double precision) BETWEEN :minLat AND :maxLat', { minLat, maxLat })
+      .andWhere('CAST(addr.longitude AS double precision) BETWEEN :minLon AND :maxLon', { minLon, maxLon })
       .andWhere('u.id IS NOT NULL')
       .select('p.id', 'id')
       .addSelect('u.firstName', 'firstName')
@@ -211,10 +223,11 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .addGroupBy('p.acceptsSameDayBooking')
       .addGroupBy('addr.latitude')
       .addGroupBy('addr.longitude')
-      .having(`(${distanceExpr}) <= :radiusKm`)
+      // Remove HAVING clause to avoid SQL errors; filtering done by bounding box approx.
+      // We can sort by exact distance.
       .orderBy('distanceKm', 'ASC')
-      .limit(limit)
-      .setParameters({ radiusKm });
+      .limit(limit);
+    // Removed setParameters for radiusKm since we use bounding box params now
 
     return await qb.getRawMany();
   }
