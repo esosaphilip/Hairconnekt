@@ -191,11 +191,6 @@ export class TypeORMProviderRepository implements IProviderRepository {
     const minLon = lon - lonDelta;
     const maxLon = lon + lonDelta;
 
-    const distanceExpr =
-      `6371 * 2 * ASIN(SQRT(POWER(SIN((CAST(addr.latitude AS double precision) - ${lat}) * pi() / 180 / 2), 2) ` +
-      `+ COS(${lat} * pi() / 180) * COS(CAST(addr.latitude AS double precision) * pi() / 180) ` +
-      `* POWER(SIN((CAST(addr.longitude AS double precision) - ${lon}) * pi() / 180 / 2), 2)))`;
-
     const qb = this.providersRepo
       .createQueryBuilder('p')
       .leftJoin('p.user', 'u')
@@ -213,20 +208,41 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .addSelect('p.coverPhotoUrl', 'coverPhotoUrl')
       .addSelect('p.isVerified', 'isVerified')
       .addSelect('p.acceptsSameDayBooking', 'acceptsSameDayBooking')
-      .addSelect(`(${distanceExpr})`, 'distanceKm')
+      .addSelect('addr.latitude', 'latitude')
+      .addSelect('addr.longitude', 'longitude')
       .groupBy('p.id')
-      .addGroupBy('u.id')     // Group by User ID (functionally implies name)
-      .addGroupBy('pl.id')    // Group by Location ID
-      .addGroupBy('addr.id')  // Group by Address ID (functionally implies lat/lon)
-      .addGroupBy('addr.latitude') // Keep explicitly for distance calc safety if needed
-      .addGroupBy('addr.longitude')
-      // Remove HAVING clause to avoid SQL errors; filtering done by bounding box approx.
-      // We can sort by exact distance.
-      .orderBy('distanceKm', 'ASC')
-      .limit(limit);
-    // Removed setParameters for radiusKm since we use bounding box params now
+      .addGroupBy('u.id')
+      .addGroupBy('pl.id')
+      .addGroupBy('addr.id')
+      .addGroupBy('addr.latitude')
+      .addGroupBy('addr.longitude');
+    // Removed ORDER BY distanceKm from SQL to avoid expression errors
 
-    return await qb.getRawMany();
+    const rawResults = await qb.getRawMany();
+
+    // Calculate distance and sort in memory
+    const resultsWithDistance = rawResults.map((r) => {
+      const pLat = parseFloat(r.latitude);
+      const pLon = parseFloat(r.longitude);
+
+      const R = 6371; // Radius of the earth in km
+      const dLat = (pLat - lat) * (Math.PI / 180);
+      const dLon = (pLon - lon) * (Math.PI / 180);
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat * (Math.PI / 180)) * Math.cos(pLat * (Math.PI / 180)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const d = R * c; // Distance in km
+
+      return { ...r, distanceKm: d };
+    });
+
+    // Sort by distance ASC
+    resultsWithDistance.sort((a, b) => a.distanceKm - b.distanceKm);
+
+    // Limit
+    return resultsWithDistance.slice(0, limit);
   }
 
   async getServicesForProviders(providerIds: string[]): Promise<any[]> {
