@@ -274,12 +274,10 @@ export function ProviderMore() {
                 <Avatar size={64}>
                   <AvatarImage
                     size={64}
-                    source={{
-                      uri: (() => {
-                        const url = getAvatarUrl(user, profile);
-                        return url ? `${url}${url.includes('?') ? '&' : '?'}t=${avatarVersion}` : undefined;
-                      })()
-                    }}
+                    uri={(() => {
+                      const url = getAvatarUrl(user, profile);
+                      return url ? `${url}${url.includes('?') ? '&' : '?'}t=${avatarVersion}` : undefined;
+                    })()}
                   />
                   <View style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 32, borderWidth: 1, borderColor: '#eee' }} />
                 </Avatar>

@@ -79,6 +79,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.gray300,
     justifyContent: 'center',
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    zIndex: 0,
   },
   fallbackText: {
     color: colors.gray700,
@@ -86,6 +90,10 @@ const styles = StyleSheet.create({
   },
   image: {
     resizeMode: 'cover',
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    zIndex: 1,
   },
 });
 
