@@ -180,10 +180,12 @@ export class TypeORMProviderRepository implements IProviderRepository {
   async findNearby(params: { lat: number; lon: number; radiusKm: number; limit: number }): Promise<any[]> {
     const { lat, lon, radiusKm, limit } = params;
     // Haversine formula (in kilometers) using Postgres math functions
+    // Interpolate values directly to avoid parameter binding issues in SELECT clause
+    // (inputs are validated as finite numbers in service layer)
     const distanceExpr =
-      `6371 * 2 * ASIN(SQRT(POWER(SIN((CAST(addr.latitude AS double precision) - :lat) * pi() / 180 / 2), 2) ` +
-      `+ COS(:lat * pi() / 180) * COS(CAST(addr.latitude AS double precision) * pi() / 180) ` +
-      `* POWER(SIN((CAST(addr.longitude AS double precision) - :lon) * pi() / 180 / 2), 2)))`;
+      `6371 * 2 * ASIN(SQRT(POWER(SIN((CAST(addr.latitude AS double precision) - ${lat}) * pi() / 180 / 2), 2) ` +
+      `+ COS(${lat} * pi() / 180) * COS(CAST(addr.latitude AS double precision) * pi() / 180) ` +
+      `* POWER(SIN((CAST(addr.longitude AS double precision) - ${lon}) * pi() / 180 / 2), 2)))`;
 
     const qb = this.providersRepo
       .createQueryBuilder('p')
@@ -212,7 +214,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .having(`(${distanceExpr}) <= :radiusKm`)
       .orderBy('distanceKm', 'ASC')
       .limit(limit)
-      .setParameters({ lat, lon, radiusKm });
+      .setParameters({ radiusKm });
 
     return await qb.getRawMany();
   }
