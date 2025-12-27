@@ -17,7 +17,7 @@ import Text from '../../components/Text';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
-import Checkbox from '../../components/Checkbox';
+import { Checkbox } from '../../components/checkbox';
 import { spacing, colors } from '../../theme/tokens';
 import { providersApi } from '../../services/providers';
 
@@ -189,7 +189,7 @@ export default function EditAddressScreen() {
                         <View style={styles.iconBox}>
                             <Ionicons name="location" size={18} color={colors.primary} />
                         </View>
-                        <Text variant="h4">Geschäftsadresse</Text>
+                        <Text variant="h3">Geschäftsadresse</Text>
                     </View>
 
                     <View style={styles.row}>
@@ -199,7 +199,7 @@ export default function EditAddressScreen() {
                                 value={formData.street}
                                 onChangeText={(text: string) => setFormData({ ...formData, street: text })}
                                 error={errors.street}
-                                disabled={isLoading}
+                                editable={!isLoading}
                             />
                         </View>
                         <View style={{ flex: 1 }}>
@@ -208,7 +208,7 @@ export default function EditAddressScreen() {
                                 value={formData.houseNumber}
                                 onChangeText={(text: string) => setFormData({ ...formData, houseNumber: text })}
                                 error={errors.houseNumber}
-                                disabled={isLoading}
+                                editable={!isLoading}
                             />
                         </View>
                     </View>
@@ -222,7 +222,7 @@ export default function EditAddressScreen() {
                                 maxLength={5}
                                 onChangeText={(text: string) => setFormData({ ...formData, postalCode: text.replace(/\D/g, '') })}
                                 error={errors.postalCode}
-                                disabled={isLoading}
+                                editable={!isLoading}
                             />
                         </View>
                         <View style={{ flex: 2 }}>
@@ -231,7 +231,7 @@ export default function EditAddressScreen() {
                                 value={formData.city}
                                 onChangeText={(text: string) => setFormData({ ...formData, city: text })}
                                 error={errors.city}
-                                disabled={isLoading}
+                                editable={!isLoading}
                             />
                         </View>
                     </View>
@@ -243,7 +243,7 @@ export default function EditAddressScreen() {
                                 value={formData.state}
                                 onChangeText={(text: string) => setFormData({ ...formData, state: text })}
                                 error={errors.state}
-                                disabled={isLoading}
+                                editable={!isLoading}
                                 placeholder="z.B. Bayern"
                             />
                         </View>
@@ -252,7 +252,7 @@ export default function EditAddressScreen() {
                     <View style={styles.checkboxContainer}>
                         <Checkbox
                             checked={formData.showOnMap}
-                            onChange={(val: boolean) => setFormData({ ...formData, showOnMap: val })}
+                            onCheckedChange={(val: boolean) => setFormData({ ...formData, showOnMap: val })}
                         />
                         <Text variant="small" style={styles.checkboxLabel}>
                             Adresse auf der Karte anzeigen
@@ -288,7 +288,7 @@ export default function EditAddressScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
+    container: { flex: 1, backgroundColor: colors.gray50 },
     centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
     header: {
         flexDirection: 'row',

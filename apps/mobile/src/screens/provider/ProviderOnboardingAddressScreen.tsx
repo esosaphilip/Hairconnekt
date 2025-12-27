@@ -15,7 +15,7 @@ import Text from '../../components/Text';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
-import Checkbox from '../../components/Checkbox';
+import { Checkbox } from '../../components/checkbox';
 import { spacing, colors } from '../../theme/tokens';
 import { providersApi } from '../../services/providers';
 
@@ -98,7 +98,7 @@ export default function ProviderOnboardingAddressScreen() {
                             <Ionicons name="location" size={20} color={colors.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
-                            <Text variant="h4">Wo können Kunden dich finden?</Text>
+                            <Text variant="h3">Wo können Kunden dich finden?</Text>
                             <Text variant="small" color={colors.gray600}>
                                 Deine Geschäftsadresse wird in deinem öffentlichen Profil angezeigt.
                             </Text>
@@ -161,7 +161,7 @@ export default function ProviderOnboardingAddressScreen() {
                     <View style={styles.checkboxRow}>
                         <Checkbox
                             checked={formData.showOnMap}
-                            onChange={(val) => setFormData({ ...formData, showOnMap: val })}
+                            onCheckedChange={(val: boolean) => setFormData({ ...formData, showOnMap: val })}
                         />
                         <Text variant="small" style={{ flex: 1, marginLeft: 8 }}>
                             Meine Adresse auf der Karte anzeigen
