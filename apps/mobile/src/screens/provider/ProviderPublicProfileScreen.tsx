@@ -78,6 +78,8 @@ export function ProviderPublicProfileScreen() {
   const [publicData, setPublicData] = useState<PublicProfile | null>(null);
   const [loadingPublic, setLoadingPublic] = useState(false);
   const [errorPublic, setErrorPublic] = useState<string | null>(null);
+  // Cache busting for avatar
+  const [avatarVersion, setAvatarVersion] = useState(Date.now());
 
   const [services, setServices] = useState<any[]>([]);
   const [loadingServices, setLoadingServices] = useState(false);
@@ -104,6 +106,9 @@ export function ProviderPublicProfileScreen() {
       let mounted = true;
 
       if (!providerId) return;
+
+      // Force avatar refresh on focus
+      setAvatarVersion(Date.now());
 
       const fetchData = async () => {
         setLoadingPublic(true);
@@ -394,7 +399,14 @@ export function ProviderPublicProfileScreen() {
         <View style={styles.profileHeader}>
           <View style={styles.profileSummary}>
             <Avatar size={80}>
-              <AvatarImage uri={publicData?.imageUrl || 'https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=200'} />
+              <AvatarImage
+                size={80}
+                uri={(() => {
+                  const url = publicData?.profile?.user?.profilePictureUrl || publicData?.imageUrl;
+                  if (!url) return 'https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=200';
+                  return `${url}${url.includes('?') ? '&' : '?'}t=${avatarVersion}`;
+                })()}
+              />
             </Avatar>
             <View style={styles.summaryTextContainer}>
               <View style={styles.businessTitleRow}>
