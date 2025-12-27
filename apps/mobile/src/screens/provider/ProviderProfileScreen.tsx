@@ -102,6 +102,11 @@ export function ProviderProfileScreen() {
       institution: string;
       year: string;
     }>;
+    availability?: Array<{
+      weekday: string;
+      start: string;
+      end: string;
+    }>;
   };
   const [profile, setProfile] = React.useState<ProviderProfile | null>(null);
   const [dashboard, setDashboard] = React.useState<Dashboard | null>(null);
@@ -352,7 +357,22 @@ export function ProviderProfileScreen() {
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="time-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>Öffnungszeiten nicht hinterlegt</Text>
+              <Text style={styles.infoText}>
+                {(() => {
+                  if (!profile?.availability || profile.availability.length === 0) return 'Öffnungszeiten nicht hinterlegt';
+
+                  // JS: 0=Sun, 1=Mon ... 6=Sat
+                  // Backend: 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'
+                  // We need to map JS day to backend string
+                  const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                  const today = days[new Date().getDay()];
+
+                  const todaySlot = profile.availability.find(d => d.weekday === today);
+
+                  if (!todaySlot) return 'Heute geschlossen';
+                  return `Heute: ${todaySlot.start} - ${todaySlot.end} Uhr`;
+                })()}
+              </Text>
             </View>
           </View>
 
