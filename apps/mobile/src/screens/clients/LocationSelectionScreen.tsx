@@ -53,15 +53,21 @@ export function LocationSelectionScreen() {
   );
 
   const handleSelectCity = async (city: typeof germanCities[0]) => {
-    await setLocation({
-      lat: city.lat,
-      lon: city.lon,
-      city: city.name,
-      label: city.name,
-      isManual: true,
-    });
-    console.log(`City selected: ${city.name}`);
-    navigation.navigate('Home');
+    console.log('Selecting city:', city.name);
+    try {
+      await setLocation({
+        lat: city.lat,
+        lon: city.lon,
+        city: city.name,
+        label: city.name,
+        isManual: true,
+      });
+      console.log(`City selected and set: ${city.name}`);
+      navigation.navigate('Home');
+    } catch (error) {
+      console.error("Failed to set location:", error);
+      Alert.alert("Fehler", "Standort konnte nicht gesetzt werden.");
+    }
   };
 
   const handleUseCurrentLocation = async () => {
@@ -142,7 +148,7 @@ export function LocationSelectionScreen() {
 
           <View style={styles.listContainer}>
             <Text style={styles.listTitle}>Beliebte Städte</Text>
-            <View style={styles.cityList}>
+            <View style={[styles.cityList, { paddingBottom: 40 }]}>
               {filteredCities.map((city) => (
                 <TouchableOpacity
                   key={city.name}

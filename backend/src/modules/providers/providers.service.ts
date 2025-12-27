@@ -569,7 +569,15 @@ export class ProvidersService {
 
     let rows: any[] = [];
     try {
+      // 1. Initial Search (Local)
       rows = await this.providerRepo.findNearby({ lat, lon, radiusKm, limit });
+
+      // 2. Fallback: Expand to entire region (2000km) if no local results
+      if (!rows || rows.length === 0) {
+        console.log(`[ProvidersService] No providers found within ${radiusKm}km. Expanding search to 2000km.`);
+        rows = await this.providerRepo.findNearby({ lat, lon, radiusKm: 2000, limit });
+      }
+
     } catch (err) {
       console.error('[ProvidersService] getNearbyProviders query error:', err);
       throw new BadRequestException('Konnte nahegelegene Anbieter nicht laden');
