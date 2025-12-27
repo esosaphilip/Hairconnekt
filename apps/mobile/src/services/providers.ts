@@ -231,15 +231,14 @@ export const providersApi = {
     }
     return (payload as any) ?? {};
   },
-  return(payload as any) ?? {};
-  },
 
-  async updateAddress(body: { street: string; houseNumber: string; postalCode: string; city: string; state: string; showOnMap?: boolean }): Promise < any > {
-  const res = await http.put('/providers/me/address', body);
-  const payload = res?.data;
-  if(payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-  return (payload as any).data;
-}
-return payload;
+
+  async updateAddress(body: { street: string; houseNumber: string; postalCode: string; city: string; state: string; showOnMap?: boolean }): Promise<any> {
+    const res = await http.put('/providers/me/address', body);
+    const payload = res?.data;
+    if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
+      return (payload as any).data;
+    }
+    return payload;
   },
 };

@@ -13,12 +13,12 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { Ionicons } from '@expo/vector-icons';
 
 // Design System Imports
-import Text from '../components/Text';
-import Input from '../components/Input';
-import Button from '../components/Button';
-import Card from '../components/Card';
-import Checkbox from '../components/Checkbox';
-import { spacing, colors } from '../theme/tokens';
+import Text from '../../components/Text';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
+import Card from '../../components/Card';
+import Checkbox from '../../components/Checkbox';
+import { spacing, colors } from '../../theme/tokens';
 import { providersApi } from '../../services/providers';
 
 export default function EditAddressScreen() {
@@ -84,8 +84,8 @@ export default function EditAddressScreen() {
                     // Fallback for string address "Street 123, City" (legacy/formatted)
                     // Hard to parse reliably without structure.
                     // Try best effort or leave empty.
-                    setFormData(prev => ({ ...prev })); // Leave defaults
-                    setOriginalData(prev => ({ ...prev }));
+                    setFormData((prev: any) => ({ ...prev })); // Leave defaults
+                    setOriginalData((prev: any) => ({ ...prev }));
                 } else {
                     setOriginalData(formData);
                 }
@@ -252,7 +252,7 @@ export default function EditAddressScreen() {
                     <View style={styles.checkboxContainer}>
                         <Checkbox
                             checked={formData.showOnMap}
-                            onChange={(val) => setFormData({ ...formData, showOnMap: val })}
+                            onChange={(val: boolean) => setFormData({ ...formData, showOnMap: val })}
                         />
                         <Text variant="small" style={styles.checkboxLabel}>
                             Adresse auf der Karte anzeigen
