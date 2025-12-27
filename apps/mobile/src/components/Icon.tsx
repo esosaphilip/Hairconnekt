@@ -20,6 +20,7 @@ const NAME_MAP: Record<string, string> = {
   camera: 'camera-outline',
   image: 'image-outline',
   check: 'checkmark',
+  user: 'person-outline',
   // Additional mappings used across screens
   'more-vertical': 'ellipsis-vertical',
   'map-pin': 'map',
