@@ -646,6 +646,7 @@ function RootNavigator() {
           <Stack.Screen name="MapViewScreen" component={MapViewScreen} options={{ headerShown: true, title: 'Karte' }} />
           {/* Shared verification screen used by MessagesScreen */}
           <Stack.Screen name="Verify" component={VerificationScreen} options={{ headerShown: true, title: 'Verifizieren' }} />
+          <Stack.Screen name="LocationSelection" component={LocationSelectionScreen} options={{ title: 'Standort wählen' }} />
         </Stack.Navigator>
       ) : (
         <Stack.Navigator initialRouteName="Welcome">
