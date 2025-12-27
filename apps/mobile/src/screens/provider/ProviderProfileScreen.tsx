@@ -343,10 +343,13 @@ export function ProviderProfileScreen() {
           </View>
 
           <View style={{ marginTop: spacing.md }}>
-            <View style={styles.infoRow}>
-              <Ionicons name="location-outline" size={20} color={colors.gray400} />
-              <Text style={styles.infoText}>{profile?.address || 'Adresse nicht hinterlegt'}</Text>
-            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('EditAddressScreen')}>
+              <View style={styles.infoRow}>
+                <Ionicons name="location-outline" size={20} color={colors.gray400} />
+                <Text style={styles.infoText}>{profile?.address || 'Adresse hinzufügen'}</Text>
+                <Ionicons name="chevron-forward" size={16} color={colors.gray400} style={{ marginLeft: 'auto' }} />
+              </View>
+            </TouchableOpacity>
             <View style={styles.infoRow}>
               <Ionicons name="call-outline" size={20} color={colors.gray400} />
               <Text style={styles.infoText}>{profile?.user?.phone || '—'}</Text>

@@ -935,9 +935,11 @@ export class ProvidersService {
         linkedin: p.linkedin || null,
       },
       // Extract main address from locations
+      // Extract main address from locations
       address: p.locations?.find(l => l.isPrimary)?.address?.streetAddress
-        ? `${p.locations.find(l => l.isPrimary)?.address?.streetAddress}, ${p.locations.find(l => l.isPrimary)?.address?.city}`
-        : (p.locations?.[0]?.address?.streetAddress ? `${p.locations[0].address.streetAddress}, ${p.locations[0].address.city}` : null)
+        ? `${p.locations.find(l => l.isPrimary)?.address?.streetAddress}, ${p.locations.find(l => l.isPrimary)?.address?.postalCode || ''} ${p.locations.find(l => l.isPrimary)?.address?.city}`
+        : (p.locations?.[0]?.address?.streetAddress ? `${p.locations[0].address.streetAddress}, ${p.locations[0].address.postalCode || ''} ${p.locations[0].address.city}` : null),
+      addressDetails: p.locations?.find(l => l.isPrimary)?.address || p.locations?.[0]?.address || null
     };
   }
 }
