@@ -215,13 +215,10 @@ export class TypeORMProviderRepository implements IProviderRepository {
       .addSelect('p.acceptsSameDayBooking', 'acceptsSameDayBooking')
       .addSelect(`(${distanceExpr})`, 'distanceKm')
       .groupBy('p.id')
-      .addGroupBy('u.firstName')
-      .addGroupBy('u.lastName')
-      .addGroupBy('p.businessName')
-      .addGroupBy('p.coverPhotoUrl')
-      .addGroupBy('p.isVerified')
-      .addGroupBy('p.acceptsSameDayBooking')
-      .addGroupBy('addr.latitude')
+      .addGroupBy('u.id')     // Group by User ID (functionally implies name)
+      .addGroupBy('pl.id')    // Group by Location ID
+      .addGroupBy('addr.id')  // Group by Address ID (functionally implies lat/lon)
+      .addGroupBy('addr.latitude') // Keep explicitly for distance calc safety if needed
       .addGroupBy('addr.longitude')
       // Remove HAVING clause to avoid SQL errors; filtering done by bounding box approx.
       // We can sort by exact distance.
