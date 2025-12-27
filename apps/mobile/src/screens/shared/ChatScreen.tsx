@@ -1,4 +1,5 @@
 // @ts-nocheck
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +17,21 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
+import ActionSheet from "react-native-actions-sheet";
+import { showMessage } from "react-native-flash-message";
+import {
+  ArrowLeft,
+  Phone,
+  Video,
+  MoreVertical,
+  Paperclip,
+  Image as ImageIcon,
+  Send,
+  User,
+  Calendar
+} from 'lucide-react-native';
+import { Avatar, AvatarImage, AvatarFallback } from '../../components/avatar';
+import { Button } from '../../components/Button';
 // ... imports
 import { http } from "../../api/http";
 
@@ -30,6 +46,40 @@ const mockChats: Record<string, any> = {
       { id: "1", text: "Hallo! Wie kann ich dir helfen?", sender: "provider", timestamp: new Date().toISOString() }
     ]
   }
+};
+
+const MessageBubble = ({ message, providerAvatar, providerName }: { message: any, providerAvatar: string, providerName: string }) => {
+  // Logic: "provider" in mock data seems to be the remote user. 
+  // If message.sender is "provider", it's Them. Otherwise it's Me.
+  const isMe = message.sender !== 'provider';
+
+  return (
+    <View style={[styles.messageRow, isMe ? styles.messageRowMe : styles.messageRowThem]}>
+      <View style={[styles.messageContent, isMe ? styles.messageContentMe : styles.messageContentThem]}>
+        {!isMe && (
+          <Avatar size={32}>
+            {providerAvatar ? (
+              <AvatarImage uri={providerAvatar} />
+            ) : (
+              <AvatarFallback label={providerName} />
+            )}
+          </Avatar>
+        )}
+        <View style={[styles.bubbleWrapper, isMe ? { alignItems: 'flex-end' } : { alignItems: 'flex-start' }]}>
+          <View style={[styles.bubble, isMe ? styles.bubbleMe : styles.bubbleThem]}>
+            <Text style={[styles.messageText, isMe ? styles.messageTextMe : styles.messageTextThem]}>
+              {message.text}
+            </Text>
+          </View>
+          <View style={[styles.timeStatusContainer, isMe ? styles.timeStatusContainerMe : styles.timeStatusContainerThem]}>
+            <Text style={styles.timeText}>
+              {message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
 };
 
 export function ChatScreen() {
@@ -54,6 +104,37 @@ export function ChatScreen() {
   const flatListRef = useRef(null);
 
   // ... useEffects
+
+  const handleSend = () => {
+    if (!message.trim()) return;
+
+    const newMessage = {
+      id: Date.now().toString(),
+      text: message,
+      sender: 'me',
+      timestamp: new Date().toISOString(),
+    };
+
+    setMessages([...messages, newMessage]);
+    setMessage("");
+  };
+
+  const handleBooking = () => {
+    actionSheetRef.current?.hide();
+    // Navigate to CreateAppointment with initial client data if suitable
+    navigation.navigate("CreateAppointment", {
+      clientId: (params as any).userId || chat.provider.id,
+      clientName: chat.provider.name
+    });
+  };
+
+  const handleCall = (type: 'voice' | 'video') => {
+    Alert.alert("Anruf", `${type === 'voice' ? 'Sprachanruf' : 'Videoanruf'} wird gestartet... (Demo)`);
+  };
+
+  const handleAttachment = () => {
+    Alert.alert("Anhang", "Datei anhängen ist noch nicht implementiert.");
+  };
 
   const handleBlockUser = () => {
     actionSheetRef.current?.hide();

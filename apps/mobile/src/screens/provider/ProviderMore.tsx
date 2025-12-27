@@ -272,6 +272,18 @@ export function ProviderMore() {
                 <Avatar size={64}>
                   <AvatarImage source={{ uri: getAvatarUrl(user, profile) }} />
                 </Avatar>
+                {/* NEW: Camera overlay or just make the whole area clickable? 
+                    The user requested "upload picture from my phone". 
+                    We can make the avatar clickable to go to upload screen.
+                 */}
+                <TouchableOpacity
+                  style={styles.cameraBtn}
+                  onPress={() => navigation.navigate("ProviderPhotoUploadScreen")}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  <Icon name="camera" size={14} color={COLORS.white} />
+                </TouchableOpacity>
+
                 <View style={styles.profileTextContainer}>
                   <Text style={styles.profileName}>{[user?.firstName, user?.lastName].filter(Boolean).join(' ') || profile?.user?.firstName || 'Profil'}</Text>
                   <Text style={styles.profileStudio}>{profile?.businessName || 'Studio'}</Text>
@@ -371,9 +383,11 @@ export function ProviderMore() {
 function getAvatarUrl(user: unknown, profile: unknown): string {
   const u = (user ?? null) as Record<string, unknown> | null;
   const p = (profile ?? null) as { user?: Record<string, unknown> } | null;
+
+  // Changed priority: Profile (fresh) > User (cached) > ImageUrl fallback
   const candidates = [
-    u && typeof u.profilePictureUrl === 'string' ? (u.profilePictureUrl as string) : undefined,
     p?.user && typeof p.user?.profilePictureUrl === 'string' ? (p.user.profilePictureUrl as string) : undefined,
+    u && typeof u.profilePictureUrl === 'string' ? (u.profilePictureUrl as string) : undefined,
     u && typeof u.imageUrl === 'string' ? (u.imageUrl as string) : undefined,
   ].filter((v): v is string => typeof v === 'string');
   return candidates[0] || '';
@@ -426,6 +440,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: SPACING.xs,
     marginTop: SPACING.xs,
+  },
+  cameraBtn: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: COLORS.primary || '#000',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: COLORS.white,
   },
   // --- Menu Sections Styles ---
   menuSectionsContainer: {

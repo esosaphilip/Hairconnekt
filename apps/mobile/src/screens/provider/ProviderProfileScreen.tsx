@@ -289,7 +289,7 @@ export function ProviderProfileScreen() {
           <View style={styles.centered}>
             <View style={{ position: 'relative', marginBottom: spacing.md }}>
               <Avatar size={96}>
-                <AvatarImage uri={(profile?.user?.profilePictureUrl || profile?.coverPhotoUrl) ?? undefined} />
+                <AvatarImage uri={(profile?.user?.profilePictureUrl) ?? undefined} />
                 <AvatarFallback label="AM" />
               </Avatar>
               <Pressable style={styles.cameraBtn} onPress={onEditPhoto} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
