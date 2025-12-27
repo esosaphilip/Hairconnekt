@@ -21,7 +21,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import IconButton from '../../components/IconButton';
 import { Badge } from '../../components/badge';
-import Avatar, { AvatarImage } from '../../components/avatar';
+import Avatar, { AvatarImage, AvatarFallback } from '../../components/avatar';
 import Icon from '../../components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { http } from '@/api/http';
@@ -403,9 +403,13 @@ export function ProviderPublicProfileScreen() {
                 size={80}
                 uri={(() => {
                   const url = publicData?.profile?.user?.profilePictureUrl || publicData?.imageUrl;
-                  if (!url) return 'https://images.unsplash.com/photo-1647462742033-f4e39fa481b1?w=200';
+                  if (!url) return undefined; // Let Fallback handle it instead of Unsplash hardcode
                   return `${url}${url.includes('?') ? '&' : '?'}t=${avatarVersion}`;
                 })()}
+              />
+              <AvatarFallback
+                size={80}
+                label={publicData?.name || 'Provider'}
               />
             </Avatar>
             <View style={styles.summaryTextContainer}>

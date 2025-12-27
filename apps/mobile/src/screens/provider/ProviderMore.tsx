@@ -18,7 +18,7 @@ import { getProviderAppointments } from '../../api/appointments';
 import { PLATFORM_FEE_RATE } from '../../api/payments';
 import Card from '../../components/Card';
 import { Badge } from '../../components/badge';
-import Avatar, { AvatarImage } from '../../components/avatar';
+import Avatar, { AvatarImage, AvatarFallback } from '../../components/avatar';
 import Icon from '../../components/Icon';
 import { checkAndReloadUpdates } from '@/services/updates';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
@@ -278,6 +278,10 @@ export function ProviderMore() {
                       const url = getAvatarUrl(user, profile);
                       return url ? `${url}${url.includes('?') ? '&' : '?'}t=${avatarVersion}` : undefined;
                     })()}
+                  />
+                  <AvatarFallback
+                    size={64}
+                    label={[user?.firstName, user?.lastName].filter(Boolean).join(' ') || profile?.user?.firstName || 'User'}
                   />
                   <View style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 32, borderWidth: 1, borderColor: '#eee' }} />
                 </Avatar>

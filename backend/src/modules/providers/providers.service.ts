@@ -591,7 +591,7 @@ export class ProvidersService {
       name: name || provider.businessName || 'Provider',
       business: provider.businessName || null,
       verified: provider.isVerified || false,
-      imageUrl: provider.coverPhotoUrl || null, // Or user.profilePictureUrl?
+      imageUrl: provider.coverPhotoUrl || provider.user?.profilePictureUrl || null,
       rating: Math.round(avgRating * 10) / 10,
       reviews: reviewCount,
       specialties,
