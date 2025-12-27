@@ -154,9 +154,11 @@ export function ProviderMore() {
   const [earningsBadge, setEarningsBadge] = useState<string | null>(null);
   const [earningsError, setEarningsError] = useState<string | null>(null);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [avatarVersion, setAvatarVersion] = useState(Date.now());
 
   useFocusEffect(
     useCallback(() => {
+      setAvatarVersion(Date.now());
       let isActive = true;
 
       const loadProfile = async () => {
@@ -270,7 +272,16 @@ export function ProviderMore() {
             <Card style={styles.profileCard}>
               <View style={styles.profileSummary}>
                 <Avatar size={64}>
-                  <AvatarImage source={{ uri: getAvatarUrl(user, profile) }} />
+                  <AvatarImage
+                    size={64}
+                    source={{
+                      uri: (() => {
+                        const url = getAvatarUrl(user, profile);
+                        return url ? `${url}${url.includes('?') ? '&' : '?'}t=${avatarVersion}` : undefined;
+                      })()
+                    }}
+                  />
+                  <View style={{ position: 'absolute', width: '100%', height: '100%', borderRadius: 32, borderWidth: 1, borderColor: '#eee' }} />
                 </Avatar>
                 {/* NEW: Camera overlay or just make the whole area clickable? 
                     The user requested "upload picture from my phone". 
