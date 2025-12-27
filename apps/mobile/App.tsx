@@ -41,6 +41,8 @@ import { AvailabilitySettingsScreen } from '@/screens/provider/AvailabilitySetti
 import { BlockTimeScreen } from '@/screens/provider/BlockTimeScreen';
 import { CreateAppointmentScreen } from '@/screens/provider/CreateAppointmentScreen';
 import { ClientDetailScreen } from '@/screens/provider/ClientDetailScreen';
+import EditAddressScreen from '@/screens/provider/EditAddressScreen';
+import ProviderOnboardingAddressScreen from '@/screens/provider/ProviderOnboardingAddressScreen';
 import { ProviderProfileScreen } from '@/screens/provider/ProviderProfileScreen';
 import { ProviderPublicProfileScreen } from '@/screens/provider/ProviderPublicProfileScreen';
 import { ServicesManagementScreen } from '@/screens/provider/ServicesManagementScreen';
@@ -234,6 +236,9 @@ function ProviderMoreStackScreen() {
       <ProviderMoreStack.Screen name="EditProfileScreen" component={EditProfileScreen} options={{ title: 'Profil bearbeiten' }} />
       <ProviderMoreStack.Screen name="AddressManagementScreen" component={AddressManagementScreen} options={{ title: 'Meine Adressen' }} />
       <ProviderMoreStack.Screen name="AddEditAddressScreen" component={AddEditAddressScreen} options={{ title: 'Adresse' }} />
+      {/* New Address Screens */}
+      <ProviderMoreStack.Screen name="EditAddressScreen" component={EditAddressScreen} options={{ headerShown: false, title: 'Adresse bearbeiten' }} />
+      <ProviderMoreStack.Screen name="ProviderOnboardingAddressScreen" component={ProviderOnboardingAddressScreen} options={{ headerShown: false }} />
     </ProviderMoreStack.Navigator>
   );
 }

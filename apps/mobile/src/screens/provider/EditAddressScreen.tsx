@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { ArrowLeft, Save, MapPin, AlertCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 // Design System Imports
 import Text from '../components/Text';
@@ -19,6 +19,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import Checkbox from '../components/Checkbox';
 import { spacing, colors } from '../theme/tokens';
+import { providersApi } from '../../services/providers';
 
 export default function EditAddressScreen() {
     const navigation = useNavigation();
@@ -44,18 +45,37 @@ export default function EditAddressScreen() {
     useEffect(() => {
         const loadData = async () => {
             try {
-                // Simulating API Call
-                const mockData = {
-                    street: "Leopoldstraße",
-                    houseNumber: "123",
-                    postalCode: "80802",
-                    city: "München",
-                    state: "BY",
-                    showOnMap: true,
+                const profile: any = await providersApi.getMyProfile();
+                const address = profile?.address;
+
+                let street = "";
+                let houseNumber = "";
+
+                if (address?.streetAddress) {
+                    // Simple split logic: assumes last part is number if it's digit-like
+                    const match = address.streetAddress.match(/^(.+?)\s+(\d+(\w)?(\s?[-/]\s?\d+\w?)?)$/);
+                    if (match) {
+                        street = match[1];
+                        houseNumber = match[2];
+                    } else {
+                        street = address.streetAddress;
+                        houseNumber = ""; // User might need to fix manually
+                    }
+                }
+
+                const data = {
+                    street: street,
+                    houseNumber: houseNumber,
+                    postalCode: address?.postalCode || "",
+                    city: address?.city || "",
+                    state: address?.state || "",
+                    showOnMap: true, // Not currently persisted in address entity
                 };
-                setFormData(mockData);
-                setOriginalData(mockData);
+
+                setFormData(data);
+                setOriginalData(data);
             } catch (e) {
+                console.error("Failed to load address", e);
                 Alert.alert("Fehler", "Adresse konnte nicht geladen werden.");
             } finally {
                 setIsFetching(false);
@@ -75,6 +95,7 @@ export default function EditAddressScreen() {
     const validate = () => {
         let tempErrors: any = {};
         if (!formData.street.trim()) tempErrors.street = "Erforderlich";
+        if (!formData.houseNumber.trim()) tempErrors.houseNumber = "Erforderlich";
         if (!/^\d{5}$/.test(formData.postalCode)) tempErrors.postalCode = "5 Ziffern erforderlich";
         if (!formData.city.trim()) tempErrors.city = "Erforderlich";
 
@@ -88,12 +109,14 @@ export default function EditAddressScreen() {
 
         setIsLoading(true);
         try {
-            // API PATCH logic here...
+            await providersApi.updateAddress(formData);
             setOriginalData(formData);
             Alert.alert("Erfolg", "Adresse wurde aktualisiert");
             navigation.goBack();
         } catch (e) {
+            console.error("Failed to save address", e);
             setErrors({ general: "Speichern fehlgeschlagen" });
+            Alert.alert("Fehler", "Speichern fehlgeschlagen");
         } finally {
             setIsLoading(false);
         }
@@ -128,7 +151,7 @@ export default function EditAddressScreen() {
             {/* Mobile Header with Save Action */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleBack}>
-                    <ArrowLeft size={24} color={colors.gray800} />
+                    <Ionicons name="arrow-back" size={24} color={colors.gray800} />
                 </TouchableOpacity>
                 <Text variant="h3">Adresse bearbeiten</Text>
                 <TouchableOpacity
@@ -139,7 +162,7 @@ export default function EditAddressScreen() {
                     {isLoading ? (
                         <ActivityIndicator size="small" color={colors.primary} />
                     ) : (
-                        <Save size={24} color={colors.primary} />
+                        <Ionicons name="save-outline" size={24} color={colors.primary} />
                     )}
                 </TouchableOpacity>
             </View>
@@ -148,7 +171,7 @@ export default function EditAddressScreen() {
                 <Card style={styles.card}>
                     <View style={styles.sectionTitle}>
                         <View style={styles.iconBox}>
-                            <MapPin size={18} color={colors.primary} />
+                            <Ionicons name="location" size={18} color={colors.primary} />
                         </View>
                         <Text variant="h4">Geschäftsadresse</Text>
                     </View>
@@ -158,7 +181,7 @@ export default function EditAddressScreen() {
                             <Input
                                 label="Straße *"
                                 value={formData.street}
-                                onChangeText={(text) => setFormData({ ...formData, street: text })}
+                                onChangeText={(text: string) => setFormData({ ...formData, street: text })}
                                 error={errors.street}
                                 disabled={isLoading}
                             />
@@ -167,7 +190,7 @@ export default function EditAddressScreen() {
                             <Input
                                 label="Nr. *"
                                 value={formData.houseNumber}
-                                onChangeText={(text) => setFormData({ ...formData, houseNumber: text })}
+                                onChangeText={(text: string) => setFormData({ ...formData, houseNumber: text })}
                                 error={errors.houseNumber}
                                 disabled={isLoading}
                             />
@@ -181,7 +204,7 @@ export default function EditAddressScreen() {
                                 value={formData.postalCode}
                                 keyboardType="number-pad"
                                 maxLength={5}
-                                onChangeText={(text) => setFormData({ ...formData, postalCode: text.replace(/\D/g, '') })}
+                                onChangeText={(text: string) => setFormData({ ...formData, postalCode: text.replace(/\D/g, '') })}
                                 error={errors.postalCode}
                                 disabled={isLoading}
                             />
@@ -190,9 +213,22 @@ export default function EditAddressScreen() {
                             <Input
                                 label="Stadt *"
                                 value={formData.city}
-                                onChangeText={(text) => setFormData({ ...formData, city: text })}
+                                onChangeText={(text: string) => setFormData({ ...formData, city: text })}
                                 error={errors.city}
                                 disabled={isLoading}
+                            />
+                        </View>
+                    </View>
+
+                    <View style={styles.row}>
+                        <View style={{ flex: 1 }}>
+                            <Input
+                                label="Bundesland *"
+                                value={formData.state}
+                                onChangeText={(text: string) => setFormData({ ...formData, state: text })}
+                                error={errors.state}
+                                disabled={isLoading}
+                                placeholder="z.B. Bayern"
                             />
                         </View>
                     </View>
@@ -211,7 +247,7 @@ export default function EditAddressScreen() {
                 {/* Changes Indicator */}
                 {hasChanges && (
                     <View style={styles.alertBar}>
-                        <AlertCircle size={14} color={colors.amber600} />
+                        <Ionicons name="alert-circle" size={14} color={colors.amber600} />
                         <Text style={styles.alertText}>Ungespeicherte Änderungen</Text>
                     </View>
                 )}

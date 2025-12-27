@@ -14,11 +14,14 @@ import { StorageService } from '../storage/storage.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { Address } from '../users/entities/address.entity';
+import { ProviderLocation } from './entities/provider-location.entity';
 
 import { ProviderCertification } from './entities/provider-certification.entity';
 
 import { CreateTimeOffDto } from './dto/create-time-off.dto';
 import { ProviderTimeOff } from './entities/provider-time-off.entity';
+import { UpdateAddressDto } from './dto/update-address.dto';
 
 @Injectable()
 export class ProvidersService {
@@ -33,6 +36,10 @@ export class ProvidersService {
     private readonly providerEntityRepo: Repository<ProviderProfile>,
     @InjectRepository(ProviderTimeOff)
     private readonly timeOffRepo: Repository<ProviderTimeOff>,
+    @InjectRepository(Address)
+    private readonly addressRepo: Repository<Address>,
+    @InjectRepository(ProviderLocation)
+    private readonly locationRepo: Repository<ProviderLocation>,
   ) { }
 
   /**
@@ -60,6 +67,60 @@ export class ProvidersService {
 
     await this.invalidateProviderCache(provider.id, userId);
     return { specializations: dto.specializations };
+  }
+
+  /**
+   * Update provider address (Business Location)
+   */
+  async updateAddress(userId: string, dto: UpdateAddressDto) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    // Find existing primary location
+    const existingLocation = await this.locationRepo.findOne({
+      where: { provider: { id: provider.id }, isPrimary: true },
+      relations: ['address'],
+    });
+
+    let address: Address;
+
+    if (existingLocation && existingLocation.address) {
+      address = existingLocation.address;
+    } else {
+      address = new Address();
+      address.user = provider.user;
+      address.label = 'Business';
+      address.country = 'DE'; // Default
+      address.isDefault = true;
+    }
+
+    // Update fields
+    address.streetAddress = `${dto.street} ${dto.houseNumber}`.trim();
+    address.city = dto.city;
+    address.postalCode = dto.postalCode;
+    address.state = dto.state;
+    // Map usage logic could go here (e.g. geocoding), ignoring showOnMap for now as it's not in Address entity
+
+    const savedAddress = await this.addressRepo.save(address);
+
+    if (!existingLocation) {
+      const location = new ProviderLocation();
+      location.provider = provider;
+      location.address = savedAddress;
+      location.isPrimary = true;
+      await this.locationRepo.save(location);
+    }
+
+    await this.invalidateProviderCache(provider.id, userId);
+
+    return {
+      street: dto.street,
+      houseNumber: dto.houseNumber,
+      postalCode: dto.postalCode,
+      city: dto.city,
+      state: dto.state,
+      showOnMap: dto.showOnMap
+    };
   }
 
   /**

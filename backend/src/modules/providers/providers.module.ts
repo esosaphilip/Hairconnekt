@@ -5,6 +5,7 @@ import { ProvidersController } from './providers.controller';
 import { ProvidersService } from './providers.service';
 import { ProviderProfile } from './entities/provider-profile.entity';
 import { User } from '../users/entities/user.entity'; // Add User import
+import { Address } from '../users/entities/address.entity'; // Add Address import
 import { StorageModule } from '../storage/storage.module'; // Add StorageModule import
 import { ProviderLocation } from './entities/provider-location.entity';
 import { ProviderLanguage } from './entities/provider-language.entity';
@@ -40,6 +41,7 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
       PortfolioImage,
       Review,
       User,
+      Address,
     ]),
     StorageModule,
     ServicesModule, // Imported to expose ServicesService to ProvidersController for direct routing fix

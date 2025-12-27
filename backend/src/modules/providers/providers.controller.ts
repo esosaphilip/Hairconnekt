@@ -9,6 +9,7 @@ import { UpdateBioDto } from './dto/update-bio.dto';
 import { UpdateSpecializationsDto } from './dto/update-specializations.dto';
 import { UpdateLanguagesDto } from './dto/update-languages.dto';
 import { UpdateSocialMediaDto } from './dto/update-social-media.dto';
+import { UpdateAddressDto } from './dto/update-address.dto';
 import { CreateCertificationDto } from './dto/create-certification.dto';
 import { CreateTimeOffDto } from './dto/create-time-off.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -46,6 +47,14 @@ export class ProvidersController {
   setAvailability(@Req() req: Request, @Body() dto: AvailabilityDto) {
     const userId = (req.user as any)?.sub;
     return this.providersService.setAvailability(userId, dto);
+  }
+
+  @Put('me/address')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  updateAddress(@Req() req: Request, @Body() dto: UpdateAddressDto) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.updateAddress(userId, dto);
   }
 
   @Patch('profile/bio')

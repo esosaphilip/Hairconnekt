@@ -3,32 +3,24 @@ import {
     View,
     TouchableOpacity,
     StyleSheet,
-    ScrollView,
     SafeAreaView,
-    ActivityIndicator,
-    Platform
+    Alert
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ArrowLeft, MapPin, Check, AlertCircle } from 'lucide-react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 
-// Assuming these are your design system components
-import Text from '../components/Text';
-import Input from '../components/Input';
-import Button from '../components/Button';
-import Card from '../components/Card';
-import Checkbox from '../components/Checkbox';
-import { spacing, colors } from '../theme/tokens';
-
-const GERMAN_STATES = [
-    { value: "BW", label: "Baden-Württemberg" },
-    { value: "BY", label: "Bayern" },
-    { value: "BE", label: "Berlin" },
-    // ... rest of states
-];
+// Components
+import Text from '../../components/Text';
+import Input from '../../components/Input';
+import Button from '../../components/Button';
+import Card from '../../components/Card';
+import Checkbox from '../../components/Checkbox';
+import { spacing, colors } from '../../theme/tokens';
+import { providersApi } from '../../services/providers';
 
 export default function ProviderOnboardingAddressScreen() {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const [isLoading, setIsLoading] = useState(false);
     const [errors, setErrors] = useState<any>({});
     const [formData, setFormData] = useState({
@@ -46,7 +38,7 @@ export default function ProviderOnboardingAddressScreen() {
         if (!formData.houseNumber.trim()) newErrors.houseNumber = "Hausnummer ist erforderlich";
         if (!/^\d{5}$/.test(formData.postalCode)) newErrors.postalCode = "Ungültige PLZ";
         if (!formData.city.trim()) newErrors.city = "Stadt ist erforderlich";
-        if (!formData.state) newErrors.state = "Bundesland ist erforderlich";
+        if (!formData.state.trim()) newErrors.state = "Bundesland ist erforderlich";
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -57,14 +49,17 @@ export default function ProviderOnboardingAddressScreen() {
 
         setIsLoading(true);
         try {
-            // Mock API logic
-            const fullAddress = `${formData.street} ${formData.houseNumber}, ${formData.postalCode} ${formData.city}`;
-            console.log("Saving address:", fullAddress);
+            await providersApi.updateAddress(formData);
 
-            // In mobile, we usually navigate using the stack reference
+            // Navigate to next step or dashboard
+            // If this is part of a flow, navigate to next. 
+            // If standalone, maybe go back or to service setup.
+            // Assuming next step is Services for now based on previous code.
             navigation.navigate('ProviderOnboardingServices');
         } catch (error) {
+            console.error(error);
             setErrors({ general: "Fehler beim Speichern der Adresse" });
+            Alert.alert("Fehler", "Speichern fehlgeschlagen.");
         } finally {
             setIsLoading(false);
         }
@@ -76,13 +71,13 @@ export default function ProviderOnboardingAddressScreen() {
             <View style={styles.header}>
                 <View style={styles.headerTop}>
                     <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <ArrowLeft size={24} color={colors.gray700} />
+                        <Ionicons name="arrow-back" size={24} color={colors.gray700} />
                     </TouchableOpacity>
                     <Text variant="h3">Geschäftsadresse</Text>
                     <View style={{ width: 24 }} />
                 </View>
 
-                {/* Progress Bar */}
+                {/* Progress Bar (Mocked to match previous look) */}
                 <View style={styles.progressContainer}>
                     <View style={[styles.progressBar, styles.progressActive]} />
                     <View style={[styles.progressBar, styles.progressActive]} />
@@ -100,7 +95,7 @@ export default function ProviderOnboardingAddressScreen() {
                 <Card style={styles.card}>
                     <View style={styles.infoRow}>
                         <View style={styles.iconContainer}>
-                            <MapPin size={20} color={colors.primary} />
+                            <Ionicons name="location" size={20} color={colors.primary} />
                         </View>
                         <View style={{ flex: 1 }}>
                             <Text variant="h4">Wo können Kunden dich finden?</Text>
@@ -116,7 +111,7 @@ export default function ProviderOnboardingAddressScreen() {
                             <Input
                                 label="Straße *"
                                 value={formData.street}
-                                onChangeText={(val) => setFormData({ ...formData, street: val })}
+                                onChangeText={(val: string) => setFormData({ ...formData, street: val })}
                                 error={errors.street}
                                 placeholder="Leopoldstraße"
                             />
@@ -125,7 +120,7 @@ export default function ProviderOnboardingAddressScreen() {
                             <Input
                                 label="Nr. *"
                                 value={formData.houseNumber}
-                                onChangeText={(val) => setFormData({ ...formData, houseNumber: val })}
+                                onChangeText={(val: string) => setFormData({ ...formData, houseNumber: val })}
                                 error={errors.houseNumber}
                                 placeholder="123"
                             />
@@ -137,7 +132,7 @@ export default function ProviderOnboardingAddressScreen() {
                             <Input
                                 label="PLZ *"
                                 value={formData.postalCode}
-                                onChangeText={(val) => setFormData({ ...formData, postalCode: val.replace(/\D/g, "") })}
+                                onChangeText={(val: string) => setFormData({ ...formData, postalCode: val.replace(/\D/g, "") })}
                                 error={errors.postalCode}
                                 keyboardType="numeric"
                                 maxLength={5}
@@ -148,20 +143,18 @@ export default function ProviderOnboardingAddressScreen() {
                             <Input
                                 label="Stadt *"
                                 value={formData.city}
-                                onChangeText={(val) => setFormData({ ...formData, city: val })}
+                                onChangeText={(val: string) => setFormData({ ...formData, city: val })}
                                 error={errors.city}
                                 placeholder="München"
                             />
                         </View>
                     </View>
 
-                    {/* Note: State Select on mobile usually triggers a BottomSheet or a Modal Picker */}
                     <Input
                         label="Bundesland *"
                         value={formData.state}
-                        placeholder="Wähle ein Bundesland"
-                        editable={false}
-                        onPressIn={() => {/* Trigger Native Picker */ }}
+                        placeholder="z.B. Bayern"
+                        onChangeText={(val: string) => setFormData({ ...formData, state: val })}
                         error={errors.state}
                     />
 
@@ -179,7 +172,7 @@ export default function ProviderOnboardingAddressScreen() {
                 {/* Privacy Note */}
                 <View style={styles.privacyCard}>
                     <View style={styles.privacyHeader}>
-                        <Check size={16} color={colors.blue600} />
+                        <Ionicons name="shield-checkmark" size={16} color={colors.blue600} />
                         <Text style={styles.privacyTitle}>Deine Privatsphäre ist geschützt</Text>
                     </View>
                     <Text style={styles.privacyText}>• Adresse wird nur bestätigten Kunden angezeigt</Text>
