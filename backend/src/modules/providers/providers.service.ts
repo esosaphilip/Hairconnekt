@@ -874,9 +874,9 @@ export class ProvidersService {
         linkedin: p.linkedin || null,
       },
       // Extract main address from locations
-      address: p.locations?.find(l => l.isPrimary)?.address?.street
-        ? `${p.locations.find(l => l.isPrimary)?.address?.street}, ${p.locations.find(l => l.isPrimary)?.address?.city}`
-        : (p.locations?.[0]?.address?.street ? `${p.locations[0].address.street}, ${p.locations[0].address.city}` : null)
+      address: p.locations?.find(l => l.isPrimary)?.address?.streetAddress
+        ? `${p.locations.find(l => l.isPrimary)?.address?.streetAddress}, ${p.locations.find(l => l.isPrimary)?.address?.city}`
+        : (p.locations?.[0]?.address?.streetAddress ? `${p.locations[0].address.streetAddress}, ${p.locations[0].address.city}` : null)
     };
   }
 }
