@@ -6,7 +6,9 @@ import Avatar, { AvatarImage, AvatarFallback } from "@/components/avatar";
 import Icon from "@/components/Icon";
 import { colors } from "@/theme/tokens";
 
-type NavigateFn = (route: string, params: Record<string, unknown>) => void;
+import { IBooking } from "@/domain/models/booking";
+
+type NavigateFn = (route: any, params?: any) => void;
 
 const local = StyleSheet.create({
   badgeCompleted: { backgroundColor: colors.success },
@@ -45,24 +47,24 @@ const sx = StyleSheet.create({
 });
 
 export function renderBookingCard(
-  booking: Record<string, unknown>,
+  booking: IBooking,
   navigate: NavigateFn,
 ) {
-  const b = booking as Record<string, unknown>;
-  const idStr = String(b["id"] ?? "");
-  const providerName = typeof b["providerName"] === "string" ? (b["providerName"] as string) : "";
-  const providerBusiness = typeof b["providerBusiness"] === "string" ? (b["providerBusiness"] as string) : null;
-  const providerImage = typeof b["providerImage"] === "string" ? (b["providerImage"] as string) : undefined;
-  const service = typeof b["service"] === "string" ? (b["service"] as string) : "Service";
-  const dateStr = typeof b["date"] === "string" ? (b["date"] as string) : "";
-  const timeStr = typeof b["time"] === "string" ? (b["time"] as string) : "";
-  const durationStr = typeof b["duration"] === "string" ? (b["duration"] as string) : null;
-  const locationStr = typeof b["location"] === "string" ? (b["location"] as string) : null;
-  const priceStr = typeof b["price"] === "string" ? (b["price"] as string) : null;
-  const status = typeof b["status"] === "string" ? (b["status"] as string) : "";
-  const reviewed = !!b["reviewed"];
-  const ratingNum = typeof b["rating"] === "number" ? (b["rating"] as number) : undefined;
-  const cancelledByStr = typeof b["cancelledBy"] === "string" ? (b["cancelledBy"] as string) : null;
+  const b = booking;
+  const idStr = b.id;
+  const providerName = b.providerName;
+  const providerBusiness = b.providerBusiness;
+  const providerImage = b.providerImage;
+  const service = b.serviceName;
+  const dateStr = b.date;
+  const timeStr = b.time;
+  const durationStr = b.duration;
+  const locationStr = b.location;
+  const priceStr = b.price;
+  const status = b.status;
+  const reviewed = b.isReviewed;
+  const ratingNum = b.rating;
+  const cancelledByStr = b.cancelledBy;
 
   const firstChar = providerName.length > 0 ? providerName.charAt(0) : "?";
   const fallbackLabel = firstChar.toUpperCase();

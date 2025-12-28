@@ -70,6 +70,7 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
 import { useEffect, useRef } from 'react';
 import { emit } from './eventBus';
 import { useNavigation } from '@react-navigation/native';
+import { rootNavigationRef } from '../navigation/rootNavigation';
 
 export function useNotificationListeners() {
   const notificationListener = useRef<Notifications.Subscription>();

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "522988400417",
+    "project_id": "hairconnekt-prod",
+    "storage_bucket": "hairconnekt-prod.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522988400417:android:2543af5ede7df6e5c35860",
+        "android_client_info": {
+          "package_name": "de.hairconnekt.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCseAhLenL4VaACmoVXAOFM-2RVN79C7qY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

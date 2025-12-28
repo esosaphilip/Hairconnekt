@@ -13,9 +13,13 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "de.hairconnekt.app",
+      "googleServicesFile": "./src/GoogleService-Info.plist"
     },
     "android": {
+      "package": "de.hairconnekt.app",
+      "googleServicesFile": "./src/google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
