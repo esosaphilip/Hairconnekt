@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { Platform, SafeAreaView, Text, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { CommonActions } from '@react-navigation/native';
+import { NavigationContainer, CommonActions } from '@react-navigation/native';
 import { useAuth } from '@/auth/AuthContext';
 import { useUserMode } from '@/state/UserModeContext';
 import { rootNavigationRef } from '@/navigation/rootNavigation';

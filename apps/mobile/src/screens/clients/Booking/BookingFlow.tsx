@@ -9,16 +9,16 @@ import {
     Alert,
 } from 'react-native';
 import { useRoute } from '@react-navigation/native';
-import Text from '../../../components/Text';
-import Button from '../../../components/Button';
-import Card from '../../../components/Card';
-import IconButton from '../../../components/IconButton';
-import Calendar from '../../../components/calendar.native';
-import Input from '../../../components/Input';
-import Icon from '../../../components/Icon';
-import { colors, COLORS, SPACING } from '../../../theme/tokens';
-import { DateService } from '../../../domain/services/DateService';
-import { rootNavigationRef } from '../../../navigation/rootNavigation';
+import Text from '@/components/Text';
+import Button from '@/components/Button';
+import Card from '@/components/Card';
+import IconButton from '@/components/IconButton';
+import Calendar from '@/components/calendar.native';
+import Input from '@/components/Input';
+import Icon from '@/components/Icon';
+import { colors, COLORS, SPACING } from '@/theme/tokens';
+import { DateService } from '@/domain/services/DateService';
+import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { styles } from './BookingFlow.styles';
 import { useBookingFlow } from './hooks/useBookingFlow';
 

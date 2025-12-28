@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { Alert } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useAuth } from '../../../../auth/AuthContext';
-import { RootStackParamList } from '../../../../navigation/types';
-import { clientBraiderApi } from '../../../../api/clientBraider';
-import { clientBookingApi } from '../../../../api/clientBooking';
-import { IBraider, IBraiderService } from '../../../../domain/models/braider';
-import { DomainError } from '../../../../domain/errors/DomainError';
+import { useAuth } from '@/auth/AuthContext';
+import { RootStackParamList } from '@/navigation/types';
+import { clientBraiderApi } from '@/api/clientBraider';
+import { clientBookingApi } from '@/api/clientBooking';
+import { IBraider, IBraiderService } from '@/domain/models/braider';
+import { DomainError } from '@/domain/errors/DomainError';
 
 export type BookingStep = 'services' | 'datetime' | 'details' | 'confirmation';
 
@@ -39,8 +39,8 @@ export const useBookingFlow = (id: string) => {
                 const data = await clientBraiderApi.getProfile(id);
                 setProvider(data);
                 const allServices: IBraiderService[] = [];
-                (data.services || []).forEach(cat => {
-                    cat.items.forEach(item => allServices.push(item));
+                (data.services || []).forEach((cat: { items: IBraiderService[] }) => {
+                    cat.items.forEach((item: IBraiderService) => allServices.push(item));
                 });
                 setServicesList(allServices);
             } catch (err) {

@@ -1,5 +1,5 @@
 import { StyleSheet, Platform } from 'react-native';
-import { colors, spacing, typography, radii, FONT_SIZES } from '../../../theme/tokens';
+import { colors, spacing, typography, radii, FONT_SIZES } from '@/theme/tokens';
 
 export const styles = StyleSheet.create({
     container: {
