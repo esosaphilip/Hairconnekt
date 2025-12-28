@@ -101,7 +101,8 @@ export const BraiderAdapter = {
       languages: profile.languages || dto.languages || [],
 
       // Use real data from backend, fallback to mock/defaults if missing (for demo/UI completeness)
-      badges: (dto.badges && dto.badges.length) ? dto.badges : ['Salon', 'Mobil verfügbar', dto.verified ? 'Verifiziert' : ''].filter(Boolean),
+      // Use specialties from DB (Hair Styles) as the primary badges for "Spezialisierungen" section
+      badges: (dto.specialties && dto.specialties.length) ? dto.specialties : (dto.badges || []),
       stats: (dto.stats && dto.stats.length) ? dto.stats : [
         { label: 'Termine', value: '0' },
         { label: 'Jahre', value: '1+' },

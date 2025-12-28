@@ -679,6 +679,8 @@ export class ProvidersService {
       .leftJoinAndSelect('p.services', 's', 's.isActive = :isActive', { isActive: true }) // Only active services
       .leftJoinAndSelect('s.category', 'cat')
       .leftJoinAndSelect('p.availability', 'av')
+      .leftJoinAndSelect('p.languages', 'lang')
+      .leftJoinAndSelect('p.specializations', 'spec')
       .where('p.id = :id', { id })
       .getOne();
 
@@ -687,8 +689,10 @@ export class ProvidersService {
     // Aggregate rating and review count
     const { avgRating, reviewCount } = await this.providerRepo.getReviewStats(id);
 
-    // Aggregate specialties from ACTIVE services
-    const specialties = (provider.services || []).map((s) => s.name).slice(0, 5);
+    // Aggregate specialties from DB or fall back to ACTIVE services
+    const dbSpecialties = (provider.specializations || []).map(s => s.specialization);
+    const serviceSpecialties = (provider.services || []).map((s) => s.name).slice(0, 5);
+    const specialties = dbSpecialties.length > 0 ? dbSpecialties : serviceSpecialties;
     const priceFromCents = (provider.services || []).reduce((min, r) => (min == null || r.priceCents < min ? r.priceCents : min), null as number | null);
 
     const name = [provider.user?.firstName, provider.user?.lastName].filter(Boolean).join(' ').trim();
@@ -750,6 +754,7 @@ export class ProvidersService {
       profile: {
         ...this.sanitizeProvider(provider),
         bio: provider.bio, // Explicitly ensure bio is present
+        languages: (provider.languages || []).map(l => l.languageCode),
         certifications: provider.certifications,
         availability: (provider.availability || []).map((r) => ({
           weekday: this.numberToWeekday(r.dayOfWeek), // Reuse existing helper
