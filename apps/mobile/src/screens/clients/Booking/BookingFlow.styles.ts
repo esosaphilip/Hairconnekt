@@ -316,9 +316,6 @@ export const styles = StyleSheet.create({
         fontSize: typography.small.fontSize,
         marginBottom: 4,
     },
-    mtMd: {
-        marginTop: spacing.md,
-    },
     bottomBar: {
         backgroundColor: colors.white,
         borderTopColor: colors.gray200,
