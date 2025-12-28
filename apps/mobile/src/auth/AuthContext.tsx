@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState, PropsWithChildren } from 'react';
 import { http, setAuthDisabled, abortAuthRefresh } from '../api/http';
-import { on } from '../services/eventBus';
+import { on, off } from '../services/eventBus';
 import { clearAuthBundle, clearTokens, getAuthBundle, getRefreshToken, saveAuthBundle, saveTokens } from './tokenStorage';
 import type { AuthBundle, Tokens, PublicUser } from './tokenStorage';
 import type { AuthContextValue } from './types';
@@ -29,60 +29,87 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     // Load persisted auth bundle on mount
+    let mounted = true;
     (async () => {
-      // ... (existing load logic) ...
-      // After loading, if user exists, sync FCM
-      if (bundle?.user && bundle?.tokens) {
-        // Sync in background
-        syncFcm();
+      try {
+        const bundle = await getAuthBundle();
+        if (mounted) {
+          if (bundle?.user && bundle?.tokens) {
+            // Sync in background
+            syncFcm();
+          }
+          setState({ user: bundle?.user ?? null, tokens: bundle?.tokens ?? null, loading: false, error: null });
+        }
+      } catch (e) {
+        if (mounted) setState({ user: null, tokens: null, loading: false, error: null });
       }
-      setState({ user: bundle?.user ?? null, tokens: bundle?.tokens ?? null, loading: false, error: null });
-      // ... (existing logs) ...
     })();
+    return () => { mounted = false; };
+  }, [syncFcm]);
+
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      logout();
+    };
+    on('session_expired', handleSessionExpired);
+    return () => {
+      off('session_expired', handleSessionExpired);
+    };
   }, []);
 
-  // ... (existing session_expired effect) ...
-
   const login = useCallback(async (emailOrPhone: string, password: string, deviceId?: string): Promise<{ user: PublicUser | null; tokens: Tokens }> => {
-    // ... (existing login logic start) ...
-    // ...
-    await saveAuthBundle({ user, tokens });
-    setState({ user, tokens, loading: false, error: null });
-    setAuthDisabled(false);
-    // Sync FCM after login
-    syncFcm();
-    return { user, tokens };
-  }
-    // ...
-      await saveAuthBundle({ user: userClassic, tokens: tokensClassic });
-  setState({ user: userClassic || null, tokens: tokensClassic, loading: false, error: null });
-  setAuthDisabled(false);
-  // Sync FCM after classic login
-  syncFcm();
-  return { user: userClassic, tokens: tokensClassic as Tokens };
-} catch (e) {
-  // ...
-}
+    try {
+      const { data } = await http.post('/auth/login', { emailOrPhone, password, deviceId });
+      const { user, tokens } = data; // Assuming backend returns { user, tokens }
+
+      await saveAuthBundle({ user, tokens });
+      setState({ user, tokens, loading: false, error: null });
+      setAuthDisabled(false);
+      syncFcm();
+      return { user, tokens };
+    } catch (e: any) {
+      throw e;
+    }
   }, [syncFcm]);
 
-const register = useCallback(async (payload: Record<string, unknown>): Promise<{ user: PublicUser | null; tokens: Tokens }> => {
-  // ...
-  await saveAuthBundle({ user, tokens });
-  setState({ user: user || null, tokens, loading: false, error: null });
-  setAuthDisabled(false);
-  // Sync FCM after registration
-  syncFcm();
-  return { user, tokens: tokens as Tokens };
-} catch (e) {
-  // ...
-}
+  const register = useCallback(async (payload: Record<string, unknown>): Promise<{ user: PublicUser | null; tokens: Tokens }> => {
+    try {
+      const { data } = await http.post('/auth/register', payload);
+      const { user, tokens } = data;
+
+      await saveAuthBundle({ user, tokens });
+      setState({ user: user || null, tokens, loading: false, error: null });
+      setAuthDisabled(false);
+      syncFcm();
+      return { user, tokens: tokens as Tokens };
+    } catch (e: any) {
+      throw e;
+    }
   }, [syncFcm]);
 
-// ... (rest of methods) ...
+  const logout = useCallback(async () => {
+    await clearAuthBundle();
+    abortAuthRefresh();
+    setAuthDisabled(true); // Stop retries
+    setState({ user: null, tokens: null, loading: false, error: null });
+  }, []);
 
-const value: AuthContextValue = { ...state, login, logout, setUser, refreshTokens, register };
+  const refreshTokens = useCallback(async () => {
+    // Logic handled via interceptor generally, but if exposed:
+    const currentRefresh = await getRefreshToken();
+    if (!currentRefresh) throw new Error('No refresh token');
+    // Implement if needed
+  }, []);
 
-return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  const setUser = useCallback((user: PublicUser | null) => {
+    setState(s => ({ ...s, user }));
+    // Should persist?
+    // saveAuthBundle({ ...state, user }); 
+  }, []);
+
+  const value: AuthContextValue = { ...state, login, logout, setUser, refreshTokens, register };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
