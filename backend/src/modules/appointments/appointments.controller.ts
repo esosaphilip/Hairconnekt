@@ -99,7 +99,7 @@ export class AppointmentsController {
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)
-  async updateStatus(@Param('id') id: string, @Body('status') status: any, @Req() req: Request) {
+  async updateStatus(@Param('id') id: string, @Body('status') status: import('./entities/appointment.entity').AppointmentStatus, @Req() req: Request) {
     const userId = (req.user as any)?.sub;
     return this.appointmentsService.updateStatus(id, status, userId);
   }

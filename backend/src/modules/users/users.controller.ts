@@ -29,6 +29,13 @@ export class UsersController {
     return this.usersService.updateLanguage(userId, body.preferredLanguage);
   }
 
+  @Patch('fcm-token')
+  @UseGuards(JwtAuthGuard)
+  async updateFcmToken(@Req() req: Request, @Body() body: { fcmToken: string }) {
+    const userId = (req.user as any)?.sub;
+    return this.usersService.updateFcmToken(userId, body.fcmToken);
+  }
+
   // Avatar upload endpoint temporarily disabled until StorageModule is ready
 
   @Post(':id/block')

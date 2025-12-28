@@ -156,6 +156,14 @@ export class UsersService {
     return { success: true };
   }
 
+  async updateFcmToken(userId: string, fcmToken: string) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    user.fcmToken = fcmToken;
+    await this.userRepo.save(user);
+    return { success: true };
+  }
+
   async deactivateUser(userId: string) {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');

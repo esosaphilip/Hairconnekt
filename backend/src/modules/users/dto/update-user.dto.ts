@@ -21,4 +21,7 @@ export class UpdateUserDto {
   @IsOptional()
   @IsUrl({ require_tld: false })
   profilePictureUrl?: string;
+
+  @IsOptional()
+  notificationPreferences?: { push?: boolean; email?: boolean; sms?: boolean };
 }

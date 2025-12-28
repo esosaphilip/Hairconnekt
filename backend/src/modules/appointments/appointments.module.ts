@@ -7,6 +7,8 @@ import { AppointmentService as AppointmentServiceEntity } from './entities/appoi
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { User } from '../users/entities/user.entity';
 import { Service } from '../services/entities/service.entity';
+import { BlockedTime } from '../blocked-time/entities/blocked-time.entity';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -17,10 +19,12 @@ import { Service } from '../services/entities/service.entity';
       ProviderProfile,
       User,
       Service,
+      BlockedTime,
     ]),
+    NotificationsModule,
   ],
   controllers: [AppointmentsController],
   providers: [AppointmentsService],
   exports: [AppointmentsService],
 })
-export class AppointmentsModule {}
+export class AppointmentsModule { }

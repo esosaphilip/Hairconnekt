@@ -13,6 +13,7 @@ import { ProviderAvailability } from './entities/provider-availability.entity';
 import { ProviderTimeOff } from './entities/provider-time-off.entity';
 import { ProviderSpecialization } from './entities/provider-specialization.entity';
 import { ProviderCertification } from './entities/provider-certification.entity';
+import { ProviderSettings } from './entities/provider-settings.entity';
 import { VerificationDocument } from './entities/verification-document.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { AppointmentService } from '../appointments/entities/appointment-service.entity';
@@ -42,6 +43,7 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
       Review,
       User,
       Address,
+      ProviderSettings,
     ]),
     StorageModule,
     ServicesModule, // Imported to expose ServicesService to ProvidersController for direct routing fix

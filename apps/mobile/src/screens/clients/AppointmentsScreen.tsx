@@ -8,9 +8,10 @@ import { clientBookingApi } from '@/api/clientBooking';
 import { IBooking } from '@/domain/models/booking';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/Icon'; // Ensure Icon exists or use Ionicons directly if needed
+import { on } from '@/services/eventBus';
 
 export function AppointmentsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const [appointments, setAppointments] = useState<IBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -28,8 +29,18 @@ export function AppointmentsScreen() {
     }
   };
 
+
+
   useEffect(() => {
     fetchAppointments();
+
+    // Listen for push notification updates
+    const off = on('appointment_updated', () => {
+      fetchAppointments();
+    });
+    return () => {
+      off();
+    };
   }, []);
 
   const onRefresh = () => {
@@ -98,8 +109,8 @@ export function AppointmentsScreen() {
 const StatusBadge = ({ status }: { status: string }) => {
   const getStyle = () => {
     switch (status) {
-      case 'confirmed': return { bg: colors.green100, text: colors.green800 };
-      case 'cancelled': return { bg: colors.red100, text: colors.red800 };
+      case 'confirmed': return { bg: colors.lightGreen, text: colors.green600 };
+      case 'cancelled': return { bg: colors.red200, text: colors.red800 };
       default: return { bg: colors.gray100, text: colors.gray800 };
     }
   };
@@ -114,9 +125,9 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.gray50 },
   header: { padding: spacing.md, backgroundColor: colors.white },
-  screenTitle: { fontSize: FONT_SIZES.h4, fontWeight: '700', color: colors.text },
+  screenTitle: { fontSize: FONT_SIZES.h4, fontWeight: '700', color: colors.gray900 },
   listContent: { padding: spacing.md },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', marginTop: 50 },
   emptyText: { color: colors.gray600, fontSize: FONT_SIZES.body },
@@ -128,13 +139,13 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
   },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
-  providerName: { fontWeight: '600', fontSize: FONT_SIZES.body, color: colors.text },
+  providerName: { fontWeight: '600', fontSize: FONT_SIZES.body, color: colors.gray900 },
   serviceName: { fontSize: FONT_SIZES.h5, fontWeight: '700', color: colors.primary, marginBottom: spacing.sm },
   infoRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xs },
   infoText: { color: colors.gray800, fontSize: FONT_SIZES.small },
   location: { color: colors.gray600, fontSize: FONT_SIZES.small, marginBottom: spacing.sm },
   footerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: spacing.xs, paddingTop: spacing.xs, borderTopWidth: 1, borderTopColor: colors.gray100 },
-  price: { fontWeight: '700', color: colors.text },
+  price: { fontWeight: '700', color: colors.gray900 },
 
   badge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
   badgeText: { fontSize: 12, fontWeight: '600' },

@@ -1,21 +1,24 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, ActivityIndicator, Pressable, StyleSheet, Alert } from 'react-native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import React, { useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+// ... existing imports
 import { Ionicons } from '@expo/vector-icons';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import { Badge } from '@/components/badge';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/avatar';
-import { Switch } from 'react-native';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/avatar';
 import { http } from '@/api/http';
 import { colors, spacing, typography } from '@/theme/tokens';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { logger } from '@/services/logger';
-import { API_CONFIG, MESSAGES } from '@/constants';
+import { API_CONFIG } from '@/constants';
 import { getErrorMessage } from '@/presentation/utils/errorHandler';
+import { on } from '@/services/eventBus';
 import { useProviderGate } from '@/hooks/useProviderGate';
-import { useNavigation } from '@react-navigation/native';
-// Removed unused ProviderTabsParamList import
 
+// ... (existing imports)
+
+// ... existing types (NextAppointment, Stats, Appointment, Review, DashboardData)
 type NextAppointment = {
   time: string;
   client: string;
@@ -100,65 +103,80 @@ export function ProviderDashboard() {
   const [profile, setProfile] = useState<{ id?: string; name?: string; avatarUrl?: string | null } | null>(null);
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchDashboardData = useCallback(async (isRefresh = false) => {
+    if (!isRefresh) setLoading(true);
     let mounted = true;
-    async function load() {
-      // 1. Load Profile (fail gracefully)
-      try {
-        const p = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.ME);
-        if (mounted && p?.data) setProfile(p.data);
-      } catch (e) {
-        logger.warn('Failed to load provider profile', e);
-        // Don't block dashboard loading on profile failure
+
+    // 1. Load Profile (fail gracefully)
+    try {
+      const p = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.ME);
+      if (mounted && p?.data) setProfile(p.data);
+    } catch (e) {
+      logger.warn('Failed to load provider profile', e);
+    }
+
+    // 2. Load Dashboard Data
+    try {
+      const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
+      if (!mounted) return;
+
+      const payload = d?.data;
+      if (payload?.success && payload?.data) {
+        setDashboard(payload.data);
+      } else if (payload?.stats) {
+        setDashboard(payload);
       }
-
-      // 2. Load Dashboard Data
+      setError(null);
+    } catch (err) {
+      // Fallback to analytics if dashboard fails
       try {
-        const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
-        if (!mounted) return;
-
-        // Use standard backend payload directly
-        const payload = d?.data;
-        if (payload?.success && payload?.data) {
-          setDashboard(payload.data);
-        } else {
-          // Fallback or explicit set if format differs slightly
-          // If the backend returns the data root directly (e.g. wrapper middleware handles it)
-          // Adjust based on observation. ProvidersController returns { success: true, data: ... }
-          // so d.data is { success: true, data: ... }.
-          // Thus payload.data is the dashboard object.
-          if (payload?.stats) {
-            setDashboard(payload);
-          }
-        }
-      } catch (err) {
-        // Fallback to analytics if dashboard fails
-        try {
-          const pid = (profile?.id as string | undefined) || undefined; // might be undefined if profile failed
-          const today = new Date();
-          const start = new Date(today.getFullYear(), today.getMonth(), 1);
-          const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-          const toYMD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-          const a = await http.get('/provider/analytics/overview', { params: { provider_id: pid, start_date: toYMD(start), end_date: toYMD(end) } });
-          if (mounted) setDashboard(a?.data || null);
-        } catch (e) {
-          const msg = getErrorMessage(err);
-          if (mounted) setError(msg);
-          logger.error('Failed to load dashboard:', err);
-        }
-      } finally {
-        if (mounted) setLoading(false);
+        const pid = (profile?.id as string | undefined) || undefined;
+        const today = new Date();
+        const start = new Date(today.getFullYear(), today.getMonth(), 1);
+        const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        const toYMD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+        const a = await http.get('/provider/analytics/overview', { params: { provider_id: pid, start_date: toYMD(start), end_date: toYMD(end) } });
+        if (mounted) setDashboard(a?.data || null);
+      } catch (e) {
+        const msg = getErrorMessage(err);
+        if (mounted) setError(msg);
+        logger.error('Failed to load dashboard:', err);
+      }
+    } finally {
+      if (mounted) {
+        setLoading(false);
+        setRefreshing(false);
       }
     }
-    load();
     return () => { mounted = false; };
-  }, [profile?.id]); // Added dependency to retry if profile loads late, although profile is state. logic is inside useEffect.
+  }, [profile?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, [fetchDashboardData])
+  );
+
+  React.useEffect(() => {
+    const off = on('appointment_updated', () => {
+      fetchDashboardData(true);
+    });
+    return () => off();
+  }, [fetchDashboardData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchDashboardData(true);
+  }, [fetchDashboardData]);
 
   // Gate non-approved/non-provider users away from provider dashboard
   const { status, checked } = useProviderGate();
-  useEffect(() => {
+
+  // existing useEffect for gate
+  React.useEffect(() => {
     if (!checked) return;
     try {
       if (status === 'pending') {
@@ -190,12 +208,17 @@ export function ProviderDashboard() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {loading && !dashboard ? (
+      {loading && !dashboard && !refreshing ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+        <ScrollView
+          contentContainerStyle={{ paddingBottom: 100 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTop}>
@@ -397,6 +420,7 @@ export function ProviderDashboard() {
                                     try {
                                       await http.patch(`/appointments/${appointment.id}/status`, { status: newStatus });
                                       Alert.alert('Erfolg', `Termin wurde aktualisiert. Bitte aktualisieren.`);
+                                      fetchDashboardData(true); // Auto refresh on status change
                                     } catch (e) {
                                       Alert.alert('Fehler', 'Konnte Status nicht aktualisieren.');
                                     }

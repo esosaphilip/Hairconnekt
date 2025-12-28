@@ -1,14 +1,15 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { In, Repository, Between, LessThanOrEqual, MoreThanOrEqual, Not } from 'typeorm';
 import { Appointment, AppointmentStatus } from './entities/appointment.entity';
-import { AppointmentService as AppointmentServiceEntity } from './entities/appointment-service.entity';
-import { ProviderLocation } from '../providers/entities/provider-location.entity';
-import { Address } from '../users/entities/address.entity';
+import { BlockedTime } from '../blocked-time/entities/blocked-time.entity';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { User, UserType } from '../users/entities/user.entity';
 import { Service } from '../services/entities/service.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
+import { NotificationsService } from '../notifications/notifications.service';
+import { Address } from '../users/entities/address.entity';
+import { ProviderLocation } from '../providers/entities/provider-location.entity';
 import * as crypto from 'crypto';
 
 type StatusGroup = 'upcoming' | 'completed' | 'cancelled';
@@ -17,13 +18,15 @@ type StatusGroup = 'upcoming' | 'completed' | 'cancelled';
 export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment) private readonly appointmentRepo: Repository<Appointment>,
-    // AppointmentServiceRepo removed as creation is now handled by Appointment domain entity
     @InjectRepository(ProviderProfile)
     private readonly providerProfileRepository: Repository<ProviderProfile>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Service)
     private readonly serviceRepository: Repository<Service>,
+    @InjectRepository(BlockedTime)
+    private readonly blockedTimeRepo: Repository<BlockedTime>,
+    private readonly notificationsService: NotificationsService,
   ) { }
 
   private readonly logger = new Logger(AppointmentsService.name);
@@ -31,10 +34,20 @@ export class AppointmentsService {
   async create(createAppointmentDto: CreateAppointmentDto): Promise<Appointment> {
     const { providerId, clientId, newClient, serviceIds, startTime, endTime, notes } = createAppointmentDto;
 
-    const provider = await this.providerProfileRepository.findOne({ where: { id: providerId } });
+    if (!providerId) {
+      throw new BadRequestException('Provider ID is required');
+    }
+
+    const provider = await this.providerProfileRepository.findOne({
+      where: { id: providerId },
+      relations: ['user'] // Needed for FCM token
+    });
     if (!provider) {
       throw new NotFoundException(`Provider with ID "${providerId}" not found`);
     }
+
+    // Availability Check
+    await this.checkAvailability(providerId, new Date(startTime), new Date(endTime));
 
     let client: User | null = null;
     if (clientId) {
@@ -81,6 +94,18 @@ export class AppointmentsService {
     const savedAppointments = await this.appointmentRepo.save([appointment]);
     const savedAppointment = savedAppointments[0];
 
+    // Notify Provider
+    if (provider.user?.fcmToken) {
+      const dateStr = savedAppointment.startTime.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+      const timeStr = savedAppointment.startTime.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      await this.notificationsService.sendPushNotification(
+        provider.user.fcmToken,
+        'Neue terminanfrage',
+        `${client.firstName} hat einen Termin für ${dateStr} um ${timeStr} angefragt.`,
+        { type: 'appointment_request', appointmentId: savedAppointment.id }
+      );
+    }
+
     const reloaded = await this.appointmentRepo.findOne({
       where: { id: savedAppointment.id },
       relations: ['provider', 'client', 'appointmentServices'],
@@ -89,6 +114,51 @@ export class AppointmentsService {
       throw new NotFoundException(`Appointment with ID "${savedAppointment.id}" not found after save`);
     }
     return reloaded;
+  }
+
+  async checkAvailability(providerId: string, start: Date, end: Date, excludeAppointmentId?: string): Promise<void> {
+    // 1. Check for overlapping appointments (excluding Cancelled/NoShow)
+    const overlap = await this.appointmentRepo.findOne({
+      where: {
+        provider: { id: providerId },
+        startTime: LessThanOrEqual(end),
+        endTime: MoreThanOrEqual(start),
+        status: Not(In([AppointmentStatus.CANCELLED_BY_CLIENT, AppointmentStatus.CANCELLED_BY_PROVIDER, AppointmentStatus.NO_SHOW])),
+        ...(excludeAppointmentId ? { id: Not(excludeAppointmentId) } : {})
+      }
+    });
+
+    if (overlap) {
+      // Double check strict overlap to avoid edge case where end == start
+      if (overlap.startTime < end && overlap.endTime > start) {
+        throw new ConflictException('Dieser Zeitraum ist bereits durch einen anderen Termin belegt.');
+      }
+    }
+
+    // 2. Check for blocked time
+    const dateStr = start.toISOString().split('T')[0];
+    const startTimeStr = start.toISOString().substring(11, 16);
+    const endTimeStr = end.toISOString().substring(11, 16);
+
+    const blocks = await this.blockedTimeRepo.find({
+      where: {
+        provider: { id: providerId },
+        startDate: dateStr,
+      }
+    });
+
+    for (const block of blocks) {
+      if (block.allDay) {
+        throw new ConflictException('Dieser Zeitraum ist blockiert (Pause/Urlaub).');
+      }
+      if (block.startTime && block.endTime) {
+        // Overlap check: (StartA < EndB) and (EndA > StartB)
+        // Using string comparison for HH:mm is safe for same-day
+        if (block.startTime < endTimeStr && block.endTime > startTimeStr) {
+          throw new ConflictException('Dieser Zeitraum ist blockiert (Pause/Urlaub).');
+        }
+      }
+    }
   }
 
   private statusGroupToStatuses(group: StatusGroup): AppointmentStatus[] {
@@ -246,18 +316,42 @@ export class AppointmentsService {
   async updateStatus(id: string, status: AppointmentStatus, userId: string): Promise<Appointment> {
     const appt = await this.appointmentRepo.findOne({
       where: { id },
-      relations: ['provider', 'provider.user']
+      relations: ['provider', 'provider.user', 'client']
     });
 
     if (!appt) {
       throw new NotFoundException(`Appointment with ID "${id}" not found`);
     }
 
+    // Ensure authorized provider
     if (appt.provider?.user?.id !== userId) {
-       throw new NotFoundException('Appointment not found for this provider'); 
+      throw new NotFoundException('Appointment not found for this provider');
     }
 
     appt.status = status;
-    return this.appointmentRepo.save(appt);
+    const saveResult = await this.appointmentRepo.save(appt);
+
+    // Notify Client
+    if (appt.client?.fcmToken) {
+      let title = 'Termin Update';
+      let body = `Der Status deines Termins wurde aktualisiert: ${status}`;
+
+      if (status === AppointmentStatus.CONFIRMED) {
+        title = 'Termin bestätigt ✅';
+        body = 'Dein Termin wurde vom Anbieter bestätigt!';
+      } else if (status === AppointmentStatus.CANCELLED_BY_PROVIDER) {
+        title = 'Termin abgesagt ❌';
+        body = 'Dein Termin wurde leider vom Anbieter abgesagt.';
+      }
+
+      await this.notificationsService.sendPushNotification(
+        appt.client.fcmToken,
+        title,
+        body,
+        { type: 'appointment_update', appointmentId: id, status }
+      );
+    }
+
+    return saveResult;
   }
 }

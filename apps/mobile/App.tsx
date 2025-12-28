@@ -459,9 +459,13 @@ function ProviderTabs() {
   );
 }
 
+import { useNotificationListeners } from '@/services/notifications';
+
 function RootNavigator() {
   const { user, loading } = useAuth();
   const { mode } = useUserMode();
+  useNotificationListeners();
+
   // Shared root navigation ref is used for imperative navigation (web hash-based routing)
 
   // Ensure that after logout (user becomes null) we immediately reset to Welcome on the root navigator.

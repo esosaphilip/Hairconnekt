@@ -1,54 +1,100 @@
-import { http } from '../api/http';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-export type BackendNotification = {
-  id: string;
-  type:
-    | 'BOOKING_REQUEST'
-    | 'BOOKING_CONFIRMED'
-    | 'BOOKING_CANCELLED'
-    | 'MESSAGE_RECEIVED'
-    | 'REVIEW_RECEIVED'
-    | 'PAYMENT_RECEIVED'
-    | 'PAYOUT_COMPLETED'
-    | 'SYSTEM';
-  title: string;
-  message: string;
-  data?: { actionUrl?: string; avatar?: string; [k: string]: unknown } | null;
-  isRead: boolean;
-  readAt?: string | null;
-  createdAt: string;
-};
+// Configure notification behavior when app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
-export const notificationsApi = {
-  async list(limit = 50): Promise<{ items: BackendNotification[]; unreadCount: number }>
-  {
-    const res = await http.get('/notifications', { params: { limit } });
-    return res.data as { items: BackendNotification[]; unreadCount: number };
-  },
-  async unreadCount(): Promise<{ count: number }>
-  {
-    const res = await http.get('/notifications/unread-count');
-    return res.data as { count: number };
-  },
-  async markRead(id: string): Promise<{ success: boolean }>
-  {
-    const res = await http.post(`/notifications/${id}/read`);
-    return res.data as { success: boolean };
-  },
-  async markAllRead(): Promise<{ success: boolean }>
-  {
-    const res = await http.post('/notifications/read-all');
-    return res.data as { success: boolean };
-  },
-  async clearAll(): Promise<{ success: boolean }>
-  {
-    const res = await http.delete('/notifications');
-    return res.data as { success: boolean };
-  },
-  async registerDeviceToken(token: string): Promise<{ success: boolean }>
-  {
-    if (!token) throw new Error('Missing device token');
-    const res = await http.post('/notifications/token', { token });
-    return res.data as { success: boolean };
-  },
-};
+export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync('default', {
+      name: 'default',
+      importance: Notifications.AndroidImportance.MAX,
+      vibrationPattern: [0, 250, 250, 250],
+      lightColor: '#FF231F7C',
+    });
+  }
+
+  if (!Device.isDevice) {
+    // eslint-disable-next-line no-console
+    console.log('Must use physical device for Push Notifications');
+    return undefined;
+  }
+
+  const { status: existingStatus } = await Notifications.getPermissionsAsync();
+  let finalStatus = existingStatus;
+
+  if (existingStatus !== 'granted') {
+    const { status } = await Notifications.requestPermissionsAsync();
+    finalStatus = status;
+  }
+
+  if (finalStatus !== 'granted') {
+    // eslint-disable-next-line no-console
+    console.log('Failed to get push token for push notification!');
+    return undefined;
+  }
+
+  try {
+    // Get the device push token (for direct FCM usage)
+    // Note: ensure your app.json has the googleServicesFile configured for this to return an FCM token
+    const tokenData = await Notifications.getDevicePushTokenAsync();
+    return tokenData.data;
+  } catch (e: any) {
+    // eslint-disable-next-line no-console
+    console.error('Error getting push token:', e);
+    return undefined;
+  }
+}
+
+import { useEffect, useRef } from 'react';
+import { emit } from './eventBus';
+import { useNavigation } from '@react-navigation/native';
+
+export function useNotificationListeners() {
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
+
+  useEffect(() => {
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      // Notification received in foreground
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.log('[Notifications] Received:', notification);
+      }
+      // Emit event to refresh data (e.g. appointments)
+      emit('appointment_updated');
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      // User tapped on notification
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.log('[Notifications] Response:', response);
+      }
+      // Future: parse data and navigate. handling basic refresh for now.
+      emit('appointment_updated');
+
+      // Attempt to navigate if data contains screen info
+      const data = response.notification.request.content.data;
+      if (data?.type === 'APPOINTMENT_UPDATE' || data?.appointmentId) {
+        // Logic to navigate could go here, but requires access to navigation ref
+        // For now, the emit will trigger refreshes if the user is on the screen
+      }
+    });
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
+}

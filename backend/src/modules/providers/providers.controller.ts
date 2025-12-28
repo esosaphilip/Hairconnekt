@@ -181,21 +181,7 @@ export class ProvidersController {
   @Roles(UserType.PROVIDER)
   async getSettings(@Req() req: Request) {
     const userId = (req.user as any)?.sub;
-    // For now, return default settings or map from profile if columns exist
-    // TODO: Implement actual settings persistence
-    return {
-      pushNotifications: true,
-      emailNotifications: true,
-      bookingAlerts: true,
-      messageAlerts: true,
-      reviewAlerts: true,
-      marketingEmails: false,
-      showPhoneNumber: true,
-      showEmail: false,
-      profileVisible: true,
-      autoAcceptBookings: false,
-      allowWalkIns: true,
-    };
+    return this.providersService.getSettings(userId);
   }
 
   @Patch('settings')
@@ -203,8 +189,7 @@ export class ProvidersController {
   @Roles(UserType.PROVIDER)
   async updateSettings(@Req() req: Request, @Body() body: any) {
     const userId = (req.user as any)?.sub;
-    // TODO: Save settings to DB
-    return { success: true, ...body };
+    return this.providersService.updateSettings(userId, body);
   }
 
   @Get('me/availability-settings')

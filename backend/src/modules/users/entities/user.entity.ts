@@ -71,6 +71,9 @@ export class User {
   @Column({ name: 'fcm_token', type: 'varchar', length: 1024, nullable: true })
   fcmToken?: string | null;
 
+  @Column({ name: 'notification_preferences', type: 'jsonb', default: { push: true, email: true, sms: false } })
+  notificationPreferences: { push: boolean; email: boolean; sms: boolean };
+
   @OneToOne(() => ClientProfile, (client) => client.user, { cascade: true })
   clientProfile?: ClientProfile;
 

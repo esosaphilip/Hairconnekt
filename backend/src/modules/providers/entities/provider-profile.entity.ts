@@ -18,6 +18,7 @@ import { Service } from '../../services/entities/service.entity';
 import { Appointment } from '../../appointments/entities/appointment.entity';
 import { ProviderSpecialization } from './provider-specialization.entity';
 import { ProviderCertification } from './provider-certification.entity';
+import { ProviderSettings } from './provider-settings.entity';
 import sanitizeHtml from 'sanitize-html';
 import { UpdateBioDto } from '../dto/update-bio.dto';
 import { UpdateSocialMediaDto } from '../dto/update-social-media.dto';
@@ -140,6 +141,9 @@ export class ProviderProfile {
 
   @OneToMany(() => ProviderCertification, (cert) => cert.provider, { cascade: true })
   certifications?: ProviderCertification[];
+
+  @OneToOne(() => ProviderSettings, (settings) => settings.provider, { cascade: true })
+  settings: ProviderSettings;
 
   // Stripe Connect integration fields
   @Column({ name: 'stripe_account_id', type: 'varchar', length: 255, nullable: true })

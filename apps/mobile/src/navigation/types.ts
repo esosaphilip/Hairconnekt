@@ -22,6 +22,7 @@ export type RootStackParamList = {
   Home: undefined;
   SignInPrompt: { returnUrl?: string } | undefined;
   ProviderNotificationsScreen: undefined;
+  Booking: { providerId?: string; serviceName?: string } | undefined;
 };
 
 // Client Tabs
@@ -138,6 +139,8 @@ export type ProviderMoreStackParamList = {
   EditSpecializationsScreen: undefined;
   AddressManagementScreen: undefined;
   AddEditAddressScreen: { id?: string } | undefined;
+  EditAddressScreen: { id?: string } | undefined;
+  ProviderOnboardingAddressScreen: undefined;
   ProviderPhotoUploadScreen: undefined;
 };
 

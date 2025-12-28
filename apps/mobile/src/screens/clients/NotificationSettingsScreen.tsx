@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -29,6 +29,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import CustomTimePicker from '../../components/CustomTimePicker'; // Placeholder for RN Time Picker
 import { colors } from '../../theme/tokens';
+import { usersApi } from '../../services/users';
 
 // Interfaces for settings
 interface NotificationSetting {
@@ -61,6 +62,23 @@ const notificationSounds = [
 export default function NotificationSettingsScreen() {
   const navigation = useNavigation();
   const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      const { data } = await usersApi.getMe();
+      if (data.notificationPreferences) {
+        setPushEnabled(data.notificationPreferences.push ?? true);
+        setEmailEnabled(data.notificationPreferences.email ?? true);
+        setSmsEnabled(data.notificationPreferences.sms ?? false);
+      }
+    } catch (e) {
+      console.error('Failed to load settings', e);
+    }
+  };
 
   // Master switches
   const [pushEnabled, setPushEnabled] = useState(true);
@@ -102,8 +120,13 @@ export default function NotificationSettingsScreen() {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await usersApi.updateMe({
+        notificationPreferences: {
+          push: pushEnabled,
+          email: emailEnabled,
+          sms: smsEnabled,
+        }
+      });
 
       showToast('Einstellungen gespeichert');
       // In RN, you might not navigate here, but let the user stay on the settings screen
@@ -141,7 +164,7 @@ export default function NotificationSettingsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Master Controls */}
         <Card style={styles.card}>
           <Text style={styles.cardLabel}>Benachrichtigungskanäle</Text>
@@ -196,7 +219,7 @@ export default function NotificationSettingsScreen() {
         <Card style={styles.card}>
           <Text style={styles.cardLabel}>Ton & Vibration</Text>
           <Text style={styles.policyText}>
-              **Hinweis:** Die Steuerung von Ton und Vibration kann auf einigen Geräten durch die **Betriebssystem-Einstellungen** eingeschränkt sein.
+            **Hinweis:** Die Steuerung von Ton und Vibration kann auf einigen Geräten durch die **Betriebssystem-Einstellungen** eingeschränkt sein.
           </Text>
 
           <View style={styles.switchRow}>
@@ -213,11 +236,11 @@ export default function NotificationSettingsScreen() {
 
           {/* Sound Selection (Replaced Select with text/picker logic) */}
           {soundEnabled && (
-            <TouchableOpacity 
-                style={styles.soundPickerRow}
-                // In production, this onPress would open a native Picker/Modal
-                onPress={() => showToast('Native Sound Picker needs implementation.')} 
-                activeOpacity={0.7}
+            <TouchableOpacity
+              style={styles.soundPickerRow}
+              // In production, this onPress would open a native Picker/Modal
+              onPress={() => showToast('Native Sound Picker needs implementation.')}
+              activeOpacity={0.7}
             >
               <Text style={styles.soundLabel}>Ton auswählen</Text>
               <View style={styles.soundValueContainer}>
@@ -258,19 +281,19 @@ export default function NotificationSettingsScreen() {
 
               {/* Time Selection (Replaced Select with CustomTimePicker placeholder) */}
               <View style={styles.timePickerContainer}>
-                <CustomTimePicker 
-                    label="Von" 
-                    value={quietHoursStart} 
-                    onChange={setQuietHoursStart}
-                    icon={<Clock size={20} color="#4B5563" />}
-                    style={styles.flex1}
+                <CustomTimePicker
+                  label="Von"
+                  value={quietHoursStart}
+                  onChange={setQuietHoursStart}
+                  icon={<Clock size={20} color="#4B5563" />}
+                  style={styles.flex1}
                 />
-                <CustomTimePicker 
-                    label="Bis" 
-                    value={quietHoursEnd} 
-                    onChange={setQuietHoursEnd} 
-                    icon={<Clock size={20} color="#4B5563" />}
-                    style={styles.flex1}
+                <CustomTimePicker
+                  label="Bis"
+                  value={quietHoursEnd}
+                  onChange={setQuietHoursEnd}
+                  icon={<Clock size={20} color="#4B5563" />}
+                  style={styles.flex1}
                 />
               </View>
             </View>
@@ -346,16 +369,16 @@ export default function NotificationSettingsScreen() {
           />
         </Card>
       </ScrollView>
-      
+
       {/* Save Button - Fixed Footer */}
       <View style={styles.footer}>
-          <Button
-            title="Einstellungen speichern"
-            onPress={handleSave}
-            loading={loading}
-            disabled={loading}
-            style={styles.saveButton}
-          />
+        <Button
+          title="Einstellungen speichern"
+          onPress={handleSave}
+          loading={loading}
+          disabled={loading}
+          style={styles.saveButton}
+        />
       </View>
     </View>
   );

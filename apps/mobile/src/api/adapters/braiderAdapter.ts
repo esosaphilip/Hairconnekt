@@ -97,7 +97,7 @@ export const BraiderAdapter = {
       // Actually it returns 'business', 'name', etc.
       // Let's assume address is not critical or is handled by base if 'business' serves as location
       coverImage: dto.imageUrl || dto.coverImage, // Cover image
-      profileImage: profile.profilePictureUrl || dto.imageUrl, // Handle nested if needed
+      profileImage: profile.user?.profilePictureUrl || profile.profilePictureUrl || dto.imageUrl,
       languages: profile.languages || dto.languages || [],
 
       // Use real data from backend, fallback to mock/defaults if missing (for demo/UI completeness)

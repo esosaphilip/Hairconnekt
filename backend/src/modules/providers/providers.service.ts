@@ -26,6 +26,8 @@ import { Appointment } from '../appointments/entities/appointment.entity';
 import { Service } from '../services/entities/service.entity';
 import { Review } from '../reviews/entities/review.entity';
 import { PortfolioImage } from '../portfolio/entities/portfolio-image.entity';
+import { ProviderSettings } from './entities/provider-settings.entity';
+
 
 @Injectable()
 export class ProvidersService {
@@ -52,6 +54,9 @@ export class ProvidersService {
     private readonly reviewRepo: Repository<Review>,
     @InjectRepository(PortfolioImage)
     private readonly portfolioRepo: Repository<PortfolioImage>,
+    @InjectRepository(ProviderSettings)
+    private readonly settingsRepo: Repository<ProviderSettings>,
+
   ) { }
 
   /**
@@ -770,6 +775,42 @@ export class ProvidersService {
         }))
       },
     };
+  }
+
+  async getSettings(userId: string) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider not found');
+
+    let settings = await this.settingsRepo.findOne({ where: { provider: { id: provider.id } } });
+    if (!settings) {
+      settings = this.settingsRepo.create({ provider: { id: provider.id } as any });
+      await this.settingsRepo.save(settings);
+    }
+    return settings;
+  }
+
+  async updateSettings(userId: string, body: any) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider not found');
+
+    let settings = await this.settingsRepo.findOne({ where: { provider: { id: provider.id } } });
+    if (!settings) {
+      settings = this.settingsRepo.create({ provider: { id: provider.id } as any });
+    }
+
+    // Merge allowed fields
+    const allowed = [
+      'pushNotifications', 'emailNotifications', 'bookingAlerts', 'messageAlerts', 'reviewAlerts',
+      'marketingEmails', 'showPhoneNumber', 'showEmail', 'profileVisible', 'autoAcceptBookings', 'allowWalkIns'
+    ];
+
+    allowed.forEach(key => {
+      if (body[key] !== undefined) {
+        (settings as any)[key] = body[key];
+      }
+    });
+
+    return this.settingsRepo.save(settings);
   }
 
   /**
