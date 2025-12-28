@@ -8,6 +8,7 @@ import {
   Platform,
   StyleSheet,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useAuth } from '@/auth/AuthContext';
@@ -152,7 +153,7 @@ export function BookingFlow() {
         start.setHours(hours, minutes, 0, 0);
 
         // Calculate duration based on services
-        const selectedServiceObjs = servicesList.filter(s => selectedServices.includes(s.id || s.name)); // Handle ID vs Name
+        const selectedServiceObjs = servicesList.filter(s => selectedServices.includes(s.id));
         const durationMinutes = selectedServiceObjs.reduce((acc, s) => {
           // parse "1 Std. 30 Min." or similar logic? 
           // Reuse logic from duration calculation or just guess 60 mins if failing
@@ -290,18 +291,18 @@ export function BookingFlow() {
               servicesList.map((service, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => toggleService(service.name)}
+                  onPress={() => toggleService(service.id)}
                   style={[
                     styles.serviceCard,
-                    selectedServices.includes(service.name) && styles.serviceCardSelected,
+                    selectedServices.includes(service.id) && styles.serviceCardSelected,
                   ]}
                 >
                   <View style={styles.serviceItem}>
                     <View style={[
                       styles.checkbox,
-                      selectedServices.includes(service.name) && styles.checkboxSelected,
+                      selectedServices.includes(service.id) && styles.checkboxSelected,
                     ]}>
-                      {selectedServices.includes(service.name) && (
+                      {selectedServices.includes(service.id) && (
                         <Icon name="check" size={12} color={colors.white} />
                       )}
                     </View>
