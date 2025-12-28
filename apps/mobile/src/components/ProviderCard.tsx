@@ -69,7 +69,16 @@ export default function ProviderCard({ data, isFavorite, onToggleFavorite, onPre
             {!!data.specialties?.length && (
               <View style={styles.specialties}>
                 {(data.specialties || []).slice(0, 3).map((s, idx) => (
-                  <Badge key={idx} variant="secondary" textStyle={styles.badgeText}>{s}</Badge>
+                  <Badge
+                    key={idx}
+                    backgroundColor="#F43F5E"
+                    borderColor="#F43F5E"
+                    textColor="#ffffff"
+                    textStyle={styles.badgeText}
+                    style={{ backgroundColor: '#F43F5E', borderColor: '#F43F5E' }}
+                  >
+                    {s}
+                  </Badge>
                 ))}
               </View>
             )}

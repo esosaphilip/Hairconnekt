@@ -71,6 +71,7 @@ import { TransactionsScreen } from '@/screens/provider/TransactionsScreen';
 import { BookingFlow } from '@/screens/clients/BookingFlow';
 import { ChatScreen } from '@/screens/shared/ChatScreen';
 import { providersApi } from '@/services/providers';
+import ProviderProfile from '@/screens/clients/ProviderProfile';
 // Client utility screens
 import { MapViewScreen } from '@/screens/clients/MapViewScreen';
 import { SettingsScreen } from '@/screens/clients/SettingsScreen';
@@ -638,7 +639,7 @@ function RootNavigator() {
             return <Stack.Screen name="Tabs" component={Tabs} />;
           })()}
           {/* Global provider detail (public profile) route accessible from anywhere */}
-          <Stack.Screen name="ProviderDetail" component={ProviderPublicProfileScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="ProviderDetail" component={ProviderProfile} options={{ headerShown: false }} />
           <Stack.Screen name="ProviderNotificationsScreen" component={ProviderNotificationsScreen} options={{ headerShown: false }} />
           {/* Global client routes accessible from anywhere */}
           <Stack.Screen name="AllStyles" component={AllStylesScreen} options={{ headerShown: true, title: 'Alle Styles' }} />

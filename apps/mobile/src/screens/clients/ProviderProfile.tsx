@@ -35,21 +35,21 @@ export default function ProviderProfile() {
 
   useEffect(() => {
     if (!id) {
-        setError("Kein Provider gefunden.");
-        setLoading(false);
-        return;
+      setError("Kein Provider gefunden.");
+      setLoading(false);
+      return;
     }
 
     async function loadProfile() {
-        setLoading(true);
-        try {
-            const data = await clientBraiderApi.getProfile(id);
-            setProvider(data);
-        } catch (err) {
-            setError("Fehler beim Laden des Profils.");
-        } finally {
-            setLoading(false);
-        }
+      setLoading(true);
+      try {
+        const data = await clientBraiderApi.getProfile(id);
+        setProvider(data);
+      } catch (err) {
+        setError("Fehler beim Laden des Profils.");
+      } finally {
+        setLoading(false);
+      }
     }
     loadProfile();
 
@@ -64,26 +64,26 @@ export default function ProviderProfile() {
   };
 
   if (loading) {
-      return (
-          <SafeAreaView style={styles.safeArea}>
-              <View style={[styles.safeArea, {justifyContent: 'center', alignItems: 'center'}]}>
-                  <ActivityIndicator size="large" color="#8B4513" />
-              </View>
-          </SafeAreaView>
-      );
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color="#8B4513" />
+        </View>
+      </SafeAreaView>
+    );
   }
 
   if (error || !provider) {
-      return (
-        <SafeAreaView style={styles.safeArea}>
-            <View style={[styles.safeArea, {justifyContent: 'center', alignItems: 'center'}]}>
-                <Text>{error || "Provider nicht gefunden"}</Text>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={{marginTop: 20}}>
-                    <Text style={{color: '#8B4513'}}>Zurück</Text>
-                </TouchableOpacity>
-            </View>
-        </SafeAreaView>
-      );
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.safeArea, { justifyContent: 'center', alignItems: 'center' }]}>
+          <Text>{error || "Provider nicht gefunden"}</Text>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 20 }}>
+            <Text style={{ color: '#8B4513' }}>Zurück</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -252,7 +252,7 @@ export default function ProviderProfile() {
             </View>
 
             {(provider.reviews || []).map((review) => (
-              <View key={review.id} style={[styles.reviewCard, styles.card]}> 
+              <View key={review.id} style={[styles.reviewCard, styles.card]}>
                 <View style={styles.rowBetween}>
                   <View style={styles.rowWithIcon}>
                     <Ionicons name="person-circle-outline" size={20} color="#FF6B6B" />
@@ -266,7 +266,7 @@ export default function ProviderProfile() {
                   ))}
                 </View>
                 <Text style={[styles.cardText, { marginTop: 6 }]}>{review.text}</Text>
-                <View style={[styles.badge, styles.badgeOutline, { alignSelf: 'flex-start', marginTop: 8 }]}> 
+                <View style={[styles.badge, styles.badgeOutline, { alignSelf: 'flex-start', marginTop: 8 }]}>
                   <Text style={[styles.badgeText, { color: '#8B4513' }]}>{review.style}</Text>
                 </View>
               </View>
@@ -278,7 +278,7 @@ export default function ProviderProfile() {
         <View style={[styles.card, styles.bottomBar]}>
           <View style={styles.rowWithIcon}>
             <Text style={styles.cardText}>Preise starten ab</Text>
-            <Text style={styles.priceBig}>{provider.priceFromCents ? `€${provider.priceFromCents/100}` : 'Anfrage'}</Text>
+            <Text style={styles.priceBig}>{provider.priceFromCents ? `€${provider.priceFromCents / 100}` : 'Anfrage'}</Text>
           </View>
           <View style={styles.rowBetween}>
             <TouchableOpacity style={[styles.btn, styles.btnOutline]} onPress={() => Alert.alert('Nachricht')}>
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   badge: {
-    backgroundColor: THEME,
+    backgroundColor: '#F43F5E',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 16,

@@ -58,7 +58,7 @@ export const clientBraiderApi = {
 
   async getProfile(id: string): Promise<IBraider> {
     try {
-      const res = await http.get(`/providers/${id}`);
+      const res = await http.get(`/providers/public/${id}`);
       // Handle { success: true, data: { ... } } pattern
       const data = res.data?.data ? res.data.data : res.data;
       return BraiderAdapter.toDomainProfile(data);
