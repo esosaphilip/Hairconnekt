@@ -670,8 +670,6 @@ const styles = StyleSheet.create({
   priceBig: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#111827', // Screenshot "ab €35" is dark text usually, let's check. 
-    // Screenshot has "ab" small, €35 larger. THEME color usually fine for price.
     color: THEME,
     marginLeft: 6,
   },
