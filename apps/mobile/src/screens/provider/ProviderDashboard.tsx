@@ -15,6 +15,8 @@ import { API_CONFIG } from '@/constants';
 import { getErrorMessage } from '@/presentation/utils/errorHandler';
 import { on } from '@/services/eventBus';
 import { useProviderGate } from '@/hooks/useProviderGate';
+import { providerAppointmentsApi } from '@/api/providerAppointments';
+
 
 // ... (existing imports)
 
@@ -88,6 +90,8 @@ function statusToBadge(status: string) {
       return { label: 'Bestätigt', color: colors.green600 };
     case 'PENDING':
       return { label: 'Ausstehend', color: colors.amber600 };
+    case 'IN_PROGRESS':
+      return { label: 'In Arbeit', color: colors.blue600 };
     case 'COMPLETED':
       return { label: 'Abgeschlossen', color: colors.gray600 };
     case 'CANCELLED':
@@ -96,6 +100,7 @@ function statusToBadge(status: string) {
       return { label: 'Status', color: colors.gray300 };
   }
 }
+
 
 export function ProviderDashboard() {
   const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void };
@@ -129,7 +134,19 @@ export function ProviderDashboard() {
       } else if (payload?.stats) {
         setDashboard(payload);
       }
+
+      // 3. Supplemental Check for Today's Appointments if needed
+      if (!(payload?.data?.todayAppointments?.length > 0)) {
+        const todayItems = await providerAppointmentsApi.getTodayAppointments();
+        if (mounted && todayItems.length > 0) {
+          setDashboard(current => ({
+            ...current!,
+            todayAppointments: todayItems
+          }));
+        }
+      }
       setError(null);
+
     } catch (err) {
       // Fallback to analytics if dashboard fails
       try {
@@ -367,8 +384,9 @@ export function ProviderDashboard() {
                   <Card key={appointment.id} style={styles.cardMb12}>
                     <View style={styles.row}>
                       <View style={styles.indicatorContainer}>
-                        <View style={styles.appointmentIndicator} />
+                        <View style={[styles.appointmentIndicator, { backgroundColor: statusToBadge(appointment.status).color }]} />
                       </View>
+
                       <View style={styles.flex1}>
                         <View style={styles.appointmentHeaderRow}>
                           <View>

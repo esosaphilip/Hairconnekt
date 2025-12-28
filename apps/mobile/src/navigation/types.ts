@@ -94,7 +94,9 @@ export type ProviderCalendarStackParamList = {
   ProviderCalendarScreen: undefined; // Alias
   CreateAppointmentScreen: { clientId?: string } | undefined;
   BlockTimeScreen: undefined;
+  AppointmentRequestScreen: { id: string };
 };
+
 
 // Provider Clients Stack
 export type ProviderClientsStackParamList = {

@@ -9,7 +9,10 @@ import Button from '@/components/Button';
 import Card from '@/components/Card';
 import Badge from '@/components/badge';
 import Avatar, { AvatarImage, AvatarFallback } from '@/components/avatar';
+import { Calendar } from '@/components/calendar.native';
+import { useProviderCalendar } from '@/hooks/useProviderCalendar';
 import type { AppointmentListItem } from '@/api/appointments';
+
 import { providersApi } from '@/services/providers';
 import { colors, spacing } from '@/theme/tokens';
 import { useAuth } from '@/auth/AuthContext';
@@ -291,47 +294,23 @@ export function ProviderCalendar() {
     </View>
   );
 
+  const { markedDates, loading: calendarLoading } = useProviderCalendar(year, month);
+
   const MonthGrid = () => {
-    const screenWidth = Dimensions.get('window').width;
-    const containerHPad = 16;
-    const gridWidth = screenWidth - containerHPad * 2;
-    const cellWidth = gridWidth / 7;
     return (
-      <View style={[styles.monthGridContainer, { paddingHorizontal: containerHPad }]}>
-        <View style={styles.monthHeaderRow}>
-          {daysOfWeek.map((day) => (
-            <View key={day} style={[styles.monthDayCell, { width: cellWidth }]}>
-              <Text style={styles.monthDayLabel}>{day}</Text>
-            </View>
-          ))}
-        </View>
-        <View style={styles.monthDaysWrap}>
-          {monthDays.map((day) => {
-            const dayAppointments = getAppointmentDots(day);
-            const isSelected = day === selectedDate;
-            const todayCheck = new Date();
-            const isToday = day === todayCheck.getDate() && month === todayCheck.getMonth() && year === todayCheck.getFullYear();
-            const bg = isSelected ? { backgroundColor: colors.primary } : isToday ? { borderWidth: 2, borderColor: colors.primary } : { backgroundColor: colors.white };
-            const textColor = isSelected ? colors.white : isToday ? colors.primary : colors.gray700;
-            return (
-              <Pressable key={day} onPress={() => setSelectedDate(day)} style={[styles.monthDayButtonBase, { width: cellWidth }, bg]}>
-                <Text style={[styles.monthDayNumber, { color: textColor }]}>{day}</Text>
-                <View style={styles.dayDotsRow}>
-                  {dayAppointments.slice(0, 3).map((status, idx) => {
-                    const dotStatusStyle = status === 'CONFIRMED' ? styles.dayDotConfirmed : status === 'IN_PROGRESS' ? styles.dayDotInProgress : status === 'PENDING' ? styles.dayDotPending : styles.dayDotDefault;
-                    return <View key={idx} style={[styles.dayDot, idx < 2 && styles.dayDotMargin, dotStatusStyle]} />;
-                  })}
-                  {dayAppointments.length > 3 && (
-                    <Text style={[styles.dayMoreLabel, { color: textColor }]}>+{dayAppointments.length - 3}</Text>
-                  )}
-                </View>
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+      <Card style={{ margin: 16, padding: 0 }}>
+        <Calendar
+          selected={currentDate}
+          onSelect={(date) => {
+            setCurrentDate(date);
+            setSelectedDate(date.getDate());
+          }}
+          markedDates={markedDates}
+        />
+      </Card>
     );
   };
+
 
   const SelectedDayDetails = () => (
     <View style={styles.selectedDayContainer}>
@@ -363,7 +342,16 @@ export function ProviderCalendar() {
 
         {!loading && !error && (selectedDay.items.length > 0 ? (
           selectedDay.items.map((apt, idx) => (
-            <RNCard key={apt.id} style={[styles.baseCard, idx < selectedDay.items.length - 1 && styles.aptCardMargin]}>
+            <RNCard
+              key={apt.id}
+              style={[styles.baseCard, idx < selectedDay.items.length - 1 && styles.aptCardMargin]}
+              onPress={() => {
+                if (apt.status === 'PENDING') {
+                  navigation.navigate('AppointmentRequestScreen', { id: apt.id });
+                }
+              }}
+            >
+
               <View style={styles.aptRow}>
                 <Text style={styles.timeText}>{apt.time}</Text>
                 <View style={styles.aptRight}>

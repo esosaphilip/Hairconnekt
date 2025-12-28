@@ -37,7 +37,9 @@ import RescheduleAppointmentScreen from '@/screens/clients/RescheduleAppoinmentS
 import WriteReviewScreen from '@/screens/clients/WriteReviewsScreen';
 // Provider app screens
 import { ProviderDashboard } from '@/screens/provider/ProviderDashboard';
+import { AppointmentRequestScreen } from '@/screens/provider/AppointmentRequestScreen';
 import ProviderCalendar from '@/screens/provider/ProviderCalendar';
+
 import ProviderClients from '@/screens/provider/ProviderClients';
 import { ProviderMore } from '@/screens/provider/ProviderMore';
 import { AvailabilitySettingsScreen } from '@/screens/provider/AvailabilitySettingsScreen';
@@ -180,7 +182,9 @@ function ProviderCalendarStackScreen() {
       <ProviderCalendarStack.Screen name="ProviderCalendarScreen" component={ProviderCalendar} options={{ title: 'Kalender' }} />
       <ProviderCalendarStack.Screen name="CreateAppointmentScreen" component={CreateAppointmentScreen} options={{ title: 'Termin erstellen' }} />
       <ProviderCalendarStack.Screen name="BlockTimeScreen" component={BlockTimeScreen} options={{ title: 'Zeit blockieren' }} />
+      <ProviderCalendarStack.Screen name="AppointmentRequestScreen" component={AppointmentRequestScreen} options={{ title: 'Buchungsanfrage' }} />
     </ProviderCalendarStack.Navigator>
+
   );
 }
 

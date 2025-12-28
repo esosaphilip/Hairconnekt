@@ -79,5 +79,26 @@ export const providerAppointmentsApi = {
     }
     return payload;
   },
+
+  async getTodayAppointments() {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const res = await http.get('/appointments/provider', {
+        params: {
+          status: 'CONFIRMED',
+          date: today
+        }
+      });
+      const data = res?.data;
+      if (data?.success && Array.isArray(data?.data)) {
+        return data.data.map(AppointmentAdapter.toDomain);
+      }
+      return [];
+    } catch (error) {
+      console.error('Failed to fetch today\'s appointments:', error);
+      return [];
+    }
+  }
 };
+
 

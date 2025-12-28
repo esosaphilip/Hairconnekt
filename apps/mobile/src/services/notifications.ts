@@ -82,11 +82,21 @@ export function useNotificationListeners() {
 
       // Attempt to navigate if data contains screen info
       const data = response.notification.request.content.data;
-      if (data?.type === 'APPOINTMENT_UPDATE' || data?.appointmentId) {
-        // Logic to navigate could go here, but requires access to navigation ref
-        // For now, the emit will trigger refreshes if the user is on the screen
+      if (data?.type === 'NEW_BOOKING' || data?.type === 'APPOINTMENT_REQUEST') {
+        const appointmentId = data.appointmentId || data.id;
+        if (appointmentId) {
+          setTimeout(() => {
+            rootNavigationRef.current?.navigate('Kalender', {
+              screen: 'AppointmentRequestScreen',
+              params: { id: appointmentId }
+            });
+          }, 100);
+        }
+      } else if (data?.type === 'APPOINTMENT_UPDATE' || data?.appointmentId) {
+        emit('appointment_updated');
       }
     });
+
 
     return () => {
       if (notificationListener.current) {

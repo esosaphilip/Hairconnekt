@@ -15,10 +15,11 @@ export type CalendarProps = {
   selected?: Date;
   onSelect?: (date: Date) => void;
   disabledDate?: (date: Date) => boolean;
+  markedDates?: Record<string, { dots?: Array<{ color: string }> }>;
 };
 
 export function Calendar(props: CalendarProps) {
-  const { selected, onSelect, disabledDate } = props;
+  const { selected, onSelect, disabledDate, markedDates } = props;
   const initial = selected ?? new Date();
   const [cursor, setCursor] = useState(new Date(initial.getFullYear(), initial.getMonth(), 1));
 
@@ -50,6 +51,14 @@ export function Calendar(props: CalendarProps) {
     if (!a || !b) return false;
     return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
   };
+
+  const toDateString = (date: Date) => {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  };
+
 
   const prevMonth = () => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1));
   const nextMonth = () => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
@@ -86,6 +95,13 @@ export function Calendar(props: CalendarProps) {
               if (!d) return <View key={di} style={[styles.dayCell, styles.blank]} />;
               const disabled = typeof disabledDate === 'function' ? !!disabledDate(d) : false;
               const selectedDay = isSameDay(d, selected ?? null);
+
+              const y = d.getFullYear();
+              const m = String(d.getMonth() + 1).padStart(2, '0');
+              const dayStr = String(d.getDate()).padStart(2, '0');
+              const dateKey = `${y}-${m}-${dayStr}`;
+              const marks = markedDates?.[dateKey];
+
               return (
                 <TouchableOpacity
                   key={di}
@@ -100,6 +116,13 @@ export function Calendar(props: CalendarProps) {
                   <Text style={[styles.dayText, selectedDay && styles.dayTextSelected, disabled && styles.dayTextDisabled]}>
                     {d.getDate()}
                   </Text>
+                  {marks?.dots && marks.dots.length > 0 && (
+                    <View style={styles.dotsRow}>
+                      {marks.dots.slice(0, 3).map((dot, i) => (
+                        <View key={i} style={[styles.dot, { backgroundColor: dot.color }]} />
+                      ))}
+                    </View>
+                  )}
                 </TouchableOpacity>
               );
             })}
@@ -153,7 +176,7 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: 32,
-    height: 32,
+    height: 40, // Increased to accommodate dots
     borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
@@ -161,6 +184,7 @@ const styles = StyleSheet.create({
   },
   blank: {
     backgroundColor: 'transparent',
+    height: 32, // Keep blank cells consistent with original if possible, or just use 40
   },
   daySelected: {
     backgroundColor: '#8B4513',
@@ -179,6 +203,19 @@ const styles = StyleSheet.create({
   dayTextDisabled: {
     color: '#6B7280',
   },
+  dotsRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+    gap: 2,
+  },
+  dot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+  },
 });
+
 
 export default Calendar;

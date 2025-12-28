@@ -92,7 +92,7 @@ const mockRequest: IAppointmentRequest = {
     id: "client-1",
     name: "Sarah Müller",
     avatar: "",
-    phone: "+4915198765432", 
+    phone: "+4915198765432",
     email: "sarah.mueller@email.de",
     totalBookings: 12,
     joinedDate: "März 2024",
@@ -116,289 +116,299 @@ const mockRequest: IAppointmentRequest = {
   status: "pending",
 };
 
-export function AppointmentRequestScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { id } = route.params; 
-  // Initialize with null or loading state in real app, but here we use mock or fetched data
-  // The screen currently uses `mockRequest`. We should ideally fetch it.
-  // For the purpose of this refactor, let's type the state.
-  const [request, setRequest] = useState<IAppointmentRequest>(mockRequest as unknown as IAppointmentRequest); 
-  // Note: `mockRequest` structure matches `IAppointmentRequest` closely but might need adjustment.
-  // Let's assume for this task we are focusing on the TYPE usage.
-  
-  // ... rest of code
+const [request, setRequest] = useState<IAppointmentRequest | null>(null);
+const [loading, setLoading] = useState(true);
 
-  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
-  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
-  const [declineReason, setDeclineReason] = useState<string | null>(null);
-  const [selectedAlternative, setSelectedAlternative] = useState<number | null>(null);
-  const [customMessage, setCustomMessage] = useState<string>("");
-
-  const handleAccept = async () => {
+React.useEffect(() => {
+  let mounted = true;
+  (async () => {
     try {
-      const res = await providerAppointmentsApi.accept(String(id));
-      const msg = res?.message || 'Termin bestätigt';
-      toast.success(msg);
+      setLoading(true);
+      const data = await providerAppointmentsApi.providerView(String(id));
+      if (mounted && data) {
+        setRequest(data);
+      }
     } catch (e: any) {
-      const msg = e?.response?.data?.message || e?.message || 'Bestätigung fehlgeschlagen';
-      toast.error(msg);
+      toast.error('Fehler beim Laden der Anfrage');
+      console.error('Failed to load request:', e);
     } finally {
-      setShowAcceptDialog(false);
-      setTimeout(() => navigation.navigate('ProviderCalendar'), 1500);
+      if (mounted) setLoading(false);
     }
-  };
+  })();
+  return () => { mounted = false; };
+}, [id]);
 
-  const handleDecline = async () => {
-    if (!declineReason && !customMessage) {
-      toast.error('Bitte gib einen Grund für die Ablehnung an');
-      return;
-    }
-    try {
-      const res = await providerAppointmentsApi.decline(String(id), { reason: (declineReason || 'other') as any, messageToClient: customMessage || undefined });
-      const msg = res?.message || 'Anfrage abgelehnt';
-      toast.success(msg);
-    } catch (e: any) {
-      const msg = e?.response?.data?.message || e?.message || 'Ablehnung fehlgeschlagen';
-      toast.error(msg);
-    } finally {
-      setShowDeclineDialog(false);
-      setTimeout(() => navigation.navigate('ProviderDashboard'), 1500);
-    }
-  };
+const [showAcceptDialog, setShowAcceptDialog] = useState(false);
+const [showDeclineDialog, setShowDeclineDialog] = useState(false);
 
-  const handleProposeAlternative = () => {
-    if (selectedAlternative === null) {
-      toast.error("Bitte wähle einen alternativen Termin aus");
-      return;
-    }
-    // Logic to propose alternative...
-    toast.success("Alternative vorgeschlagen!");
-    setTimeout(() => navigation.navigate("ProviderCalendar"), 1500);
-  };
+const [declineReason, setDeclineReason] = useState<string | null>(null);
+const [selectedAlternative, setSelectedAlternative] = useState<number | null>(null);
+const [customMessage, setCustomMessage] = useState<string>("");
 
-  // Function to open phone dialer
-  const handleCall = (phoneNumber: string) => {
-    Linking.openURL(`tel:${phoneNumber}`);
-  };
+const handleAccept = async () => {
+  try {
+    const res = await providerAppointmentsApi.accept(String(id));
+    const msg = res?.message || 'Termin bestätigt';
+    toast.success(msg);
+  } catch (e: any) {
+    const msg = e?.response?.data?.message || e?.message || 'Bestätigung fehlgeschlagen';
+    toast.error(msg);
+  } finally {
+    setShowAcceptDialog(false);
+    setTimeout(() => navigation.navigate('ProviderCalendar'), 1500);
+  }
+};
 
-  return (
-    <View style={styles.container}>
-      {/* Header (replaces sticky div) */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name={IconNames.ArrowLeft} size={24} color="#000" />
-        </TouchableOpacity>
-        <View>
-          <Text variant="h3" style={{ color: '#000' }}>Buchungsanfrage</Text>
-          <Text style={styles.headerSubtitle}>{request.requestedAt}</Text>
-        </View>
+const handleDecline = async () => {
+  if (!declineReason && !customMessage) {
+    toast.error('Bitte gib einen Grund für die Ablehnung an');
+    return;
+  }
+  try {
+    const res = await providerAppointmentsApi.decline(String(id), { reason: (declineReason || 'other') as any, messageToClient: customMessage || undefined });
+    const msg = res?.message || 'Anfrage abgelehnt';
+    toast.success(msg);
+  } catch (e: any) {
+    const msg = e?.response?.data?.message || e?.message || 'Ablehnung fehlgeschlagen';
+    toast.error(msg);
+  } finally {
+    setShowDeclineDialog(false);
+    setTimeout(() => navigation.navigate('ProviderDashboard'), 1500);
+  }
+};
+
+const handleProposeAlternative = () => {
+  if (selectedAlternative === null) {
+    toast.error("Bitte wähle einen alternativen Termin aus");
+    return;
+  }
+  // Logic to propose alternative...
+  toast.success("Alternative vorgeschlagen!");
+  setTimeout(() => navigation.navigate("ProviderCalendar"), 1500);
+};
+
+// Function to open phone dialer
+const handleCall = (phoneNumber: string) => {
+  Linking.openURL(`tel:${phoneNumber}`);
+};
+
+return (
+  <View style={styles.container}>
+    {/* Header (replaces sticky div) */}
+    <View style={styles.header}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Icon name={IconNames.ArrowLeft} size={24} color="#000" />
+      </TouchableOpacity>
+      <View>
+        <Text variant="h3" style={{ color: '#000' }}>Buchungsanfrage</Text>
+        <Text style={styles.headerSubtitle}>{request.requestedAt}</Text>
+      </View>
+    </View>
+
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      {/* Status Badge */}
+      <View style={styles.statusRow}>
+        <Badge color="#FFF0D5" textColor="#9A6600">
+          <Icon name={IconNames.AlertCircle} size={14} color="#9A6600" style={{ marginRight: 4 }} />
+          Ausstehend
+        </Badge>
+        <Text style={styles.statusText}>Reagiere innerhalb von 24 Std.</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Status Badge */}
-        <View style={styles.statusRow}>
-          <Badge color="#FFF0D5" textColor="#9A6600">
-            <Icon name={IconNames.AlertCircle} size={14} color="#9A6600" style={{ marginRight: 4 }} />
-            Ausstehend
-          </Badge>
-          <Text style={styles.statusText}>Reagiere innerhalb von 24 Std.</Text>
-        </View>
-
-        {/* Client Info */}
-        <Card style={styles.card}>
-          <View style={styles.clientInfo}>
-            <Avatar size={50} style={{ backgroundColor: primaryColor }}>
-              <AvatarImage source={{ uri: request.client.avatar }} />
-              <AvatarFallback label={getInitials(request.client.name)} />
-            </Avatar>
-            <View style={styles.clientDetails}>
-              <Text variant="h3">{request.client.name}</Text>
-              <Text style={styles.clientStats}>
-                {request.client.totalBookings} Buchungen • Mitglied seit {request.client.joinedDate}
-              </Text>
-              <View style={styles.clientActions}>
-                <Button
-                  title="Profil"
-                  variant="outline"
-                  icon={IconNames.User}
-                  onPress={() => navigation.navigate('ClientProfile', { clientId: request.client.id })}
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="Anrufen"
-                  variant="outline"
-                  icon={IconNames.Phone}
-                  onPress={() => handleCall(request.client.phone)}
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="Nachricht"
-                  variant="outline"
-                  icon={IconNames.MessageSquare}
-                  onPress={() => navigation.navigate('ChatScreen', { clientId: request.client.id })}
-                  style={styles.actionButton}
-                />
-              </View>
+      {/* Client Info */}
+      <Card style={styles.card}>
+        <View style={styles.clientInfo}>
+          <Avatar size={50} style={{ backgroundColor: primaryColor }}>
+            <AvatarImage source={{ uri: request.client.avatar }} />
+            <AvatarFallback label={getInitials(request.client.name)} />
+          </Avatar>
+          <View style={styles.clientDetails}>
+            <Text variant="h3">{request.client.name}</Text>
+            <Text style={styles.clientStats}>
+              {request.client.totalBookings} Buchungen • Mitglied seit {request.client.joinedDate}
+            </Text>
+            <View style={styles.clientActions}>
+              <Button
+                title="Profil"
+                variant="outline"
+                icon={IconNames.User}
+                onPress={() => navigation.navigate('ClientProfile', { clientId: request.client.id })}
+                style={styles.actionButton}
+              />
+              <Button
+                title="Anrufen"
+                variant="outline"
+                icon={IconNames.Phone}
+                onPress={() => handleCall(request.client.phone)}
+                style={styles.actionButton}
+              />
+              <Button
+                title="Nachricht"
+                variant="outline"
+                icon={IconNames.MessageSquare}
+                onPress={() => navigation.navigate('ChatScreen', { clientId: request.client.id })}
+                style={styles.actionButton}
+              />
             </View>
           </View>
-        </Card>
+        </View>
+      </Card>
 
-        {/* Service Details */}
+      {/* Service Details */}
+      <Card style={styles.card}>
+        <Text variant="h3" style={{ marginBottom: spacing.sm }}>Termindetails</Text>
+        {/* Separator is just a thin line in RN */}
+        <View style={styles.separator} />
+
+        {/* Detail Rows */}
+        {[
+          { icon: IconNames.Calendar, title: 'Gewünschtes Datum', value: request.requestedDate, detail: null },
+          { icon: IconNames.Clock, title: 'Uhrzeit', value: `${request.requestedTime} (${request.service.duration})`, detail: null },
+          { icon: IconNames.User, title: 'Service', value: request.service.name, detail: request.service.price },
+          { icon: IconNames.MapPin, title: 'Standort', value: request.location, detail: request.address },
+        ].map((item, index) => (
+          <View key={index} style={styles.detailRow}>
+            <View style={[styles.detailIcon, { backgroundColor: `${alertColor}1A` }]}>
+              <Icon name={item.icon} size={20} color={alertColor} />
+            </View>
+            <View style={styles.detailTextContainer}>
+              <Text style={styles.detailTitle}>{item.title}</Text>
+              <Text style={styles.detailValue}>{item.value}</Text>
+              {item.detail && <Text style={styles.detailSubValue}>{item.detail}</Text>}
+            </View>
+          </View>
+        ))}
+      </Card>
+
+      {/* Alternative Dates */}
+      {request.alternativeDates.length > 0 && (
         <Card style={styles.card}>
-          <Text variant="h3" style={{ marginBottom: spacing.sm }}>Termindetails</Text>
-          {/* Separator is just a thin line in RN */}
+          <Text variant="h3" style={{ marginBottom: spacing.sm }}>Alternative Termine</Text>
+          <Text style={styles.subtitle}>Der Kunde ist auch an diesen Terminen verfügbar</Text>
           <View style={styles.separator} />
 
-          {/* Detail Rows */}
-          {[
-            { icon: IconNames.Calendar, title: 'Gewünschtes Datum', value: request.requestedDate, detail: null },
-            { icon: IconNames.Clock, title: 'Uhrzeit', value: `${request.requestedTime} (${request.service.duration})`, detail: null },
-            { icon: IconNames.User, title: 'Service', value: request.service.name, detail: request.service.price },
-            { icon: IconNames.MapPin, title: 'Standort', value: request.location, detail: request.address },
-          ].map((item, index) => (
-            <View key={index} style={styles.detailRow}>
-              <View style={[styles.detailIcon, { backgroundColor: `${alertColor}1A` }]}>
-                <Icon name={item.icon} size={20} color={alertColor} />
-              </View>
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailTitle}>{item.title}</Text>
-                <Text style={styles.detailValue}>{item.value}</Text>
-                {item.detail && <Text style={styles.detailSubValue}>{item.detail}</Text>}
-              </View>
-            </View>
-          ))}
+          <View style={styles.alternativeDatesList}>
+            {request.alternativeDates.map((alt, index) => (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.alternativeDateItem,
+                  selectedAlternative === index && styles.alternativeDateItemSelected,
+                ]}
+                onPress={() => setSelectedAlternative(index)}
+              >
+                <View>
+                  <Text style={styles.alternativeDateText}>{alt.date}</Text>
+                  <Text style={styles.alternativeDateSubText}>{alt.time}</Text>
+                </View>
+                {selectedAlternative === index && (
+                  <Icon name={IconNames.CheckCircle2} size={20} color={primaryColor} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </View>
         </Card>
+      )}
 
-        {/* Alternative Dates */}
-        {request.alternativeDates.length > 0 && (
-          <Card style={styles.card}>
-            <Text variant="h3" style={{ marginBottom: spacing.sm }}>Alternative Termine</Text>
-            <Text style={styles.subtitle}>Der Kunde ist auch an diesen Terminen verfügbar</Text>
-            <View style={styles.separator} />
+      {/* Client Notes */}
+      {request.notes && (
+        <Card style={styles.card}>
+          <Text variant="h3" style={{ marginBottom: spacing.sm }}>Notizen vom Kunden</Text>
+          <Text style={styles.notesText}>{request.notes}</Text>
+        </Card>
+      )}
+    </ScrollView>
 
-            <View style={styles.alternativeDatesList}>
-              {request.alternativeDates.map((alt, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.alternativeDateItem,
-                    selectedAlternative === index && styles.alternativeDateItemSelected,
-                  ]}
-                  onPress={() => setSelectedAlternative(index)}
-                >
-                  <View>
-                    <Text style={styles.alternativeDateText}>{alt.date}</Text>
-                    <Text style={styles.alternativeDateSubText}>{alt.time}</Text>
-                  </View>
-                  {selectedAlternative === index && (
-                    <Icon name={IconNames.CheckCircle2} size={20} color={primaryColor} />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </Card>
-        )}
-
-        {/* Client Notes */}
-        {request.notes && (
-          <Card style={styles.card}>
-            <Text variant="h3" style={{ marginBottom: spacing.sm }}>Notizen vom Kunden</Text>
-            <Text style={styles.notesText}>{request.notes}</Text>
-          </Card>
-        )}
-      </ScrollView>
-      
-      {/* Fixed Action Buttons */}
-      <View style={styles.actionsContainer}>
-        <Button
-          title="Anfrage annehmen"
-          onPress={() => setShowAcceptDialog(true)}
-          style={[styles.fullWidthButton, { backgroundColor: primaryColor }]}
-          textStyle={{ color: '#fff' }}
-          icon={IconNames.CheckCircle2}
-        />
-        
-        {selectedAlternative !== null && (
-          <Button
-            title="Alternative vorschlagen"
-            onPress={handleProposeAlternative}
-            style={[styles.fullWidthButton, { backgroundColor: alertColor }]}
-            textStyle={{ color: '#fff' }}
-            icon={IconNames.Calendar}
-          />
-        )}
-        
-        <Button
-          title="Ablehnen"
-          variant="outline"
-          onPress={() => setShowDeclineDialog(true)}
-          style={styles.fullWidthButton}
-          textStyle={{ color: '#333' }}
-          icon={IconNames.XCircle}
-        />
-      </View>
-
-
-      {/* --- Modals (AlertDialog equivalent) --- */}
-
-      {/* Accept Dialog */}
-      <AlertModal
-        isVisible={showAcceptDialog}
-        onClose={() => setShowAcceptDialog(false)}
-        title="Anfrage annehmen?"
-        description="Der Termin wird in deinem Kalender eingetragen und der Kunde erhält eine Bestätigung."
-        buttons={[
-          { title: "Abbrechen", onPress: () => setShowAcceptDialog(false), variant: 'outline' },
-          { title: "Bestätigen", onPress: handleAccept, style: { backgroundColor: primaryColor } },
-        ]}
+    {/* Fixed Action Buttons */}
+    <View style={styles.actionsContainer}>
+      <Button
+        title="Anfrage annehmen"
+        onPress={() => setShowAcceptDialog(true)}
+        style={[styles.fullWidthButton, { backgroundColor: primaryColor }]}
+        textStyle={{ color: '#fff' }}
+        icon={IconNames.CheckCircle2}
       />
 
-      {/* Decline Dialog */}
-      <AlertModal
-        isVisible={showDeclineDialog}
-        onClose={() => setShowDeclineDialog(false)}
-        title="Anfrage ablehnen"
-        description="Bitte gib einen Grund an, damit der Kunde besser verstehen kann."
-        customContent={
-          <View style={{ width: '100%', paddingVertical: spacing.md }}>
-            <View style={{ marginBottom: spacing.md }}>
-              {[
-                "Termin nicht verfügbar",
-                "Service nicht angeboten",
-                "Standort zu weit entfernt",
-                "Anderer Grund",
-              ].map((reason) => (
-                <TouchableOpacity
-                  key={reason}
-                  style={[
-                    styles.declineReasonItem,
-                    declineReason === reason && styles.declineReasonItemSelected,
-                  ]}
-                  onPress={() => setDeclineReason(reason)}
-                >
-                  <Text style={styles.declineReasonText}>{reason}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.label}>Nachricht (optional)</Text>
-            <Input
-              placeholder="Füge eine persönliche Nachricht hinzu..."
-              value={customMessage}
-              onChangeText={setCustomMessage}
-              multiline
-              numberOfLines={4}
-              style={{ minHeight: 80, marginTop: spacing.sm }}
-            />
-          </View>
-        }
-        buttons={[
-          { title: "Abbrechen", onPress: () => setShowDeclineDialog(false), variant: 'outline' },
-          { title: "Ablehnen", onPress: handleDecline, style: { backgroundColor: alertColor } },
-        ]}
+      {selectedAlternative !== null && (
+        <Button
+          title="Alternative vorschlagen"
+          onPress={handleProposeAlternative}
+          style={[styles.fullWidthButton, { backgroundColor: alertColor }]}
+          textStyle={{ color: '#fff' }}
+          icon={IconNames.Calendar}
+        />
+      )}
+
+      <Button
+        title="Ablehnen"
+        variant="outline"
+        onPress={() => setShowDeclineDialog(true)}
+        style={styles.fullWidthButton}
+        textStyle={{ color: '#333' }}
+        icon={IconNames.XCircle}
       />
     </View>
-  );
+
+
+    {/* --- Modals (AlertDialog equivalent) --- */}
+
+    {/* Accept Dialog */}
+    <AlertModal
+      isVisible={showAcceptDialog}
+      onClose={() => setShowAcceptDialog(false)}
+      title="Anfrage annehmen?"
+      description="Der Termin wird in deinem Kalender eingetragen und der Kunde erhält eine Bestätigung."
+      buttons={[
+        { title: "Abbrechen", onPress: () => setShowAcceptDialog(false), variant: 'outline' },
+        { title: "Bestätigen", onPress: handleAccept, style: { backgroundColor: primaryColor } },
+      ]}
+    />
+
+    {/* Decline Dialog */}
+    <AlertModal
+      isVisible={showDeclineDialog}
+      onClose={() => setShowDeclineDialog(false)}
+      title="Anfrage ablehnen"
+      description="Bitte gib einen Grund an, damit der Kunde besser verstehen kann."
+      customContent={
+        <View style={{ width: '100%', paddingVertical: spacing.md }}>
+          <View style={{ marginBottom: spacing.md }}>
+            {[
+              "Termin nicht verfügbar",
+              "Service nicht angeboten",
+              "Standort zu weit entfernt",
+              "Anderer Grund",
+            ].map((reason) => (
+              <TouchableOpacity
+                key={reason}
+                style={[
+                  styles.declineReasonItem,
+                  declineReason === reason && styles.declineReasonItemSelected,
+                ]}
+                onPress={() => setDeclineReason(reason)}
+              >
+                <Text style={styles.declineReasonText}>{reason}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={styles.label}>Nachricht (optional)</Text>
+          <Input
+            placeholder="Füge eine persönliche Nachricht hinzu..."
+            value={customMessage}
+            onChangeText={setCustomMessage}
+            multiline
+            numberOfLines={4}
+            style={{ minHeight: 80, marginTop: spacing.sm }}
+          />
+        </View>
+      }
+      buttons={[
+        { title: "Abbrechen", onPress: () => setShowDeclineDialog(false), variant: 'outline' },
+        { title: "Ablehnen", onPress: handleDecline, style: { backgroundColor: alertColor } },
+      ]}
+    />
+  </View>
+);
 }
 
 // --- Stylesheet for React Native ---
