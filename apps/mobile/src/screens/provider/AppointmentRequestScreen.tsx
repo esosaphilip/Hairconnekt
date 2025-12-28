@@ -16,49 +16,26 @@ import Input from '../../components/Input';
 import Icon from '../../components/Icon'; // Component for rendering icons (e.g., Ionicons-based)
 import { Modal } from 'react-native';
 
-// Navigation Hook equivalent for React Native (using React Navigation)
-// Note: In a real app, 'useNavigation' and 'useRoute' from '@react-navigation/native' 
-// would be used instead of react-router-dom's 'useNavigate' and 'useParams'.
-// For simplicity, I'll define mock navigation/route logic.
-const useNavigation = () => ({
-  goBack: () => console.log('Navigating back...'),
-  navigate: (screen: string, params?: Record<string, unknown>) => console.log(`Navigating to ${screen} with params: ${JSON.stringify(params)}`),
-});
-const useRoute = (): { params: { id: string } } => ({ params: { id: 'req-123' } });
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing } from '../../theme/tokens';
 
-// Mock for displaying notifications in React Native
-const toast = {
-  success: (message: string) => console.log(`TOAST SUCCESS: ${message}`),
-  error: (message: string) => console.log(`TOAST ERROR: ${message}`),
-};
-
-// --- Icons Replacement (using a generic Icon component) ---
-// In a real project, you'd use a library like 'react-native-vector-icons'
-const IconNames = {
-  ArrowLeft: 'chevron-left',
-  Calendar: 'calendar',
-  Clock: 'clock',
-  User: 'user',
-  MapPin: 'map-pin',
-  CheckCircle2: 'check-circle',
-  XCircle: 'x-circle',
-  AlertCircle: 'alert-triangle',
-  MessageSquare: 'message-square',
-  Phone: 'phone',
-};
 
 import { IAppointmentRequest } from '@/domain/models/appointment';
 import { providerAppointmentsApi } from '@/api/providerAppointments';
 
-// Styles for visual consistency and tokens (assuming tokens like spacing.md)
-const primaryColor = '#8B4513';
-const alertColor = '#FF6B6B';
-const backgroundColor = '#FAF9F6';
-const spacing = { sm: 8, md: 16, lg: 24, xl: 32 };
+import { Alert } from 'react-native';
 
-// Helper to get initials for AvatarFallback
-const getInitials = (name: string) =>
-  name.split(" ").map((n) => n[0]).join("");
+const toast = {
+  success: (msg: string) => Alert.alert('Erfolg', msg),
+  error: (msg: string) => Alert.alert('Fehler', msg),
+};
+
+// Styles for visual consistency and tokens (assuming tokens like spacing.md)
+const primaryColor = colors.primary;
+const alertColor = colors.error;
+const backgroundColor = colors.gray50;
+
 
 function AlertModal({ isVisible, onClose, title, description, customContent, buttons }: { isVisible: boolean; onClose: () => void; title: string; description?: string; customContent?: React.ReactNode; buttons: { title: string; onPress: () => void; variant?: 'outline' | 'primary'; style?: any }[] }) {
   return (
@@ -86,35 +63,7 @@ function AlertModal({ isVisible, onClose, title, description, customContent, but
 }
 
 // Mock data (temporary, typed)
-const mockRequest: IAppointmentRequest = {
-  id: "req-123",
-  client: {
-    id: "client-1",
-    name: "Sarah Müller",
-    avatar: "",
-    phone: "+4915198765432",
-    email: "sarah.mueller@email.de",
-    totalBookings: 12,
-    joinedDate: "März 2024",
-  },
-  service: {
-    name: "Box Braids - Medium",
-    duration: "5 Std.",
-    price: "€95",
-    priceCents: 9500,
-  },
-  requestedDate: "Montag, 15. Nov 2025",
-  requestedTime: "10:00",
-  alternativeDates: [
-    { date: "Dienstag, 16. Nov 2025", time: "14:00" },
-    { date: "Mittwoch, 17. Nov 2025", time: "10:00" },
-  ],
-  location: "Ihr Salon",
-  address: "Hauptstraße 45, 10115 Berlin",
-  notes: "Ich hätte gerne eine Beratung zur Haarfarbe und würde auch Extensions in Betracht ziehen.",
-  requestedAt: "Vor 2 Stunden",
-  status: "pending",
-};
+
 
 export function AppointmentRequestScreen() {
   const navigation = useNavigation() as any;
@@ -200,24 +149,25 @@ export function AppointmentRequestScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header (replaces sticky div) */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name={IconNames.ArrowLeft} size={24} color="#000" />
+          <Ionicons name="chevron-back" size={24} color="#000" />
         </TouchableOpacity>
         <View>
           <Text variant="h3" style={{ color: '#000' }}>Buchungsanfrage</Text>
-          <Text style={styles.headerSubtitle}>{request.requestedAt}</Text>
+          <Text style={styles.headerSubtitle}>{request?.requestedAt}</Text>
         </View>
       </View>
+
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Status Badge */}
         <View style={styles.statusRow}>
           <Badge color="#FFF0D5" textColor="#9A6600">
-            <Icon name={IconNames.AlertCircle} size={14} color="#9A6600" style={{ marginRight: 4 }} />
+            <Ionicons name="alert-circle-outline" size={14} color="#9A6600" style={{ marginRight: 4 }} />
             Ausstehend
           </Badge>
+
           <Text style={styles.statusText}>Reagiere innerhalb von 24 Std.</Text>
         </View>
 
@@ -225,9 +175,10 @@ export function AppointmentRequestScreen() {
         <Card style={styles.card}>
           <View style={styles.clientInfo}>
             <Avatar size={50} style={{ backgroundColor: primaryColor }}>
-              <AvatarImage source={{ uri: request.client.avatar }} />
-              <AvatarFallback label={getInitials(request.client.name)} />
+              <AvatarImage source={{ uri: request?.client?.avatar }} />
+              <AvatarFallback label={getInitials(request?.client?.name || 'U')} />
             </Avatar>
+
             <View style={styles.clientDetails}>
               <Text variant="h3">{request.client.name}</Text>
               <Text style={styles.clientStats}>
@@ -237,24 +188,25 @@ export function AppointmentRequestScreen() {
                 <Button
                   title="Profil"
                   variant="outline"
-                  icon={IconNames.User}
-                  onPress={() => navigation.navigate('ClientProfile', { clientId: request.client.id })}
+                  icon="person-outline"
+                  onPress={() => navigation.navigate('ClientProfile', { clientId: request?.client?.id })}
                   style={styles.actionButton}
                 />
                 <Button
                   title="Anrufen"
                   variant="outline"
-                  icon={IconNames.Phone}
-                  onPress={() => handleCall(request.client.phone)}
+                  icon="call-outline"
+                  onPress={() => handleCall(request?.client?.phone || '')}
                   style={styles.actionButton}
                 />
                 <Button
                   title="Nachricht"
                   variant="outline"
-                  icon={IconNames.MessageSquare}
-                  onPress={() => navigation.navigate('ChatScreen', { clientId: request.client.id })}
+                  icon="chatbubble-outline"
+                  onPress={() => navigation.navigate('ChatScreen', { clientId: request?.client?.id })}
                   style={styles.actionButton}
                 />
+
               </View>
             </View>
           </View>
@@ -268,15 +220,16 @@ export function AppointmentRequestScreen() {
 
           {/* Detail Rows */}
           {[
-            { icon: IconNames.Calendar, title: 'Gewünschtes Datum', value: request.requestedDate, detail: null },
-            { icon: IconNames.Clock, title: 'Uhrzeit', value: `${request.requestedTime} (${request.service.duration})`, detail: null },
-            { icon: IconNames.User, title: 'Service', value: request.service.name, detail: request.service.price },
-            { icon: IconNames.MapPin, title: 'Standort', value: request.location, detail: request.address },
+            { icon: 'calendar-outline', title: 'Gewünschtes Datum', value: request?.requestedDate, detail: null },
+            { icon: 'time-outline', title: 'Uhrzeit', value: `${request?.requestedTime} (${request?.service?.duration})`, detail: null },
+            { icon: 'person-outline', title: 'Service', value: request?.service?.name, detail: request?.service?.price },
+            { icon: 'location-outline', title: 'Standort', value: request?.location, detail: request?.address },
           ].map((item, index) => (
             <View key={index} style={styles.detailRow}>
               <View style={[styles.detailIcon, { backgroundColor: `${alertColor}1A` }]}>
-                <Icon name={item.icon} size={20} color={alertColor} />
+                <Ionicons name={item.icon as any} size={20} color={alertColor} />
               </View>
+
               <View style={styles.detailTextContainer}>
                 <Text style={styles.detailTitle}>{item.title}</Text>
                 <Text style={styles.detailValue}>{item.value}</Text>
@@ -308,8 +261,9 @@ export function AppointmentRequestScreen() {
                     <Text style={styles.alternativeDateSubText}>{alt.time}</Text>
                   </View>
                   {selectedAlternative === index && (
-                    <Icon name={IconNames.CheckCircle2} size={20} color={primaryColor} />
+                    <Ionicons name="checkmark-circle" size={20} color={primaryColor} />
                   )}
+
                 </TouchableOpacity>
               ))}
             </View>
@@ -332,7 +286,7 @@ export function AppointmentRequestScreen() {
           onPress={() => setShowAcceptDialog(true)}
           style={[styles.fullWidthButton, { backgroundColor: primaryColor }]}
           textStyle={{ color: '#fff' }}
-          icon={IconNames.CheckCircle2}
+          icon="checkmark-circle-outline"
         />
 
         {selectedAlternative !== null && (
@@ -341,7 +295,7 @@ export function AppointmentRequestScreen() {
             onPress={handleProposeAlternative}
             style={[styles.fullWidthButton, { backgroundColor: alertColor }]}
             textStyle={{ color: '#fff' }}
-            icon={IconNames.Calendar}
+            icon="calendar-outline"
           />
         )}
 
@@ -351,8 +305,9 @@ export function AppointmentRequestScreen() {
           onPress={() => setShowDeclineDialog(true)}
           style={styles.fullWidthButton}
           textStyle={{ color: '#333' }}
-          icon={IconNames.XCircle}
+          icon="close-circle-outline"
         />
+
       </View>
 
 
@@ -413,7 +368,7 @@ export function AppointmentRequestScreen() {
           { title: "Ablehnen", onPress: handleDecline, style: { backgroundColor: alertColor } },
         ]}
       />
-    </View>
+    </View >
   );
 }
 

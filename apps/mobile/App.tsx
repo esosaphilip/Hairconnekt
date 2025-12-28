@@ -466,15 +466,20 @@ function ProviderTabs() {
 import { useNotificationListeners } from '@/services/notifications';
 import { useFirebaseNotifications } from '@/services/firebaseNotifications';
 
+function NotificationManager() {
+  useNotificationListeners();
+  useFirebaseNotifications();
+  return null;
+}
+
 function RootNavigator() {
   const { user, loading } = useAuth();
   const { mode } = useUserMode();
-  useNotificationListeners();
-  useFirebaseNotifications();
 
   // Shared root navigation ref is used for imperative navigation (web hash-based routing)
 
   // Ensure that after logout (user becomes null) we immediately reset to Welcome on the root navigator.
+
   // This avoids race conditions where nested screens attempt to reset to a route not present in the logged-in stack.
   useEffect(() => {
     if (!loading && !user) {
@@ -623,6 +628,7 @@ function RootNavigator() {
   }
   return (
     <NavigationContainer ref={rootNavigationRef}>
+      <NotificationManager />
       {user ? (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           {/* Route to provider vs client app based on userType */}

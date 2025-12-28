@@ -1,7 +1,20 @@
-import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+
+// Safe check for Device module using dynamic require
+const isDeviceSafe = () => {
+  if (Platform.OS === 'web') return false;
+  try {
+    // Dynamic require helps avoid crash during top-level bundle evaluation 
+    // if the native module is missing from the binary.
+    const Device = require('expo-device');
+    return Device.isDevice;
+  } catch (e) {
+    if (__DEV__) console.warn('[Notifications] expo-device native module not found');
+    return false;
+  }
+};
 
 // Configure notification behavior when app is in foreground
 Notifications.setNotificationHandler({
@@ -22,9 +35,9 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
     });
   }
 
-  if (!Device.isDevice) {
+  if (!isDeviceSafe()) {
     // eslint-disable-next-line no-console
-    console.log('Must use physical device for Push Notifications');
+    console.log('Must use physical device for Push Notifications or native module missing');
     return undefined;
   }
 
