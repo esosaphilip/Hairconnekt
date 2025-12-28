@@ -18,7 +18,7 @@ export const useFirebaseNotifications = () => {
                 if (fcmToken) {
                     // 3. Send to Backend
                     // We use http client which handles auth headers
-                    await http.patch('/users/fcm-token', { fcmToken });
+                    await http.patch('/users/me/fcm-token', { fcmToken });
                     if (__DEV__) console.log('[Firebase] FCM Token synced:', fcmToken);
                 }
             } catch (err) {
@@ -32,7 +32,7 @@ export const useFirebaseNotifications = () => {
 
         // Listen for token refreshes
         return messaging().onTokenRefresh(token => {
-            http.patch('/users/fcm-token', { fcmToken: token }).catch(err => {
+            http.patch('/users/me/fcm-token', { fcmToken: token }).catch(err => {
                 if (__DEV__) console.error('[Firebase] Failed to sync refreshed token', err);
             });
         });

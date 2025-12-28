@@ -1,4 +1,3 @@
-```typescript
 import { Injectable, OnModuleInit, Logger, Inject, forwardRef, NotFoundException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
@@ -25,7 +24,7 @@ export class NotificationsService implements OnModuleInit {
       }
 
       const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || path.resolve(process.cwd(), 'serviceAccountKey.json');
-      this.logger.log(`Initializing Firebase with credentials from: ${ serviceAccountPath } `);
+      this.logger.log(`Initializing Firebase with credentials from: ${serviceAccountPath}`);
 
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const serviceAccount = require(serviceAccountPath);
@@ -47,11 +46,11 @@ export class NotificationsService implements OnModuleInit {
       await admin.messaging().send({
         token: fcmToken,
         notification: { title, body },
-        data,
+        data: data || {},
       });
-      this.logger.log(`Notification sent to ${ fcmToken.substring(0, 10) }...: ${ title } `);
+      this.logger.log(`Notification sent to ${fcmToken.substring(0, 10)}...: ${title}`);
     } catch (error) {
-      this.logger.error(`Error sending push notification to ${ fcmToken.substring(0, 10) }...`, error);
+      this.logger.error(`Error sending push notification to ${fcmToken.substring(0, 10)}...`, error);
     }
   }
 
@@ -63,7 +62,7 @@ export class NotificationsService implements OnModuleInit {
 
   async getPreferences(userId: string) {
     const user = await this.usersService.findOne(userId);
-    if (!user) return {};
+    if (!user) throw new NotFoundException('User not found');
     return user.notificationPreferences || { push: true, email: true, sms: true };
   }
 
@@ -71,48 +70,42 @@ export class NotificationsService implements OnModuleInit {
     const user = await this.usersService.findOne(userId);
     if (!user) throw new NotFoundException('User not found');
 
-    const prefs = {
-      push: dto.pushEnabled,
-      email: dto.emailEnabled,
-      sms: dto.smsEnabled
-    };
+    const prefsToUpdate: Partial<{ push: boolean; email: boolean; sms: boolean }> = {};
+    if (dto.pushEnabled !== undefined) prefsToUpdate.push = dto.pushEnabled;
+    if (dto.emailEnabled !== undefined) prefsToUpdate.email = dto.emailEnabled;
+    if (dto.smsEnabled !== undefined) prefsToUpdate.sms = dto.smsEnabled;
 
-    // Remove undefined values from input DTO
-    const cleanInput = Object.fromEntries(
-        Object.entries(prefs).filter(([_, value]) => value !== undefined)
-    );
-
-    // Merge with existing
+    // Merge with existing preferences
     const updatedPrefs = {
-      ...(user.notificationPreferences || {}),
-      ...cleanInput
-    };
-    
+      ...(user.notificationPreferences || { push: true, email: true, sms: true }),
+      ...prefsToUpdate
+    } as { push: boolean; email: boolean; sms: boolean };
+
     return this.usersService.updateMe(userId, { notificationPreferences: updatedPrefs });
   }
 
   async listNotifications(userId: string, limit?: number) {
-    // Stub
+    // Stub for now
     return [];
   }
 
   async unreadCount(userId: string) {
-    // Stub
+    // Stub for now
     return { count: 0 };
   }
 
   async markRead(userId: string, id: string) {
-    // Stub
+    // Stub for now
     return { success: true };
   }
 
   async markAllRead(userId: string) {
-    // Stub
+    // Stub for now
     return { success: true };
   }
 
   async clearAll(userId: string) {
-    // Stub
+    // Stub for now
     return { success: true };
   }
 }

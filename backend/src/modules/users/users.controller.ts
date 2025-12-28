@@ -29,7 +29,7 @@ export class UsersController {
     return this.usersService.updateLanguage(userId, body.preferredLanguage);
   }
 
-  @Patch('fcm-token')
+  @Patch('me/fcm-token')
   @UseGuards(JwtAuthGuard)
   async updateFcmToken(@Req() req: Request, @Body() body: { fcmToken: string }) {
     const userId = (req.user as any)?.sub;
