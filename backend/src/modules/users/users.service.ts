@@ -142,6 +142,7 @@ export class UsersService {
     if (typeof payload.phone === 'string') allowed.phone = payload.phone;
     if (typeof payload.profilePictureUrl === 'string') allowed.profilePictureUrl = payload.profilePictureUrl;
     if (typeof payload.preferredLanguage === 'string') allowed.preferredLanguage = payload.preferredLanguage;
+    if (payload.notificationPreferences) allowed.notificationPreferences = payload.notificationPreferences;
 
     Object.assign(user, allowed);
     await this.userRepo.save(user);
