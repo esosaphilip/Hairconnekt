@@ -460,11 +460,13 @@ function ProviderTabs() {
 }
 
 import { useNotificationListeners } from '@/services/notifications';
+import { useFirebaseNotifications } from '@/services/firebaseNotifications';
 
 function RootNavigator() {
   const { user, loading } = useAuth();
   const { mode } = useUserMode();
   useNotificationListeners();
+  useFirebaseNotifications();
 
   // Shared root navigation ref is used for imperative navigation (web hash-based routing)
 
