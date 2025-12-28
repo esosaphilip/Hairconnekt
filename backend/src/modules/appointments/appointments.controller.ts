@@ -94,28 +94,6 @@ export class AppointmentsController {
     }
 
     return this.appointmentsService.create(createAppointmentDto);
-    // I will leave `@Post()` alone or restore it to what it was?
-    // The view_file output showed:
-    /*
-      @UseGuards(JwtAuthGuard)
-      @Post()
-      async create(@Body() createAppointmentDto: CreateAppointmentDto, @Req() req: Request) {
-        const providerId = await this.resolveProviderId(req);
-        return this.appointmentsService.create({ ...createAppointmentDto, providerId });
-      }
-    */
-    // If I insert `provider-create` separate, I'll avoid touching `create` logic unless necessary.
-    // However, I suspect `create` being defined as `@Post()` matches `/appointments` which might be what clients use.
-    // If clients use it, `resolveProviderId` will fail. 
-    // But I will stick to the plan: Add `provider-create`.
-
-    // Actually, if I look at the snippet I'm replacing... 
-    // I am targeting lines 63-68.
-    // I'll replace the existing `create` with BOTH methods to be clean, or just insert above.
-    // I'll insert above.
-
-    const providerId = await this.resolveProviderId(req);
-    return this.appointmentsService.create({ ...createAppointmentDto, providerId });
   }
 
   @Patch(':id/status')
