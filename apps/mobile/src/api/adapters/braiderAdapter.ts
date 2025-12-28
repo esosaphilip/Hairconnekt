@@ -56,19 +56,38 @@ export const BraiderAdapter = {
     // These are IBraiderService (flat).
     // Domain expects IBraiderServiceCategory[].
 
-    const services: any[] = [];
-    if (rawServices.length > 0) {
-      services.push({
-        category: 'Alle Services',
-        items: rawServices.map((s: any) => ({
-          id: s.id,
-          name: s.name,
-          duration: s.durationMinutes ? `${s.durationMinutes} Min.` : '60 Min.',
-          price: s.priceCents ? `€${(s.priceCents / 100).toFixed(2)}` : 'Preise auf Anfrage',
-          description: s.description || '',
-        }))
+    const groupedServices: Record<string, any[]> = {};
+
+    rawServices.forEach((s: any) => {
+      const catName = s.category?.name || 'Allgemein';
+      if (!groupedServices[catName]) groupedServices[catName] = [];
+
+      let priceDisplay = 'Preise auf Anfrage';
+      if (s.priceCents) {
+        const minPrice = (s.priceCents / 100).toFixed(2).replace('.00', '');
+        if (s.priceType === 'range' && s.priceMaxCents) {
+          const maxPrice = (s.priceMaxCents / 100).toFixed(2).replace('.00', '');
+          priceDisplay = `€${minPrice} - €${maxPrice}`;
+        } else if (s.priceType === 'from') {
+          priceDisplay = `ab €${minPrice}`;
+        } else {
+          priceDisplay = `€${minPrice}`;
+        }
+      }
+
+      groupedServices[catName].push({
+        id: s.id,
+        name: s.name,
+        duration: s.durationMinutes ? `${s.durationMinutes} Min.` : 'Var.', // Updated from '60 Min.' default
+        price: priceDisplay,
+        description: s.description || '',
       });
-    }
+    });
+
+    const services = Object.keys(groupedServices).map((cat) => ({
+      category: cat,
+      items: groupedServices[cat],
+    }));
 
     return {
       ...base,

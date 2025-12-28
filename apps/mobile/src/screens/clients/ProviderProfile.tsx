@@ -213,28 +213,42 @@ export default function ProviderProfile() {
         )}
 
         {activeTab === 'services' && (
-          <View style={styles.section}>
+          <View style={styles.servicesContainer}>
             {(provider.services || []).map((cat, idx) => (
-              <View key={idx} style={styles.card}>
-                <Text style={styles.cardTitle}>{cat.category}</Text>
+              <View key={idx} style={styles.categorySection}>
+                <Text style={styles.categoryHeader}>{cat.category}</Text>
+
                 {cat.items.map((service, sIdx) => {
                   const active = selectedServices.includes(service.name);
                   return (
-                    <TouchableOpacity key={sIdx} onPress={() => toggleService(service.name)} style={[styles.serviceItem, active && styles.serviceItemActive]}>
-                      <View style={styles.rowBetween}>
+                    <TouchableOpacity
+                      key={sIdx}
+                      onPress={() => toggleService(service.name)}
+                      style={[styles.serviceCard, active && styles.serviceCardActive]}
+                    >
+                      <View style={styles.serviceHeaderRow}>
                         <Text style={styles.serviceName}>{service.name}</Text>
                         <Text style={styles.servicePrice}>{service.price}</Text>
                       </View>
-                      <Text style={styles.serviceDescription}>{service.description}</Text>
-                      <View style={styles.rowWithIcon}>
+
+                      {service.description ? (
+                        <Text style={styles.serviceDescription}>{service.description}</Text>
+                      ) : null}
+
+                      <View style={styles.serviceMetaRow}>
                         <Ionicons name="time-outline" size={14} color="#6B7280" />
-                        <Text style={styles.serviceMeta}>{service.duration}</Text>
+                        <Text style={styles.serviceMetaText}>{service.duration}</Text>
                       </View>
                     </TouchableOpacity>
                   );
                 })}
               </View>
             ))}
+            {(!provider.services || provider.services.length === 0) && (
+              <View style={styles.emptyState}>
+                <Text style={styles.emptyStateText}>Keine Services verfügbar.</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -572,36 +586,76 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#EF4444',
   },
-  serviceItem: {
+  servicesContainer: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+  },
+  categorySection: {
+    marginBottom: 24,
+  },
+  categoryHeader: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+  },
+  serviceCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  serviceItemActive: {
+  serviceCardActive: {
     borderColor: THEME,
     backgroundColor: '#FDF8F6',
   },
+  serviceHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  serviceMetaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    gap: 6,
+  },
+  serviceMetaText: {
+    fontSize: 13,
+    color: '#6B7280',
+  },
+  emptyState: {
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyStateText: {
+    color: '#6B7280',
+    fontSize: 14,
+  },
   serviceName: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#111827',
+    flex: 1,
+    marginRight: 8,
   },
   servicePrice: {
-    fontSize: 15,
+    fontSize: 15, // Matches design "45 - 65"
     fontWeight: '700',
     color: THEME,
   },
   serviceDescription: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginTop: 4,
-  },
-  serviceMeta: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: 14,
+    color: '#4B5563',
+    lineHeight: 20,
   },
   galleryGrid: {
     flexDirection: 'row',

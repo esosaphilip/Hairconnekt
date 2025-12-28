@@ -677,6 +677,7 @@ export class ProvidersService {
       .leftJoinAndSelect('p.user', 'u')
       .leftJoinAndSelect('p.certifications', 'c')
       .leftJoinAndSelect('p.services', 's', 's.isActive = :isActive', { isActive: true }) // Only active services
+      .leftJoinAndSelect('s.category', 'cat')
       .leftJoinAndSelect('p.availability', 'av')
       .where('p.id = :id', { id })
       .getOne();
