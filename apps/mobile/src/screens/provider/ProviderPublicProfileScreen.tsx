@@ -297,7 +297,7 @@ export function ProviderPublicProfileScreen() {
             <Button
               title="Buchen"
               size="sm"
-              onPress={() => navigation.navigate('BookingFlowScreen', { providerId, serviceName: service.name })}
+              onPress={() => navigation.navigate('Booking', { providerId, serviceName: service.name })}
               style={styles.bookButton}
             />
           </Card>
@@ -444,7 +444,7 @@ export function ProviderPublicProfileScreen() {
           </View>
 
           <View style={styles.actionButtons}>
-            <Button title="Jetzt buchen" onPress={() => navigation.navigate("BookingFlowScreen", { providerId })} style={styles.bookNowButton} />
+            <Button title="Jetzt buchen" onPress={() => navigation.navigate("Booking", { providerId })} style={styles.bookNowButton} />
             <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen", { userId: providerId })} style={styles.iconButtonOutline} color={COLORS.textSecondary} />
             <IconButton name={isFavorite ? 'heart' : 'heart'} onPress={handleToggleFavorite} style={styles.iconButtonOutline} color={isFavorite ? COLORS.primary : COLORS.textSecondary} />
           </View>

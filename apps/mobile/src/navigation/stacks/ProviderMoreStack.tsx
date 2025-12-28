@@ -47,7 +47,6 @@ export function ProviderMoreStackScreen() {
             <ProviderMoreStack.Screen name="UploadPortfolioScreen" component={UploadPortfolioScreen} options={{ title: 'Portfolio hochladen' }} />
             <ProviderMoreStack.Screen name="ProviderPhotoUploadScreen" component={ProviderPhotoUploadScreen} options={{ title: 'Profilbild ändern' }} />
             <ProviderMoreStack.Screen name="Booking" component={BookingFlow} options={{ title: 'Buchung' }} />
-            <ProviderMoreStack.Screen name="BookingFlowScreen" component={BookingFlow} options={{ title: 'Buchung' }} />
             <ProviderMoreStack.Screen name="ChatScreen" component={ChatScreen} options={{ title: 'Chat' }} />
             <ProviderMoreStack.Screen name="ProviderProfile" component={ProviderPublicProfileScreen} options={{ title: 'Profil ansehen' }} />
             <ProviderMoreStack.Screen name="PayoutRequestScreen" component={PayoutRequestScreen} options={{ title: 'Auszahlung beantragen' }} />

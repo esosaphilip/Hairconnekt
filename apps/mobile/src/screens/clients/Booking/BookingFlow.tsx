@@ -8,7 +8,8 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { RootStackParamList } from '@/navigation/types';
 import Text from '@/components/Text';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
@@ -28,9 +29,12 @@ const timeSlots = {
     evening: ['17:00', '17:30', '18:00', '18:30', '19:00'],
 };
 
+export type BookingRouteProp = RouteProp<RootStackParamList, 'Booking'>;
+
 export function BookingFlow() {
-    const route = useRoute<any>();
-    const { id } = route.params || {};
+    const route = useRoute<BookingRouteProp>();
+    const { id, providerId } = route.params || {};
+    const finalId = (id || providerId) as string;
 
     const {
         step,
@@ -55,7 +59,7 @@ export function BookingFlow() {
         stepNumber,
         headerTitle,
         canProceed,
-    } = useBookingFlow(id);
+    } = useBookingFlow(finalId);
 
     if (loadingProvider) {
         return (

@@ -62,6 +62,13 @@ function AlertModal({ isVisible, onClose, title, description, customContent, but
   );
 }
 
+// Helper functions
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .map((n: string) => (n.length > 1 ? n[0] : n.slice(0, 2)))
+    .join("");
+
 // Mock data (temporary, typed)
 
 
@@ -155,127 +162,133 @@ export function AppointmentRequestScreen() {
         </TouchableOpacity>
         <View>
           <Text variant="h3" style={{ color: '#000' }}>Buchungsanfrage</Text>
-          <Text style={styles.headerSubtitle}>{request?.requestedAt}</Text>
+          <Text style={styles.headerSubtitle}>{request?.requestedAt || 'Geladen...'}</Text>
         </View>
       </View>
 
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Status Badge */}
-        <View style={styles.statusRow}>
-          <Badge color="#FFF0D5" textColor="#9A6600">
-            <Ionicons name="alert-circle-outline" size={14} color="#9A6600" style={{ marginRight: 4 }} />
-            Ausstehend
-          </Badge>
+        {!request ? (
+          <View style={{ padding: 20, alignItems: 'center' }}><Text>Anfrage wird geladen...</Text></View>
+        ) : (
+          <>
+            {/* Status Badge */}
+            <View style={styles.statusRow}>
+              <Badge color="#FFF0D5" textColor="#9A6600">
+                <Ionicons name="alert-circle-outline" size={14} color="#9A6600" style={{ marginRight: 4 }} />
+                Ausstehend
+              </Badge>
 
-          <Text style={styles.statusText}>Reagiere innerhalb von 24 Std.</Text>
-        </View>
-
-        {/* Client Info */}
-        <Card style={styles.card}>
-          <View style={styles.clientInfo}>
-            <Avatar size={50} style={{ backgroundColor: primaryColor }}>
-              <AvatarImage source={{ uri: request?.client?.avatar }} />
-              <AvatarFallback label={getInitials(request?.client?.name || 'U')} />
-            </Avatar>
-
-            <View style={styles.clientDetails}>
-              <Text variant="h3">{request.client.name}</Text>
-              <Text style={styles.clientStats}>
-                {request.client.totalBookings} Buchungen • Mitglied seit {request.client.joinedDate}
-              </Text>
-              <View style={styles.clientActions}>
-                <Button
-                  title="Profil"
-                  variant="outline"
-                  icon="person-outline"
-                  onPress={() => navigation.navigate('ClientProfile', { clientId: request?.client?.id })}
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="Anrufen"
-                  variant="outline"
-                  icon="call-outline"
-                  onPress={() => handleCall(request?.client?.phone || '')}
-                  style={styles.actionButton}
-                />
-                <Button
-                  title="Nachricht"
-                  variant="outline"
-                  icon="chatbubble-outline"
-                  onPress={() => navigation.navigate('ChatScreen', { clientId: request?.client?.id })}
-                  style={styles.actionButton}
-                />
-
-              </View>
+              <Text style={styles.statusText}>Reagiere innerhalb von 24 Std.</Text>
             </View>
-          </View>
-        </Card>
 
-        {/* Service Details */}
-        <Card style={styles.card}>
-          <Text variant="h3" style={{ marginBottom: spacing.sm }}>Termindetails</Text>
-          {/* Separator is just a thin line in RN */}
-          <View style={styles.separator} />
+            {/* Client Info */}
+            <Card style={styles.card}>
+              <View style={styles.clientInfo}>
+                <Avatar size={50} style={{ backgroundColor: primaryColor }}>
+                  <AvatarImage source={{ uri: request?.client?.avatar }} />
+                  <AvatarFallback label={getInitials(request?.client?.name || 'U')} />
+                </Avatar>
 
-          {/* Detail Rows */}
-          {[
-            { icon: 'calendar-outline', title: 'Gewünschtes Datum', value: request?.requestedDate, detail: null },
-            { icon: 'time-outline', title: 'Uhrzeit', value: `${request?.requestedTime} (${request?.service?.duration})`, detail: null },
-            { icon: 'person-outline', title: 'Service', value: request?.service?.name, detail: request?.service?.price },
-            { icon: 'location-outline', title: 'Standort', value: request?.location, detail: request?.address },
-          ].map((item, index) => (
-            <View key={index} style={styles.detailRow}>
-              <View style={[styles.detailIcon, { backgroundColor: `${alertColor}1A` }]}>
-                <Ionicons name={item.icon as any} size={20} color={alertColor} />
-              </View>
+                <View style={styles.clientDetails}>
+                  <Text variant="h3">{request.client.name}</Text>
+                  <Text style={styles.clientStats}>
+                    {request.client.totalBookings} Buchungen • Mitglied seit {request.client.joinedDate}
+                  </Text>
+                  <View style={styles.clientActions}>
+                    <Button
+                      title="Profil"
+                      variant="outline"
+                      icon="person-outline"
+                      onPress={() => navigation.navigate('ClientProfile', { clientId: request?.client?.id })}
+                      style={styles.actionButton}
+                    />
+                    <Button
+                      title="Anrufen"
+                      variant="outline"
+                      icon="call-outline"
+                      onPress={() => handleCall(request?.client?.phone || '')}
+                      style={styles.actionButton}
+                    />
+                    <Button
+                      title="Nachricht"
+                      variant="outline"
+                      icon="chatbubble-outline"
+                      onPress={() => navigation.navigate('ChatScreen', { clientId: request?.client?.id })}
+                      style={styles.actionButton}
+                    />
 
-              <View style={styles.detailTextContainer}>
-                <Text style={styles.detailTitle}>{item.title}</Text>
-                <Text style={styles.detailValue}>{item.value}</Text>
-                {item.detail && <Text style={styles.detailSubValue}>{item.detail}</Text>}
-              </View>
-            </View>
-          ))}
-        </Card>
-
-        {/* Alternative Dates */}
-        {request.alternativeDates.length > 0 && (
-          <Card style={styles.card}>
-            <Text variant="h3" style={{ marginBottom: spacing.sm }}>Alternative Termine</Text>
-            <Text style={styles.subtitle}>Der Kunde ist auch an diesen Terminen verfügbar</Text>
-            <View style={styles.separator} />
-
-            <View style={styles.alternativeDatesList}>
-              {request.alternativeDates.map((alt, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.alternativeDateItem,
-                    selectedAlternative === index && styles.alternativeDateItemSelected,
-                  ]}
-                  onPress={() => setSelectedAlternative(index)}
-                >
-                  <View>
-                    <Text style={styles.alternativeDateText}>{alt.date}</Text>
-                    <Text style={styles.alternativeDateSubText}>{alt.time}</Text>
                   </View>
-                  {selectedAlternative === index && (
-                    <Ionicons name="checkmark-circle" size={20} color={primaryColor} />
-                  )}
+                </View>
+              </View>
+            </Card>
 
-                </TouchableOpacity>
+            {/* Service Details */}
+            <Card style={styles.card}>
+              <Text variant="h3" style={{ marginBottom: spacing.sm }}>Termindetails</Text>
+              {/* Separator is just a thin line in RN */}
+              <View style={styles.separator} />
+
+              {/* Detail Rows */}
+              {[
+                { icon: 'calendar-outline', title: 'Gewünschtes Datum', value: request?.requestedDate, detail: null },
+                { icon: 'time-outline', title: 'Uhrzeit', value: `${request?.requestedTime} (${request?.service?.duration})`, detail: null },
+                { icon: 'person-outline', title: 'Service', value: request?.service?.name, detail: request?.service?.price },
+                { icon: 'location-outline', title: 'Standort', value: request?.location, detail: request?.address },
+              ].map((item, index) => (
+                <View key={index} style={styles.detailRow}>
+                  <View style={[styles.detailIcon, { backgroundColor: `${alertColor}1A` }]}>
+                    <Ionicons name={item.icon as any} size={20} color={alertColor} />
+                  </View>
+
+                  <View style={styles.detailTextContainer}>
+                    <Text style={styles.detailTitle}>{item.title}</Text>
+                    <Text style={styles.detailValue}>{item.value}</Text>
+                    {item.detail && <Text style={styles.detailSubValue}>{item.detail}</Text>}
+                  </View>
+                </View>
               ))}
-            </View>
-          </Card>
-        )}
+            </Card>
 
-        {/* Client Notes */}
-        {request.notes && (
-          <Card style={styles.card}>
-            <Text variant="h3" style={{ marginBottom: spacing.sm }}>Notizen vom Kunden</Text>
-            <Text style={styles.notesText}>{request.notes}</Text>
-          </Card>
+            {/* Alternative Dates */}
+            {(request?.alternativeDates || []).length > 0 && (
+              <Card style={styles.card}>
+                <Text variant="h3" style={{ marginBottom: spacing.sm }}>Alternative Termine</Text>
+                <Text style={styles.subtitle}>Der Kunde ist auch an diesen Terminen verfügbar</Text>
+                <View style={styles.separator} />
+
+                <View style={styles.alternativeDatesList}>
+                  {request.alternativeDates.map((alt, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.alternativeDateItem,
+                        selectedAlternative === index && styles.alternativeDateItemSelected,
+                      ]}
+                      onPress={() => setSelectedAlternative(index)}
+                    >
+                      <View>
+                        <Text style={styles.alternativeDateText}>{alt.date}</Text>
+                        <Text style={styles.alternativeDateSubText}>{alt.time}</Text>
+                      </View>
+                      {selectedAlternative === index && (
+                        <Ionicons name="checkmark-circle" size={20} color={primaryColor} />
+                      )}
+
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </Card>
+            )}
+
+            {/* Client Notes */}
+            {request.notes && (
+              <Card style={styles.card}>
+                <Text variant="h3" style={{ marginBottom: spacing.sm }}>Notizen vom Kunden</Text>
+                <Text style={styles.notesText}>{request.notes}</Text>
+              </Card>
+            )}
+          </>
         )}
       </ScrollView>
 

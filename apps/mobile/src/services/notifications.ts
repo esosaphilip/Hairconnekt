@@ -1,6 +1,10 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import { useEffect, useRef } from 'react';
+import { emit } from './eventBus';
+import { useNavigation } from '@react-navigation/native';
+import { rootNavigationRef } from '../navigation/rootNavigation';
 
 // Safe check for Device module using dynamic require
 const isDeviceSafe = () => {
@@ -22,6 +26,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -67,14 +73,11 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
   }
 }
 
-import { useEffect, useRef } from 'react';
-import { emit } from './eventBus';
-import { useNavigation } from '@react-navigation/native';
-import { rootNavigationRef } from '../navigation/rootNavigation';
+
 
 export function useNotificationListeners() {
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
@@ -114,10 +117,10 @@ export function useNotificationListeners() {
 
     return () => {
       if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+        notificationListener.current.remove();
       }
       if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+        responseListener.current.remove();
       }
     };
   }, []);

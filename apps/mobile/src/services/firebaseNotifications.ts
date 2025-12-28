@@ -1,5 +1,6 @@
 import messaging from '@react-native-firebase/messaging';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { http } from '../api/http'; // Import your http client
 
 export const useFirebaseNotifications = () => {

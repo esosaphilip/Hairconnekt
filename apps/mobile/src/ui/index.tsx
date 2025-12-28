@@ -29,23 +29,11 @@ export const Card: React.FC<CardProps> = ({ children, style }) => {
   return <View style={[styles.card, style]}>{renderChildren(children)}</View>;
 };
 
-// Simple Badge with variants
-export type BadgeProps = {
-  children?: ReactNode;
-  variant?: 'default' | 'secondary' | 'success' | 'outline';
-  textStyle?: StyleProp<TextStyle>;
-  style?: StyleProp<ViewStyle>;
-};
+import { Badge as ComponentsBadge } from '../components/badge';
 
-export const Badge: React.FC<BadgeProps> = ({ children, variant = 'default', textStyle, style }) => {
-  const backgroundColor = variant === 'secondary' ? colors.gray200 : variant === 'success' ? colors.green600 : colors.gray200;
-  const textColor = variant === 'secondary' ? colors.gray700 : colors.gray800;
-  return (
-    <View style={[styles.badge, { backgroundColor }, style]}>
-      <Text style={[styles.badgeText, { color: textColor }, textStyle]}>{children}</Text>
-    </View>
-  );
-};
+// ... (other components)
+
+export const Badge = ComponentsBadge;
 
 // Simple Avatar; supports children (e.g., Text or Image) and size
 export type AvatarProps = {

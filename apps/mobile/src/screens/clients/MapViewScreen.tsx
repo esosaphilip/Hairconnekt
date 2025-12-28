@@ -148,9 +148,23 @@ export function MapViewScreen() {
 
     (async () => {
       try {
+        if (!location?.lat || !location?.lon) return;
+
         const items = await clientBraiderApi.getNearby({ lat: location.lat, lon: location.lon, radiusKm: 10, limit: 10 });
         if (mounted && Array.isArray(items) && items.length > 0) {
-          setProviders(items);
+          const mapped: Provider[] = items.map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar: p.imageUrl || '',
+            rating: p.rating,
+            reviewCount: p.reviewCount,
+            distance: p.distance || (p.distanceKm ? `${p.distanceKm.toFixed(1)} km` : '0 km'),
+            specialty: p.specialties?.join(', ') || '',
+            price: p.priceFromCents != null ? `ab €${(p.priceFromCents / 100).toFixed(2)}` : 'Preis auf Anfrage',
+            location: { lat: 0, lng: 0, address: p.address || '' },
+            isAvailable: p.isAvailable
+          }));
+          setProviders(mapped);
         }
       } catch (e) {
         console.error("Failed to load map providers", e);

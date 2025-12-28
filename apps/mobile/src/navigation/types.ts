@@ -22,7 +22,7 @@ export type RootStackParamList = {
   Home: undefined;
   SignInPrompt: { returnUrl?: string } | undefined;
   ProviderNotificationsScreen: undefined;
-  Booking: { providerId?: string; serviceName?: string } | undefined;
+  Booking: { id?: string; providerId?: string; serviceName?: string } | undefined;
 };
 
 // Client Tabs
@@ -114,9 +114,7 @@ export type ProviderMoreStackParamList = {
   AddEditServiceScreen: { serviceId?: string } | undefined;
   ProviderPortfolioScreen: undefined;
   UploadPortfolioScreen: undefined;
-  Booking: { providerId?: string } | undefined;
-  // Allow passing a suggested service name for preselection
-  BookingFlowScreen: { providerId?: string; serviceName?: string } | undefined;
+  Booking: { id?: string; providerId?: string; serviceName?: string } | undefined;
   ChatScreen: { conversationId?: string; userId?: string } | undefined;
   ProviderProfile: { id: string };
   PayoutRequestScreen: undefined;

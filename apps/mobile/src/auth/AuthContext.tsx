@@ -94,14 +94,15 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setState({ user: null, tokens: null, loading: false, error: null });
   }, []);
 
-  const refreshTokens = useCallback(async () => {
+  const refreshTokens = useCallback(async (): Promise<Tokens | null> => {
     // Logic handled via interceptor generally, but if exposed:
     const currentRefresh = await getRefreshToken();
     if (!currentRefresh) throw new Error('No refresh token');
     // Implement if needed
+    return null;
   }, []);
 
-  const setUser = useCallback((user: PublicUser | null) => {
+  const setUser = useCallback(async (user: PublicUser | null) => {
     setState(s => ({ ...s, user }));
     // Should persist?
     // saveAuthBundle({ ...state, user }); 
