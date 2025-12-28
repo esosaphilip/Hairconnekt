@@ -22,6 +22,10 @@ import { ProviderCertification } from './entities/provider-certification.entity'
 import { CreateTimeOffDto } from './dto/create-time-off.dto';
 import { ProviderTimeOff } from './entities/provider-time-off.entity';
 import { UpdateAddressDto } from './dto/update-address.dto';
+import { Appointment } from '../appointments/entities/appointment.entity';
+import { Service } from '../services/entities/service.entity';
+import { Review } from '../reviews/entities/review.entity';
+import { PortfolioImage } from '../portfolio/entities/portfolio-image.entity';
 
 @Injectable()
 export class ProvidersService {
@@ -40,6 +44,14 @@ export class ProvidersService {
     private readonly addressRepo: Repository<Address>,
     @InjectRepository(ProviderLocation)
     private readonly locationRepo: Repository<ProviderLocation>,
+    @InjectRepository(Appointment)
+    private readonly appointmentRepo: Repository<Appointment>,
+    @InjectRepository(Service)
+    private readonly serviceRepo: Repository<Service>,
+    @InjectRepository(Review)
+    private readonly reviewRepo: Repository<Review>,
+    @InjectRepository(PortfolioImage)
+    private readonly portfolioRepo: Repository<PortfolioImage>,
   ) { }
 
   /**
@@ -680,6 +692,33 @@ export class ProvidersService {
 
     const name = [provider.user?.firstName, provider.user?.lastName].filter(Boolean).join(' ').trim();
 
+    // Fetch Reviews (recent 5)
+    // Note: Reviews are not directly related to ProviderProfile in typical ManyToOne if defined in Review entity pointing to ProviderProfile
+    // Let's verify relation name. In Review entity: @ManyToOne(() => ProviderProfile ... provider)
+    const recentReviews = await this.reviewRepo.find({
+      where: { provider: { id } },
+      relations: ['client'],
+      order: { createdAt: 'DESC' },
+      take: 5,
+    });
+
+    // Fetch Portfolio
+    // In PortfolioImage: @ManyToOne(() => ProviderProfile ... provider)
+    const portfolioImages = await this.portfolioRepo.find({
+      where: { provider: { id }, isPublic: true },
+      order: { displayOrder: 'ASC' },
+      take: 12, // Limit for profile view
+    });
+
+    // Calculate dynamic stats
+    const yearsExperience = provider.yearsOfExperience || 0;
+    const stats = [
+      { label: 'Termine', value: (await this.appointmentRepo.count({ where: { provider: { id } } })).toString() },
+      { label: 'Jahre', value: yearsExperience.toString() },
+      { label: 'Empfehlung', value: reviewCount > 0 ? `${Math.round((avgRating / 5) * 100)}%` : '-' },
+    ];
+
+
     return {
       id: provider.id,
       name: name || provider.businessName || 'Provider',
@@ -690,6 +729,23 @@ export class ProvidersService {
       reviews: reviewCount,
       specialties,
       priceFromCents,
+      // Pass raw arrays to be mapped by adapter/frontend if needed in specific structure, 
+      // or map here. Let's pass them in a 'details' object or extended root.
+      badges: [
+        provider.businessType === 'SALON' ? 'Salon' : 'Home Studio',
+        provider.isMobileService ? 'Mobil verfügbar' : null,
+        provider.isVerified ? 'Verifiziert' : null
+      ].filter(Boolean),
+      stats,
+      portfolio: portfolioImages.map(img => img.imageUrl),
+      recentReviews: recentReviews.map(r => ({
+        id: r.id,
+        name: [r.client?.firstName, r.client?.lastName].filter(Boolean).join(' ') || 'Anonymous',
+        rating: r.rating,
+        date: r.createdAt,
+        text: r.comment,
+        style: 'General' // we don't have style relation easily accessible on review yet without join
+      })),
       profile: {
         ...this.sanitizeProvider(provider),
         bio: provider.bio, // Explicitly ensure bio is present

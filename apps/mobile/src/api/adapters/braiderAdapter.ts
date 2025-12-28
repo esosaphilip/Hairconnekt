@@ -81,14 +81,10 @@ export const BraiderAdapter = {
       profileImage: profile.profilePictureUrl || dto.imageUrl, // Handle nested if needed
       languages: profile.languages || dto.languages || [],
 
-      // Keep some mock data for UI elements if backend data is missing
-      badges: ['Salon', 'Mobil verfügbar', dto.verified ? 'Verifiziert' : ''].filter(Boolean),
-      stats: [
-        { label: 'Termine', value: '234' }, // Mock
-        { label: 'Jahre', value: '3' },     // Mock
-        { label: 'Response', value: '< 1 Std.' }, // Mock
-        { label: 'Empfehlung', value: '98%' },   // Mock
-      ],
+      // Use real data from backend, fallback to empty arrays if missing (prevents crash, but relies on backend data)
+      badges: dto.badges || [],
+      stats: dto.stats || [],
+
       hours: (profile.availability || []).map((a: any) => ({
         day: a.weekday,
         hours: `${a.start} - ${a.end}`
@@ -96,26 +92,17 @@ export const BraiderAdapter = {
 
       services: services, // Real services
 
-      portfolioImages: [
-        'https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-        'https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      ], // Mock (backend doesn't return gallery yet)
+      portfolioImages: dto.portfolio || [], // Real portfolio images
 
-      reviews: [
-        {
-          id: 1,
-          name: 'Sarah M.',
-          rating: 5,
-          date: 'vor 2 Wochen',
-          text: 'Fantastisch! Meine Box Braids sehen perfekt aus.',
-          verified: true,
-          style: 'Box Braids',
-        },
-      ], // Mock (backend review list separate call? or included?)
-      // Controller: returns reviews count and avg, but not list of reviews array in the simple public profile payload?
-      // Actually: getPublicProfileById does NOT return reviews array.
-      // ProviderProfile screen might need to fetch reviews separately if we want real ones.
-      // For now, keep mock reviews to avoid empty UI.
+      reviews: (dto.recentReviews || []).map((r: any) => ({
+        id: r.id,
+        name: r.name,
+        rating: r.rating,
+        date: r.date ? new Date(r.date).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '',
+        text: r.text,
+        verified: true,
+        style: r.style || 'Allgemein',
+      })),
     };
   }
 };
