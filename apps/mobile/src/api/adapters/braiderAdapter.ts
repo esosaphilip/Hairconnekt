@@ -109,17 +109,22 @@ export const BraiderAdapter = {
         { label: 'Empfehlung', value: '-' },
       ],
 
-      hours: (profile.availability || []).map((a: any) => ({
-        day: a.weekday,
-        hours: `${a.start} - ${a.end}`
-      })),
+      hours: (() => {
+        const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+        const availabilityMap = (profile.availability || []).reduce((acc: any, curr: any) => {
+          acc[curr.weekday] = `${curr.start} - ${curr.end}`;
+          return acc;
+        }, {});
+
+        return days.map(day => ({
+          day,
+          hours: availabilityMap[day] || 'Geschlossen'
+        }));
+      })(),
 
       services: services, // Real services
 
-      portfolioImages: (dto.portfolio && dto.portfolio.length) ? dto.portfolio : [
-        'https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-        'https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      ],
+      portfolioImages: (dto.portfolio && dto.portfolio.length) ? dto.portfolio : [],
 
       reviews: (dto.recentReviews && dto.recentReviews.length) ? (dto.recentReviews || []).map((r: any) => ({
         id: r.id,
@@ -129,17 +134,7 @@ export const BraiderAdapter = {
         text: r.text,
         verified: true,
         style: r.style || 'Allgemein',
-      })) : [
-        {
-          id: 1,
-          name: 'Sarah M.',
-          rating: 5,
-          date: 'vor 2 Wochen',
-          text: 'Fantastisch! Meine Box Braids sehen perfekt aus.',
-          verified: true,
-          style: 'Box Braids',
-        },
-      ],
+      })) : [],
     };
   }
 };

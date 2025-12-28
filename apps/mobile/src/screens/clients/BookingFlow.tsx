@@ -96,8 +96,8 @@ export function BookingFlow() {
   const getTotalPrice = (): number => {
     // Parse price strings "€45 - €65" -> take lower bound 45 for calculation or average?
     // For simplicity, let's try to parse the first number found
-    const basePrice = selectedServices.reduce((sum, name) => {
-      const service = servicesList.find(s => s.name === name);
+    const basePrice = selectedServices.reduce((sum, id) => {
+      const service = servicesList.find(s => s.id === id); // Use ID lookup
       if (!service) return sum;
       const match = service.price.match(/(\d+)/);
       const price = match ? parseInt(match[0], 10) : 0;
@@ -108,7 +108,7 @@ export function BookingFlow() {
 
   // Function to get total duration string (simplified for display)
   const getTotalDuration = (): string => {
-    const selected = servicesList.filter(s => selectedServices.includes(s.name));
+    const selected = servicesList.filter(s => selectedServices.includes(s.id));
     if (selected.length === 0) return '0 Std.';
     return selected.map(s => s.duration.split(' ')[0]).join(' / ');
   };

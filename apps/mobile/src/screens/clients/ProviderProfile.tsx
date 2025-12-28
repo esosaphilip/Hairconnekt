@@ -181,34 +181,42 @@ export default function ProviderProfile() {
         </View>
 
         {activeTab === 'overview' && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Über mich</Text>
-            <Text style={styles.cardText}>{provider.bio || 'Keine Beschreibung verfügbar.'}</Text>
+          <View style={styles.galleryContainer}>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Über mich</Text>
+              <Text style={styles.cardText}>{provider.bio || 'Keine Beschreibung verfügbar.'}</Text>
+            </View>
 
-            <Text style={[styles.cardTitle, { marginTop: 12 }]}>Spezialisierungen</Text>
-            {provider.specialties.map((s, i) => (
-              <View key={i} style={styles.rowWithIcon}>
-                <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                <Text style={styles.cardText}>{s}</Text>
-              </View>
-            ))}
-
-            <Text style={[styles.cardTitle, { marginTop: 12 }]}>Sprachen</Text>
-            <View style={styles.badgesRow}>
-              {(provider.languages || []).map((lang, i) => (
-                <View key={i} style={[styles.badge, styles.badgeOutline]}>
-                  <Text style={[styles.badgeText, { color: '#374151' }]}>{lang}</Text>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Spezialisierungen</Text>
+              {(provider.badges || []).map((badge, i) => (
+                <View key={i} style={styles.rowWithIcon}>
+                  <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                  <Text style={[styles.cardText, { marginLeft: 8 }]}>{badge}</Text>
                 </View>
               ))}
             </View>
 
-            <Text style={[styles.cardTitle, { marginTop: 12 }]}>Öffnungszeiten</Text>
-            {(provider.hours || []).map((h, i) => (
-              <View key={i} style={styles.rowBetween}>
-                <Text style={[styles.cardText, h.day === 'Montag' && styles.boldText]}>{h.day}</Text>
-                <Text style={[styles.cardText, h.hours === 'Geschlossen' ? styles.closedText : styles.boldText]}>{h.hours}</Text>
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Sprachen</Text>
+              <View style={styles.badgesRow}>
+                {(provider.languages || []).map((lang, i) => (
+                  <View key={i} style={[styles.badge, styles.badgeOutline, { marginRight: 8 }]}>
+                    <Text style={[styles.badgeText, { color: '#374151' }]}>{lang}</Text>
+                  </View>
+                ))}
               </View>
-            ))}
+            </View>
+
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Öffnungszeiten</Text>
+              {(provider.hours || []).map((h, i) => (
+                <View key={i} style={styles.rowBetween}>
+                  <Text style={[styles.cardText, h.day === 'Montag' && styles.boldText]}>{h.day}</Text>
+                  <Text style={[styles.cardText, h.hours === 'Geschlossen' ? styles.closedText : styles.boldText]}>{h.hours}</Text>
+                </View>
+              ))}
+            </View>
           </View>
         )}
 
@@ -253,48 +261,50 @@ export default function ProviderProfile() {
         )}
 
         {activeTab === 'gallery' && (
-          <View style={styles.card}>
-            <View style={styles.rowBetween}>
-              <Text style={styles.cardTitle}>Portfolio</Text>
-              <Text style={styles.cardText}>({(provider.portfolioImages || []).length} Bilder)</Text>
-            </View>
+          <View style={styles.galleryContainer}>
+            <Text style={styles.sectionHeader}>
+              Galerie ({(provider.portfolioImages || []).length})
+            </Text>
             <View style={styles.galleryGrid}>
               {(provider.portfolioImages || []).map((uri, i) => (
                 <Image key={i} source={{ uri }} style={styles.galleryImage} />
               ))}
             </View>
+            {(!provider.portfolioImages || provider.portfolioImages.length === 0) && (
+              <Text style={styles.emptyStateText}>Noch keine Bilder hochgeladen.</Text>
+            )}
           </View>
         )}
 
         {activeTab === 'reviews' && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Bewertungsübersicht</Text>
-            <View style={styles.rowWithIcon}>
-              <Text style={styles.ratingBig}>{provider.rating}</Text>
-              <Ionicons name="star" size={16} color="#F59E0B" />
-              <Text style={styles.cardText}>{provider.reviewCount} Gesamtbewertungen</Text>
-            </View>
+          <View style={styles.galleryContainer}>
+            <Text style={styles.sectionHeader}>Bewertungen ({provider.reviewCount})</Text>
 
             {(provider.reviews || []).map((review) => (
               <View key={review.id} style={[styles.reviewCard, styles.card]}>
                 <View style={styles.rowBetween}>
                   <View style={styles.rowWithIcon}>
-                    <Ionicons name="person-circle-outline" size={20} color="#FF6B6B" />
-                    <Text style={styles.boldText}>{review.name}</Text>
+                    <Ionicons name="person-circle-outline" size={24} color="#9CA3AF" />
+                    <Text style={[styles.boldText, { marginLeft: 8 }]}>{review.name}</Text>
                   </View>
                   <Text style={styles.cardText}>{review.date}</Text>
                 </View>
-                <View style={{ flexDirection: 'row', marginTop: 4 }}>
+                <View style={{ flexDirection: 'row', marginTop: 4, marginBottom: 6 }}>
                   {Array.from({ length: review.rating }).map((_, i) => (
                     <Ionicons key={i} name="star" size={14} color="#F59E0B" />
                   ))}
                 </View>
-                <Text style={[styles.cardText, { marginTop: 6 }]}>{review.text}</Text>
-                <View style={[styles.badge, styles.badgeOutline, { alignSelf: 'flex-start', marginTop: 8 }]}>
-                  <Text style={[styles.badgeText, { color: '#8B4513' }]}>{review.style}</Text>
-                </View>
+                <Text style={styles.cardText}>{review.text}</Text>
+                {review.style && (
+                  <View style={[styles.badge, styles.badgeOutline, { alignSelf: 'flex-start', marginTop: 8 }]}>
+                    <Text style={[styles.badgeText, { color: '#8B4513' }]}>{review.style}</Text>
+                  </View>
+                )}
               </View>
             ))}
+            {(!provider.reviews || provider.reviews.length === 0) && (
+              <Text style={styles.emptyStateText}>Noch keine Bewertungen.</Text>
+            )}
           </View>
         )}
 
@@ -585,6 +595,16 @@ const styles = StyleSheet.create({
   closedText: {
     fontWeight: '600',
     color: '#EF4444',
+  },
+  galleryContainer: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+  },
+  sectionHeader: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
   },
   servicesContainer: {
     marginTop: 16,
