@@ -87,40 +87,45 @@ export default function ProviderProfile() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconButton}>
-          <Ionicons name="chevron-back" size={22} color="#111827" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{provider.businessName || provider.name}</Text>
-        <View style={styles.headerActions}>
-          <TouchableOpacity onPress={() => Alert.alert('Teilen')} style={styles.headerIconButton}>
-            <Ionicons name="share-outline" size={20} color="#111827" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setIsFavorite((p) => !p)} style={styles.headerIconButton}>
-            <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={20} color={isFavorite ? '#F43F5E' : '#111827'} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Hero Image + Avatar */}
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
+        {/* Header / Hero Image */}
         <View style={styles.heroWrapper}>
           <Image source={{ uri: provider.coverImage || provider.imageUrl }} style={styles.heroImage} />
+
+          {/* Overlay Actions */}
+          <SafeAreaView style={styles.headerOverlay}>
+            <View style={styles.headerRow}>
+              <TouchableOpacity onPress={() => navigation.goBack()} style={styles.circleBtn}>
+                <Ionicons name="arrow-back" size={22} color="#111827" />
+              </TouchableOpacity>
+              <View style={styles.headerActions}>
+                <TouchableOpacity onPress={() => Alert.alert('Teilen')} style={styles.circleBtn}>
+                  <Ionicons name="share-social-outline" size={20} color="#111827" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setIsFavorite((p) => !p)} style={styles.circleBtn}>
+                  <Ionicons name={isFavorite ? 'heart' : 'heart-outline'} size={20} color={isFavorite ? '#F43F5E' : '#111827'} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </SafeAreaView>
+
+          {/* Centered Avatar */}
           <View style={styles.avatarWrapper}>
             <Image source={{ uri: provider.profileImage || provider.imageUrl }} style={styles.avatarImage} />
             {provider.isVerified && (
               <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark" size={14} color="#fff" />
+                <Ionicons name="checkmark" size={12} color="#fff" />
               </View>
             )}
           </View>
         </View>
 
-        {/* Title & Rating */}
+        {/* Title & Rating - Centered */}
         <View style={styles.section}>
           <Text style={styles.title}>{provider.businessName || provider.name}</Text>
           <Text style={styles.subtitle}>von {provider.name}</Text>
+
           <View style={styles.ratingRow}>
             {Array.from({ length: 5 }).map((_, i) => (
               <Ionicons
@@ -128,19 +133,23 @@ export default function ProviderProfile() {
                 name={i < Math.floor(provider.rating) ? 'star' : 'star-outline'}
                 size={16}
                 color={i < Math.floor(provider.rating) ? '#F59E0B' : '#D1D5DB'}
-                style={{ marginRight: 2 }}
+                style={{ marginHorizontal: 1 }}
               />
             ))}
             <Text style={styles.ratingText}>{provider.rating}</Text>
             <Text style={styles.reviewsText}>({provider.reviewCount} Bewertungen)</Text>
           </View>
-          <View style={styles.distanceRow}>
-            <Ionicons name="location-outline" size={16} color="#8B4513" />
-            <Text style={styles.distanceText}>{provider.address || (provider.distanceKm ? `${provider.distanceKm.toFixed(1)} km entfernt` : 'Entfernung unbekannt')}</Text>
-          </View>
+
+          <TouchableOpacity style={styles.distanceRow}>
+            <Ionicons name="location-outline" size={16} color="#6B7280" />
+            <Text style={styles.distanceText}>
+              {provider.distanceKm ? `${provider.distanceKm.toFixed(1)} km entfernt` : 'Entfernung unbekannt'}
+            </Text>
+            <Text style={styles.routeText}>Route</Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Badges */}
+        {/* Badges - Centered */}
         <View style={[styles.section, styles.badgesRow]}>
           {(provider.badges || []).map((badge, idx) => (
             <View key={idx} style={styles.badge}>
@@ -158,6 +167,7 @@ export default function ProviderProfile() {
             </View>
           ))}
         </View>
+
 
         {/* Tabs */}
         <View style={styles.tabsList}>
@@ -292,73 +302,92 @@ export default function ProviderProfile() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
+
+
 const THEME = '#8B4513';
+const COLOR_ROUTE = '#D97706'; // Example orange/brown for Route text
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
-  header: {
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderBottomColor: '#F3F4F6',
-    borderBottomWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  headerIconButton: {
-    padding: 6,
-  },
   scrollContent: {
-    padding: 16,
     paddingBottom: 24,
   },
   heroWrapper: {
-    marginBottom: 16,
+    position: 'relative',
+    marginBottom: 50, // Making space for the overlapping avatar
   },
   heroImage: {
     width: '100%',
-    height: 180,
-    borderRadius: 12,
+    height: 220, // Taller image as per design
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 10, // Adjust for status bar if not handled by SafeAreaView automatically in absolute mode
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  circleBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   avatarWrapper: {
     position: 'absolute',
-    bottom: -24,
-    left: 16,
-    width: 72,
-    height: 72,
+    bottom: -36, // Half of 72 to overlap
+    alignSelf: 'center',
+    width: 84, // Slightly larger border wrapper
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: '#fff', // White border effect
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   avatarImage: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    borderWidth: 3,
-    borderColor: '#fff',
+    width: 76,
+    height: 76,
+    borderRadius: 38,
   },
   verifiedBadge: {
     position: 'absolute',
-    right: -4,
-    bottom: -4,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    right: 0,
+    bottom: 4,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
     backgroundColor: '#3B82F6',
     alignItems: 'center',
     justifyContent: 'center',
@@ -366,54 +395,67 @@ const styles = StyleSheet.create({
     borderColor: '#fff',
   },
   section: {
-    marginTop: 24,
+    marginTop: 16,
+    alignItems: 'center', // Center everything in main sections
+    paddingHorizontal: 16,
   },
   title: {
     fontSize: 22,
     fontWeight: '700',
     color: '#111827',
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,
     color: '#6B7280',
-    marginTop: 4,
+    marginTop: 2,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 8,
+    justifyContent: 'center',
+    marginBottom: 6,
   },
   ratingText: {
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '700',
     color: '#111827',
     marginLeft: 6,
-    marginRight: 6,
+    marginRight: 4,
   },
   reviewsText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#6B7280',
   },
   distanceRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    justifyContent: 'center',
     gap: 6,
   },
   distanceText: {
-    fontSize: 13,
-    color: '#6B7280',
+    fontSize: 14,
+    color: '#4B5563',
+  },
+  routeText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: COLOR_ROUTE,
   },
   badgesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: 8,
-    marginTop: 8,
+    marginTop: 16,
   },
   badge: {
     backgroundColor: '#F43F5E',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6, // Slightly taller pill
+    borderRadius: 20,
   },
   badgeOutline: {
     backgroundColor: '#fff',
@@ -422,91 +464,105 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 12,
+    fontWeight: '600',
     color: '#fff',
   },
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
+    marginTop: 24,
+    width: '100%',
   },
   statCard: {
     backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
     width: '23%',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    // Minimal shadow for clean look
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
   },
   statValue: {
-    fontSize: 16,
+    fontSize: 15,
     color: THEME,
     fontWeight: '700',
+    marginBottom: 2,
   },
   statLabel: {
     fontSize: 11,
     color: '#6B7280',
+    textAlign: 'center',
   },
   tabsList: {
     flexDirection: 'row',
-    backgroundColor: '#E5E7EB',
-    borderRadius: 8,
+    justifyContent: 'space-between', // Spread tabs?? Or pill container? Design looks like segmented
+    backgroundColor: '#F3F4F6', // Light gray background for the bar
+    borderRadius: 24, // High radius for pill shape container
     padding: 4,
-    marginTop: 20,
+    marginTop: 24,
+    marginHorizontal: 16,
   },
   tabButton: {
     flex: 1,
     paddingVertical: 8,
-    borderRadius: 6,
+    borderRadius: 20,
     alignItems: 'center',
   },
   tabButtonActive: {
     backgroundColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 1,
+    elevation: 2,
   },
   tabButtonText: {
     fontSize: 13,
     color: '#6B7280',
-    fontWeight: '600',
+    fontWeight: '500',
   },
   tabButtonTextActive: {
     color: '#111827',
+    fontWeight: '600',
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 12,
-    marginTop: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
+    padding: 16,
+    marginTop: 16,
+    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   cardTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
     color: '#111827',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   cardText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#374151',
+    lineHeight: 20,
   },
   rowWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginTop: 4,
+    gap: 8,
+    marginTop: 6,
   },
   rowBetween: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 4,
+    marginTop: 6,
   },
   boldText: {
     fontWeight: '600',
@@ -517,16 +573,16 @@ const styles = StyleSheet.create({
     color: '#EF4444',
   },
   serviceItem: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: '#E5E7EB',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 8,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 10,
     backgroundColor: '#fff',
   },
   serviceItemActive: {
     borderColor: THEME,
-    backgroundColor: '#F8F1EC',
+    backgroundColor: '#FDF8F6',
   },
   serviceName: {
     fontSize: 15,
@@ -534,12 +590,12 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   servicePrice: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
     color: THEME,
   },
   serviceDescription: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#6B7280',
     marginTop: 4,
   },
@@ -556,25 +612,40 @@ const styles = StyleSheet.create({
     width: '31%',
     aspectRatio: 1,
     borderRadius: 8,
+    marginBottom: 8,
   },
   ratingBig: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '800',
     color: THEME,
-    marginRight: 6,
+    marginRight: 8,
   },
   reviewCard: {
-    marginTop: 10,
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
   },
   bottomBar: {
-    marginTop: 20,
+    marginTop: 24,
+    marginBottom: 16, // Extra margin at bottom
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingTop: 16,
+    // Make bottom bar simpler as per screenshot?
+    // Screenshot shows simple "ab €35" and Buttons.
+    // Use card style but removed background color/border to blend often?
+    // Screenshot has separate container.
+    // Keeping "card" style is fine, but maybe flatter.
+    shadowOpacity: 0.05,
+    elevation: 4,
   },
   btn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderRadius: 8,
     flex: 1,
   },
@@ -582,23 +653,25 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#D1D5DB',
-    marginRight: 8,
+    marginRight: 10,
   },
   btnPrimary: {
     backgroundColor: THEME,
-    marginLeft: 8,
+    marginLeft: 0, // Reset
   },
   btnText: {
     fontSize: 14,
-    color: '#374151',
+    color: '#111827',
     fontWeight: '600',
   },
   btnTextPrimary: {
     color: '#fff',
   },
   priceBig: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: '700',
+    color: '#111827', // Screenshot "ab €35" is dark text usually, let's check. 
+    // Screenshot has "ab" small, €35 larger. THEME color usually fine for price.
     color: THEME,
     marginLeft: 6,
   },

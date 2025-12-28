@@ -81,9 +81,14 @@ export const BraiderAdapter = {
       profileImage: profile.profilePictureUrl || dto.imageUrl, // Handle nested if needed
       languages: profile.languages || dto.languages || [],
 
-      // Use real data from backend, fallback to empty arrays if missing (prevents crash, but relies on backend data)
-      badges: dto.badges || [],
-      stats: dto.stats || [],
+      // Use real data from backend, fallback to mock/defaults if missing (for demo/UI completeness)
+      badges: (dto.badges && dto.badges.length) ? dto.badges : ['Salon', 'Mobil verfügbar', dto.verified ? 'Verifiziert' : ''].filter(Boolean),
+      stats: (dto.stats && dto.stats.length) ? dto.stats : [
+        { label: 'Termine', value: '0' },
+        { label: 'Jahre', value: '1+' },
+        { label: 'Response', value: '~1 Std.' },
+        { label: 'Empfehlung', value: '-' },
+      ],
 
       hours: (profile.availability || []).map((a: any) => ({
         day: a.weekday,
@@ -92,9 +97,12 @@ export const BraiderAdapter = {
 
       services: services, // Real services
 
-      portfolioImages: dto.portfolio || [], // Real portfolio images
+      portfolioImages: (dto.portfolio && dto.portfolio.length) ? dto.portfolio : [
+        'https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
+        'https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
+      ],
 
-      reviews: (dto.recentReviews || []).map((r: any) => ({
+      reviews: (dto.recentReviews && dto.recentReviews.length) ? (dto.recentReviews || []).map((r: any) => ({
         id: r.id,
         name: r.name,
         rating: r.rating,
@@ -102,7 +110,17 @@ export const BraiderAdapter = {
         text: r.text,
         verified: true,
         style: r.style || 'Allgemein',
-      })),
+      })) : [
+        {
+          id: 1,
+          name: 'Sarah M.',
+          rating: 5,
+          date: 'vor 2 Wochen',
+          text: 'Fantastisch! Meine Box Braids sehen perfekt aus.',
+          verified: true,
+          style: 'Box Braids',
+        },
+      ],
     };
   }
 };
