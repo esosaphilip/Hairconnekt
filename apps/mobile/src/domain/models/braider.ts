@@ -1,4 +1,5 @@
 export interface IBraiderService {
+  id: string;
   name: string;
   duration: string;
   price: string;
@@ -46,7 +47,7 @@ export interface IBraider {
   specialties: string[];
   priceFromCents?: number;
   isAvailable: boolean;
-  
+
   // Detailed Profile fields
   bio?: string;
   badges?: string[];

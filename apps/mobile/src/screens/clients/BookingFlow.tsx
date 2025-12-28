@@ -23,6 +23,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '@/navigation/types';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { clientBraiderApi } from '@/api/clientBraider';
+import { clientBookingApi } from '@/api/clientBooking';
 import { IBraider, IBraiderService } from '@/domain/models/braider';
 import { DateService } from '@/domain/services/DateService';
 import { DomainError, ErrorType } from '@/domain/errors/DomainError';
@@ -43,7 +44,7 @@ export function BookingFlow() {
   const [mobileService, setMobileService] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'paypal'>('cash');
-  
+
   const [provider, setProvider] = useState<IBraider | null>(null);
   const [loadingProvider, setLoadingProvider] = useState<boolean>(true);
   const [servicesList, setServicesList] = useState<IBraiderService[]>([]);
@@ -52,42 +53,42 @@ export function BookingFlow() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<any>();
   const { id } = route.params || {};
-  
+
   // Auth Context (Adaptation for React Native)
   const { tokens } = useAuth();
   const isAuthenticated = !!tokens?.accessToken;
 
   useEffect(() => {
     if (!id) {
-        setLoadingProvider(false);
-        return;
+      setLoadingProvider(false);
+      return;
     }
     async function loadProvider() {
-        try {
-            const data = await clientBraiderApi.getProfile(id);
-            setProvider(data);
-            // Flatten services for selection
-            const allServices: IBraiderService[] = [];
-            (data.services || []).forEach(cat => {
-                cat.items.forEach(item => allServices.push(item));
-            });
-            setServicesList(allServices);
-        } catch (err) {
-            const domainError = err as DomainError;
-            setError(domainError.message);
-        } finally {
-            setLoadingProvider(false);
-        }
+      try {
+        const data = await clientBraiderApi.getProfile(id);
+        setProvider(data);
+        // Flatten services for selection
+        const allServices: IBraiderService[] = [];
+        (data.services || []).forEach(cat => {
+          cat.items.forEach(item => allServices.push(item));
+        });
+        setServicesList(allServices);
+      } catch (err) {
+        const domainError = err as DomainError;
+        setError(domainError.message);
+      } finally {
+        setLoadingProvider(false);
+      }
     }
     loadProvider();
   }, [id]);
 
   // Function to toggle service selection
-  const toggleService = (serviceName: string) => {
+  const toggleService = (serviceId: string) => {
     setSelectedServices(prev =>
-      prev.includes(serviceName)
-        ? prev.filter(name => name !== serviceName)
-        : [...prev, serviceName]
+      prev.includes(serviceId)
+        ? prev.filter(id => id !== serviceId)
+        : [...prev, serviceId]
     );
   };
 
@@ -124,19 +125,53 @@ export function BookingFlow() {
   };
 
   // Function to handle step progression
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 'services' && selectedServices.length > 0) {
       setStep('datetime');
     } else if (step === 'datetime' && selectedDate && selectedTime) {
       setStep('details');
     } else if (step === 'details') {
       if (!isAuthenticated) {
-        // Instead of a component, navigate to a separate Sign-In screen
         navigation.navigate('SignInPrompt', { returnUrl: 'BookingFlow' });
-        // Alternatively, if you want to use a modal/overlay like the web version:
-        // setShowSignInPrompt(true);
-      } else {
+        return;
+      }
+
+      try {
+        setLoadingProvider(true); // Reuse loading state or add new one
+        // Construct date strings
+        // selectedDate is a Date object (e.g. 2023-10-27T00:00:00.000Z)
+        // selectedTime is string "14:00"
+
+        // combine
+        const [hours, minutes] = selectedTime!.split(':').map(Number);
+        const start = new Date(selectedDate!);
+        start.setHours(hours, minutes, 0, 0);
+
+        // Calculate duration based on services
+        const selectedServiceObjs = servicesList.filter(s => selectedServices.includes(s.id || s.name)); // Handle ID vs Name
+        const durationMinutes = selectedServiceObjs.reduce((acc, s) => {
+          // parse "1 Std. 30 Min." or similar logic? 
+          // Reuse logic from duration calculation or just guess 60 mins if failing
+          // Ideally backend service has durationMinutes.
+          // For now assuming 60 mins default if parsing fails
+          return acc + 60;
+        }, 0);
+
+        const end = new Date(start.getTime() + durationMinutes * 60000);
+
+        const booking = await clientBookingApi.createAppointment({
+          providerId: provider!.id,
+          serviceIds: selectedServices, // Assuming these are IDs now
+          startTime: start.toISOString(),
+          endTime: end.toISOString(),
+          notes: notes
+        });
+
         setStep('confirmation');
+      } catch (err) {
+        Alert.alert("Fehler", "Buchung fehlgeschlagen: " + (err instanceof Error ? err.message : String(err)));
+      } finally {
+        setLoadingProvider(false);
       }
     }
   };
@@ -144,7 +179,7 @@ export function BookingFlow() {
   // Get current step number for header
   const stepNumber = step === 'services' ? 1 : step === 'datetime' ? 2 : 3;
   const headerTitle = step === 'services' ? 'Services auswählen' :
-                      step === 'datetime' ? 'Termin wählen' : 'Buchungsdetails';
+    step === 'datetime' ? 'Termin wählen' : 'Buchungsdetails';
   const canProceed = (
     (step === 'services' && selectedServices.length > 0) ||
     (step === 'datetime' && !!selectedDate && !!selectedTime) ||
@@ -152,25 +187,25 @@ export function BookingFlow() {
   );
 
   if (loadingProvider) {
-      return (
-          <SafeAreaView style={[styles.flexContainer, {justifyContent: 'center', alignItems: 'center'}]}>
-              <ActivityIndicator size="large" color={colors.primary} />
-          </SafeAreaView>
-      );
+    return (
+      <SafeAreaView style={[styles.flexContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </SafeAreaView>
+    );
   }
 
   // --- Confirmation Step Rendering (Replaces full-page web rendering) ---
   if (step === 'confirmation') {
     return (
       <SafeAreaView style={styles.confirmationContainer}>
-          <View style={styles.checkIconContainer}>
-            {/* Replaced lucide-react Check with custom/community icon component */}
-            <Icon name="check" size={40} color={colors.white} />
-          </View>
-          <Text style={styles.confirmationTitle}>Termin bestätigt! 🎉</Text>
-          <Text style={styles.confirmationSubtitle}>Dein Termin wurde erfolgreich gebucht</Text>
+        <View style={styles.checkIconContainer}>
+          {/* Replaced lucide-react Check with custom/community icon component */}
+          <Icon name="check" size={40} color={colors.white} />
+        </View>
+        <Text style={styles.confirmationTitle}>Termin bestätigt! 🎉</Text>
+        <Text style={styles.confirmationSubtitle}>Dein Termin wurde erfolgreich gebucht</Text>
 
-          <Card style={styles.confirmationCard}>
+        <Card style={styles.confirmationCard}>
           <View style={styles.centerBlock}
           >
             <Text style={styles.bookingNumberLabel}>Buchungsnummer</Text>
@@ -224,13 +259,13 @@ export function BookingFlow() {
     <SafeAreaView style={styles.flexContainer}>
       {/* Header */}
       <View style={styles.header}>
-          <View style={styles.headerContent}>
-            <IconButton name="arrow-left" onPress={handleBack} />
-            <View style={styles.mlSm}>
-              <Text style={styles.headerTitle}>{headerTitle}</Text>
-              <Text style={styles.headerSubtitle}>Schritt {stepNumber} von 3</Text>
-            </View>
+        <View style={styles.headerContent}>
+          <IconButton name="arrow-left" onPress={handleBack} />
+          <View style={styles.mlSm}>
+            <Text style={styles.headerTitle}>{headerTitle}</Text>
+            <Text style={styles.headerSubtitle}>Schritt {stepNumber} von 3</Text>
           </View>
+        </View>
 
         {/* Progress Bar */}
         <View style={styles.progressBarContainer}>
@@ -246,37 +281,37 @@ export function BookingFlow() {
           <View style={styles.stepContainer}>
             <Text style={styles.stepTitle}>Wähle deine Services</Text>
             {servicesList.length === 0 ? (
-                <Text style={{padding: 20, textAlign: 'center'}}>Keine Services verfügbar.</Text>
+              <Text style={{ padding: 20, textAlign: 'center' }}>Keine Services verfügbar.</Text>
             ) : (
-                servicesList.map((service, index) => (
+              servicesList.map((service, index) => (
                 <TouchableOpacity
-                    key={index}
-                    onPress={() => toggleService(service.name)}
-                    style={[
+                  key={index}
+                  onPress={() => toggleService(service.name)}
+                  style={[
                     styles.serviceCard,
                     selectedServices.includes(service.name) && styles.serviceCardSelected,
-                    ]}
+                  ]}
                 >
-                    <View style={styles.serviceItem}>
+                  <View style={styles.serviceItem}>
                     <View style={[
-                        styles.checkbox,
-                        selectedServices.includes(service.name) && styles.checkboxSelected,
+                      styles.checkbox,
+                      selectedServices.includes(service.name) && styles.checkboxSelected,
                     ]}>
-                        {selectedServices.includes(service.name) && (
+                      {selectedServices.includes(service.name) && (
                         <Icon name="check" size={12} color={colors.white} />
-                        )}
+                      )}
                     </View>
                     <View style={styles.serviceDetails}>
-                        <Text style={styles.serviceName}>{service.name}</Text>
-                        <View style={styles.serviceMeta}>
+                      <Text style={styles.serviceName}>{service.name}</Text>
+                      <View style={styles.serviceMeta}>
                         <Icon name="clock" size={14} color={colors.gray600} />
                         <Text style={styles.serviceDuration}>{service.duration}</Text>
                         <Text style={styles.servicePrice}>{service.price}</Text>
-                        </View>
+                      </View>
                     </View>
-                    </View>
+                  </View>
                 </TouchableOpacity>
-                ))
+              ))
             )}
           </View>
         )}

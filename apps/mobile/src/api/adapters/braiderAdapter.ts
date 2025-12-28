@@ -42,16 +42,46 @@ export const BraiderAdapter = {
     };
   },
 
-  toDomainProfile(dto: ProviderProfileDTO): IBraider {
+  toDomainProfile(dto: any): IBraider {
     const base = this.toDomain(dto);
+    const profile = dto.profile || {};
+
+    // Map services if they exist in the profile
+    // Backend returns flat services list with ID
+    const rawServices = profile.services || [];
+
+    // Group services by category if possible, or put them in a "General" category
+    // Since backend "listForProvider" grouped them by category (maybe?), but here we get a flat list?
+    // ProvidersController.getPublicProfileById -> profile.services: (provider.services || []).map...
+    // These are IBraiderService (flat).
+    // Domain expects IBraiderServiceCategory[].
+
+    const services: any[] = [];
+    if (rawServices.length > 0) {
+      services.push({
+        category: 'Alle Services',
+        items: rawServices.map((s: any) => ({
+          id: s.id,
+          name: s.name,
+          duration: s.durationMinutes ? `${s.durationMinutes} Min.` : '60 Min.',
+          price: s.priceCents ? `€${(s.priceCents / 100).toFixed(2)}` : 'Preise auf Anfrage',
+          description: s.description || '',
+        }))
+      });
+    }
+
     return {
       ...base,
-      bio: dto.bio || '',
-      address: dto.address,
-      coverImage: dto.coverImage || dto.imageUrl,
-      profileImage: dto.profileImage || dto.imageUrl,
-      languages: dto.languages || [],
-      // Mock data injection for UI elements not yet in backend
+      bio: profile.bio || '',
+      address: dto.address, // Address might be at top level in some DTOs, or in profile?
+      // Controller: address not explicitly top level in getPublicProfileById return?
+      // Actually it returns 'business', 'name', etc.
+      // Let's assume address is not critical or is handled by base if 'business' serves as location
+      coverImage: dto.imageUrl || dto.coverImage, // Cover image
+      profileImage: profile.profilePictureUrl || dto.imageUrl, // Handle nested if needed
+      languages: profile.languages || dto.languages || [],
+
+      // Keep some mock data for UI elements if backend data is missing
       badges: ['Salon', 'Mobil verfügbar', dto.verified ? 'Verifiziert' : ''].filter(Boolean),
       stats: [
         { label: 'Termine', value: '234' }, // Mock
@@ -59,43 +89,33 @@ export const BraiderAdapter = {
         { label: 'Response', value: '< 1 Std.' }, // Mock
         { label: 'Empfehlung', value: '98%' },   // Mock
       ],
-      hours: [
-        { day: 'Montag', hours: '09:00 - 18:00' },
-        { day: 'Dienstag', hours: '09:00 - 18:00' },
-        { day: 'Mittwoch', hours: '09:00 - 18:00' },
-        { day: 'Donnerstag', hours: '09:00 - 20:00' },
-        { day: 'Freitag', hours: '09:00 - 20:00' },
-        { day: 'Samstag', hours: '10:00 - 16:00' },
-        { day: 'Sonntag', hours: 'Geschlossen' },
-      ], // Mock
-      services: [
-        {
-            category: 'Box Braids',
-            items: [
-            {
-                name: 'Classic Box Braids',
-                duration: '3-4 Std.',
-                price: '€45 - €65',
-                description: 'Traditionelle Box Braids in verschiedenen Größen',
-            },
-            ],
-        },
-      ], // Mock
+      hours: (profile.availability || []).map((a: any) => ({
+        day: a.weekday,
+        hours: `${a.start} - ${a.end}`
+      })),
+
+      services: services, // Real services
+
       portfolioImages: [
         'https://images.unsplash.com/photo-1733532915163-02915638c793?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
         'https://images.unsplash.com/photo-1718931202052-2996aac5ed85?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400',
-      ], // Mock
+      ], // Mock (backend doesn't return gallery yet)
+
       reviews: [
-          {
-            id: 1,
-            name: 'Sarah M.',
-            rating: 5,
-            date: 'vor 2 Wochen',
-            text: 'Fantastisch! Meine Box Braids sehen perfekt aus.',
-            verified: true,
-            style: 'Box Braids',
-          },
-      ], // Mock
+        {
+          id: 1,
+          name: 'Sarah M.',
+          rating: 5,
+          date: 'vor 2 Wochen',
+          text: 'Fantastisch! Meine Box Braids sehen perfekt aus.',
+          verified: true,
+          style: 'Box Braids',
+        },
+      ], // Mock (backend review list separate call? or included?)
+      // Controller: returns reviews count and avg, but not list of reviews array in the simple public profile payload?
+      // Actually: getPublicProfileById does NOT return reviews array.
+      // ProviderProfile screen might need to fetch reviews separately if we want real ones.
+      // For now, keep mock reviews to avoid empty UI.
     };
   }
 };

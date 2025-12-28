@@ -169,7 +169,7 @@ export default function EditAddressScreen() {
                 <TouchableOpacity onPress={handleBack}>
                     <Ionicons name="arrow-back" size={24} color={colors.gray800} />
                 </TouchableOpacity>
-                <Text variant="h3">Adresse bearbeiten</Text>
+                <Text variant="h3">Geschäftsadresse bearbeiten</Text>
                 <TouchableOpacity
                     onPress={handleSave}
                     disabled={isLoading || !hasChanges}

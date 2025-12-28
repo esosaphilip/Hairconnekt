@@ -7,8 +7,10 @@ import { mapApiError } from '../domain/errors/DomainError';
 export const clientBraiderApi = {
   async getNearby(params: { lat: number; lon: number; radiusKm?: number; limit?: number }): Promise<IBraider[]> {
     try {
-      const res = await http.get<{ items: any[] }>(API_CONFIG.ENDPOINTS.PROVIDERS.NEARBY, { params });
-      const items = res.data?.items ?? [];
+      const res = await http.get<{ success?: boolean; data?: { items: any[] }; items?: any[] }>(API_CONFIG.ENDPOINTS.PROVIDERS.NEARBY, { params });
+      // Handle { success: true, data: { items: [] } } pattern
+      const dataObj = res.data?.data ? res.data.data : res.data;
+      const items = dataObj?.items ?? [];
       return items.map(BraiderAdapter.toDomain);
     } catch (error) {
       throw mapApiError(error);
@@ -57,7 +59,8 @@ export const clientBraiderApi = {
   async getProfile(id: string): Promise<IBraider> {
     try {
       const res = await http.get(`/providers/${id}`);
-      const data = res.data;
+      // Handle { success: true, data: { ... } } pattern
+      const data = res.data?.data ? res.data.data : res.data;
       return BraiderAdapter.toDomainProfile(data);
     } catch (error) {
       throw mapApiError(error);

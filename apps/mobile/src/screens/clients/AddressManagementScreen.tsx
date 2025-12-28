@@ -167,7 +167,7 @@ export function AddressManagementScreen() {
       </Card>
     );
   };
-  
+
   // --- Empty State Component ---
   const EmptyState = () => (
     <Card style={styles.emptyCard}>
@@ -191,6 +191,9 @@ export function AddressManagementScreen() {
           <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
           <View style={styles.headerTextContainer}>
             <Text style={styles.headerTitle}>Meine Adressen</Text>
+            <Text style={{ color: '#666', fontSize: 13, marginTop: 4 }}>
+              (Privatadressen für Buchungen)
+            </Text>
             <Text style={styles.headerSubtitle}>
               {addresses.length} gespeicherte Adressen
             </Text>

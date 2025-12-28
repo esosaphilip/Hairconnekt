@@ -21,10 +21,10 @@ import Avatar, { AvatarImage, AvatarFallback } from '@/components/avatar';
 import Icon from '@/components/Icon';
 import { colors, spacing, typography, radii } from '@/theme/tokens';
 import { logger } from '@/services/logger';
-import { MESSAGES } from '@/constants'; 
+import { MESSAGES } from '@/constants';
 import { useNavigation } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
-import { providersApi } from '@/services/providers';
+import { clientBraiderApi } from '@/api/clientBraider';
 import { useEffect } from 'react';
 
 const { width, height } = Dimensions.get('window');
@@ -119,8 +119,11 @@ const getInitials = (name: string) =>
     .map((n: string) => (n.length > 1 ? n[0] : n.slice(0, 2)))
     .join("");
 
+import { useLocation } from '@/context/LocationContext';
+
 export function MapViewScreen() {
   const navigation = useNavigation();
+  const { location } = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   type Provider = {
     id: string;
@@ -140,29 +143,23 @@ export function MapViewScreen() {
 
   useEffect(() => {
     let mounted = true;
+    const lat = location?.lat || 52.52;
+    const lon = location?.lon || 13.405;
+
     (async () => {
       try {
-        const items = await providersApi.nearby({ lat: 52.52, lon: 13.405, radiusKm: 10, limit: 10 });
+        const items = await clientBraiderApi.getNearby({ lat: location.lat, lon: location.lon, radiusKm: 10, limit: 10 });
         if (mounted && Array.isArray(items) && items.length > 0) {
-          setProviders(items.map((p) => ({
-            id: p.id,
-            name: p.business || p.name,
-            avatar: p.imageUrl || '',
-            rating: p.rating || 0,
-            reviewCount: p.reviews || 0,
-            distance: typeof p.distanceKm === 'number' ? `${p.distanceKm.toFixed(1)} km` : '',
-            specialty: (p.specialties || []).join(', '),
-            price: p.priceLabel || (p.priceFromCents ? `€${(p.priceFromCents/100).toFixed(0)}+` : ''),
-            location: { lat: 52.52, lng: 13.405, address: '' },
-            isAvailable: p.available ?? true,
-          })));
+          setProviders(items);
         }
-      } catch {}
+      } catch (e) {
+        console.error("Failed to load map providers", e);
+      }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [location]);
 
-  const filteredProviders = useMemo(() => 
+  const filteredProviders = useMemo(() =>
     providers.filter((provider) =>
       String(provider.name || '').toLowerCase().includes(searchQuery.toLowerCase())
     ), [providers, searchQuery]);
@@ -171,7 +168,7 @@ export function MapViewScreen() {
     // Mock call functionality, use Linking.openURL(`tel:`) in a real app
     Alert.alert("Anruf", "Starte Anruf zu +49 123 456 7890...");
   };
-  
+
   // Custom Render for the Provider Card (Bottom Sheet Equivalent)
   const renderProviderCard = () => {
     if (!selectedProvider) return null;
@@ -193,9 +190,9 @@ export function MapViewScreen() {
                   {provider.name}
                 </Text>
                 {provider.isAvailable && (
-                  <Badge 
-                    label="Verfügbar" 
-                    backgroundColor={colors.lightGreen} 
+                  <Badge
+                    label="Verfügbar"
+                    backgroundColor={colors.lightGreen}
                     textColor={colors.green600}
                   />
                 )}
@@ -227,22 +224,22 @@ export function MapViewScreen() {
                   style={styles.profileButton}
                   textStyle={{ color: colors.white }}
                 />
-              <Button
-                variant="outline"
-                size="icon"
-                onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Messages' })}
-                style={[styles.actionIconButton, { marginLeft: 8 }]}
-              >
-                <Icon name={IconNames.MessageSquare} size={16} color={colors.gray700} />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                onPress={handleCall}
-                style={[styles.actionIconButton, { marginLeft: 8 }]}
-              >
-                <Icon name={IconNames.Phone} size={16} color={colors.gray700} />
-              </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Messages' })}
+                  style={[styles.actionIconButton, { marginLeft: 8 }]}
+                >
+                  <Icon name={IconNames.MessageSquare} size={16} color={colors.gray700} />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onPress={handleCall}
+                  style={[styles.actionIconButton, { marginLeft: 8 }]}
+                >
+                  <Icon name={IconNames.Phone} size={16} color={colors.gray700} />
+                </Button>
               </View>
             </View>
           </View>
@@ -250,7 +247,7 @@ export function MapViewScreen() {
       </View>
     );
   };
-  
+
   // Custom Render for the List View
   const renderListView = () => {
     return (
@@ -293,9 +290,9 @@ export function MapViewScreen() {
                         {provider.name}
                       </Text>
                       {provider.isAvailable && (
-                        <Badge 
-                          label="Verfügbar" 
-                          backgroundColor={colors.lightGreen} 
+                        <Badge
+                          label="Verfügbar"
+                          backgroundColor={colors.lightGreen}
                           textColor={colors.green}
                           textStyle={styles.listItemBadge}
                         />
@@ -400,9 +397,9 @@ export function MapViewScreen() {
                 ]}
               >
                 <View style={[
-                    styles.mapMarkerInner,
-                    provider.isAvailable ? styles.markerAvailable : styles.markerUnavailable,
-                  ]}
+                  styles.mapMarkerInner,
+                  provider.isAvailable ? styles.markerAvailable : styles.markerUnavailable,
+                ]}
                 >
                   <Icon name={IconNames.MapPin} size={20} color={colors.white} />
                 </View>
@@ -422,7 +419,7 @@ export function MapViewScreen() {
           <Icon name={IconNames.Navigation} size={20} color={colors.primary} />
         </TouchableOpacity>
       </View>
-      
+
       {/* 3. Selected Provider Card (Bottom Overlay) */}
       {renderProviderCard()}
 
@@ -511,7 +508,7 @@ const styles = StyleSheet.create({
   mockMapBackground: {
     ...StyleSheet.absoluteFillObject,
     // Simulating gradient map background
-    backgroundColor: colors.blue200, 
+    backgroundColor: colors.blue200,
   },
   resultsBadge: {
     position: 'absolute',

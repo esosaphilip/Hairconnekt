@@ -14,5 +14,20 @@ export const clientBookingApi = {
     } catch (error) {
       throw mapApiError(error);
     }
+  },
+
+  async createAppointment(dto: {
+    providerId: string;
+    serviceIds: string[];
+    startTime: string;
+    endTime: string;
+    notes?: string;
+  }): Promise<IBooking> {
+    try {
+      const res = await http.post('/appointments', dto);
+      return BookingAdapter.toDomain(res.data);
+    } catch (error) {
+      throw mapApiError(error);
+    }
   }
 };
