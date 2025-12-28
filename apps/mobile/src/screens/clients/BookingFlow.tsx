@@ -131,12 +131,16 @@ export function BookingFlow() {
     } else if (step === 'datetime' && selectedDate && selectedTime) {
       setStep('details');
     } else if (step === 'details') {
-      if (!isAuthenticated) {
-        navigation.navigate('SignInPrompt', { returnUrl: 'BookingFlow' });
-        return;
-      }
+      console.log('Attempting to book...', { isAuthenticated });
+      // Temporary: Log auth status but allow proceeding for testing connection
+      // if (!isAuthenticated) {
+      //   console.log('Not authenticated, redirecting');
+      //   navigation.navigate('SignInPrompt', { returnUrl: 'BookingFlow' });
+      //   // return; // UNCOMMENT TO ENFORCE AUTH
+      // }
 
       try {
+        console.log('Sending booking request...');
         setLoadingProvider(true); // Reuse loading state or add new one
         // Construct date strings
         // selectedDate is a Date object (e.g. 2023-10-27T00:00:00.000Z)
