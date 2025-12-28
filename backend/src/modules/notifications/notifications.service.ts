@@ -1,4 +1,5 @@
-import { Injectable, OnModuleInit, Logger, Inject, forwardRef } from '@nestjs/common';
+```typescript
+import { Injectable, OnModuleInit, Logger, Inject, forwardRef, NotFoundException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
 import { UsersService } from '../users/users.service';
@@ -24,7 +25,7 @@ export class NotificationsService implements OnModuleInit {
       }
 
       const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || path.resolve(process.cwd(), 'serviceAccountKey.json');
-      this.logger.log(`Initializing Firebase with credentials from: ${serviceAccountPath}`);
+      this.logger.log(`Initializing Firebase with credentials from: ${ serviceAccountPath } `);
 
       // eslint-disable-next-line @typescript-eslint/no-var-requires
       const serviceAccount = require(serviceAccountPath);
@@ -48,9 +49,9 @@ export class NotificationsService implements OnModuleInit {
         notification: { title, body },
         data,
       });
-      this.logger.log(`Notification sent to ${fcmToken.substring(0, 10)}...: ${title}`);
+      this.logger.log(`Notification sent to ${ fcmToken.substring(0, 10) }...: ${ title } `);
     } catch (error) {
-      this.logger.error(`Error sending push notification to ${fcmToken.substring(0, 10)}...`, error);
+      this.logger.error(`Error sending push notification to ${ fcmToken.substring(0, 10) }...`, error);
     }
   }
 
@@ -67,18 +68,27 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async updatePreferences(userId: string, dto: any) {
+    const user = await this.usersService.findOne(userId);
+    if (!user) throw new NotFoundException('User not found');
+
     const prefs = {
       push: dto.pushEnabled,
       email: dto.emailEnabled,
       sms: dto.smsEnabled
     };
 
-    // Clean undefined values safely
-    const cleanPrefs = Object.fromEntries(
-      Object.entries(prefs).filter(([_, value]) => value !== undefined)
+    // Remove undefined values from input DTO
+    const cleanInput = Object.fromEntries(
+        Object.entries(prefs).filter(([_, value]) => value !== undefined)
     );
 
-    return this.usersService.updateMe(userId, { notificationPreferences: cleanPrefs });
+    // Merge with existing
+    const updatedPrefs = {
+      ...(user.notificationPreferences || {}),
+      ...cleanInput
+    };
+    
+    return this.usersService.updateMe(userId, { notificationPreferences: updatedPrefs });
   }
 
   async listNotifications(userId: string, limit?: number) {
