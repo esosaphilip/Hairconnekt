@@ -34,6 +34,9 @@ const germanCities = [
   { name: 'Frankfurt', state: 'Hessen', population: '760K', lat: 50.1109, lon: 8.6821 },
   { name: 'Stuttgart', state: 'Baden-Württemberg', population: '635K', lat: 48.7758, lon: 9.1829 },
   { name: 'Düsseldorf', state: 'Nordrhein-Westfalen', population: '620K', lat: 51.2277, lon: 6.7735 },
+  { name: 'Wuppertal', state: 'Nordrhein-Westfalen', population: '355K', lat: 51.2562, lon: 7.1508 },
+  { name: 'Dortmund', state: 'Nordrhein-Westfalen', population: '587K', lat: 51.5136, lon: 7.4653 },
+  { name: 'Essen', state: 'Nordrhein-Westfalen', population: '583K', lat: 51.4556, lon: 7.0116 },
   { name: 'Leipzig', state: 'Sachsen', population: '600K', lat: 51.3397, lon: 12.3731 },
 ];
 

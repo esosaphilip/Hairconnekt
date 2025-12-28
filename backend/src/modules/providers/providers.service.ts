@@ -99,7 +99,29 @@ export class ProvidersService {
     address.city = dto.city;
     address.postalCode = dto.postalCode;
     address.state = dto.state;
-    // Map usage logic could go here (e.g. geocoding), ignoring showOnMap for now as it's not in Address entity
+    // Map usage logic: Geocode the address
+    const fullAddress = `${dto.street} ${dto.houseNumber}, ${dto.postalCode} ${dto.city}, ${address.country}`;
+    if (process.env.GOOGLE_MAPS_API_KEY) {
+      try {
+        const encodedAddr = encodeURIComponent(fullAddress);
+        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddr}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.status === 'OK' && data.results?.length > 0) {
+          const loc = data.results[0].geometry.location;
+          address.latitude = loc.lat;
+          address.longitude = loc.lng;
+          console.log(`[ProvidersService] Geocoded address '${fullAddress}' to (${loc.lat}, ${loc.lng})`);
+        } else {
+          console.warn(`[ProvidersService] Geocoding failed for '${fullAddress}': ${data.status}`);
+        }
+      } catch (error) {
+        console.error('[ProvidersService] Geocoding error:', error);
+      }
+    } else {
+      console.warn('[ProvidersService] GOOGLE_MAPS_API_KEY not set. Skipping geocoding.');
+    }
 
     const savedAddress = await this.addressRepo.save(address);
 
@@ -569,13 +591,16 @@ export class ProvidersService {
 
     let rows: any[] = [];
     try {
+      console.log(`[ProvidersService] getNearbyProviders params: lat=${lat}, lon=${lon}, radius=${radiusKm}`);
       // 1. Initial Search (Local)
       rows = await this.providerRepo.findNearby({ lat, lon, radiusKm, limit });
+      console.log(`[ProvidersService] Local search found ${rows.length} rows`);
 
       // 2. Fallback: Expand to entire region (2000km) if no local results
       if (!rows || rows.length === 0) {
         console.log(`[ProvidersService] No providers found within ${radiusKm}km. Expanding search to 2000km.`);
         rows = await this.providerRepo.findNearby({ lat, lon, radiusKm: 2000, limit });
+        console.log(`[ProvidersService] Extended search found ${rows.length} rows`);
       }
 
     } catch (err) {
