@@ -1,227 +1,46 @@
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
-// ... existing imports
+import React, { useMemo } from 'react';
+import {
+  ActivityIndicator,
+  Pressable,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  Switch,
+  Text,
+  View
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Card from '@/components/Card';
-import Button from '@/components/Button';
-import { Badge } from '@/components/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/avatar';
-import { http } from '@/api/http';
-import { colors, spacing, typography } from '@/theme/tokens';
-import { rootNavigationRef } from '@/navigation/rootNavigation';
-import { logger } from '@/services/logger';
-import { API_CONFIG } from '@/constants';
-import { getErrorMessage } from '@/presentation/utils/errorHandler';
-import { on } from '@/services/eventBus';
-import { useProviderGate } from '@/hooks/useProviderGate';
-import { providerAppointmentsApi } from '@/api/providerAppointments';
-
-
-// ... (existing imports)
-
-// ... existing types (NextAppointment, Stats, Appointment, Review, DashboardData)
-type NextAppointment = {
-  time: string;
-  client: string;
-  hoursUntil: number;
-};
-
-type Stats = {
-  todayCount: number;
-  nextAppointment?: NextAppointment | null;
-  weekEarningsCents: number;
-  ratingAverage: number;
-  reviewCount: number;
-};
-
-type Appointment = {
-  id: string | number;
-  time: string;
-  hoursUntil: number;
-  status: string;
-  client: { id?: string; name: string; image?: string | null };
-  service: string;
-  priceCents: number;
-};
-
-type Review = {
-  id: string | number;
-  client: string;
-  rating: number;
-  date: string;
-  text: string;
-  hasResponse?: boolean;
-};
-
-type DashboardData = {
-  stats: Stats;
-  todayAppointments: Appointment[];
-  recentReviews: Review[];
-};
-
-function formatEuro(cents: number) {
-  const euros = (cents || 0) / 100;
-  try {
-    if (typeof Intl !== 'undefined' && Intl.NumberFormat) {
-      return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(euros);
-    }
-  } catch { }
-  // Fallback formatting
-  const value = Math.round((euros + Number.EPSILON));
-  return `€${value.toString()}`;
-}
-
-function safeLocaleDateString(date: Date, locale: string, options?: Intl.DateTimeFormatOptions) {
-  try {
-    return date.toLocaleDateString(locale, options);
-  } catch {
-    // Fallback: DD.MM.YYYY
-    const d = date.getDate().toString().padStart(2, '0');
-    const m = (date.getMonth() + 1).toString().padStart(2, '0');
-    const y = date.getFullYear();
-    return `${d}.${m}.${y}`;
-  }
-}
-
-function statusToBadge(status: string) {
-  switch ((status || '').toUpperCase()) {
-    case 'CONFIRMED':
-      return { label: 'Bestätigt', color: colors.green600 };
-    case 'PENDING':
-      return { label: 'Ausstehend', color: colors.amber600 };
-    case 'IN_PROGRESS':
-      return { label: 'In Arbeit', color: colors.blue600 };
-    case 'COMPLETED':
-      return { label: 'Abgeschlossen', color: colors.gray600 };
-    case 'CANCELLED':
-      return { label: 'Storniert', color: colors.error };
-    default:
-      return { label: 'Status', color: colors.gray300 };
-  }
-}
-
+import { colors } from '@/theme/tokens';
+import { styles } from './ProviderDashboard.styles';
+import { useProviderDashboard, safeLocaleDateString } from './hooks/useProviderDashboard';
+import { StatsGrid } from './components/StatsGrid';
+import { TodaySchedule } from './components/TodaySchedule';
+import { QuickActions } from './components/QuickActions';
+import { RecentReviews } from './components/RecentReviews';
 
 export function ProviderDashboard() {
-  const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void };
-  const [isAvailable, setIsAvailable] = useState(true);
-  const [profile, setProfile] = useState<{ id?: string; name?: string; avatarUrl?: string | null } | null>(null);
-  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    profile,
+    dashboard,
+    loading,
+    refreshing,
+    error,
+    isAvailable,
+    onRefresh,
+    handleToggleOnline,
+    todayYmd,
+    navigation
+  } = useProviderDashboard();
 
-  const fetchDashboardData = useCallback(async (isRefresh = false) => {
-    if (!isRefresh) setLoading(true);
-    let mounted = true;
-
-    // 1. Load Profile (fail gracefully)
-    try {
-      const p = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.ME);
-      if (mounted && p?.data) setProfile(p.data);
-    } catch (e) {
-      logger.warn('Failed to load provider profile', e);
-    }
-
-    // 2. Load Dashboard Data
-    try {
-      const d = await http.get(API_CONFIG.ENDPOINTS.PROVIDERS.DASHBOARD);
-      if (!mounted) return;
-
-      const payload = d?.data;
-      if (payload?.success && payload?.data) {
-        setDashboard(payload.data);
-      } else if (payload?.stats) {
-        setDashboard(payload);
-      }
-
-      // 3. Supplemental Check for Today's Appointments if needed
-      if (!(payload?.data?.todayAppointments?.length > 0)) {
-        const todayItems = await providerAppointmentsApi.getTodayAppointments();
-        if (mounted && todayItems.length > 0) {
-          setDashboard(current => ({
-            ...current!,
-            todayAppointments: todayItems
-          }));
-        }
-      }
-      setError(null);
-
-    } catch (err) {
-      // Fallback to analytics if dashboard fails
-      try {
-        const pid = (profile?.id as string | undefined) || undefined;
-        const today = new Date();
-        const start = new Date(today.getFullYear(), today.getMonth(), 1);
-        const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        const toYMD = (dt: Date) => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
-        const a = await http.get('/provider/analytics/overview', { params: { provider_id: pid, start_date: toYMD(start), end_date: toYMD(end) } });
-        if (mounted) setDashboard(a?.data || null);
-      } catch (e) {
-        const msg = getErrorMessage(err);
-        if (mounted) setError(msg);
-        logger.error('Failed to load dashboard:', err);
-      }
-    } finally {
-      if (mounted) {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    }
-    return () => { mounted = false; };
-  }, [profile?.id]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchDashboardData();
-    }, [fetchDashboardData])
-  );
-
-  React.useEffect(() => {
-    const off = on('appointment_updated', () => {
-      fetchDashboardData(true);
-    });
-    return () => off();
-  }, [fetchDashboardData]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchDashboardData(true);
-  }, [fetchDashboardData]);
-
-  // Gate non-approved/non-provider users away from provider dashboard
-  const { status, checked } = useProviderGate();
-
-  // existing useEffect for gate
-  React.useEffect(() => {
-    if (!checked) return;
-    try {
-      if (status === 'pending') {
-        navigation.navigate('ProviderPendingApproval');
-      } else if (status === 'not_provider') {
-        navigation.navigate('ProviderWelcome');
-      }
-    } catch { }
-  }, [status, checked]);
-
-  const todayLabel = useMemo(() => safeLocaleDateString(new Date(), 'de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }), []);
-
-  const toYMD = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-  const todayYmd = useMemo(() => toYMD(new Date()), []);
-
-  const todayAppointments: Appointment[] = (dashboard?.todayAppointments ?? []) as Appointment[];
-  const recentReviews: Review[] = (dashboard?.recentReviews ?? []) as Review[];
-  const quickActions: { label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { label: 'Blockierte Zeit', icon: 'close-outline' },
-    { label: 'Termin erstellen', icon: 'add-outline' },
-    { label: 'Dienste bearbeiten', icon: 'create-outline' },
-    { label: 'Verfügbarkeit', icon: 'time-outline' },
-  ];
+  const todayLabel = useMemo(() =>
+    safeLocaleDateString(new Date(), 'de-DE', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    }),
+    []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -248,10 +67,7 @@ export function ProviderDashboard() {
               <View style={styles.headerActions}>
                 <Pressable
                   style={styles.headerActionButton}
-                  onPress={() => {
-                    // Navigate to the global notifications screen (registered in RootStack)
-                    navigation.navigate('ProviderNotificationsScreen');
-                  }}
+                  onPress={() => navigation.navigate('ProviderNotificationsScreen')}
                 >
                   <Ionicons name="notifications-outline" size={22} color={colors.gray700} />
                 </Pressable>
@@ -277,278 +93,29 @@ export function ProviderDashboard() {
                 </View>
                 <Switch
                   value={isAvailable}
-                  onValueChange={async (v: boolean) => {
-                    setIsAvailable(v);
-                    try {
-                      const r = await (await import('@/services/providers')).providersApi.setOnlineStatus(v);
-                      if (r?.isOnline !== undefined) setIsAvailable(!!r.isOnline);
-                    } catch { }
-                  }}
+                  onValueChange={handleToggleOnline}
                 />
               </View>
             </Card>
           </View>
 
-          {/* Stats Grid */}
           <View style={styles.statsContainer}>
-            <View style={styles.statsGrid}>
-              <Card
-                style={styles.statCard}
-                onPress={() => rootNavigationRef.current?.navigate('Kalender', { screen: 'ProviderCalendar', params: { targetDate: todayYmd, viewMode: 'day' } })}
-              >
-                <View style={styles.statHeader}>
-                  <Ionicons name="calendar-outline" size={16} color={colors.primary} style={styles.statIcon} />
-                  <Text style={styles.statLabel}>Termine heute</Text>
-                </View>
-                <View style={styles.rowEndBetween}>
-                  <View>
-                    <Text style={styles.statNumber}>
-                      {dashboard?.stats?.todayCount ?? 0}
-                    </Text>
-                    <View style={styles.changeRow}>
-                      <Ionicons name="arrow-up-outline" size={12} color={colors.green600} />
-                      <Text style={styles.positiveChangeText}>+2 vs. gestern</Text>
-                    </View>
-                  </View>
-                </View>
-              </Card>
-
-              <Card
-                style={styles.statCard}
-                onPress={() => rootNavigationRef.current?.navigate('Kalender', { screen: 'ProviderCalendar', params: { targetDate: todayYmd, viewMode: 'day' } })}
-              >
-                <View style={styles.statHeader}>
-                  <Ionicons name="time-outline" size={16} color={colors.blue600} style={styles.statIcon} />
-                  <Text style={styles.statLabel}>Nächster Termin</Text>
-                </View>
-                <View>
-                  {dashboard?.stats?.nextAppointment ? (
-                    <>
-                      <Text style={styles.nextTimeText}>{dashboard.stats.nextAppointment.time}</Text>
-                      <Text style={styles.smallMutedText}>mit {dashboard.stats.nextAppointment.client}</Text>
-                      <Text style={styles.timeUntilText}>
-                        In {Math.max(0, Math.floor(dashboard.stats.nextAppointment.hoursUntil))} Std. {Math.max(0, Math.round((dashboard.stats.nextAppointment.hoursUntil % 1) * 60))} Min.
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={styles.smallMutedText}>Keine Termine heute</Text>
-                  )}
-                </View>
-              </Card>
-
-              <Card
-                style={styles.statCard}
-                onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderAnalyticsScreen' })}
-              >
-                <View style={styles.statHeader}>
-                  <Ionicons name="cash-outline" size={16} color={colors.green600} style={styles.statIcon} />
-                  <Text style={styles.statLabel}>Diese Woche</Text>
-                </View>
-                <View>
-                  <Text style={[styles.statNumber, styles.mb2, { color: colors.green600 }]}>{formatEuro(dashboard?.stats?.weekEarningsCents || 0)}</Text>
-                  <Text style={styles.nettoText}>(netto)</Text>
-                  <View style={styles.changeRow}>
-                    <Ionicons name="arrow-up-outline" size={12} color={colors.green600} />
-                    <Text style={styles.positiveChangeText}>+18%</Text>
-                  </View>
-                </View>
-              </Card>
-
-              <Card
-                style={styles.statCard}
-                onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen' })}
-              >
-                <View style={styles.statHeader}>
-                  <Ionicons name="star-outline" size={16} color={colors.amber600} style={styles.statIcon} />
-                  <Text style={styles.statLabel}>Bewertung</Text>
-                </View>
-                <View>
-                  <Text style={{ fontSize: 22, marginBottom: 2 }}>{(dashboard?.stats?.ratingAverage ?? 0).toFixed(1)} ★</Text>
-                  <Text style={{ fontSize: 12, color: colors.gray600 }}>{dashboard?.stats?.reviewCount ?? 0} Bewertungen</Text>
-                  <Text style={{ fontSize: 12, color: colors.gray500, marginTop: 2 }}>→ Stabil</Text>
-                </View>
-              </Card>
-            </View>
+            {/* Stats Grid */}
+            <StatsGrid stats={dashboard?.stats} todayYmd={todayYmd} />
 
             {/* Today's Schedule */}
-            <View style={styles.mbMd}>
-              <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Heutiger Zeitplan</Text>
-                <Pressable onPress={() => rootNavigationRef.current?.navigate('Kalender', { screen: 'ProviderCalendar', params: { targetDate: todayYmd, viewMode: 'day' } })}>
-                  <Text style={styles.seeAllText}>Alle anzeigen</Text>
-                </Pressable>
-              </View>
-
-              <View>
-                {todayAppointments.map((appointment: Appointment) => (
-                  <Card key={appointment.id} style={styles.cardMb12}>
-                    <View style={styles.row}>
-                      <View style={styles.indicatorContainer}>
-                        <View style={[styles.appointmentIndicator, { backgroundColor: statusToBadge(appointment.status).color }]} />
-                      </View>
-
-                      <View style={styles.flex1}>
-                        <View style={styles.appointmentHeaderRow}>
-                          <View>
-                            <Text style={styles.smallMutedText}>{appointment.time}</Text>
-                            {appointment.hoursUntil <= 3 && (
-                              <Text style={styles.timeUntilText}>
-                                In {Math.max(0, Math.floor(appointment.hoursUntil))} Std. {Math.max(0, Math.round((appointment.hoursUntil % 1) * 60))} Min.
-                              </Text>
-                            )}
-                          </View>
-                          {(() => {
-                            const b = statusToBadge(appointment.status);
-                            return (
-                              <Badge style={{ backgroundColor: b.color, borderColor: b.color }}>
-                                {b.label}
-                              </Badge>
-                            );
-                          })()}
-                        </View>
-
-                        <View style={styles.appointmentRow}>
-                          <Avatar size={40}>
-                            {appointment.client.image ? (
-                              <AvatarImage uri={appointment.client.image} />
-                            ) : (
-                              <AvatarFallback label={(appointment.client.name || 'K').slice(0, 2).toUpperCase()} />
-                            )}
-                          </Avatar>
-                          <View style={styles.clientInfo}>
-                            <Text style={styles.clientName}>{appointment.client.name}</Text>
-                            <Text style={styles.smallMutedText}>{appointment.service}</Text>
-                          </View>
-                          <Text style={styles.priceText}>{formatEuro(appointment.priceCents)}</Text>
-                        </View>
-
-                        <View style={styles.row}>
-                          <Button
-                            title={appointment.status === 'IN_PROGRESS' ? "Abschließen" : "Starten"}
-                            style={[styles.actionButton, { backgroundColor: appointment.status === 'IN_PROGRESS' ? colors.gray600 : colors.green600, flex: 2 }]}
-                            onPress={() => {
-                              const isStarted = appointment.status === 'IN_PROGRESS';
-                              const newStatus = isStarted ? 'COMPLETED' : 'IN_PROGRESS';
-                              const actionLabel = isStarted ? 'abschließen' : 'starten';
-                              Alert.alert(`Termin ${actionLabel}`, `Möchtest du diesen Termin jetzt ${actionLabel}?`, [
-                                { text: 'Abbrechen', style: 'cancel' },
-                                {
-                                  text: isStarted ? 'Abschließen' : 'Starten',
-                                  onPress: async () => {
-                                    try {
-                                      await http.patch(`/appointments/${appointment.id}/status`, { status: newStatus });
-                                      Alert.alert('Erfolg', `Termin wurde aktualisiert. Bitte aktualisieren.`);
-                                      fetchDashboardData(true); // Auto refresh on status change
-                                    } catch (e) {
-                                      Alert.alert('Fehler', 'Konnte Status nicht aktualisieren.');
-                                    }
-                                  }
-                                }
-                              ]);
-                            }}
-                          />
-                          <Button
-                            title="Nachricht"
-                            variant="ghost"
-                            style={styles.ghostButtonWide}
-                            onPress={() => {
-                              navigation.navigate('Mehr', {
-                                screen: 'ChatScreen',
-                                params: {
-                                  userId: typeof appointment.client.id === 'string' ? appointment.client.id : undefined
-                                }
-                              });
-                            }}
-                          />
-                          <Pressable
-                            style={styles.iconButton}
-                            onPress={() => { /* Open more options */ }}
-                          >
-                            <Ionicons name="ellipsis-vertical" size={20} color={colors.gray600} />
-                          </Pressable>
-                        </View>
-                      </View>
-                    </View>
-                  </Card>
-                ))}
-
-                <View style={styles.dashedRow}>
-                  <View style={styles.dashedDivider} />
-                  <Text style={styles.smallGrayText}>15:00 - 16:00 Frei</Text>
-                </View>
-              </View>
-            </View>
+            <TodaySchedule
+              appointments={dashboard?.todayAppointments ?? []}
+              todayYmd={todayYmd}
+              onRefresh={() => onRefresh()}
+              navigation={navigation}
+            />
 
             {/* Quick Actions */}
-            <View style={styles.mbMd}>
-              <Text style={[styles.sectionTitle, styles.mbSm]}>Schnellaktionen</Text>
-              <View style={styles.quickActionsRow}>
-                {quickActions.map((qa) => (
-                  <Card key={qa.label} style={styles.quickActionCard}>
-                    <Pressable
-                      onPress={() => {
-                        switch (qa.label) {
-                          case 'Blockierte Zeit':
-                            rootNavigationRef.current?.navigate('Kalender', { screen: 'BlockTimeScreen' });
-                            break;
-                          case 'Termin erstellen':
-                            rootNavigationRef.current?.navigate('Kalender', { screen: 'CreateAppointmentScreen' });
-                            break;
-                          case 'Dienste bearbeiten':
-                            rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderServicesScreen' });
-                            break;
-                          case 'Verfügbarkeit':
-                            rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderAvailabilityScreen' });
-                            break;
-                          default:
-                            break;
-                        }
-                      }}
-                      style={styles.centered}
-                    >
-                      <Ionicons name={qa.icon} size={24} color={colors.gray600} />
-                      <Text style={styles.quickActionLabel}>{qa.label}</Text>
-                    </Pressable>
-                  </Card>
-                ))}
-              </View>
-            </View>
+            <QuickActions />
 
             {/* Recent Reviews */}
-            <View>
-              <View style={styles.sectionHeaderRow}>
-                <Text style={styles.sectionTitle}>Neueste Bewertungen</Text>
-                <Pressable onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen' })}>
-                  <Text style={styles.seeAllText}>Alle anzeigen</Text>
-                </Pressable>
-              </View>
-
-              <View>
-                {recentReviews.map((review: Review) => (
-                  <Card key={review.id} style={styles.cardMb12}>
-                    <View style={styles.reviewHeaderRow}>
-                      <View>
-                        <Text style={styles.reviewClientName}>{review.client}</Text>
-                        <View style={styles.reviewStarsRow}>
-                          {Array.from({ length: review.rating }).map((_, i) => (
-                            <Ionicons key={i} name="star" size={12} color={colors.amber600} style={styles.starIcon} />
-                          ))}
-                        </View>
-                      </View>
-                      <Text style={styles.smallGrayText}>{safeLocaleDateString(new Date(review.date), 'de-DE')}</Text>
-                    </View>
-                    <Text style={styles.reviewText}>{review.text}</Text>
-                    {!review.hasResponse && (
-                      <Button
-                        title="Antworten"
-                        variant="ghost"
-                        onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen', params: { initialFilter: 'unresponded', focusReviewId: review.id } })}
-                      />
-                    )}
-                  </Card>
-                ))}
-              </View>
-            </View>
+            <RecentReviews reviews={dashboard?.recentReviews ?? []} />
           </View>
 
           {!!error && (
@@ -563,258 +130,3 @@ export function ProviderDashboard() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  appointmentHeaderRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  appointmentRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  cardMb12: {
-    marginBottom: 12,
-  },
-  actionButton: {
-    flex: 1,
-    marginRight: spacing.sm,
-  },
-  iconButton: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 8,
-  },
-  appointmentIndicator: {
-    backgroundColor: colors.green600,
-    borderRadius: 1,
-    flex: 1,
-    width: 2,
-  },
-  centered: {
-    alignItems: 'center',
-  },
-  flex1: {
-    flex: 1,
-  },
-  availabilityDescription: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
-  },
-  availabilityText: {
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-  },
-  clientInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  clientName: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  changeRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginTop: spacing.xs,
-  },
-  dashedDivider: {
-    borderColor: colors.gray300,
-    borderLeftWidth: 2,
-    borderStyle: 'dashed',
-    height: 48,
-    marginRight: 8,
-  },
-  dashedRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    paddingVertical: 8,
-  },
-  dateText: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
-  },
-  errorText: {
-    color: colors.error,
-  },
-  errorContainerPadding: {
-    paddingHorizontal: 16,
-  },
-  header: {
-    backgroundColor: colors.white,
-    borderBottomColor: colors.overlay,
-    borderBottomWidth: 1,
-    paddingBottom: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.md,
-  },
-  headerActionButton: {
-    padding: spacing.sm,
-  },
-  headerActions: {
-    flexDirection: 'row',
-  },
-  headerTop: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  indicatorContainer: {
-    alignItems: 'center',
-    paddingTop: 4,
-    width: 8,
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  mb2: {
-    marginBottom: 2,
-  },
-  mbMd: {
-    marginBottom: spacing.md,
-  },
-  mbSm: {
-    marginBottom: spacing.sm,
-  },
-  nettoText: {
-    color: colors.gray500,
-    fontSize: 10,
-  },
-  nextTimeText: {
-    fontSize: 22,
-    marginBottom: 2,
-  },
-  positiveChangeText: {
-    color: colors.green600,
-    fontSize: 11,
-    marginLeft: spacing.xs,
-  },
-  priceText: {
-    color: colors.primary,
-    fontWeight: '700',
-  },
-  ghostButtonWide: {
-    flex: 1,
-  },
-  quickActionCard: {
-    paddingVertical: 16,
-    width: '48%',
-  },
-  quickActionLabel: {
-    color: colors.gray700,
-    fontSize: 12,
-    marginTop: 8,
-  },
-  quickActionsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-  },
-  safeArea: {
-    backgroundColor: colors.gray50,
-    flex: 1,
-  },
-  row: {
-    flexDirection: 'row',
-  },
-  rowBetweenCenter: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  rowEndBetween: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    fontSize: typography.body.fontSize,
-    fontWeight: '700',
-  },
-  sectionHeaderRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  seeAllText: {
-    color: colors.primary,
-    fontSize: typography.small.fontSize,
-  },
-  smallGrayText: {
-    color: colors.gray500,
-    fontSize: 12,
-  },
-  smallMutedText: {
-    color: colors.gray600,
-    fontSize: 12,
-  },
-  starIcon: {
-    marginRight: 2,
-  },
-  statCard: {
-    width: '48%',
-  },
-  statHeader: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    marginBottom: 6,
-  },
-  statIcon: {
-    marginRight: spacing.xs,
-  },
-  statLabel: {
-    color: colors.gray600,
-    fontSize: typography.small.fontSize,
-  },
-  statNumber: {
-    color: colors.primary,
-    fontSize: typography.h2.fontSize,
-    fontWeight: '700',
-    marginBottom: spacing.xs,
-  },
-  statsContainer: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    marginBottom: spacing.sm,
-  },
-  reviewClientName: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  reviewHeaderRow: {
-    alignItems: 'flex-start',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  reviewStarsRow: {
-    flexDirection: 'row',
-    marginTop: 4,
-  },
-  reviewText: {
-    color: colors.gray700,
-    fontSize: 14,
-    marginBottom: 8,
-  },
-  timeUntilText: {
-    color: colors.blue900,
-    fontSize: typography.small.fontSize,
-    marginTop: 2,
-  },
-  welcomeText: {
-    fontSize: typography.h3.fontSize,
-    fontWeight: typography.h3.fontWeight,
-  },
-});
