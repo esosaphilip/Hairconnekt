@@ -64,6 +64,10 @@ export class UsersService {
     return count > 0;
   }
 
+  async findOne(id: string) {
+    return this.userRepo.findById(id);
+  }
+
   async getMe(userId: string) {
     const user = await this.userRepo.findById(userId);
     if (!user) throw new NotFoundException('User not found');

@@ -61,32 +61,24 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async getPreferences(userId: string) {
-    const user = await this.usersService.findById(userId); // Assuming findOne or similar exists that returns entity
-    if (!user) return {}; // Warning: check proper return type
+    const user = await this.usersService.findOne(userId);
+    if (!user) return {};
     return user.notificationPreferences || { push: true, email: true, sms: true };
   }
 
   async updatePreferences(userId: string, dto: any) {
-    // Map DTO { pushEnabled, emailEnabled, smsEnabled } to { push, email, sms } if needed
-    // The controller DTO uses Enabled suffix, User entity keys are simple.
-    // Let's assume User entity has structure { push: boolean, email: boolean, sms: boolean }
     const prefs = {
       push: dto.pushEnabled,
       email: dto.emailEnabled,
       sms: dto.smsEnabled
     };
-    // Remove undefined
-    Object.keys(prefs).forEach(key => prefs[key] === undefined && delete prefs[key]);
 
-    // We need to merge with existing or just save. UsersService.update usually handles this.
-    // However, updateMe takes partial user. 
-    // Let's rely on updateMe logic if possible, but UsersService might not expose a direct 'updatePreferences'
-    // I will call a raw update via repo if I could, but I only have service.
-    // I'll assume usersService.update(userId, { notificationPreferences: prefs }) works if I cast it.
+    // Clean undefined values safely
+    const cleanPrefs = Object.fromEntries(
+      Object.entries(prefs).filter(([_, value]) => value !== undefined)
+    );
 
-    // Actually, I'll fetch user, merge, save via service if possible. 
-    // Or just call updateMe which is 'update'.
-    return this.usersService.updateMe(userId, { notificationPreferences: prefs });
+    return this.usersService.updateMe(userId, { notificationPreferences: cleanPrefs });
   }
 
   async listNotifications(userId: string, limit?: number) {
