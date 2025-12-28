@@ -972,8 +972,8 @@ export class ProvidersService {
 
   /** Helper: convert number weekday to canonical short name */
   private numberToWeekday(n: number): string {
-    const names = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-    return names[n] ?? 'mon';
+    const names = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+    return names[n] ?? 'Montag';
   }
 
   /** Helper: normalize HH:mm to HH:mm:ss for Postgres time columns */

@@ -441,20 +441,9 @@ export function BookingFlow() {
       </ScrollView>
 
       {/* Bottom Summary/Fixed Footer */}
-      <View style={styles.footer}>
+      <View style={styles.bottomBar}>
         {selectedServices.length > 0 && (
           <View style={{ marginBottom: SPACING.sm }}>
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Services ({selectedServices.length}):</Text>
-              <Text>€{getTotalPrice() - (mobileService ? 15 : 0)}</Text>
-            </View>
-            {mobileService && (
-              <View style={styles.summaryRow}>
-                <Text style={styles.summaryLabel}>Mobiler Service:</Text>
-                <Text>€15</Text>
-              </View>
-            )}
-            <View style={styles.separator} />
             <View style={styles.summaryRow}>
               <Text style={styles.summaryTotalLabel}>Gesamtpreis:</Text>
               <Text style={styles.summaryTotalValue}>€{getTotalPrice()}</Text>
@@ -466,8 +455,8 @@ export function BookingFlow() {
           title={step === 'details' ? 'Jetzt buchen' : 'Weiter'}
           onPress={handleNext}
           disabled={!canProceed}
-          style={{ backgroundColor: COLORS.primary }}
-          icon="chevron-right" // Assuming Button component supports a trailing icon
+          style={{ backgroundColor: COLORS.primary, width: '100%' }}
+          icon="chevron-right"
         />
       </View>
     </SafeAreaView>
@@ -801,5 +790,12 @@ const styles = StyleSheet.create({
   totalPriceValue: {
     color: colors.primary,
     fontWeight: 'bold',
+  },
+  bottomBar: {
+    padding: 16,
+    paddingBottom: 34, // Safe area padding
+    borderTopWidth: 1,
+    borderTopColor: colors.gray200,
+    backgroundColor: '#fff',
   },
 });

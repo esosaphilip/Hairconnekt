@@ -112,7 +112,14 @@ export default function ProviderProfile() {
 
           {/* Centered Avatar */}
           <View style={styles.avatarWrapper}>
-            <Image source={{ uri: provider.profileImage || provider.imageUrl }} style={styles.avatarImage} />
+            <Image
+              source={
+                (provider.profileImage || provider.imageUrl)
+                  ? { uri: provider.profileImage || provider.imageUrl }
+                  : { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.name)}&background=random` }
+              }
+              style={styles.avatarImage}
+            />
             {provider.isVerified && (
               <View style={styles.verifiedBadge}>
                 <Ionicons name="checkmark" size={12} color="#fff" />
@@ -687,6 +694,7 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 8,
     marginBottom: 8,
+    backgroundColor: '#f3f4f6', // Fallback for loading/missing images
   },
   ratingBig: {
     fontSize: 32,
