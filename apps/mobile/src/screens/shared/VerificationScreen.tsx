@@ -62,7 +62,8 @@ export function VerificationScreen() {
       await setUser(nextUser);
       Alert.alert('Erfolg', 'E-Mail erfolgreich verifiziert');
       setEmailCode('');
-    } catch (e) {
+    } catch (e: any) {
+      console.log('[VerificationScreen] Email Verification Error:', JSON.stringify(e?.response?.data || e.message || e, null, 2));
       Alert.alert('Fehler', getErrorMessage(e, 'Verifizierung fehlgeschlagen'));
     } finally {
       setLoadingEmail(false);
@@ -81,7 +82,8 @@ export function VerificationScreen() {
       await setUser(nextUser);
       Alert.alert('Erfolg', 'Telefonnummer erfolgreich verifiziert');
       setPhoneCode('');
-    } catch (e) {
+    } catch (e: any) {
+      console.log('[VerificationScreen] Phone Verification Error:', JSON.stringify(e?.response?.data || e.message || e, null, 2));
       Alert.alert('Fehler', getErrorMessage(e, 'Verifizierung fehlgeschlagen'));
     } finally {
       setLoadingPhone(false);

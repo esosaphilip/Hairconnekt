@@ -196,9 +196,9 @@ export function HomeScreen() {
           </View>
           <FlatList
             data={popularCategories}
-            keyExtractor={(item, index) => item.id || `style-${index}`}
+            keyExtractor={(item, index) => (item.id ? `style-${item.id}` : `style-${index}`)}
             renderItem={({ item }) => (
-              <View key={item.id}>
+              <View key={item.id ? `style-${item.id}` : undefined}>
                 <PopularStyleCard item={item} />
               </View>
             )}
@@ -222,7 +222,7 @@ export function HomeScreen() {
           )}
           <View style={styles.nearbyList}>
             {(nearby || []).map((braider, index) => (
-              <View key={`${braider.id}-${index}`}>
+              <View key={`nearby-${braider.id}-${index}`}>
                 <NearbyBraiderCard
                   braider={braider}
                   isFavorite={favorites.includes(braider.id)}

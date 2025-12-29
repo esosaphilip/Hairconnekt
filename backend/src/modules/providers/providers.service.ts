@@ -599,7 +599,8 @@ export class ProvidersService {
   async getNearbyProviders(params: { lat?: number; lon?: number; radiusKm?: number; limit?: number }) {
     const lat = typeof params.lat === 'number' ? params.lat : NaN;
     const lon = typeof params.lon === 'number' ? params.lon : NaN;
-    const radiusKm = typeof params.radiusKm === 'number' ? params.radiusKm : 10;
+    // Default to 50km if radiusKm is missing or 0 to prevent "only self" visibility
+    let radiusKm = typeof params.radiusKm === 'number' && params.radiusKm > 0 ? params.radiusKm : 50;
     const limit = typeof params.limit === 'number' ? params.limit : 20;
 
     if (!isFinite(lat) || !isFinite(lon)) {

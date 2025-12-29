@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '@/components/Button';
@@ -27,16 +27,24 @@ const durationOptions = [
   { value: 300, label: '5 Std.' },
   { value: 360, label: '6 Std.' },
 ];
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { ProviderMoreStackParamList } from '@/navigation/types';
 
 type RouteParams = NativeStackScreenProps<ProviderMoreStackParamList, 'AddEditServiceScreen'>['route']['params'];
 
+
 export function AddEditServiceScreen() {
   const route = useRoute();
+  const navigation = useNavigation();
   const params = (route?.params as RouteParams) || {};
   const serviceId = (params as any)?.serviceId as string | undefined;
+
+  // Track if we are currently saving to prevent double-save or save-after-submit
+  const isSavingRef = useRef(false);
+  // Track if the form was manually submitted to skip auto-save
+  const wasSubmittedRef = useRef(false);
+
   // Best-effort detection: if running on web and URL contains 'edit', treat as editing
   const isEditing = useMemo(() => {
     if (Platform.OS === 'web') {
@@ -45,7 +53,7 @@ export function AddEditServiceScreen() {
       } catch { }
     }
     return !!serviceId;
-  }, []);
+  }, [serviceId]);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -59,6 +67,12 @@ export function AddEditServiceScreen() {
     requiresConsultation: false,
   });
 
+  // Keep a ref to formData for the cleanup effect
+  const formDataRef = useRef(formData);
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -71,6 +85,9 @@ export function AddEditServiceScreen() {
     // Placeholder navigation
     if (Platform.OS === 'web') {
       try { window.history.back(); } catch { }
+    }
+    if (navigation.canGoBack()) {
+      navigation.goBack();
     }
   };
 
@@ -141,6 +158,55 @@ export function AddEditServiceScreen() {
     fetchCategories();
   }, []);
 
+  // AUTO-SAVE LOGIC
+  useEffect(() => {
+    return () => {
+      // Cleanup: check if we should auto-save
+      // Conditions:
+      // 1. Not already submitting (wasSubmittedRef)
+      // 2. Not currently saving (isSavingRef)
+      // 3. Has minimal valid data (name and category)
+      const currentData = formDataRef.current;
+
+      if (wasSubmittedRef.current || isSavingRef.current) return;
+
+      // Validation for auto-save (can be looser than submit)
+      if (!currentData.name.trim() || !currentData.category) {
+        console.log('[AutoSave] Skipping auto-save: missing name or category');
+        return;
+      }
+
+      console.log('[AutoSave] Triggering auto-save on unmount...');
+      const saveAsync = async () => {
+        try {
+          const body: any = {
+            name: currentData.name,
+            categoryId: currentData.category,
+            durationMinutes: Number(currentData.duration || 0),
+            priceCents: Math.round(Number(currentData.price || 0) * 100),
+            description: currentData.description || undefined,
+            isActive: !!currentData.isActive,
+            allowOnlineBooking: !!currentData.allowOnlineBooking,
+            requiresConsultation: !!currentData.requiresConsultation,
+          };
+
+          if (isEditing && serviceId) {
+            await http.patch(`/providers/me/services/${serviceId}`, body);
+            console.log('[AutoSave] Update successful');
+          } else {
+            await http.post('/providers/me/services', body);
+            console.log('[AutoSave] Creation successful');
+          }
+        } catch (err) {
+          console.warn('[AutoSave] Failed', err);
+        }
+      };
+
+      // Fire and forget (cannot await in cleanup)
+      saveAsync();
+    };
+  }, [isEditing, serviceId]); // Dependencies define when the effect is re-created, but refs hold current values
+
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
       setMessage('Bitte einen Service-Namen eingeben');
@@ -153,6 +219,8 @@ export function AddEditServiceScreen() {
 
     setLoading(true);
     setError(null);
+    wasSubmittedRef.current = true; // Mark as submitted to prevent auto-save from running
+
 
     const body: any = {
       name: formData.name,
