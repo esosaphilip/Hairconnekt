@@ -1,6 +1,9 @@
 import { Injectable, OnModuleInit, Logger, Inject, forwardRef, NotFoundException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import * as path from 'path';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -10,6 +13,8 @@ export class NotificationsService implements OnModuleInit {
   constructor(
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
   ) { }
 
   onModuleInit() {
@@ -61,13 +66,14 @@ export class NotificationsService implements OnModuleInit {
   }
 
   async getPreferences(userId: string) {
-    const user = await this.usersService.findOne(userId);
+    // ✅ NEW (Fixes the rollback): Use explicit findOne with where clause on repo
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
     return user.notificationPreferences || { push: true, email: true, sms: true };
   }
 
   async updatePreferences(userId: string, dto: any) {
-    const user = await this.usersService.findOne(userId);
+    const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('User not found');
 
     const prefsToUpdate: Partial<{ push: boolean; email: boolean; sms: boolean }> = {};
