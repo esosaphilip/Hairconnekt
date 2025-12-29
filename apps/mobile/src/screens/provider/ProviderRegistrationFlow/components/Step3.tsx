@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Checkbox } from '../../../components/checkbox';
-import { Slider } from '../../../components/Slider';
+import { Checkbox } from '../../../../components/checkbox';
+import { Slider } from '../../../../components/slider';
 import { FormData } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
 
