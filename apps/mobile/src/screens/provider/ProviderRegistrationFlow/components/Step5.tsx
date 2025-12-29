@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Card from '../../../components/Card';
-import Icon from '../../../components/Icon';
-import { Checkbox } from '../../../components/checkbox';
+import Card from '../../../../components/Card';
+import Icon from '../../../../components/Icon';
+import { Checkbox } from '../../../../components/checkbox';
 import { FormData, Step } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
 import { colors } from '../../../theme/tokens';

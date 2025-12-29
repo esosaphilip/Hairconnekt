@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-import { Input } from '../../../components/input';
-import { Checkbox } from '../../../components/checkbox';
-import { Picker } from '../../../components/picker';
-import { Slider } from '../../../components/Slider';
+import { Input } from '../../../../components/Input';
+import { Checkbox } from '../../../../components/checkbox';
+import { Picker } from '../../../../components/Picker';
+import { Slider } from '../../../../components/slider';
 import { FormData } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
 

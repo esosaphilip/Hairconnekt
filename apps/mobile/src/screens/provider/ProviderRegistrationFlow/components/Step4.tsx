@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Card from '../../../components/Card';
-import Icon from '../../../components/Icon';
-import Button from '../../../components/Button';
+import Card from '../../../../components/Card';
+import Icon from '../../../../components/Icon';
+import Button from '../../../../components/Button';
 import { FormData } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
 import { colors } from '../../../theme/tokens';

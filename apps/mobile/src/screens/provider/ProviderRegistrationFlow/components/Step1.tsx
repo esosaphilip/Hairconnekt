@@ -1,8 +1,8 @@
 import React from 'react';
 import { View, Text, Alert } from 'react-native';
-import { Input } from '../../../components/input';
-import { Checkbox } from '../../../components/checkbox';
-import { Progress } from '../../../components/progress';
+import { Input } from '../../../../components/Input';
+import { Checkbox } from '../../../../components/checkbox';
+import { Progress } from '../../../../components/progress';
 import { FormData } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
 
