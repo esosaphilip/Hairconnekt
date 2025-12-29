@@ -5,7 +5,7 @@ import Icon from '../../../../components/Icon';
 import Button from '../../../../components/Button';
 import { FormData } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
-import { colors } from '../../../theme/tokens';
+import { colors } from '../../../../theme/tokens';
 
 interface StepProps {
     formData: FormData;

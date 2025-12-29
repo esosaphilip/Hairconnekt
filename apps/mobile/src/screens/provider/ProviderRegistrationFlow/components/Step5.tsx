@@ -5,7 +5,7 @@ import Icon from '../../../../components/Icon';
 import { Checkbox } from '../../../../components/checkbox';
 import { FormData, Step } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
-import { colors } from '../../../theme/tokens';
+import { colors } from '../../../../theme/tokens';
 
 interface StepProps {
     formData: FormData;
