@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet } from 'react-native';
+import { SafeAreaView, StyleSheet, View } from 'react-native';
 import Text from '@/components/Text';
 import { colors, spacing } from '@/theme/tokens';
 import type { BookingsStackScreenProps } from '@/navigation/types';

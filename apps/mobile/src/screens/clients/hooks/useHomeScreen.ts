@@ -80,8 +80,6 @@ export function useHomeScreen() {
             const items = await clientBraiderApi.getNearby({
                 lat: latitude,
                 lon: longitude,
-                lat: latitude,
-                lon: longitude,
                 radiusKm: 50,
                 limit: 20
             });
