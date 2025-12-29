@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform, Alert, ScrollView, KeyboardAvoidingView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
@@ -21,6 +21,12 @@ export function ServicesManagementScreen() {
   const navigation = useNavigation();
   const { services, loading, error, toggleServiceActive, deleteService, createService, loadServices } = useServices();
   const [refreshing, setRefreshing] = useState(false);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadServices();
+    }, [loadServices])
+  );
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);

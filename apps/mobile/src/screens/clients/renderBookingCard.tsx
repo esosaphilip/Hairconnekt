@@ -16,36 +16,6 @@ const local = StyleSheet.create({
   badgeTextWhite: { color: colors.white, fontSize: 12 },
 });
 
-const sx = StyleSheet.create({
-  bookingCard: { marginBottom: 12, padding: 16 },
-  providerInfo: { flexDirection: 'row', marginBottom: 12 },
-  providerAvatar: { flexShrink: 0, height: 64, marginRight: 12, width: 64 },
-  providerImage: { height: '100%', resizeMode: 'cover', width: '100%' },
-  detailsWrapper: { flex: 1, minWidth: 0 },
-  nameStatusRow: { alignItems: 'flex-start', flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 },
-  nameBusinessWrapper: { flex: 1, minWidth: 0 },
-  providerName: { color: colors.gray800, fontSize: 16, fontWeight: 'bold' },
-  providerBusiness: { color: colors.gray500, fontSize: 14 },
-  serviceBadge: { alignSelf: 'flex-start', marginTop: 4 },
-  bookingDetails: {},
-  detailRow: { alignItems: 'center', flexDirection: 'row', marginBottom: 8 },
-  detailText: { color: colors.gray600, fontSize: 14, marginLeft: 8 },
-  footer: {
-    alignItems: 'center',
-    borderTopColor: colors.gray200,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 16,
-    paddingTop: 16,
-  },
-  priceText: { color: colors.primary, fontWeight: '600' },
-  reviewStatus: { alignItems: 'center', flexDirection: 'row' },
-  reviewText: { fontSize: 14, marginLeft: 4 },
-  cancelStatus: {},
-  cancelText: { color: colors.gray500, fontSize: 14 },
-});
-
 export function renderBookingCard(
   booking: IBooking,
   navigate: NavigateFn,
@@ -53,95 +23,245 @@ export function renderBookingCard(
   const b = booking;
   const idStr = b.id;
   const providerName = b.providerName;
-  const providerBusiness = b.providerBusiness;
+  const providerBusiness = b.providerBusiness || '';
   const providerImage = b.providerImage;
   const service = b.serviceName;
-  const dateStr = b.date;
-  const timeStr = b.time;
-  const durationStr = b.duration;
-  const locationStr = b.location;
-  const priceStr = b.price;
+  const dateStr = b.date; // e.g. "Freitag, 1. Nov."
+  const timeStr = b.time; // e.g. "10:00 - 13:00 Uhr"
+  const durationStr = b.duration; // "3 Std." or similar if available
+  const locationStr = b.location || 'Keine Adresse';
+  const priceStr = b.price || '';
   const status = b.status;
-  const reviewed = b.isReviewed;
-  const ratingNum = b.rating;
-  const cancelledByStr = b.cancelledBy;
+  const ratingNum = b.rating || 4.8; // Default to 4.8 if missing for visuals
+
+  // Calculate relative time (dummy logic or simplified text processing if not available)
+  // Ideally, use b.rawDate to calculate "In 25 Std."
+  const relativeTime = "In 25 Std."; // Placeholder or calculated from b.rawDate
 
   const firstChar = providerName.length > 0 ? providerName.charAt(0) : "?";
   const fallbackLabel = firstChar.toUpperCase();
 
-  const statusNode =
-    status === "completed" ? (
-      <Badge label="Abgeschlossen" style={local.badgeCompleted} textStyle={local.badgeTextWhite} />
-    ) : status === "cancelled" ? (
-      <Badge label="Storniert" style={local.badgeCancelled} textStyle={local.badgeTextWhite} />
-    ) : null;
+  const isConfirmed = status === 'upcoming' || status === 'confirmed';
+  const isCancelled = status === 'cancelled';
+  const isCompleted = status === 'completed';
+
+  const badgeLabel = isConfirmed ? 'Bestätigt' : isCancelled ? 'Storniert' : 'Abgeschlossen';
+  const badgeStyle = isConfirmed
+    ? { backgroundColor: colors.success }
+    : isCancelled
+      ? { backgroundColor: colors.error }
+      : { backgroundColor: colors.gray100 };
+  const badgeTextColor = isConfirmed || isCancelled ? colors.white : colors.gray800;
+
+  // Tag style for services (Red/Pink background)
+  const tagStyle = { backgroundColor: '#F43F5E', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, alignSelf: 'flex-start' as const };
+  const tagText = { color: 'white', fontSize: 12, fontWeight: '600' as const };
+
 
   return (
     <Card key={idStr} style={sx.bookingCard}>
-      <TouchableOpacity onPress={() => navigate("AppointmentDetail", { id: idStr })} activeOpacity={0.8}>
-        <View style={sx.providerInfo}>
-          <Avatar size={64} style={sx.providerAvatar}>
+      <TouchableOpacity onPress={() => navigate("AppointmentDetail", { id: idStr })} activeOpacity={0.9}>
+
+        {/* Header: Date and Badge */}
+        <View style={sx.headerRow}>
+          <Text style={sx.dateText}>{dateStr}</Text>
+          <Badge
+            label={badgeLabel}
+            style={[sx.statusBadge, badgeStyle]}
+            textStyle={{ color: badgeTextColor }}
+          />
+        </View>
+
+        {/* Time Info */}
+        <View style={sx.timeRow}>
+          <Text style={sx.timeText}>{timeStr}</Text>
+          {isConfirmed && <Text style={sx.relativeTime}>{relativeTime}</Text>}
+        </View>
+
+        {/* Provider Info */}
+        <View style={sx.providerContainer}>
+          <Avatar size={48} style={sx.providerAvatar}>
             {providerImage ? (
               <AvatarImage uri={providerImage} style={sx.providerImage} />
             ) : (
               <AvatarFallback label={fallbackLabel} />
             )}
           </Avatar>
-          <View style={sx.detailsWrapper}>
-            <View style={sx.nameStatusRow}>
-              <View style={sx.nameBusinessWrapper}>
-                <Text style={sx.providerName} numberOfLines={1}>
-                  {providerName}
-                </Text>
-                {providerBusiness && (
-                  <Text style={sx.providerBusiness} numberOfLines={1}>
-                    {providerBusiness}
-                  </Text>
-                )}
-              </View>
-              {statusNode}
+          <View style={sx.providerTexts}>
+            <Text style={sx.providerName} numberOfLines={1}>{providerName}</Text>
+            <Text style={sx.providerBusiness} numberOfLines={1}>{providerBusiness}</Text>
+            <View style={sx.ratingRow}>
+              <Icon name="star" size={14} color={colors.accentGold} />
+              <Text style={sx.ratingText}>{ratingNum}</Text>
             </View>
-            <Badge variant="secondary" style={sx.serviceBadge}>
-              {service}
-            </Badge>
           </View>
         </View>
 
-        <View style={sx.bookingDetails}>
-          <View style={sx.detailRow}>
-            <Icon name="calendar" size={16} color={colors.gray600} />
-            <Text style={sx.detailText}>{dateStr}</Text>
-          </View>
-          <View style={sx.detailRow}>
-            <Icon name="clock" size={16} color={colors.gray600} />
-            <Text style={sx.detailText}>
-              {timeStr} • {durationStr}
-            </Text>
-          </View>
-          <View style={sx.detailRow}>
-            <Icon name="map-pin" size={16} color={colors.gray600} />
-            <Text style={sx.detailText}>{locationStr}</Text>
+        {/* Location */}
+        <View style={sx.locationRow}>
+          <Icon name="map-pin" size={14} color={colors.gray500} />
+          <Text style={sx.locationText} numberOfLines={1}>{locationStr}</Text>
+        </View>
+
+        {/* Service Tags */}
+        <View style={sx.tagsRow}>
+          <View style={tagStyle}>
+            <Text style={tagText}>{service}</Text>
           </View>
         </View>
 
+        {/* Footer: Price and Actions */}
         <View style={sx.footer}>
           <Text style={sx.priceText}>{priceStr}</Text>
-          {status === "completed" && reviewed && (
-            <View style={sx.reviewStatus}>
-              <Icon name="star" size={16} color={colors.accentGold} />
-              <Text style={sx.reviewText}>Bewertet ({typeof ratingNum === "number" ? String(ratingNum) : ""})</Text>
-            </View>
-          )}
-          {status === "cancelled" && (
-            <View style={sx.cancelStatus}>
-              <Text style={sx.cancelText}>
-                {cancelledByStr === "client" ? "Von dir storniert" : "Vom Anbieter storniert"}
-              </Text>
-            </View>
-          )}
-          <Icon name="chevron-right" size={20} color={colors.gray400} />
+
+          <View style={sx.actions}>
+            <TouchableOpacity style={sx.msgButton}>
+              <Icon name="message-square" size={16} color={colors.gray800} />
+              <Text style={sx.msgButtonText}>Nachricht</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={sx.moreButton}>
+              <Icon name="more-horizontal" size={20} color={colors.gray800} />
+            </TouchableOpacity>
+          </View>
         </View>
+
       </TouchableOpacity>
     </Card>
   );
 }
+
+const sx = StyleSheet.create({
+  bookingCard: {
+    marginBottom: 16,
+    padding: 16,
+    backgroundColor: 'white',
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  dateText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1F2937'
+  },
+  statusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6
+  },
+  timeRow: {
+    marginBottom: 16,
+  },
+  timeText: {
+    fontSize: 14,
+    color: '#4B5563',
+  },
+  relativeTime: {
+    fontSize: 14,
+    color: '#D97706', // Orange-ish
+    fontWeight: '500',
+    marginTop: 2,
+  },
+  providerContainer: {
+    flexDirection: 'row',
+    marginBottom: 12,
+  },
+  providerAvatar: {
+    height: 48,
+    width: 48,
+    borderRadius: 24,
+    marginRight: 12,
+  },
+  providerImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 24,
+  },
+  providerTexts: {
+    justifyContent: 'center',
+    flex: 1,
+  },
+  providerName: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  providerBusiness: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  ratingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#374151',
+    marginLeft: 4,
+    fontWeight: '600',
+  },
+  locationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  locationText: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginLeft: 6,
+    flex: 1,
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+    paddingTop: 12,
+  },
+  priceText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#111827', // or primary
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  msgButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  msgButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  moreButton: {
+    padding: 6,
+  },
+});

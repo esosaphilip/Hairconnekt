@@ -6,8 +6,9 @@ import Button from '@/components/Button';
 import { spacing, colors, radii, FONT_SIZES } from '@/theme/tokens';
 import { clientBookingApi } from '@/api/clientBooking';
 import { IBooking } from '@/domain/models/booking';
+import { renderBookingCard } from './renderBookingCard';
 import { useNavigation } from '@react-navigation/native';
-import Icon from '@/components/Icon'; // Ensure Icon exists or use Ionicons directly if needed
+import Icon from '@/components/Icon';
 import { on } from '@/services/eventBus';
 
 export function AppointmentsScreen() {
@@ -48,35 +49,19 @@ export function AppointmentsScreen() {
     fetchAppointments();
   };
 
-  const renderItem = ({ item }: { item: IBooking }) => (
-    <Card style={styles.appointmentCard}>
-      <View style={styles.headerRow}>
-        <Text style={styles.providerName}>{item.providerName}</Text>
-        <StatusBadge status={item.status} />
-      </View>
-      <Text style={styles.serviceName}>{item.serviceName}</Text>
-
-      <View style={styles.infoRow}>
-        <Text style={styles.infoText}>📅 {item.date}</Text>
-        <Text style={styles.infoText}>⏰ {item.time}</Text>
-      </View>
-
-      {item.location && (
-        <Text style={styles.location} numberOfLines={1}>📍 {item.location}</Text>
-      )}
-
-      <View style={styles.footerRow}>
-        <Text style={styles.price}>{item.price || 'Preisanfrage'}</Text>
-        {/* Placeholder for actions like Cancel/Reschedule */}
-      </View>
-    </Card>
-  );
+  // Use the updated renderBookingCard
+  const renderItem = ({ item }: { item: IBooking }) => renderBookingCard(item, navigation.navigate);
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.screenTitle}>Meine Termine</Text>
+        <TouchableOpacity>
+          <Icon name="calendar" size={24} color={colors.gray800} />
+        </TouchableOpacity>
       </View>
+
+      {/* Tabs (Anstehend, Abgeschlossen, Abgesagt) could be added here later */}
 
       {loading && !refreshing ? (
         <View style={styles.center}>
@@ -96,7 +81,7 @@ export function AppointmentsScreen() {
                 title="Jetzt buchen"
                 variant="primary"
                 style={{ marginTop: spacing.md }}
-                onPress={() => navigation.navigate('Home' as any)}
+                onPress={() => navigation.navigate('Home')}
               />
             </View>
           }
