@@ -327,6 +327,62 @@ export class PortfolioService {
     return saved;
   }
 
+  // Create entry from existing URL (e.g. Firebase client-side upload)
+  async uploadWithUrl(
+    providerId: string,
+    fields: { imageUrl: string; caption?: string; tags?: any; metadata?: any },
+  ) {
+    const provider = await this.providerRepo.findOne({ where: { id: providerId } });
+    if (!provider) throw new NotFoundException('Provider not found');
+
+    const raw = await this.imagesRepo
+      .createQueryBuilder('img')
+      .where('img.provider.id = :pid', { pid: provider.id })
+      .select('MAX(img.display_order)', 'max')
+      .getRawOne<{ max: string | null }>();
+    const nextDisplayOrder = raw?.max ? Number(raw.max) + 1 : 1;
+
+    let customTags: string[] | undefined;
+    if (Array.isArray(fields.tags)) customTags = fields.tags as string[];
+    else if (typeof fields.tags === 'string') {
+      try {
+        if (fields.tags.trim().startsWith('[')) customTags = JSON.parse(fields.tags);
+        else customTags = fields.tags.split(',').map((s) => s.trim()).filter(Boolean);
+      } catch {
+        customTags = fields.tags.split(',').map((s) => s.trim()).filter(Boolean);
+      }
+    }
+
+    let meta: any = undefined;
+    if (typeof fields.metadata === 'string') {
+      try { meta = JSON.parse(fields.metadata); } catch { meta = undefined; }
+    } else if (fields.metadata && typeof fields.metadata === 'object') {
+      meta = fields.metadata;
+    }
+
+    const image = this.imagesRepo.create({
+      provider,
+      imageUrl: fields.imageUrl,
+      thumbnailUrl: fields.imageUrl,
+      caption: fields.caption ?? null,
+      customTags: customTags?.length ? customTags : null,
+      hairLength: (meta?.hairLength && Object.values(HairLength).includes(meta.hairLength))
+        ? meta.hairLength
+        : null,
+      hairTypeTags: Array.isArray(meta?.hairTypeTags) ? meta.hairTypeTags : null,
+      durationMinutes: typeof meta?.durationMinutes === 'number' ? meta.durationMinutes : null,
+      priceMinCents: typeof meta?.priceMinCents === 'number' ? meta.priceMinCents : null,
+      priceMaxCents: typeof meta?.priceMaxCents === 'number' ? meta.priceMaxCents : null,
+      isPublic: meta?.isPublic === false ? false : true,
+      isFeatured: meta?.isFeatured === true ? true : false,
+      displayOrder: nextDisplayOrder,
+    });
+
+    const saved = await this.imagesRepo.save(image);
+    await this.cache.deleteByPrefix('portfolio:discover');
+    return saved;
+  }
+
   // Update portfolio image. For now, enforce ownership via providerId argument
   async updateImage(
     id: string,

@@ -105,36 +105,34 @@ export const usersApi = {
   },
 
   // POST /users/me/avatar (multipart)
+  // Create Firebase Storage reference and upload
   async uploadAvatar(image: UploadImage): Promise<{ url: string }> {
     try {
       const uri = typeof image === 'string' ? image : image?.uri;
       if (!uri) throw new Error('Image URI is required');
-      const name = typeof image === 'string' ? guessNameFromUri(uri) : image?.name || guessNameFromUri(uri);
-      const type = typeof image === 'string' ? guessMimeFromUri(uri) : image?.type || guessMimeFromUri(uri);
 
-      const form = new FormData();
-      if (Platform.OS === 'web') {
-        // On web, FormData.append requires a Blob or string. Convert URI to Blob.
-        const blob = await uriToBlob(uri, type);
-        form.append('image', blob, name);
-      } else {
-        // React Native (iOS/Android) expects an object with uri/name/type
-        // @ts-expect-error React Native FormData supports file parts objects with uri/name/type
-        form.append('image', { uri, name, type });
-      }
+      // Dynamic import to avoid cycles if needed, or use the helper
+      const { getStorageRef } = require('../config/firebase');
+      const { getAuthBundle } = require('../auth/tokenStorage');
+      const bundle = await getAuthBundle();
+      const userId = bundle?.user?.id;
 
-      const res = await http.post<{ url: string }>(
-        '/users/me/avatar',
-        form,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
-      );
-      const urlRaw = res?.data && (res.data as Record<string, unknown>)['url'];
-      const url = typeof urlRaw === 'string' ? urlRaw : uri;
+      if (!userId) throw new Error('User ID not found');
+
+      const filename = 'photo.jpg'; // overwrite previous
+      const path = `profiles/${userId}/${filename}`;
+      const ref = getStorageRef(path);
+
+      await ref.putFile(uri);
+      const url = await ref.getDownloadURL();
+
+      // Update backend with new URL
+      await usersApi.updateMe({ profilePictureUrl: url });
+
       return { url };
-    } catch {
-      // Fallback: return the provided URI so the app remains usable
-      const uri = typeof image === 'string' ? image : image?.uri || '';
-      return { url: uri };
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      throw error;
     }
   },
 };

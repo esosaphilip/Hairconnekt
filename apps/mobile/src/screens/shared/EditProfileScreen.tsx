@@ -73,7 +73,11 @@ export function EditProfileScreen() {
       }
       Alert.alert('Gespeichert', 'Profil aktualisiert');
     } catch (e: any) {
-      const msg = e?.response?.data?.message || e?.message || 'Speichern fehlgeschlagen';
+      console.error('EditProfile Error:', e);
+      let msg = e?.response?.data?.message || e?.message || 'Speichern fehlgeschlagen';
+      if (e?.response?.status === 403) {
+        msg = 'Keine Berechtigung (403). Bist du als Dienstleister eingeloggt?';
+      }
       setError(String(msg));
       Alert.alert('Fehler', String(msg));
     } finally {

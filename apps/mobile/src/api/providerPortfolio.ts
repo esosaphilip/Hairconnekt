@@ -23,9 +23,7 @@ export const providerPortfolioApi = {
   },
 
   async upload(photos: Array<{ uri: string; name?: string; type?: string }>, metadata: Array<{ serviceCategory?: string; caption?: string; isBeforeAfter?: boolean }> = []) {
-    // We need the provider ID for the backend DTO
-    // Dynamic import to avoid cycles if necessary, or assume it's available. 
-    // Since getAuthBundle is in auth/tokenStorage, we import it.
+    const { getStorageRef } = require('../config/firebase');
     const { getAuthBundle } = require('../auth/tokenStorage');
     const bundle = await getAuthBundle();
     const providerId = bundle?.user?.id;
@@ -37,28 +35,24 @@ export const providerPortfolioApi = {
     for (let i = 0; i < photos.length; i++) {
       const p = photos[i];
       const meta = metadata[i] || {};
+      const timestamp = Date.now();
+      const path = `portfolio/${providerId}/${timestamp}_${i}.jpg`;
+      const ref = getStorageRef(path);
 
-      const form = new FormData();
-      // 'image' matches FileInterceptor('image') in backend controller
-      form.append('image', {
-        uri: p.uri,
-        name: p.name || `photo_${Date.now()}_${i}.jpg`,
-        type: p.type || 'image/jpeg',
-      } as any);
-
-      form.append('providerId', providerId);
-      if (meta.caption) form.append('caption', meta.caption);
+      await ref.putFile(p.uri);
+      const downloadUrl = await ref.getDownloadURL();
 
       // Metadata fields
       const metaObj = {
         serviceCategory: meta.serviceCategory,
         isBeforeAfter: meta.isBeforeAfter,
       };
-      form.append('metadata', JSON.stringify(metaObj));
 
-      // Post to the correct endpoint
-      const res = await http.post('/providers/portfolio', form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // Post URL to backend
+      const res = await http.post('/providers/portfolio/url', {
+        imageUrl: downloadUrl,
+        caption: meta.caption,
+        metadata: JSON.stringify(metaObj)
       });
       results.push(res?.data);
     }

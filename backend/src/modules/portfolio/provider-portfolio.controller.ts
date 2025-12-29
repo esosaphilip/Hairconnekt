@@ -99,6 +99,22 @@ export class ProviderPortfolioController {
     });
   }
 
+  // POST /api/v1/providers/portfolio/url
+  @Post('portfolio/url')
+  @UseGuards(JwtAuthGuard)
+  async uploadUrl(
+    @Body() body: import('./dto/upload-image-url.dto').UploadImageUrlDto,
+    @Req() req: any,
+  ) {
+    const providerId = await this.resolveProviderId(req);
+    return this.portfolioService.uploadWithUrl(providerId, {
+      imageUrl: body.imageUrl,
+      caption: body.caption,
+      tags: body.tags,
+      metadata: body.metadata,
+    });
+  }
+
   // PUT /api/v1/providers/portfolio/:id
   // PUT /api/v1/providers/portfolio/:id
   @Put('portfolio/:id')

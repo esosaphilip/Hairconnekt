@@ -208,9 +208,15 @@ export class AuthService {
     } else {
       user = await this.usersRepo.findOne({ where: { [id.by]: id.value } as any });
     }
-    if (!user) throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      console.warn(`[Login] User not found for identifier: ${id.value} (by ${id.by})`);
+      throw new UnauthorizedException('Invalid credentials');
+    }
     const ok = await this.verifyPassword(dto.password, user.passwordHash);
-    if (!ok) throw new UnauthorizedException('Invalid credentials');
+    if (!ok) {
+      console.warn(`[Login] Password mismatch for user: ${user.email || user.phone}`);
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
     // If legacy PBKDF2 hash verified, upgrade to argon2 with pepper transparently
     if (this.isPBKDF2Hash(user.passwordHash)) {

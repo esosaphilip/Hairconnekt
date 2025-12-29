@@ -217,8 +217,8 @@ export function HomeScreen() {
             <Text style={styles.errorText}>{nearbyError}</Text>
           )}
           <View style={styles.nearbyList}>
-            {(nearby || []).map((braider) => (
-              <View key={braider.id}>
+            {(nearby || []).map((braider, index) => (
+              <View key={`${braider.id}-${index}`}>
                 <NearbyBraiderCard
                   braider={braider}
                   isFavorite={favorites.includes(braider.id)}
