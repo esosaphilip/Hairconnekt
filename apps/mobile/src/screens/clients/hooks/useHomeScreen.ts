@@ -80,8 +80,10 @@ export function useHomeScreen() {
             const items = await clientBraiderApi.getNearby({
                 lat: latitude,
                 lon: longitude,
-                radiusKm: 25,
-                limit: 10
+                lat: latitude,
+                lon: longitude,
+                radiusKm: 50,
+                limit: 20
             });
             setNearby(items);
             initFavStatus(items);

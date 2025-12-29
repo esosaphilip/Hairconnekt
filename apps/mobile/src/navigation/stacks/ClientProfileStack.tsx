@@ -37,8 +37,7 @@ export function ClientProfileStackScreen() {
     return (
         <ClientProfileStack.Navigator>
             <ClientProfileStack.Screen name="Profile" component={ProfileScreen} options={{ title: t('screens.profile.title') }} />
-            <ClientProfileStack.Screen name="Settings" component={PrivacySecurityScreen} options={{ title: t('screens.profile.sections.settings') }} />
-            <ClientProfileStack.Screen name="SettingsScreen" component={SettingsScreen} options={{ title: t('screens.profile.sections.settings') }} />
+            <ClientProfileStack.Screen name="Settings" component={SettingsScreen} options={{ title: t('screens.profile.sections.settings') }} />
             <ClientProfileStack.Screen name="SecuritySettingsScreen" component={SecuritySettingsScreen} options={{ title: t('screens.profile.menu.privacy') || 'Sicherheit' }} />
             <ClientProfileStack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: t('screens.profile.editProfile') }} />
             <ClientProfileStack.Screen name="Notifications" component={NotificationsScreen} options={{ title: t('screens.profile.menu.notifications') }} />

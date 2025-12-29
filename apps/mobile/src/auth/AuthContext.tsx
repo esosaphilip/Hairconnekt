@@ -103,9 +103,11 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const setUser = useCallback(async (user: PublicUser | null) => {
-    setState(s => ({ ...s, user }));
-    // Should persist?
-    // saveAuthBundle({ ...state, user }); 
+    setState(s => {
+      const newState = { ...s, user };
+      saveAuthBundle({ user: newState.user, tokens: newState.tokens });
+      return newState;
+    });
   }, []);
 
   const value: AuthContextValue = { ...state, login, logout, setUser, refreshTokens, register };

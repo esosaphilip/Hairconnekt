@@ -49,7 +49,7 @@ export const clientBraiderApi = {
         id: c.id,
         name: c.nameDe || c.name,
         slug: c.slug,
-        iconUrl: c.iconUrl,
+        iconUrl: c.iconUrl || c.icon_url || c.imageUrl || c.image_url,
       }));
     } catch (error) {
       return [];

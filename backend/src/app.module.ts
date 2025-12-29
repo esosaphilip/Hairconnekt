@@ -27,6 +27,7 @@ import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { SearchModule } from './modules/search/search.module';
 import { StorageModule } from './modules/storage/storage.module';
 import { TasksModule } from './modules/tasks/tasks.module';
+import { VouchersModule } from './modules/vouchers/vouchers.module';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { TasksModule } from './modules/tasks/tasks.module';
     SearchModule,
     StorageModule,
     TasksModule,
+    VouchersModule,
   ],
   controllers: [],
   providers: [],

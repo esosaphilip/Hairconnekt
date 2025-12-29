@@ -196,8 +196,12 @@ export function HomeScreen() {
           </View>
           <FlatList
             data={popularCategories}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => <PopularStyleCard item={item} />}
+            keyExtractor={(item, index) => item.id || `style-${index}`}
+            renderItem={({ item }) => (
+              <View key={item.id}>
+                <PopularStyleCard item={item} />
+              </View>
+            )}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.popularStylesList}

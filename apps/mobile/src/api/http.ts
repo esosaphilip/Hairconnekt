@@ -45,7 +45,7 @@ http.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
       headers['Accept-Language'] = lang;
       config.headers = headers;
     }
-  } catch {}
+  } catch { }
   return config;
 });
 
@@ -78,7 +78,7 @@ async function refreshTokenFlow() {
     try {
       await clearTokens();
       await clearAuthBundle();
-    } catch {}
+    } catch { }
     setAuthDisabled(true);
     emit('session_expired');
     return null;
@@ -92,7 +92,7 @@ async function refreshTokenFlow() {
 export function abortAuthRefresh() {
   try {
     pendingQueue.forEach((p) => p.reject(new Error('Auth refresh aborted')));
-  } catch {}
+  } catch { }
   pendingQueue = [];
   isRefreshing = false;
 }
@@ -128,6 +128,18 @@ http.interceptors.response.use(
         return Promise.reject(e);
       }
     }
+
+    // Handle 403 Forbidden globally
+    if (status === 403) {
+      if (!authDisabled) {
+        const { rootNavigationRef } = require('../navigation/rootNavigation');
+        // Optional: show toast/alert
+        // alert('Keine Berechtigung (403)');
+        // Redirect if appropriate, or just let the caller handle it but the specialized 'Permission Error'
+        // For now, we mainly want to ensure we don't treat it as 401 loop
+      }
+    }
+
     return Promise.reject(error);
   },
 );
