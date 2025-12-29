@@ -10,6 +10,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
+import { AppointmentStatus } from './entities/appointment.entity';
 import { Request } from 'express';
 
 @Controller('appointments')
@@ -102,6 +103,29 @@ export class AppointmentsController {
   async updateStatus(@Param('id') id: string, @Body('status') status: import('./entities/appointment.entity').AppointmentStatus, @Req() req: Request) {
     const userId = (req.user as any)?.sub;
     return this.appointmentsService.updateStatus(id, status, userId);
+  }
+
+  @Post(':id/accept')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async acceptAppointment(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    return this.appointmentsService.updateStatus(id, AppointmentStatus.CONFIRMED, userId);
+  }
+
+  @Post(':id/decline')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async declineAppointment(
+    @Param('id') id: string,
+    @Body() body: { reason: string; messageToClient?: string },
+    @Req() req: Request
+  ) {
+    const userId = (req.user as any)?.sub;
+    return this.appointmentsService.updateStatus(id, AppointmentStatus.CANCELLED_BY_PROVIDER, userId, {
+      cancellationReason: body.reason,
+      providerNotes: body.messageToClient
+    });
   }
 
   @Patch()

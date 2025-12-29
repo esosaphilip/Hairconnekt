@@ -34,7 +34,7 @@ export function VerificationScreen() {
     setUser: (u: PublicUser) => Promise<void>;
   };
   const user: PublicUser | null = auth?.user || null;
-  const setUser = (auth?.setUser || (async (_u: PublicUser) => {})) as (u: PublicUser) => Promise<void>;
+  const setUser = (auth?.setUser || (async (_u: PublicUser) => { })) as (u: PublicUser) => Promise<void>;
   const navigation = useNavigation();
   const [emailCode, setEmailCode] = useState('');
   const [phoneCode, setPhoneCode] = useState('');
@@ -54,7 +54,8 @@ export function VerificationScreen() {
     if (!user?.email) return;
     setLoadingEmail(true);
     try {
-      await http.post('/auth/verify-email', { email: user.email, code: emailCode });
+      const emailToVerify = user.email.trim();
+      await http.post('/auth/verify-email', { email: emailToVerify, code: emailCode.trim() });
       // Merge current user with updated verification flag using explicit types
       const currentUser: Partial<PublicUser> = (user ?? {}) as Partial<PublicUser>;
       const nextUser: PublicUser = { ...currentUser, emailVerified: true } as PublicUser;
@@ -72,7 +73,8 @@ export function VerificationScreen() {
     if (!user?.phone) return;
     setLoadingPhone(true);
     try {
-      await http.post('/auth/verify-phone', { phone: user.phone, code: phoneCode });
+      const phoneToVerify = user.phone.trim();
+      await http.post('/auth/verify-phone', { phone: phoneToVerify, code: phoneCode.trim() });
       // Merge current user with updated verification flag using explicit types
       const currentUser: Partial<PublicUser> = (user ?? {}) as Partial<PublicUser>;
       const nextUser: PublicUser = { ...currentUser, phoneVerified: true } as PublicUser;

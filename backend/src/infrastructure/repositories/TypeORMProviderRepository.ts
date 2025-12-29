@@ -219,6 +219,8 @@ export class TypeORMProviderRepository implements IProviderRepository {
     // Removed ORDER BY distanceKm from SQL to avoid expression errors
 
     const rawResults = await qb.getRawMany();
+    // eslint-disable-next-line no-console
+    console.log(`[ProvidersRepository] Bounding box query returned ${rawResults.length} raw rows`);
 
     // Calculate distance and sort in memory
     const resultsWithDistance = rawResults.map((r) => {

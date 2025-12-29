@@ -33,7 +33,7 @@ export class AuthService {
     private readonly emailService: EmailService,
     private readonly smsService: SmsService,
     private readonly dataSource: DataSource,
-  ) {}
+  ) { }
 
   private isArgon2Hash(stored: string) {
     return /^\$argon2(id|i|d)\$/.test(stored);
@@ -334,9 +334,14 @@ export class AuthService {
   async verifyEmail(dto: VerifyEmailDto) {
     const email = dto.email.toLowerCase();
     const user = await this.usersRepo.findOne({ where: { email } });
-    const genericError = new BadRequestException('Invalid or expired verification code');
-    if (!user) throw genericError;
-    if (user.emailVerified) return { success: true, alreadyVerified: true };
+    if (!user) {
+      console.warn(`[verifyEmail] User not found for email: ${email}`);
+      throw new BadRequestException('User not found');
+    }
+    if (user.emailVerified) {
+      console.log(`[verifyEmail] User ${email} already verified`);
+      return { success: true, alreadyVerified: true };
+    }
 
     // Dev bypass: allow a fixed code to verify without consuming a record
     const devBypassEnabled = (process.env.DEV_VERIFICATION_BYPASS === 'true' || process.env.DEV_VERIFICATION_BYPASS === '1') && process.env.NODE_ENV !== 'production';
@@ -376,7 +381,18 @@ export class AuthService {
         },
         relations: ['user'],
       });
-      if (!v || v.consumedAt || v.expiresAt < now) throw genericError;
+      if (!v) {
+        console.warn(`[verifyEmail] Invalid code for ${email}. Hash: ${codeHash}`);
+        throw new BadRequestException('Invalid verification code');
+      }
+      if (v.consumedAt) {
+        console.warn(`[verifyEmail] Code already consumed for ${email}`);
+        throw new BadRequestException('Verification code already used');
+      }
+      if (v.expiresAt < now) {
+        console.warn(`[verifyEmail] Code expired for ${email}. Expired at ${v.expiresAt}`);
+        throw new BadRequestException('Verification code expired');
+      }
 
       v.consumedAt = now;
       await vRepo.save(v);
@@ -407,9 +423,14 @@ export class AuthService {
   async verifyPhone(dto: VerifyPhoneDto) {
     const phone = this.sanitizePhone(dto.phone);
     const user = await this.usersRepo.findOne({ where: { phone } });
-    const genericError = new BadRequestException('Invalid or expired verification code');
-    if (!user) throw genericError;
-    if (user.phoneVerified) return { success: true, alreadyVerified: true };
+    if (!user) {
+      console.warn(`[verifyPhone] User not found for phone: ${phone}`);
+      throw new BadRequestException('User not found');
+    }
+    if (user.phoneVerified) {
+      console.log(`[verifyPhone] User ${phone} already verified`);
+      return { success: true, alreadyVerified: true };
+    }
 
     // Dev bypass: allow a fixed code to verify without consuming a record
     const devBypassEnabled = (process.env.DEV_VERIFICATION_BYPASS === 'true' || process.env.DEV_VERIFICATION_BYPASS === '1') && process.env.NODE_ENV !== 'production';
@@ -443,7 +464,18 @@ export class AuthService {
         },
         relations: ['user'],
       });
-      if (!v || v.consumedAt || v.expiresAt < now) throw genericError;
+      if (!v) {
+        console.warn(`[verifyPhone] Invalid code for ${phone}`);
+        throw new BadRequestException('Invalid verification code');
+      }
+      if (v.consumedAt) {
+        console.warn(`[verifyPhone] Code already consumed for ${phone}`);
+        throw new BadRequestException('Verification code already used');
+      }
+      if (v.expiresAt < now) {
+        console.warn(`[verifyPhone] Code expired for ${phone}`);
+        throw new BadRequestException('Verification code expired');
+      }
 
       v.consumedAt = now;
       await vRepo.save(v);

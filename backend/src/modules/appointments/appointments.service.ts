@@ -313,7 +313,7 @@ export class AppointmentsService {
     }
   }
 
-  async updateStatus(id: string, status: AppointmentStatus, userId: string): Promise<Appointment> {
+  async updateStatus(id: string, status: AppointmentStatus, userId: string, options?: { cancellationReason?: string; providerNotes?: string }): Promise<Appointment> {
     const appt = await this.appointmentRepo.findOne({
       where: { id },
       relations: ['provider', 'provider.user', 'client']
@@ -329,6 +329,13 @@ export class AppointmentsService {
     }
 
     appt.status = status;
+    if (options?.cancellationReason) {
+      appt.cancellationReason = options.cancellationReason;
+    }
+    if (options?.providerNotes) {
+      appt.providerNotes = options.providerNotes;
+    }
+
     const saveResult = await this.appointmentRepo.save(appt);
 
     // Notify Client
@@ -341,7 +348,9 @@ export class AppointmentsService {
         body = 'Dein Termin wurde vom Anbieter bestätigt!';
       } else if (status === AppointmentStatus.CANCELLED_BY_PROVIDER) {
         title = 'Termin abgesagt ❌';
-        body = 'Dein Termin wurde leider vom Anbieter abgesagt.';
+        body = options?.providerNotes
+          ? `Dein Termin wurde abgesagt: ${options.providerNotes}`
+          : 'Dein Termin wurde leider vom Anbieter abgesagt.';
       }
 
       await this.notificationsService.sendPushNotification(
