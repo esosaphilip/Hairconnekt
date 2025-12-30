@@ -81,8 +81,45 @@ export function AddEditServiceScreen() {
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [durationOpen, setDurationOpen] = useState(false);
 
-  const onBack = () => {
-    // Placeholder navigation
+  // Manual Save Logic triggers when user presses "Back"
+  // This replaces unreliable unmount-effect auto-save
+  const onBack = async () => {
+    // 1. Check if we should save
+    const currentData = formData;
+    const hasName = !!currentData.name.trim();
+    const isClean = wasSubmittedRef.current; // If already submitted via button, don't auto-save again
+
+    if (!isClean && hasName && !isSavingRef.current) {
+      console.log('[AutoSave] Saving before exit...');
+      isSavingRef.current = true;
+      try {
+        const body: any = {
+          name: currentData.name,
+          categoryId: currentData.category,
+          durationMinutes: Number(currentData.duration || 0),
+          priceCents: Math.round(Number(currentData.price || 0) * 100),
+          description: currentData.description || undefined,
+          isActive: !!currentData.isActive,
+          allowOnlineBooking: !!currentData.allowOnlineBooking,
+          requiresConsultation: !!currentData.requiresConsultation,
+        };
+
+        if (isEditing && serviceId) {
+          await http.patch(`/providers/me/services/${serviceId}`, body);
+          console.log('[AutoSave] Update successful');
+        } else {
+          await http.post('/providers/me/services', body);
+          console.log('[AutoSave] Creation successful');
+        }
+      } catch (err) {
+        console.warn('[AutoSave] Failed', err);
+        // Optional: Alert user? For now we just log, as "Auto-save" is usually silent.
+      } finally {
+        isSavingRef.current = false;
+      }
+    }
+
+    // 2. Navigate back
     if (Platform.OS === 'web') {
       try { window.history.back(); } catch { }
     }
@@ -162,55 +199,6 @@ export function AddEditServiceScreen() {
     };
     fetchCategories();
   }, []);
-
-  // AUTO-SAVE LOGIC
-  useEffect(() => {
-    return () => {
-      // Cleanup: check if we should auto-save
-      // Conditions:
-      // 1. Not already submitting (wasSubmittedRef)
-      // 2. Not currently saving (isSavingRef)
-      // 3. Has minimal valid data (name and category)
-      const currentData = formDataRef.current;
-
-      if (wasSubmittedRef.current || isSavingRef.current) return;
-
-      // Validation for auto-save (can be looser than submit)
-      if (!currentData.name.trim()) {
-        console.log('[AutoSave] Skipping auto-save: missing name');
-        return;
-      }
-
-      console.log('[AutoSave] Triggering auto-save on unmount...');
-      const saveAsync = async () => {
-        try {
-          const body: any = {
-            name: currentData.name,
-            categoryId: currentData.category,
-            durationMinutes: Number(currentData.duration || 0),
-            priceCents: Math.round(Number(currentData.price || 0) * 100),
-            description: currentData.description || undefined,
-            isActive: !!currentData.isActive,
-            allowOnlineBooking: !!currentData.allowOnlineBooking,
-            requiresConsultation: !!currentData.requiresConsultation,
-          };
-
-          if (isEditing && serviceId) {
-            await http.patch(`/providers/me/services/${serviceId}`, body);
-            console.log('[AutoSave] Update successful');
-          } else {
-            await http.post('/providers/me/services', body);
-            console.log('[AutoSave] Creation successful');
-          }
-        } catch (err) {
-          console.warn('[AutoSave] Failed', err);
-        }
-      };
-
-      // Fire and forget (cannot await in cleanup)
-      saveAsync();
-    };
-  }, [isEditing, serviceId]); // Dependencies define when the effect is re-created, but refs hold current values
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
