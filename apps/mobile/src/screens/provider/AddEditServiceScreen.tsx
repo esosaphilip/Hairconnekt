@@ -126,6 +126,11 @@ export function AddEditServiceScreen() {
       setCategoriesError(null);
       try {
         try {
+          const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
+          const items = normalize(res?.data);
+          if (items.length) { setCategories(items); return; }
+        } catch { }
+        try {
           const res = await http.get('/services/categories', { params: { locale: 'de' } });
           const items = normalize(res?.data);
           if (items.length) { setCategories(items); return; }
