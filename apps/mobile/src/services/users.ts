@@ -24,6 +24,11 @@ export type MeResponse = {
     favorites: number;
     reviews: number;
   };
+  notificationPreferences?: {
+    push: boolean;
+    email: boolean;
+    sms: boolean;
+  };
 };
 
 export type ClientProfile = {
@@ -45,6 +50,11 @@ export type UpdateUserDto = Partial<{
   lastName: string;
   preferredLanguage: 'de' | 'en' | 'fr' | 'es' | 'it';
   profilePictureUrl: string;
+  notificationPreferences: {
+    push: boolean;
+    email: boolean;
+    sms: boolean;
+  };
 }>;
 
 export type UpdateClientProfileDto = Partial<{

@@ -171,8 +171,8 @@ export function AddEditServiceScreen() {
       if (wasSubmittedRef.current || isSavingRef.current) return;
 
       // Validation for auto-save (can be looser than submit)
-      if (!currentData.name.trim() || !currentData.category) {
-        console.log('[AutoSave] Skipping auto-save: missing name or category');
+      if (!currentData.name.trim()) {
+        console.log('[AutoSave] Skipping auto-save: missing name');
         return;
       }
 

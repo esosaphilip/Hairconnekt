@@ -23,6 +23,7 @@ export type RootStackParamList = {
   SignInPrompt: { returnUrl?: string } | undefined;
   ProviderNotificationsScreen: undefined;
   Booking: { id?: string; providerId?: string; serviceName?: string } | undefined;
+  ChatScreen: { id?: string; conversationId?: string; userId?: string } | undefined;
 };
 
 // Client Tabs

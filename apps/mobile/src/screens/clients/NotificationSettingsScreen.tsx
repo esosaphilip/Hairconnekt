@@ -69,7 +69,7 @@ export default function NotificationSettingsScreen() {
 
   const loadSettings = async () => {
     try {
-      const { data } = await usersApi.getMe();
+      const data = await usersApi.getMe();
       if (data.notificationPreferences) {
         setPushEnabled(data.notificationPreferences.push ?? true);
         setEmailEnabled(data.notificationPreferences.email ?? true);

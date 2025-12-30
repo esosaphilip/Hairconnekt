@@ -160,7 +160,7 @@ export function ServicesManagementScreen() {
               <Text style={styles.headerSubtitle}>{activeServices.length} aktive Services</Text>
             </View>
           </View>
-          <Button title="Neu" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen' })} style={{ backgroundColor: colors.primary }} />
+          <Button title="Neu" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } })} style={{ backgroundColor: colors.primary }} />
         </View>
       </View>
 
@@ -416,7 +416,7 @@ export function ServicesManagementScreen() {
               <Text style={{ color: colors.gray600, textAlign: 'center', marginBottom: spacing.md }}>
                 Füge deine ersten Services hinzu, damit Kunden dich buchen können
               </Text>
-              <Button title="Service hinzufügen" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen' })} style={{ backgroundColor: colors.primary }} />
+              <Button title="Service hinzufügen" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } })} style={{ backgroundColor: colors.primary }} />
             </View>
           )}
 
