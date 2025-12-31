@@ -13,7 +13,9 @@ export type Service = {
   id: string;
   name: string;
   description: string | null;
-  category: ServiceCategory | null;
+  category?: ServiceCategory | null; // Renamed/Deprecated in favor of categoryId
+  categoryId?: string | null;
+  tags?: string[];
   priceCents: number;
   durationMinutes: number;
   isActive: boolean;
@@ -26,6 +28,8 @@ export function createService(data: {
   name: string;
   description?: string | null;
   category?: ServiceCategory | null;
+  categoryId?: string | null;
+  tags?: string[];
   priceCents: number;
   durationMinutes: number;
   isActive?: boolean;
@@ -36,6 +40,8 @@ export function createService(data: {
     name: data.name,
     description: data.description ?? null,
     category: data.category ?? null,
+    categoryId: data.categoryId ?? null,
+    tags: data.tags ?? [],
     priceCents: data.priceCents,
     durationMinutes: data.durationMinutes,
     isActive: data.isActive ?? true,

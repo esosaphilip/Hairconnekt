@@ -21,7 +21,7 @@ export class SearchService {
     private readonly reviewsRepo: Repository<Review>,
     @InjectRepository(ServiceCategory)
     private readonly categoryRepo: Repository<ServiceCategory>,
-  ) {}
+  ) { }
 
   async search(params: SearchQueryDto) {
     const q = (params.query || '').trim();
@@ -179,7 +179,7 @@ export class SearchService {
     // Also fetch the specific services for each provider matching the category
     const matchingServices = await this.servicesRepo.find({
       where: {
-        category: { id: category.id },
+        categoryId: category.id,
         isActive: true,
         provider: { id: In(ids) },
       },
@@ -196,7 +196,7 @@ export class SearchService {
     const results = providers.map((p) => {
       const name = [p.user?.firstName, p.user?.lastName].filter(Boolean).join(' ').trim();
       const pServices = servicesByProvider.get(p.id) || [];
-      
+
       return {
         id: p.id,
         name: name || p.businessName || 'Provider',
@@ -206,11 +206,11 @@ export class SearchService {
         distance: undefined,
         specialties: pServices.map(s => s.name), // Show the service names as "specialties" for this view
         services: pServices.map(s => ({
-            id: s.id,
-            name: s.name,
-            price: s.priceCents,
-            duration: s.durationMinutes,
-            imageUrl: s.imageUrl
+          id: s.id,
+          name: s.name,
+          price: s.priceCents,
+          duration: s.durationMinutes,
+          imageUrl: s.imageUrl
         })),
         price: pServices.length > 0 ? Math.min(...pServices.map(s => s.priceCents)) : undefined, // Min price
         available: p.acceptsSameDayBooking || false,

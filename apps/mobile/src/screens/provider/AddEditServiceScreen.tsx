@@ -10,7 +10,7 @@ import { colors, spacing, radii, typography } from '@/theme/tokens';
 import { http } from '@/api/http';
 import { providersApi } from '@/services/providers';
 import { logger } from '@/services/logger';
-import { API_CONFIG, MESSAGES } from '@/constants';
+import { API_CONFIG, MESSAGES, HAIR_CATEGORIES } from '@/constants';
 import Picker from '@/components/Picker';
 import { Slider } from '@/components/slider';
 
@@ -26,7 +26,9 @@ const durationOptions = [
   { value: 240, label: '4 Std.' },
   { value: 300, label: '5 Std.' },
   { value: 360, label: '6 Std.' },
+  { value: 360, label: '6 Std.' },
 ];
+
 import { useRoute, useNavigation } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { ProviderMoreStackParamList } from '@/navigation/types';
@@ -65,6 +67,7 @@ export function AddEditServiceScreen() {
     isActive: true,
     allowOnlineBooking: true,
     requiresConsultation: false,
+    tags: [] as string[],
   });
 
   // Keep a ref to formData for the cleanup effect
@@ -103,6 +106,7 @@ export function AddEditServiceScreen() {
           isActive: !!currentData.isActive,
           allowOnlineBooking: !!currentData.allowOnlineBooking,
           requiresConsultation: !!currentData.requiresConsultation,
+          tags: currentData.tags || [],
         };
 
         if (isEditing && serviceId) {
@@ -148,58 +152,24 @@ export function AddEditServiceScreen() {
             isActive: !!found.isActive,
             allowOnlineBooking: true,
             requiresConsultation: false,
+            tags: Array.isArray(found.tags) ? found.tags : [],
           });
         }
       } catch { }
     })();
   }, [serviceId]);
 
-  useEffect(() => {
-    const normalize = (raw: any): CategoryItem[] => {
-      const arr = Array.isArray(raw) ? raw : (raw?.items ?? []);
-      return (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
-    };
-    const fetchCategories = async () => {
-      setCategoriesLoading(true);
-      setCategoriesError(null);
-      try {
-        try {
-          const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch { }
-        try {
-          const res = await http.get('/services/categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch { }
-        try {
-          const res = await http.get('/provider/services/categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch { }
-        try {
-          const res = await http.get('/providers/services/categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch { }
-        try {
-          const res = await http.get('/service-categories', { params: { locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch { }
-        try {
-          const res = await http.get('/categories', { params: { type: 'service', locale: 'de' } });
-          const items = normalize(res?.data);
-          if (items.length) { setCategories(items); return; }
-        } catch { }
-        setCategoriesError('Keine Kategorien gefunden.');
-      } finally {
-        setCategoriesLoading(false);
-      }
-    };
-    fetchCategories();
-  }, []);
+  // Legacy category fetching removed in favor of strict taxonomy
+  const activeCategory = HAIR_CATEGORIES.find(c => c.id === formData.category);
+
+  const toggleTag = (tag: string) => {
+    setFormData(prev => {
+      const newTags = prev.tags.includes(tag)
+        ? prev.tags.filter(t => t !== tag)
+        : [...prev.tags, tag];
+      return { ...prev, tags: newTags };
+    });
+  };
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
@@ -225,6 +195,7 @@ export function AddEditServiceScreen() {
       isActive: !!formData.isActive,
       allowOnlineBooking: !!formData.allowOnlineBooking,
       requiresConsultation: !!formData.requiresConsultation,
+      tags: formData.tags,
     };
 
     try {
@@ -326,9 +297,29 @@ export function AddEditServiceScreen() {
             ) : (
               <Picker
                 selectedValue={formData.category}
-                onValueChange={(v: string) => setFormData({ ...formData, category: v })}
-                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.nameDe ?? 'Kategorie', value: c.id }))]}
+                onValueChange={(v: string) => setFormData({ ...formData, category: v, tags: [] })}
+                items={[{ label: 'Kategorie wählen', value: '' }, ...HAIR_CATEGORIES.map((c) => ({ label: c.name, value: c.id }))]}
               />
+            )}
+            {/* Tags Selection */}
+            {activeCategory && activeCategory.tags.length > 0 && (
+              <View style={styles.tagsContainer}>
+                <Text style={styles.subLabel}>Spezialisierungen (Optional)</Text>
+                <View style={styles.tagsRow}>
+                  {activeCategory.tags.map(tag => {
+                    const isSelected = formData.tags.includes(tag);
+                    return (
+                      <Pressable
+                        key={tag}
+                        style={[styles.tagChip, isSelected && styles.tagChipSelected]}
+                        onPress={() => toggleTag(tag)}
+                      >
+                        <Text style={[styles.tagText, isSelected && styles.tagTextSelected]}>{tag}</Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
             )}
             {categoriesError && <Text style={styles.feedbackError}>{categoriesError}</Text>}
           </View>
@@ -641,5 +632,39 @@ const styles = StyleSheet.create({
   totalText: {
     color: colors.primary,
     fontWeight: '600',
+  },
+  tagsContainer: {
+    marginTop: spacing.md,
+  },
+  subLabel: {
+    fontSize: 12,
+    color: colors.gray600,
+    marginBottom: 8,
+    fontWeight: '500',
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tagChip: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.gray300,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  tagChipSelected: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  tagText: {
+    fontSize: 12,
+    color: colors.gray700,
+  },
+  tagTextSelected: {
+    color: colors.white,
+    fontWeight: '500',
   },
 });

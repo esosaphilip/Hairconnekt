@@ -349,7 +349,6 @@ export class AuthService {
       return { success: true, alreadyVerified: true };
     }
 
-    // Dev bypass: allow a fixed code to verify without consuming a record
     const devBypassEnabled = (process.env.DEV_VERIFICATION_BYPASS === 'true' || process.env.DEV_VERIFICATION_BYPASS === '1') && process.env.NODE_ENV !== 'production';
     const devBypassCode = process.env.DEV_VERIFICATION_CODE || '000000';
     if (devBypassEnabled && dto.code === devBypassCode) {
@@ -438,7 +437,6 @@ export class AuthService {
       return { success: true, alreadyVerified: true };
     }
 
-    // Dev bypass: allow a fixed code to verify without consuming a record
     const devBypassEnabled = (process.env.DEV_VERIFICATION_BYPASS === 'true' || process.env.DEV_VERIFICATION_BYPASS === '1') && process.env.NODE_ENV !== 'production';
     const devBypassCode = process.env.DEV_VERIFICATION_CODE || '000000';
     if (devBypassEnabled && dto.code === devBypassCode) {

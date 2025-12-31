@@ -30,14 +30,12 @@ export class Service {
   @JoinColumn({ name: 'provider_id' })
   provider: ProviderProfile;
 
-  // Make category optional to match CreateServiceDto where categoryId is optional
-  // Note: DB constraint may still be NOT NULL; creation without category should be avoided
-  @Column({ name: 'category_id', type: 'uuid', nullable: true })
+  @Column({ name: 'category_id', type: 'varchar', length: 50, nullable: true })
   categoryId?: string | null;
 
-  @ManyToOne(() => ServiceCategory, { onDelete: 'RESTRICT', nullable: true })
-  @JoinColumn({ name: 'category_id' })
-  category?: ServiceCategory | null;
+  @Column('text', { array: true, nullable: true })
+  tags?: string[];
+
 
   @Index()
   @Column({ type: 'varchar', length: 255 })
@@ -89,7 +87,7 @@ export class Service {
     durationMinutes: number,
     priceCents: number,
     priceType: PriceType,
-    category?: ServiceCategory,
+    categoryId?: string,
     priceMaxCents?: number,
     imageUrl?: string,
   ): Service {
@@ -110,7 +108,7 @@ export class Service {
     service.durationMinutes = durationMinutes;
     service.priceCents = priceCents;
     service.priceType = priceType;
-    service.category = category || null;
+    service.categoryId = categoryId || null;
     service.priceMaxCents = priceMaxCents || null;
     service.imageUrl = imageUrl || null;
     service.isActive = true;

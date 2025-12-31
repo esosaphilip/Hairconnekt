@@ -47,6 +47,7 @@ export function useServices() {
     isActive?: boolean;
     allowOnlineBooking?: boolean;
     categoryId?: string;
+    tags?: string[];
   }): Promise<Service> => {
     setLoading(true);
     setError(null);

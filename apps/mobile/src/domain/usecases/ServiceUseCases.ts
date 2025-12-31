@@ -9,7 +9,7 @@ import { ValidationError, NotFoundError } from '../errors/DomainError';
 import { VALIDATION_RULES } from '@/constants';
 
 export class ServiceUseCases {
-  constructor(private readonly serviceRepository: IServiceRepository) {}
+  constructor(private readonly serviceRepository: IServiceRepository) { }
 
   async listServices(): Promise<Service[]> {
     return this.serviceRepository.list();
@@ -29,7 +29,9 @@ export class ServiceUseCases {
     priceCents: number;
     durationMinutes: number;
     isActive?: boolean;
+    allowOnlineBooking?: boolean;
     categoryId?: string;
+    tags?: string[];
   }): Promise<Service> {
     // Validation
     if (!data.name || data.name.trim().length < VALIDATION_RULES.SERVICE.NAME_MIN_LENGTH) {
@@ -48,10 +50,13 @@ export class ServiceUseCases {
       id: '',
       name: data.name.trim(),
       description: data.description?.trim() ?? null,
-      category: data.categoryId ? ({ id: data.categoryId } as any) : null,
+      categoryId: data.categoryId ?? null,
+      tags: data.tags ?? [],
+      category: null,
       priceCents: data.priceCents,
       durationMinutes: data.durationMinutes,
       isActive: data.isActive ?? true,
+      allowOnlineBooking: data.allowOnlineBooking ?? true,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

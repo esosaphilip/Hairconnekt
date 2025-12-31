@@ -14,7 +14,7 @@ import { colors, spacing, typography } from '@/theme/tokens';
 import { http } from '@/api/http';
 import { useServices } from '@/presentation/hooks/useServices';
 import { showError, showSuccess } from '@/presentation/utils/errorHandler';
-import { MESSAGES } from '@/constants';
+import { MESSAGES, HAIR_CATEGORIES } from '@/constants';
 import type { Service } from '@/domain/entities/Service';
 
 export function ServicesManagementScreen() {
@@ -36,58 +36,10 @@ export function ServicesManagementScreen() {
   }, [loadServices]);
   const [adding, setAdding] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState('');
-  const [duration, setDuration] = useState('60');
-  const [description, setDescription] = useState('');
-  const [active, setActive] = useState(true);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
-  const [selectedCategoryName, setSelectedCategoryName] = useState<string>('');
-  const [manualCategoryId, setManualCategoryId] = useState<string>('');
-  const [categories, setCategories] = useState<Array<{ id: string; nameDe?: string; name_de?: string }>>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [categoriesError, setCategoriesError] = useState<string | null>(null);
-  const defaultCategoryNames = [
-    'Box Braids',
-    'Knotless Braids',
-    'Cornrows',
-    'Senegalese Twists',
-    'Passion Twists',
-    'Locs',
-    'Natural Hair Care',
-    'Barber Services',
-    'Other',
-  ];
 
-  useEffect(() => {
-    const normalize = (raw: any): Array<{ id: string; nameDe?: string; name_de?: string }> => {
-      const arr = Array.isArray(raw) ? raw : (raw?.items ?? []);
-      return (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
-    };
-    const fetchCategories = async () => {
-      setCategoriesLoading(true);
-      setCategoriesError(null);
-      try {
-        // Single dedicated call as per Master Solution Contract
-        // Path: /providers/me/services/categories (http client adds base URL /api/v1)
-        const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
-        const items = normalize(res?.data);
-        if (items.length) {
-          setCategories(items);
-        } else {
-          // Fallback only if array is empty but call succeeded? Or just show error?
-          // Contract says "Replace it with exactly one call". I will respect that.
-          if (items.length === 0) setCategoriesError('Keine Kategorien gefunden.');
-        }
-      } catch (err) {
-        console.log('[ServicesManagement] Category Fetch Error:', err);
-        setCategoriesError('Kategorien konnten nicht geladen werden.');
-      } finally {
-        setCategoriesLoading(false);
-      }
-    };
-    fetchCategories();
-  }, []);
+  // Legacy inline-add state removed/simplified
+  // All addition happens via navigation to AddEditScreen now
+
 
   const activeServices = useMemo(() => services.filter(s => s.isActive), [services]);
   const inactiveServices = useMemo(() => services.filter(s => !s.isActive), [services]);
@@ -140,7 +92,8 @@ export function ServicesManagementScreen() {
   };
 
   const onAddService = () => {
-    setAdding(true);
+    // Navigate strictly to new screen
+    rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } });
   };
 
   const onEditService = (id: string) => {
@@ -188,135 +141,8 @@ export function ServicesManagementScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
           }
         >
-          {adding && (
-            <Card style={styles.card}>
-              <Text style={styles.sectionTitle}>Neuen Service hinzufügen</Text>
-              <View style={{ gap: spacing.sm }}>
-                <View>
-                  <Text style={styles.label}>Service-Kategorie *</Text>
-                  {categoriesLoading ? (
-                    <Text style={{ color: colors.gray600 }}>Kategorien werden geladen…</Text>
-                  ) : (
-                    <Picker
-                      selectedValue={categories.length ? selectedCategoryId : selectedCategoryName}
-                      onValueChange={(v: string) => {
-                        if (categories.length) setSelectedCategoryId(v);
-                        else setSelectedCategoryName(v);
-                      }}
-                      items={
-                        [{ label: 'Kategorie wählen...', value: '' }].concat(
-                          categories.length
-                            ? categories.map((cat) => ({ label: cat.nameDe ?? cat.name_de ?? 'Kategorie', value: cat.id }))
-                            : defaultCategoryNames.map((name) => ({ label: name, value: name }))
-                        )
-                      }
-                    />
-                  )}
-                  {categoriesError && (
-                    <View style={{ marginTop: spacing.xs }}>
-                      <Text style={{ color: colors.error }}>{categoriesError}</Text>
-                      <View style={{ flexDirection: 'row', marginTop: spacing.xs }}>
-                        <Button title="Neu laden" variant="outline" onPress={() => {
-                          setCategoriesError(null);
-                          setCategoriesLoading(true);
-                          // trigger reload by calling the same effect logic
-                          (async () => {
-                            try {
-                              const res = await http.get('/providers/me/services/categories', { params: { locale: 'de' } });
-                              const arr = Array.isArray(res?.data) ? res.data : (res?.data?.items ?? []);
-                              const items = (arr as any[]).map((c) => ({ id: String(c.id), nameDe: c.nameDe ?? c.name_de ?? c.name }));
-                              setCategories(items);
-                            } catch { }
-                            setCategoriesLoading(false);
-                          })();
-                        }} />
-                      </View>
-                    </View>
-                  )}
-                  {/* Fallback ID input removed to keep flow simple */}
-                </View>
-                <View>
-                  <Text style={styles.label}>Name *</Text>
-                  <Input value={name} onChangeText={setName} placeholder="z. B. Box Braids" />
-                </View>
-                <View>
-                  <Text style={styles.label}>Preis (in €) *</Text>
-                  <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={price} onChangeText={setPrice} placeholder="z. B. 55" />
-                </View>
-                <View>
-                  <Text style={styles.label}>Dauer (Minuten) *</Text>
-                  <Input keyboardType={Platform.OS === 'ios' ? 'numbers-and-punctuation' : 'numeric'} value={duration} onChangeText={setDuration} placeholder="z. B. 60" />
-                </View>
-                <View>
-                  <Text style={styles.label}>Beschreibung (optional)</Text>
-                  <Textarea value={description} onChangeText={setDescription} placeholder="Kurzbeschreibung" numberOfLines={3} />
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <Text style={styles.label}>Aktiv</Text>
-                  <Switch value={active} onValueChange={setActive} />
-                </View>
-                <View style={{ flexDirection: 'row', gap: spacing.sm }}>
-                  <Button
-                    title="Speichern"
-                    onPress={async () => {
-                      if (!name.trim()) {
-                        Alert.alert('Fehler', 'Bitte einen Namen eingeben');
-                        return;
-                      }
-                      const finalCategoryId = selectedCategoryId;
-                      if (categories.length > 0 && !finalCategoryId) {
-                        Alert.alert('Fehler', 'Bitte wähle eine Kategorie');
-                        return;
-                      }
-                      const priceCents = Math.round(parseFloat(price.replace(',', '.')) * 100) || 0;
-                      const durationMinutes = parseInt(duration, 10) || 60;
-                      if (priceCents <= 0) {
-                        Alert.alert('Fehler', 'Bitte einen gültigen Preis eingeben');
-                        return;
-                      }
-                      if (durationMinutes <= 0) {
-                        Alert.alert('Fehler', 'Bitte eine gültige Dauer eingeben');
-                        return;
-                      }
-                      try {
-                        setSaving(true);
-                        await createService({ name: name.trim(), description: description.trim() || undefined, priceCents, durationMinutes, isActive: active, categoryId: finalCategoryId || undefined });
-                        setAdding(false);
-                        setName('');
-                        setPrice('');
-                        setDuration('60');
-                        setDescription('');
-                        setActive(true);
-                        setSelectedCategoryId('');
-                        setManualCategoryId('');
-                        showSuccess(MESSAGES.SUCCESS.SAVE);
-                      } catch (err: unknown) {
-                        const msg = (err as any)?.response?.data?.message || (err instanceof Error ? err.message : 'Fehler beim Speichern');
-                        if (typeof msg === 'string' && msg.includes('must be a number')) {
-                          // Suppress technical validation errors with user friendly one
-                          Alert.alert('Fehler', 'Bitte überprüfe deine Eingaben (Preis und Dauer müssen Zahlen sein)');
-                        } else if (typeof msg === 'string' && msg.includes('priceCents must not be less than')) {
-                          Alert.alert('Fehler', 'Ungültiger Preis oder Dauer');
-                        } else {
-                          // Only show if not a 500 error
-                          if ((err as any)?.response?.status !== 500) {
-                            Alert.alert('Fehler', typeof msg === 'string' ? msg : 'Service konnte nicht gespeichert werden');
-                          } else {
-                            Alert.alert('Fehler', 'Service konnte nicht gespeichert werden. Bitte versuche es später erneut.');
-                          }
-                        }
-                      } finally {
-                        setSaving(false);
-                      }
-                    }}
-                    style={{ backgroundColor: colors.primary, flex: 1 }}
-                  />
-                  <Button title="Abbrechen" variant="outline" onPress={() => setAdding(false)} style={{ flex: 1 }} />
-                </View>
-                {saving ? <Text style={{ color: colors.gray600 }}>Speichern...</Text> : null}
-              </View>
-            </Card>
-          )}
+
+          {/* Legacy inline 'adding' form removed */}
           {/* Active Services */}
           {activeServices.length > 0 && (
             <View style={{ marginBottom: spacing.lg }}>
@@ -328,9 +154,9 @@ export function ServicesManagementScreen() {
                       <View style={{ flex: 1 }}>
                         <View style={styles.titleRow}>
                           <Text style={styles.serviceName}>{service.name}</Text>
-                          {service.category ? (
+                          {service.categoryId ? (
                             <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                              {service.category?.nameDe ?? 'Allgemein'}
+                              {HAIR_CATEGORIES.find(c => c.id === service.categoryId)?.name ?? service.categoryId}
                             </Badge>
                           ) : null}
                         </View>
@@ -373,9 +199,9 @@ export function ServicesManagementScreen() {
                       <View style={{ flex: 1 }}>
                         <View style={styles.titleRow}>
                           <Text style={styles.serviceName}>{service.name}</Text>
-                          {service.category ? (
+                          {service.categoryId ? (
                             <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                              {service.category?.nameDe ?? 'Allgemein'}
+                              {HAIR_CATEGORIES.find(c => c.id === service.categoryId)?.name ?? service.categoryId}
                             </Badge>
                           ) : null}
                         </View>

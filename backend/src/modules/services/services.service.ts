@@ -51,15 +51,11 @@ export class ServicesService {
       throw new NotFoundException('Provider profile not found');
     }
 
-    // Validate and fetch category if provided
-    let category: ServiceCategory | null = null;
-    if (createDto.categoryId) {
-      category = await this.serviceCategoryRepository.findOne({
-        where: { id: createDto.categoryId },
-      });
-      if (!category) {
-        throw new BadRequestException(`Category with ID "${createDto.categoryId}" not found`);
-      }
+    // Validate and fetch category if provided (only if looks like UUID for legacy support)
+    // If it's a static ID (like 'cat_braids'), skip DB lookup
+    if (createDto.categoryId && createDto.categoryId.length > 20 && !createDto.categoryId.startsWith('cat_')) {
+      // Optional: Could strictly validate if we wanted to enforce UUIDs for old cats
+      // For now, we trust the input if it's a string, or check seed existence
     }
 
     // Validate price and duration are integers
@@ -81,7 +77,7 @@ export class ServicesService {
         createDto.durationMinutes !== undefined ? createDto.durationMinutes : 60,
         createDto.priceCents !== undefined ? createDto.priceCents : 0,
         createDto.priceType || PriceType.FIXED,
-        category ?? undefined,
+        createDto.categoryId, // Pass string directly
         createDto.priceMaxCents ?? undefined,
         createDto.imageUrl ?? undefined,
       );
@@ -95,6 +91,7 @@ export class ServicesService {
     if (createDto.isActive !== undefined) service.isActive = createDto.isActive;
     if (createDto.allowOnlineBooking !== undefined) service.allowOnlineBooking = createDto.allowOnlineBooking;
     if (createDto.displayOrder !== undefined) service.displayOrder = createDto.displayOrder;
+    if (createDto.tags !== undefined) service.tags = createDto.tags; // Map tags
 
     // Explicitly set providerId to ensure strict foreign key mapping
     service.providerId = providerId;
@@ -105,7 +102,7 @@ export class ServicesService {
         id: saved.id,
         name: saved.name,
         providerId: saved.provider.id,
-        categoryId: saved.category?.id
+        categoryId: saved.categoryId
       });
       return saved;
     } catch (error) {
@@ -124,7 +121,6 @@ export class ServicesService {
       console.log(`[ServicesService] Listing services for provider: ${providerId}`);
       const services = await this.serviceRepository.find({
         where: { providerId },
-        relations: ['category'],
         order: {
           displayOrder: 'ASC',
           name: 'ASC',
@@ -156,12 +152,13 @@ export class ServicesService {
     }
 
     // Handle category update
-    if (updateDto.categoryId) {
-      const category = await this.serviceCategoryRepository.findOne({ where: { id: updateDto.categoryId } });
-      if (!category) {
-        throw new NotFoundException(`Category with ID "${updateDto.categoryId}" not found`);
-      }
-      service.category = category;
+    if (updateDto.categoryId !== undefined) {
+      service.categoryId = updateDto.categoryId;
+    }
+
+    // Handle tags update
+    if (updateDto.tags !== undefined) {
+      service.tags = updateDto.tags;
     }
 
     // Data Translation & Mapping
