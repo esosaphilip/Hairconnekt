@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServicesModule } from '../services/services.module';
 import { ProvidersController } from './providers.controller';
+import { SharedModule } from '../../shared/shared.module';
 import { ProvidersService } from './providers.service';
 import { ProviderProfile } from './entities/provider-profile.entity';
 import { User } from '../users/entities/user.entity'; // Add User import
@@ -46,7 +47,8 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
       ProviderSettings,
     ]),
     StorageModule,
-    ServicesModule, // Imported to expose ServicesService to ProvidersController for direct routing fix
+    ServicesModule,
+    SharedModule, // Imported for GeocodingService
   ],
   controllers: [ProvidersController],
   providers: [

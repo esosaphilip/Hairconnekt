@@ -198,8 +198,8 @@ async function run() {
     city: 'Wuppertal',
     postalCode: '42119',
     state: 'NRW',
-    latitude: 51.2464,
-    longitude: 7.1511,
+    latitude: '51.2464',
+    longitude: '7.1511',
   });
   await ensureProviderLocation(locationRepo, graceProfile, graceAddress);
 
@@ -229,8 +229,8 @@ async function run() {
     city: 'Wuppertal',
     postalCode: '42275',
     state: 'Barmen',
-    latitude: 51.2721,
-    longitude: 7.1953,
+    latitude: '51.2721',
+    longitude: '7.1953',
   });
   await ensureProviderLocation(locationRepo, powerProfile, powerAddress);
 
@@ -260,8 +260,8 @@ async function run() {
     city: 'Wuppertal',
     postalCode: '42105',
     state: 'NRW',
-    latitude: 51.2589,
-    longitude: 7.1322,
+    latitude: '51.2589',
+    longitude: '7.1322',
   });
   await ensureProviderLocation(locationRepo, afroProfile, afroAddress);
 
@@ -291,8 +291,8 @@ async function run() {
     city: 'Wuppertal',
     postalCode: '42105',
     state: 'NRW',
-    latitude: 51.2562,
-    longitude: 7.1475,
+    latitude: '51.2562',
+    longitude: '7.1475',
   });
   await ensureProviderLocation(locationRepo, beautyProfile, beautyAddress);
 

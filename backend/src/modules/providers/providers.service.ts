@@ -24,6 +24,8 @@ import { ProviderTimeOff } from './entities/provider-time-off.entity';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { Service } from '../services/entities/service.entity';
+import { ServicesService } from '../services/services.service';
+import { GeocodingService } from '../../shared/services/geocoding.service';
 import { Review } from '../reviews/entities/review.entity';
 import { PortfolioImage } from '../portfolio/entities/portfolio-image.entity';
 import { ProviderSettings } from './entities/provider-settings.entity';
@@ -56,7 +58,7 @@ export class ProvidersService {
     private readonly portfolioRepo: Repository<PortfolioImage>,
     @InjectRepository(ProviderSettings)
     private readonly settingsRepo: Repository<ProviderSettings>,
-
+    private readonly geocodingService: GeocodingService,
   ) { }
 
   /**
@@ -117,27 +119,15 @@ export class ProvidersService {
     address.postalCode = dto.postalCode;
     address.state = dto.state;
     // Map usage logic: Geocode the address
+    // Map usage logic: Geocode the address
     const fullAddress = `${dto.street} ${dto.houseNumber}, ${dto.postalCode} ${dto.city}, ${address.country}`;
-    if (process.env.GOOGLE_MAPS_API_KEY) {
-      try {
-        const encodedAddr = encodeURIComponent(fullAddress);
-        const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddr}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
-        const res = await fetch(url);
-        const data = await res.json();
 
-        if (data.status === 'OK' && data.results?.length > 0) {
-          const loc = data.results[0].geometry.location;
-          address.latitude = loc.lat;
-          address.longitude = loc.lng;
-          console.log(`[ProvidersService] Geocoded address '${fullAddress}' to (${loc.lat}, ${loc.lng})`);
-        } else {
-          console.warn(`[ProvidersService] Geocoding failed for '${fullAddress}': ${data.status}`);
-        }
-      } catch (error) {
-        console.error('[ProvidersService] Geocoding error:', error);
-      }
-    } else {
-      console.warn('[ProvidersService] GOOGLE_MAPS_API_KEY not set. Skipping geocoding.');
+    // Use Shared Geocoding Service (SerpApi / Nominatim)
+    const coords = await this.geocodingService.getCoordinates(fullAddress);
+    if (coords) {
+      address.latitude = coords.lat.toString(); // Store as string (decimal type in DB usually handles this, or entity expects string)
+      address.longitude = coords.lng.toString();
+      // Ensure entity field type matches. Address entity defines latitude? as string | null (decimal type).
     }
 
     const savedAddress = await this.addressRepo.save(address);
