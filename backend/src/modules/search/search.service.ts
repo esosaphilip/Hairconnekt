@@ -25,6 +25,13 @@ export class SearchService {
 
   async search(params: SearchQueryDto) {
     const q = (params.query || '').trim();
+    const cat = (params.category || '').trim().toLowerCase();
+
+    // If query is empty but category is provided, use specialized category search
+    if (!q && cat) {
+      return this.findProvidersByCategory(cat);
+    }
+
     if (!q) return { results: [] };
 
     // Use LOWER(..) LIKE :filterLower for cross-driver compatibility (SQLite/Postgres)
@@ -48,7 +55,7 @@ export class SearchService {
       .limit(50);
 
     // Optional category filter mapping
-    const cat = (params.category || '').toLowerCase();
+    // cat is already defined above
     if (cat) {
       const map: Record<string, BusinessType> = {
         salon: BusinessType.SALON,
@@ -56,7 +63,22 @@ export class SearchService {
         mobile: BusinessType.MOBILE,
       };
       const bt = map[cat];
-      if (bt) qb.andWhere('p.business_type = :bt', { bt });
+      if (bt) {
+        qb.andWhere('p.business_type = :bt', { bt });
+      } else {
+        // Not a business type? Try filtering by ServiceCategory slug (e.g. 'braids')
+        // We need to look up the category ID first or join. Joining is cleaner for the query.
+        // But we need to be careful not to affect the main query count if not matched.
+        // Actually, inner joining services filters providers who HAVE that service.
+        const category = await this.categoryRepo.findOne({ where: { slug: cat } });
+
+        if (category) {
+          // Filter providers that have at least one active service in this category
+          qb.innerJoin('p.services', 's_filter')
+            .andWhere('s_filter.category_id = :filterCatId', { filterCatId: category.id })
+            .andWhere('s_filter.is_active = :filterIsActive', { filterIsActive: true });
+        }
+      }
     }
 
     // Prefer verified providers first

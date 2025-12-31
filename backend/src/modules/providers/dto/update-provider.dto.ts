@@ -16,5 +16,9 @@ export class UpdateProviderDto {
   advanceBookingDays?: number;
 
   @IsOptional()
+  @IsString()
+  profilePictureUrl?: string; // New: Client uploads to Firebase, sends URL here
+
+  @IsOptional()
   acceptsSameDayBooking?: boolean;
 }

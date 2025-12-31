@@ -8,6 +8,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { colors, spacing, typography } from '../../theme/tokens';
 import { http } from '../../api/http';
+import { providersApi } from '../../services/providers';
 import { useAuth } from '../../auth/AuthContext';
 
 export function ProviderPhotoUploadScreen() {
@@ -41,26 +42,21 @@ export function ProviderPhotoUploadScreen() {
 
         try {
             setUploading(true);
-            const formData = new FormData();
+            const fileName = `profile-photo-${Date.now()}.jpg`;
 
-            // Filename logic
-            const uriParts = image.split('.');
-            const fileType = uriParts[uriParts.length - 1];
-            const fileName = `profile-photo.${fileType}`;
+            // 1. Upload to Firebase Storage (Client Side)
+            const { getAuthBundle } = require('../../auth/tokenStorage');
+            const bundle = await getAuthBundle();
+            const userId = bundle?.user?.id;
+            if (!userId) throw new Error('User not found');
 
-            formData.append('file', {
-                uri: Platform.OS === 'ios' ? image.replace('file://', '') : image,
-                name: fileName,
-                type: `image/${fileType}`,
-            } as any);
+            const path = `providers/${userId}/profile/${fileName}`;
+            const { uploadImageToFirebase } = require('../../services/imageUpload');
+            const downloadUrl = await uploadImageToFirebase(image, path);
 
-            await http.post('/providers/profile-picture', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            // 2. Update Backend with URL
+            await providersApi.updateProfile({ profilePictureUrl: downloadUrl });
 
-            // The backend returns 201 Created on success
             Alert.alert(
                 'Erfolg',
                 'Profilbild erfolgreich aktualisiert',

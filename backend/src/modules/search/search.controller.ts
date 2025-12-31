@@ -6,7 +6,7 @@ import { AppCacheInterceptor, CacheKeyBuilder } from '../cache/app-cache.interce
 
 @Controller('search')
 export class SearchController {
-  constructor(private readonly searchService: SearchService) {}
+  constructor(private readonly searchService: SearchService) { }
 
   @Get()
   @UseInterceptors(AppCacheInterceptor)
@@ -23,7 +23,7 @@ export class SearchController {
   ) {
     // Support both ?q= and ?query= from different clients
     const normalizedQuery = (queryStr || q || '').trim();
-    if (!normalizedQuery) {
+    if (!normalizedQuery && !category) {
       return { results: [] };
     }
     const dto: SearchQueryDto = { query: normalizedQuery, category } as any;

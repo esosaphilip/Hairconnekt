@@ -30,16 +30,18 @@ export function useHomeScreen() {
     const [nearbyLoading, setNearbyLoading] = useState<boolean>(false);
     const [nearbyError, setNearbyError] = useState<string | null>(null);
 
-    // Load popular categories
+    // Hardcoded popular categories with fallback images
     useEffect(() => {
         (async () => {
-            try {
-                const cats = await clientBraiderApi.getCategories();
-                // Take top 5 for horizontal list
-                setPopularCategories(cats.slice(0, 5) as unknown as PopularStyle[]);
-            } catch (e) {
-                // ignore
-            }
+            // Fallback to static list (for immediate restoration)
+            const staticCategories: PopularStyle[] = [
+                { id: 'cat_braids', name: 'Braids', slug: 'braids', iconUrl: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=400' },
+                { id: 'cat_twists', name: 'Twists', slug: 'twists', iconUrl: 'https://images.unsplash.com/photo-1628045667794-fb4d99c30f4a?auto=format&fit=crop&q=80&w=400' },
+                { id: 'cat_locs', name: 'Locs', slug: 'locs', iconUrl: 'https://images.unsplash.com/photo-1520186717578-831e353272cc?auto=format&fit=crop&q=80&w=400' },
+                { id: 'cat_natural', name: 'Natural', slug: 'natural', iconUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&q=80&w=400' },
+                { id: 'cat_weave', name: 'Weaves', slug: 'weave', iconUrl: 'https://images.unsplash.com/photo-1583766395091-758f2648fb46?auto=format&fit=crop&q=80&w=400' }
+            ];
+            setPopularCategories(staticCategories);
         })();
     }, []);
 

@@ -68,8 +68,14 @@ export class ProvidersService {
     const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    provider.updateBio(dto);
-    await this.providerRepo.save(provider);
+    provider.updateDetails(dto);
+    await this.providerEntityRepo.save(provider);
+
+    // If profilePictureUrl is provided, update the User entity as well
+    if (dto.profilePictureUrl && provider.user) {
+      provider.user.profilePictureUrl = dto.profilePictureUrl;
+      await this.userRepo.save(provider.user);
+    }
 
     await this.invalidateProviderCache(provider.id, userId);
     return { bio: provider.bio };

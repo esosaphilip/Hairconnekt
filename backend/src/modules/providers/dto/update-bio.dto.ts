@@ -1,4 +1,4 @@
-import { IsString, MaxLength } from 'class-validator';
+import { IsString, MaxLength, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateBioDto {
@@ -6,4 +6,8 @@ export class UpdateBioDto {
   @IsString({ message: 'Bio muss ein Text sein' })
   @MaxLength(500, { message: 'Die Bio darf maximal 500 Zeichen lang sein' })
   bio: string;
+
+  @IsOptional()
+  @IsString()
+  profilePictureUrl?: string; // Support updating profile picture along with details
 }

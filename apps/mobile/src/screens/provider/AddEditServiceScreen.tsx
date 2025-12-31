@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Platform, Modal, ActivityIndicator } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, Platform, Modal, ActivityIndicator, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
@@ -68,6 +69,7 @@ export function AddEditServiceScreen() {
     allowOnlineBooking: true,
     requiresConsultation: false,
     tags: [] as string[],
+    imageUrl: '' as string | undefined,
   });
 
   // Keep a ref to formData for the cleanup effect
@@ -85,13 +87,56 @@ export function AddEditServiceScreen() {
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [durationOpen, setDurationOpen] = useState(false);
 
-  // Manual Save Logic triggers when user presses "Back"
-  // This replaces unreliable unmount-effect auto-save
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  const handleImagePick = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Berechtigung fehlt', 'Wir benötigen Zugriff auf deine Fotos.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const selectedUri = result.assets[0].uri;
+      uploadServiceImage(selectedUri);
+    }
+  };
+
+  const uploadServiceImage = async (uri: string) => {
+    try {
+      setUploadingImage(true);
+      const { getAuthBundle } = require('@/auth/tokenStorage');
+      const bundle = await getAuthBundle();
+      const userId = bundle?.user?.id;
+      if (!userId) throw new Error('User not found');
+
+      const fileName = `service-${Date.now()}.jpg`;
+      const path = `providers/${userId}/services/${fileName}`;
+
+      const { uploadImageToFirebase } = require('@/services/imageUpload');
+      const url = await uploadImageToFirebase(uri, path);
+
+      setFormData(prev => ({ ...prev, imageUrl: url }));
+    } catch (e: any) {
+      console.error('Service image upload failed', e);
+      Alert.alert('Upload fehlgeschlagen', e.message || 'Ein Fehler ist aufgetreten');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const onBack = async () => {
     // 1. Check if we should save
     const currentData = formData;
     const hasName = !!currentData.name.trim();
-    const isClean = wasSubmittedRef.current; // If already submitted via button, don't auto-save again
+    const isClean = wasSubmittedRef.current;
 
     if (!isClean && hasName && !isSavingRef.current) {
       console.log('[AutoSave] Saving before exit...');
@@ -107,6 +152,7 @@ export function AddEditServiceScreen() {
           allowOnlineBooking: !!currentData.allowOnlineBooking,
           requiresConsultation: !!currentData.requiresConsultation,
           tags: currentData.tags || [],
+          imageUrl: currentData.imageUrl,
         };
 
         if (isEditing && serviceId) {
@@ -118,13 +164,11 @@ export function AddEditServiceScreen() {
         }
       } catch (err) {
         console.warn('[AutoSave] Failed', err);
-        // Optional: Alert user? For now we just log, as "Auto-save" is usually silent.
       } finally {
         isSavingRef.current = false;
       }
     }
 
-    // 2. Navigate back
     if (Platform.OS === 'web') {
       try { window.history.back(); } catch { }
     }
@@ -153,6 +197,7 @@ export function AddEditServiceScreen() {
             allowOnlineBooking: true,
             requiresConsultation: false,
             tags: Array.isArray(found.tags) ? found.tags : [],
+            imageUrl: found.imageUrl || '',
           });
         }
       } catch { }
@@ -196,6 +241,7 @@ export function AddEditServiceScreen() {
       allowOnlineBooking: !!formData.allowOnlineBooking,
       requiresConsultation: !!formData.requiresConsultation,
       tags: formData.tags,
+      imageUrl: formData.imageUrl,
     };
 
     try {
@@ -276,6 +322,36 @@ export function AddEditServiceScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Card style={styles.cardSection}>
+          <Text style={styles.sectionTitle}>Service Bild</Text>
+          <View style={[styles.mtSm, { alignItems: 'center' }]}>
+            <Pressable onPress={handleImagePick} style={styles.imageUploadBox}>
+              {formData.imageUrl ? (
+                <Image source={{ uri: formData.imageUrl }} style={styles.uploadedImage} resizeMode="cover" />
+              ) : (
+                <View style={styles.placeholderContainer}>
+                  <Ionicons name="camera-outline" size={32} color={colors.gray400} />
+                  <Text style={styles.placeholderText}>Bild hinzufügen</Text>
+                </View>
+              )}
+              {uploadingImage && (
+                <View style={styles.uploadOverlay}>
+                  <ActivityIndicator color={colors.primary} />
+                </View>
+              )}
+            </Pressable>
+            {formData.imageUrl && (
+              <Button
+                title="Bild ändern"
+                variant="ghost"
+                onPress={handleImagePick}
+                style={{ marginTop: spacing.xs }}
+                disabled={uploadingImage}
+              />
+            )}
+          </View>
+        </Card>
+
         {/* Basic Info */}
         <Card style={styles.cardSection}>
           <Text style={styles.sectionTitle}>Grundinformationen</Text>
@@ -666,5 +742,34 @@ const styles = StyleSheet.create({
   tagTextSelected: {
     color: colors.white,
     fontWeight: '500',
+  },
+  imageUploadBox: {
+    width: '100%',
+    height: 180,
+    backgroundColor: colors.gray100,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: colors.gray300,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  uploadedImage: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderContainer: {
+    alignItems: 'center',
+  },
+  placeholderText: {
+    color: colors.gray500,
+    marginTop: spacing.xs,
+  },
+  uploadOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
