@@ -97,6 +97,14 @@ export class AppointmentsController {
     return this.appointmentsService.create(createAppointmentDto);
   }
 
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async findOne(@Param('id') id: string, @Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    return this.appointmentsService.findOne(id, userId);
+  }
+
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)

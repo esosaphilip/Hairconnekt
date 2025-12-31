@@ -363,4 +363,26 @@ export class AppointmentsService {
 
     return saveResult;
   }
+
+  async findOne(id: string, userId: string) {
+    const appointment = await this.appointmentRepo.findOne({
+      where: { id },
+      relations: ['provider', 'provider.user', 'client', 'appointmentServices', 'serviceAddress']
+    });
+
+    if (!appointment) {
+      throw new NotFoundException(`Appointment with ID ${id} not found`);
+    }
+
+    // Security check: Ensure the user is either the client or the provider
+    const isClient = (appointment.client && appointment.client.id === userId);
+    // Safe check for provider user id
+    const isProvider = appointment.provider?.userId === userId || (appointment.provider && appointment.provider.user?.id === userId);
+
+    if (!isClient && !isProvider) {
+      throw new NotFoundException(`Appointment with ID ${id} not found`);
+    }
+
+    return { data: this.mapAppointmentToDto(appointment) };
+  }
 }

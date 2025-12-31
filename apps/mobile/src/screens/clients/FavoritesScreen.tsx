@@ -13,7 +13,7 @@ import {
 // Assuming React Navigation is used
 import { useNavigation, type NavigationProp, type ParamListBase } from '@react-navigation/native';
 // Icon imports (using standard RN names or placeholders)
-import ArrowLeft from '../../icons/ArrowLeft'; 
+import ArrowLeft from '../../icons/ArrowLeft';
 import Heart from '../../icons/Heart';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
@@ -85,10 +85,10 @@ export function FavoritesScreen() {
     // Optimistic update
     const prev = items;
     setItems((cur) => cur.filter((it) => it.providerId !== providerId));
-    
+
     // Success notification is logged to console, can be replaced by a toast library
     console.log(t('screens.favorites.removedSuccess', { name }));
-    
+
     try {
       await removeFavoriteApi(providerId);
     } catch (err: unknown) {
@@ -100,14 +100,14 @@ export function FavoritesScreen() {
 
   const handleNavigateToProvider = (providerId: string) => {
     // Navigate to ProviderDetail with a consistent { id } param shape
-    navigation.navigate('ProviderDetail', { id: providerId }); 
+    navigation.navigate('ProviderDetail', { id: providerId });
   };
-  
+
   const renderItem = (provider: FavoriteItem) => (
     <Card
       key={provider.id}
       // Replaced onClick with onPress on the Card's TouchableOpacity
-      onPress={() => handleNavigateToProvider(provider.providerId)} 
+      onPress={() => handleNavigateToProvider(provider.providerId)}
       style={styles.cardItem}
     >
       <View style={styles.cardContent}>
@@ -131,7 +131,7 @@ export function FavoritesScreen() {
         {/* Info */}
         <View style={styles.infoContainer}>
           <View style={styles.infoTopRow}>
-            <Text style={styles.providerName} numberOfLines={1}>
+            <Text style={styles.providerName}>
               {provider.name}
             </Text>
           </View>
@@ -172,7 +172,7 @@ export function FavoritesScreen() {
           <Button title={t('common.actions.retry')} onPress={fetchData} />
         </View>
       )}
-      
+
       {/* Empty State */}
       {!loading && !error && items.length === 0 && (
         <View style={styles.emptyContainer}>
@@ -195,13 +195,13 @@ export function FavoritesScreen() {
       {!loading && !error && items.length > 0 && (
         <ScrollView contentContainerStyle={styles.listContainer}>
           <Text style={styles.listCountText}>
-            {items.length === 1 
-              ? t('screens.favorites.count.one') 
+            {items.length === 1
+              ? t('screens.favorites.count.one')
               : t('screens.favorites.count.other', { count: items.length })}
           </Text>
 
           {items.map(renderItem)}
-          
+
           {/* Suggestions */}
           <View style={styles.suggestionsContainer}>
             <View style={styles.suggestionsHeader}>
@@ -225,12 +225,15 @@ export function FavoritesScreen() {
 const styles = StyleSheet.create({
   cardContent: {
     flexDirection: 'row',
-    gap: SPACING.sm * 1.5,
-    padding: SPACING.sm * 1.5,
+    gap: SPACING.md,
+    padding: SPACING.md,
+    alignItems: 'flex-start',
   },
   cardItem: {
     borderRadius: 8,
     overflow: 'hidden',
+    backgroundColor: COLORS.white,
+    marginBottom: SPACING.sm, // Add spacing between items if not handled by container gap
   },
   discoverButton: {
     backgroundColor: COLORS.primary,
@@ -294,15 +297,15 @@ const styles = StyleSheet.create({
     marginLeft: SPACING.md,
   },
   imageWrapper: {
-    flexShrink: 0,
-    height: 96,
+    height: 80,
+    width: 80,
+    borderRadius: 8,
+    overflow: 'hidden',
     position: 'relative',
-    width: 96,
   },
   infoContainer: {
     flex: 1,
-    minWidth: 0,
-    paddingRight: SPACING.sm,
+    justifyContent: 'center',
   },
   infoTopRow: {
     alignItems: 'flex-start',
@@ -311,7 +314,7 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm / 2,
   },
   listContainer: {
-    gap: SPACING.sm * 1.5,
+    gap: SPACING.md,
     padding: SPACING.md,
   },
   listCountText: {
@@ -332,31 +335,31 @@ const styles = StyleSheet.create({
   },
   providerBusiness: {
     color: COLORS.textSecondary,
-    fontSize: 12,
-    marginBottom: SPACING.sm,
+    fontSize: 14,
+    marginTop: 2,
   },
   providerImage: {
-    borderRadius: 8,
     height: '100%',
     width: '100%',
   },
   providerName: {
     color: COLORS.text,
-    flexShrink: 1,
     fontSize: 16,
     fontWeight: '600',
+    flexShrink: 1, // Allow shrinking if needed
+    flexWrap: 'wrap', // Allow wrapping
   },
   removeButton: {
     alignItems: 'center',
-    backgroundColor: COLORS.white,
-    borderRadius: 14,
-    height: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 12,
+    height: 24,
     justifyContent: 'center',
-    opacity: 0.9,
     position: 'absolute',
-    right: SPACING.sm / 2,
-    top: SPACING.sm / 2,
-    width: 28,
+    right: 4,
+    top: 4,
+    width: 24,
+    zIndex: 10,
   },
   safeArea: {
     backgroundColor: COLORS.background,

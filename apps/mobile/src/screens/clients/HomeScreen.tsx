@@ -86,7 +86,14 @@ export function HomeScreen() {
               {isAuthenticated && (
                 <TouchableOpacity
                   style={styles.notificationButton}
-                  onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } })}
+
+                  onPress={() => {
+                    requestAnimationFrame(() => {
+                      setTimeout(() => {
+                        rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } });
+                      }, 50);
+                    });
+                  }}
                 >
                   <Icon name="notifications" size={24} color={colors.gray700} />
                   <View style={styles.notificationBadge} />

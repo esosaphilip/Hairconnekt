@@ -162,11 +162,23 @@ export class SearchService {
     }
 
     // 2. Find providers with at least one active service in this category
+    // We must check for BOTH the category.id (UUID) AND the legacy mapping (e.g. 'cat_braids')
+    // to support services created before the migration or via seeds.
+    let legacyId: string | null = null;
+    if (slug === 'braids') legacyId = 'cat_braids';
+    else if (slug === 'twists') legacyId = 'cat_twists';
+    else if (slug === 'locs') legacyId = 'cat_locs';
+    else if (slug === 'natural' || slug === 'natural-styling') legacyId = 'cat_natural';
+    else if (slug === 'weave' || slug === 'weaves') legacyId = 'cat_weave';
+
+    const catIds = [category.id];
+    if (legacyId) catIds.push(legacyId);
+
     const providers = await this.providersRepo
       .createQueryBuilder('p')
       .innerJoin('p.services', 's')
       .innerJoinAndSelect('p.user', 'u')
-      .where('s.category_id = :catId', { catId: category.id })
+      .where('s.category_id IN (:...catIds)', { catIds })
       .andWhere('s.is_active = :isActive', { isActive: true })
       .andWhere('p.user_id IS NOT NULL') // Ensure linked to a user
       .distinct(true)
@@ -199,9 +211,10 @@ export class SearchService {
 
     // 4. Map to result format
     // Also fetch the specific services for each provider matching the category
+    // Reuse catIds from above (must facilitate scope if needed, but for now we reconstruct or assume same scope)
     const matchingServices = await this.servicesRepo.find({
       where: {
-        categoryId: category.id,
+        categoryId: In(catIds),
         isActive: true,
         provider: { id: In(ids) },
       },
