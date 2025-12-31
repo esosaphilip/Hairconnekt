@@ -131,13 +131,23 @@ async function ensureService(
   const existing = await repo.findOne({ where: { provider: { id: provider.id }, name } as any });
   if (existing) return existing;
 
-  let category = null;
-  if (categoryName && catRepo) {
-    category = await catRepo.findOne({ where: { nameDe: categoryName } });
-    if (!category) {
-      // Find default category or create? For now find any
-      // implementation choice: try to map simple string to existing categories seeded
-    }
+  let finalCategoryId = 'cat_haircuts'; // Default
+  const inferenceSource = (categoryName || name).toLowerCase();
+
+  if (inferenceSource.includes('braid') || inferenceSource.includes('cornrow') || inferenceSource.includes('rasta') || inferenceSource.includes('dread') || inferenceSource.includes('twist')) {
+    finalCategoryId = 'cat_braids';
+  } else if (inferenceSource.includes('color') || inferenceSource.includes('farbe') || inferenceSource.includes('strähne') || inferenceSource.includes('coloration') || inferenceSource.includes('balayage')) {
+    finalCategoryId = 'cat_color';
+  } else if (inferenceSource.includes('cut') || inferenceSource.includes('schnitt') || inferenceSource.includes('shave')) {
+    finalCategoryId = 'cat_haircuts';
+  } else if (inferenceSource.includes('styling') || inferenceSource.includes('wash') || inferenceSource.includes('fön') || inferenceSource.includes('dry')) {
+    finalCategoryId = 'cat_styling';
+  } else if (inferenceSource.includes('extension') || inferenceSource.includes('verdichtung')) {
+    finalCategoryId = 'cat_extensions';
+  } else if (inferenceSource.includes('shave') || inferenceSource.includes('rasur') || inferenceSource.includes('bart')) {
+    finalCategoryId = 'cat_beard';
+  } else if (inferenceSource.includes('brow') || inferenceSource.includes('lashes') || inferenceSource.includes('kosmetik') || inferenceSource.includes('threading')) {
+    finalCategoryId = 'cat_eyebrows_lashes';
   }
 
   const service = repo.create({
@@ -147,7 +157,7 @@ async function ensureService(
     priceCents,
     durationMinutes,
     priceType: PriceType.FIXED,
-    category: category || undefined, // TypeORM might complain about null if relations strict logic
+    categoryId: finalCategoryId,
     isActive: true,
   });
   return repo.save(service);
