@@ -86,13 +86,14 @@ export function HomeScreen() {
               {isAuthenticated && (
                 <TouchableOpacity
                   style={styles.notificationButton}
-
+                  testID="notification-bell"
                   onPress={() => {
-                    requestAnimationFrame(() => {
-                      setTimeout(() => {
-                        rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } });
-                      }, 50);
-                    });
+                    // Simple debounce/throttle
+                    const now = Date.now();
+                    if (now - (global.lastNotificationNav || 0) > 1000) {
+                      global.lastNotificationNav = now;
+                      rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } });
+                    }
                   }}
                 >
                   <Icon name="notifications" size={24} color={colors.gray700} />

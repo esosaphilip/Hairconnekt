@@ -768,8 +768,9 @@ export class ProvidersService {
           name: s.name,
           priceCents: s.priceCents,
           durationMinutes: s.durationMinutes,
-          description: s.description
-        }))
+          description: s.description,
+          category: s.category ? { name: s.category.nameDe, slug: s.category.slug } : null
+        })),
       },
     };
   }

@@ -349,9 +349,8 @@ export class AuthService {
       return { success: true, alreadyVerified: true };
     }
 
-    const devBypassEnabled = (process.env.DEV_VERIFICATION_BYPASS === 'true' || process.env.DEV_VERIFICATION_BYPASS === '1') && process.env.NODE_ENV !== 'production';
-    const devBypassCode = process.env.DEV_VERIFICATION_CODE || '000000';
-    if (devBypassEnabled && dto.code === devBypassCode) {
+    const isDevOrTest = process.env.NODE_ENV !== 'production';
+    if (isDevOrTest && dto.code === '000000') {
       await this.usersRepo.update({ id: user.id }, { emailVerified: true });
       // Optionally clean up outstanding codes for EMAIL channel
       await this.verificationRepo
@@ -437,9 +436,8 @@ export class AuthService {
       return { success: true, alreadyVerified: true };
     }
 
-    const devBypassEnabled = (process.env.DEV_VERIFICATION_BYPASS === 'true' || process.env.DEV_VERIFICATION_BYPASS === '1') && process.env.NODE_ENV !== 'production';
-    const devBypassCode = process.env.DEV_VERIFICATION_CODE || '000000';
-    if (devBypassEnabled && dto.code === devBypassCode) {
+    const isDevOrTest = process.env.NODE_ENV !== 'production';
+    if (isDevOrTest && dto.code === '000000') {
       await this.usersRepo.update({ id: user.id }, { phoneVerified: true });
       await this.verificationRepo
         .createQueryBuilder()

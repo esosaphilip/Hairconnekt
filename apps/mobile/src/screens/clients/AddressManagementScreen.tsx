@@ -6,11 +6,11 @@ import {
   SafeAreaView,
   TouchableOpacity,
   StyleSheet,
-  Alert, // Used to replace browser 'confirm' and 'toast'
-  Platform, // For minor platform-specific adjustments
+  Alert,
+  Platform,
+  FlatList,
 } from 'react-native';
 
-// Replaced web imports with assumed custom/community React Native components
 import { useNavigation } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Button from '@/components/Button';
@@ -19,6 +19,7 @@ import IconButton from '@/components/IconButton';
 import { Badge } from '@/components/badge';
 import Icon from '@/components/Icon';
 import { COLORS, SPACING, FONT_SIZES } from '@/theme/tokens';
+import { clientUserApi, Address } from '@/api/clientUser';
 // navigation types omitted
 
 type AddressItem = {
@@ -72,9 +73,26 @@ const ICON_MAP: Record<string, string> = {
 // --- Main Component ---
 export function AddressManagementScreen() {
   const navigation = useNavigation();
-  const [addresses, setAddresses] = useState<AddressItem[]>(mockAddresses);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Replaces browser 'confirm' and web 'toast'
+  const fetchAddresses = async () => {
+    try {
+      setLoading(true);
+      const data = await clientUserApi.getAddresses();
+      setAddresses(data);
+    } catch (error) {
+      console.error('Error fetching addresses:', error);
+      Alert.alert('Fehler', 'Adressen konnten nicht geladen werden.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
+
   const handleDelete = (id: string) => {
     Alert.alert(
       "Adresse löschen?",
@@ -86,9 +104,15 @@ export function AddressManagementScreen() {
         },
         {
           text: "Löschen",
-          onPress: () => {
-            setAddresses(addresses.filter((addr) => addr.id !== id));
-            Alert.alert("Erfolg", "Adresse gelöscht"); // Simple toast replacement
+          onPress: async () => {
+            try {
+              await clientUserApi.deleteAddress(id);
+              fetchAddresses();
+              Alert.alert("Erfolg", "Adresse gelöscht");
+            } catch (error) {
+              console.error('Error deleting address:', error);
+              Alert.alert('Fehler', 'Adresse konnte nicht gelöscht werden.');
+            }
           },
           style: "destructive",
         },
@@ -96,23 +120,22 @@ export function AddressManagementScreen() {
     );
   };
 
-  // Replaces web 'toast'
-  const handleSetDefault = (id: string) => {
-    setAddresses(
-      addresses.map((addr) => ({
-        ...addr,
-        isDefault: addr.id === id,
-      }))
-    );
-    Alert.alert("Erfolg", "Standardadresse geändert"); // Simple toast replacement
+  const handleSetDefault = async (id: string) => {
+    try {
+      await clientUserApi.setDefaultAddress(id);
+      fetchAddresses();
+      Alert.alert("Erfolg", "Standardadresse geändert");
+    } catch (error) {
+      console.error('Error setting default address:', error);
+      Alert.alert('Fehler', 'Standardadresse konnte nicht geändert werden.');
+    }
   };
 
   const getIconName = (label: string) => {
     return ICON_MAP[label] || ICON_MAP.default;
   };
 
-  // --- Render Item for the List ---
-  const renderAddressItem = (address: AddressItem) => {
+  const renderAddressItem = ({ item: address }: { item: Address }) => {
     const iconName = getIconName(address.label);
     return (
       <Card style={styles.addressCard}>
@@ -130,7 +153,7 @@ export function AddressManagementScreen() {
                 <Badge title="Standard" color="primary" />
               )}
             </View>
-            <Text style={styles.addressText}>{address.street}</Text>
+            <Text style={styles.addressText}>{address.streetAddress}</Text>
             <Text style={styles.addressText}>
               {address.postalCode} {address.city}
             </Text>
@@ -168,7 +191,6 @@ export function AddressManagementScreen() {
     );
   };
 
-  // --- Empty State Component ---
   const EmptyState = () => (
     <Card style={styles.emptyCard}>
       <Icon name="map-pin" size={48} color={COLORS.textSecondary} style={{ marginBottom: SPACING.md }} />
@@ -185,7 +207,6 @@ export function AddressManagementScreen() {
 
   return (
     <SafeAreaView style={styles.flexContainer}>
-      {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerContent}>
           <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
@@ -201,25 +222,23 @@ export function AddressManagementScreen() {
         </View>
       </View>
 
-      <View style={styles.contentContainer}>
-        {/* Info Card */}
-        <Card style={styles.infoCard}>
-          <Text style={styles.infoText}>
-            Gespeicherte Adressen werden bei Buchungen mit mobilem Service verwendet.
-          </Text>
-        </Card>
+      <FlatList
+        data={addresses}
+        renderItem={renderAddressItem}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.contentContainer}
+        ListHeaderComponent={
+          <Card style={styles.infoCard}>
+            <Text style={styles.infoText}>
+              Gespeicherte Adressen werden bei Buchungen mit mobilem Service verwendet.
+            </Text>
+          </Card>
+        }
+        ListEmptyComponent={!loading ? <EmptyState /> : null}
+        refreshing={loading}
+        onRefresh={fetchAddresses}
+      />
 
-        {/* Address List */}
-        {addresses.length > 0 ? (
-          addresses.map((address) => (
-            <View key={address.id}>{renderAddressItem(address)}</View>
-          ))
-        ) : (
-          <EmptyState />
-        )}
-      </View>
-
-      {/* FAB */}
       {addresses.length > 0 && (
         <TouchableOpacity
           onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'AddEditAddressScreen' } })}

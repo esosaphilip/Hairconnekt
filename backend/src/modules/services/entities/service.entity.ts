@@ -30,8 +30,12 @@ export class Service {
   @JoinColumn({ name: 'provider_id' })
   provider: ProviderProfile;
 
-  @Column({ name: 'category_id', type: 'varchar', length: 50, nullable: true })
+  @Column({ name: 'category_id', type: 'uuid', nullable: true })
   categoryId?: string | null;
+
+  @ManyToOne(() => ServiceCategory)
+  @JoinColumn({ name: 'category_id' })
+  category?: ServiceCategory;
 
   @Column('text', { array: true, nullable: true })
   tags?: string[];

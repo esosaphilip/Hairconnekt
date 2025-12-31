@@ -58,6 +58,28 @@ export class UsersController {
     return { success: true, message: 'User reported' };
   }
 
+  @Get('me/addresses')
+  @UseGuards(JwtAuthGuard)
+  async getAddresses(@Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    const addresses = await this.usersService.getAddresses(userId);
+    return { success: true, data: addresses };
+  }
+
+  @Delete('me/addresses/:id')
+  @UseGuards(JwtAuthGuard)
+  async deleteAddress(@Req() req: Request, @Param('id') id: string) {
+    const userId = (req.user as any)?.sub;
+    return this.usersService.deleteAddress(userId, id);
+  }
+
+  @Patch('me/addresses/:id/default')
+  @UseGuards(JwtAuthGuard)
+  async setDefaultAddress(@Req() req: Request, @Param('id') id: string) {
+    const userId = (req.user as any)?.sub;
+    return this.usersService.setDefaultAddress(userId, id);
+  }
+
   @Delete('me')
   @UseGuards(JwtAuthGuard)
   async deleteMe(@Req() req: Request) {

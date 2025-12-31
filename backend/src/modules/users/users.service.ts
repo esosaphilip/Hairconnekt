@@ -181,4 +181,28 @@ export class UsersService {
     await this.userRepo.save(user);
     return { success: true };
   }
+
+  async getAddresses(userId: string) {
+    return this.addressesRepo.findAllByUserId(userId);
+  }
+
+  async deleteAddress(userId: string, addressId: string) {
+    const address = await this.addressesRepo.findById(addressId);
+    if (!address) throw new NotFoundException('Address not found');
+    if (address.user.id !== userId) throw new NotFoundException('Address not found'); // Security check
+
+    await this.addressesRepo.delete(addressId);
+    return { success: true };
+  }
+
+  async setDefaultAddress(userId: string, addressId: string) {
+    const address = await this.addressesRepo.findById(addressId);
+    if (!address) throw new NotFoundException('Address not found');
+    if (address.user.id !== userId) throw new NotFoundException('Address not found');
+
+    await this.addressesRepo.resetDefaults(userId);
+    address.isDefault = true;
+    await this.addressesRepo.save(address);
+    return { success: true };
+  }
 }
