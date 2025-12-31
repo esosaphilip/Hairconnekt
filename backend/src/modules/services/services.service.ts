@@ -98,7 +98,12 @@ export class ServicesService {
 
     try {
       const saved = await this.serviceRepository.save(service);
-      console.log('[ServicesService] Service created successfully:', saved.id);
+      console.log('[ServicesService] Service created successfully:', {
+        id: saved.id,
+        name: saved.name,
+        providerId: saved.provider.id,
+        categoryId: saved.category?.id
+      });
       return saved;
     } catch (error) {
       console.error('[ServicesService] Create service error:', error);
@@ -113,7 +118,8 @@ export class ServicesService {
 
   async listForProvider(providerId: string): Promise<Service[]> {
     try {
-      return await this.serviceRepository.find({
+      console.log(`[ServicesService] Listing services for provider: ${providerId}`);
+      const services = await this.serviceRepository.find({
         where: { providerId },
         relations: ['category'],
         order: {
@@ -121,6 +127,8 @@ export class ServicesService {
           name: 'ASC',
         },
       });
+      console.log(`[ServicesService] Found ${services.length} services for provider ${providerId}`);
+      return services;
     } catch (error) {
       console.error('[ServicesService] listForProvider Error:', error);
       // DEBUG: Return actual error message to frontend to identify the SQL issue

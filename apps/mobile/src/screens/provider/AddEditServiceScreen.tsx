@@ -71,6 +71,7 @@ export function AddEditServiceScreen() {
   const formDataRef = useRef(formData);
   useEffect(() => {
     formDataRef.current = formData;
+    wasSubmittedRef.current = false; // Reset submitted flag on any change
   }, [formData]);
 
   const [loading, setLoading] = useState<boolean>(false);

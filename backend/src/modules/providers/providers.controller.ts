@@ -122,46 +122,7 @@ export class ProvidersController {
     return this.providersService.removeCertification(userId, id);
   }
 
-  @Get('me/services')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserType.PROVIDER)
-  async getMyServices(@Req() req: Request) {
-    const userId = (req.user as any)?.sub;
-    console.log('[FIRE-DEBUG] ProvidersController GET /providers/me/services HIT (Direct Route)');
-    const providerId = await this.servicesService.getProviderIdByUserId(userId);
-    return this.servicesService.listForProvider(providerId);
-  }
 
-  @Post('me/services')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserType.PROVIDER)
-  async createService(@Req() req: Request, @Body() body: any) {
-    const userId = (req.user as any)?.sub;
-    console.log('[FIRE-DEBUG] ProvidersController POST /providers/me/services HIT (Direct Route)');
-    // Resolve provider ID internally
-    const providerId = await this.servicesService.getProviderIdByUserId(userId);
-    return this.servicesService.create(providerId, body);
-  }
-
-  @Patch('me/services/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserType.PROVIDER)
-  async updateService(@Req() req: Request, @Param('id', new ParseUUIDPipe()) id: string, @Body() body: any) {
-    const userId = (req.user as any)?.sub;
-    console.log(`[FIRE-DEBUG] ProvidersController PATCH /providers/me/services/${id} HIT (Direct Route)`);
-    const providerId = await this.servicesService.getProviderIdByUserId(userId);
-    return this.servicesService.update(id, providerId, body);
-  }
-
-  @Delete('me/services/:id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserType.PROVIDER)
-  async deleteService(@Req() req: Request, @Param('id', new ParseUUIDPipe()) id: string) {
-    const userId = (req.user as any)?.sub;
-    console.log(`[FIRE-DEBUG] ProvidersController DELETE /providers/me/services/${id} HIT (Direct Route)`);
-    const providerId = await this.servicesService.getProviderIdByUserId(userId);
-    return this.servicesService.delete(id, providerId);
-  }
 
 
   @Get('me')
