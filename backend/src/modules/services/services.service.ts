@@ -96,6 +96,9 @@ export class ServicesService {
     if (createDto.allowOnlineBooking !== undefined) service.allowOnlineBooking = createDto.allowOnlineBooking;
     if (createDto.displayOrder !== undefined) service.displayOrder = createDto.displayOrder;
 
+    // Explicitly set providerId to ensure strict foreign key mapping
+    service.providerId = providerId;
+
     try {
       const saved = await this.serviceRepository.save(service);
       console.log('[ServicesService] Service created successfully:', {

@@ -231,14 +231,36 @@ export function AddEditServiceScreen() {
       if (isEditing && serviceId) {
         await http.patch(`/providers/me/services/${serviceId}`, body);
         setMessage('Dienst aktualisiert');
+        // Small delay to ensure state is settled before navigation
+        setTimeout(() => {
+          if (navigation.canGoBack()) navigation.goBack();
+          else navigation.navigate('ServicesManagementScreen' as never);
+        }, 500);
       } else {
         const res = await http.post('/providers/me/services', body);
-        const msg = (res?.data && (res.data as any)?.data?.message) || 'Dienst gespeichert';
-        setMessage(String(msg));
+        // Only show success if we got a valid ID back
+        if (res?.data?.id || (res?.data as any)?.data?.id) {
+          const msg = (res?.data && (res.data as any)?.data?.message) || 'Dienst gespeichert';
+          setMessage(String(msg));
+          // Small delay to ensure state is settled before navigation
+          setTimeout(() => {
+            if (navigation.canGoBack()) navigation.goBack();
+            else navigation.navigate('ServicesManagementScreen' as never);
+          }, 500);
+        } else {
+          // Fallback if no ID returned, though unlikely with 201
+          setMessage('Dienst gespeichert (Keine ID erhalten)');
+          setTimeout(() => {
+            if (navigation.canGoBack()) navigation.goBack();
+          }, 1000);
+        }
       }
 
       if (Platform.OS === 'web') {
-        try { window.location.hash = '/provider/services'; } catch { }
+        try {
+          // Optional: still keep hash for web dev, but navigation above should handle it
+          // window.location.hash = '/provider/services'; 
+        } catch { }
       }
     } catch (err) {
       let msg = 'Ein Fehler ist aufgetreten.';

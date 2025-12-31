@@ -24,8 +24,9 @@ export function ServicesManagementScreen() {
 
   useFocusEffect(
     React.useCallback(() => {
+      console.log('[ServicesManagementScreen] Screen focused, loading services...');
       loadServices();
-    }, [loadServices])
+    }, [loadServices]) // loadServices comes from useServices and should be stable
   );
 
   const onRefresh = React.useCallback(async () => {

@@ -31,7 +31,11 @@ export class ServicesController {
     // In strict provider mode, the authenticated user IS the provider (or linked to it)
     if (user.userType === UserType.PROVIDER || user.userType === UserType.BOTH) {
       // Fetch the actual ProviderProfile ID linked to this User ID
-      return this.servicesService.getProviderIdByUserId(user.sub);
+      const providerId = await this.servicesService.getProviderIdByUserId(user.sub);
+      if (!providerId) {
+        throw new BadRequestException('Provider profile not found for this user');
+      }
+      return providerId;
     }
     throw new BadRequestException('User is not a provider');
   }
