@@ -41,6 +41,26 @@ export const clientBraiderApi = {
     }
   },
 
+  async searchServices(
+    params: { query?: string; category?: string; limit?: number } = {}
+  ): Promise<{
+    id: string;
+    name: string;
+    price: number;
+    duration: number;
+    imageUrl?: string;
+    categorySlug?: string;
+    provider: { id: string; name: string; city?: string; isVerified: boolean };
+  }[]> {
+    try {
+      const res = await http.get('/search/services', { params });
+      return Array.isArray(res.data?.results) ? res.data.results : [];
+    } catch (error) {
+      console.error('[clientBraiderApi] searchServices error:', error);
+      return [];
+    }
+  },
+
   async getCategories(): Promise<{ id: string; name: string; slug: string; iconUrl?: string }[]> {
     try {
       const res = await http.get('/services/categories');

@@ -32,8 +32,16 @@ export class SearchController {
       return res;
     } catch (err) {
       // Fail-soft: return empty results to avoid breaking the client UI
-      console.error('[SearchController] search error:', err);
       return { results: [] };
     }
+  }
+
+  @Get('services')
+  async searchServices(
+    @Query('q') q?: string,
+    @Query('category') category?: string,
+    @Query('limit') limit?: number,
+  ) {
+    return this.searchService.searchServices({ query: q, category, limit });
   }
 }

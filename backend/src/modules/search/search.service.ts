@@ -257,4 +257,69 @@ export class SearchService {
 
     return { results, categoryName: category.nameDe };
   }
+
+  async searchServices(params: { query?: string; category?: string; limit?: number }) {
+    const q = (params.query || '').trim();
+    const cat = (params.category || '').trim().toLowerCase();
+    const limit = params.limit || 50;
+
+    const qb = this.servicesRepo.createQueryBuilder('s')
+      .leftJoinAndSelect('s.provider', 'p') // Join provider to get name/avatar
+      .leftJoinAndSelect('p.user', 'u') // Provider user details
+      .leftJoinAndSelect('s.category', 'c') // Join category for filtering/slug
+      .where('s.isActive = :isActive', { isActive: true })
+      .andWhere('p.isVerified = :isVerified', { isVerified: true }); // Only verified providers
+
+    // Filter by text (Service Name OR Description)
+    if (q) {
+      const filterLower = `%${q.toLowerCase()}%`;
+      qb.andWhere(
+        '(LOWER(s.name) LIKE :filterLower OR LOWER(s.description) LIKE :filterLower)',
+        { filterLower }
+      );
+    }
+
+    // Filter by Category Slug
+    if (cat) {
+      // Direct category slug match or legacy
+      let legacyId: string | null = null;
+      if (cat === 'braids') legacyId = 'cat_braids';
+      else if (cat === 'twists') legacyId = 'cat_twists';
+      else if (cat === 'locs') legacyId = 'cat_locs';
+      else if (cat === 'natural' || cat === 'natural-styling') legacyId = 'cat_natural';
+      else if (cat === 'weave' || cat === 'weaves') legacyId = 'cat_weave';
+
+      if (legacyId) {
+        qb.andWhere('(c.slug = :cat OR s.categoryId = :legacyId)', { cat, legacyId });
+      } else {
+        // Also handle 'Alle' or generic cases if needed, but 'Alle' usually sends empty cat
+        if (cat !== 'alle' && cat !== 'all') {
+          qb.andWhere('c.slug = :cat', { cat });
+        }
+      }
+    }
+
+    qb.orderBy('s.createdAt', 'DESC') // Newest styles first
+      .take(limit);
+
+    const services = await qb.getMany();
+
+    // Map to frontend friendly format
+    const results = services.map(s => ({
+      id: s.id,
+      name: s.name,
+      price: s.priceCents,
+      duration: s.durationMinutes,
+      imageUrl: s.imageUrl,
+      categorySlug: s.category?.slug,
+      provider: {
+        id: s.provider.id,
+        name: [s.provider.user?.firstName, s.provider.user?.lastName].filter(Boolean).join(' ') || s.provider.businessName || 'Provider',
+        city: s.provider.city || 'Berlin', // Fallback
+        isVerified: s.provider.isVerified
+      }
+    }));
+
+    return { results };
+  }
 }
