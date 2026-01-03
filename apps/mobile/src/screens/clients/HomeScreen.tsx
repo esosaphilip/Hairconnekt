@@ -26,6 +26,8 @@ const quickActions = [
   { iconName: "sparkles", key: "newBraiders", color: colors.amber600 },
 ];
 
+import { useNavigation } from '@react-navigation/native';
+
 export function HomeScreen() {
   const {
     t,
@@ -44,7 +46,21 @@ export function HomeScreen() {
   } = useHomeScreen();
 
   const { location } = useLocation();
-  const lastNotificationNavRef = React.useRef<number>(0);
+  const navigation = useNavigation();
+  const [isNavigating, setIsNavigating] = React.useState(false);
+
+  const handleNotificationPress = React.useCallback(() => {
+    if (isNavigating) return;
+    setIsNavigating(true);
+
+    // @ts-ignore
+    navigation.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } });
+
+    // Reset guard after delay
+    setTimeout(() => {
+      setIsNavigating(false);
+    }, 1500);
+  }, [isNavigating, navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -88,13 +104,7 @@ export function HomeScreen() {
                 <TouchableOpacity
                   style={styles.notificationButton}
                   testID="notification-bell"
-                  onPress={() => {
-                    const now = Date.now();
-                    if (now - (lastNotificationNavRef.current || 0) > 1000) {
-                      lastNotificationNavRef.current = now;
-                      rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } });
-                    }
-                  }}
+                  onPress={handleNotificationPress}
                 >
                   <Icon name="notifications" size={24} color={colors.gray700} />
                   <View style={styles.notificationBadge} />
