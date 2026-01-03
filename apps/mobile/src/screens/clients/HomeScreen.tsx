@@ -44,6 +44,7 @@ export function HomeScreen() {
   } = useHomeScreen();
 
   const { location } = useLocation();
+  const lastNotificationNavRef = React.useRef<number>(0);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -88,10 +89,9 @@ export function HomeScreen() {
                   style={styles.notificationButton}
                   testID="notification-bell"
                   onPress={() => {
-                    // Simple debounce/throttle
                     const now = Date.now();
-                    if (now - (global.lastNotificationNav || 0) > 1000) {
-                      global.lastNotificationNav = now;
+                    if (now - (lastNotificationNavRef.current || 0) > 1000) {
+                      lastNotificationNavRef.current = now;
                       rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } });
                     }
                   }}
@@ -245,6 +245,6 @@ export function HomeScreen() {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }

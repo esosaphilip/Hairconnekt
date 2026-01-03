@@ -9,12 +9,15 @@
       "./node_modules/@types"
     ],
     "types": [
-      "react"
+      "react",
+      "jest"
     ],
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": [
+        "src/*"
+      ]
     }
   },
   "exclude": [

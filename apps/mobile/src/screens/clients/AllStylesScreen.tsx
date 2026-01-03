@@ -105,6 +105,7 @@ export function AllStylesScreen() {
     (async () => {
       try {
         const cats = await clientBraiderApi.getCategories();
+        console.log('Fetched Categories:', cats.map(c => `${c.name} (${c.slug})`));
         setCategories(cats);
       } catch (e) {
         console.error(e);
@@ -120,7 +121,10 @@ export function AllStylesScreen() {
 
     // Get slugs allowed for this group
     const allowedSlugs = CATEGORY_GROUPS[selectedFilter as keyof typeof CATEGORY_GROUPS] || [];
-    return categories.filter(c => allowedSlugs.includes(c.slug));
+    return categories.filter(c =>
+      allowedSlugs.includes(c.slug) ||
+      c.name.toLowerCase().includes(selectedFilter.toLowerCase())
+    );
   }, [categories, selectedFilter]);
 
 
@@ -137,14 +141,8 @@ export function AllStylesScreen() {
       <Icon name="search" size={48} color={colors.gray300} />
       <Text style={styles.emptyText}>Keine Styles gefunden</Text>
       <Text style={styles.emptySubtext}>
-        In der Kategorie "{selectedFilter}" sind momentan keine Styles verfügbar.
+        Versuche es mit einer anderen Kategorie oder wähle 'Alle' oben aus.
       </Text>
-      <Button
-        title="Alle Styles anzeigen"
-        variant="outline"
-        onPress={() => setSelectedFilter("Alle")}
-        style={{ marginTop: spacing.md }}
-      />
     </View>
   );
 
