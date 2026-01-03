@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import type { ListRenderItem } from 'react-native';
-import { useNavigation, type NavigationProp } from '@react-navigation/native';
+import { useNavigation, useRoute, type NavigationProp, type RouteProp } from '@react-navigation/native';
 import Button from '@/components/Button';
 import IconButton from '@/components/IconButton';
 import Icon from '@/components/Icon';
@@ -85,9 +85,21 @@ type NavParams = {
 
 export function AllStylesScreen() {
   const navigation = useNavigation<any>();
+  const route = useRoute<RouteProp<{ params: { category?: string } }, 'params'>>();
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState("Alle");
+
+  useEffect(() => {
+    if (route.params?.category) {
+      // Allow case-insensitive matching for robustness
+      const target = route.params.category;
+      const matched = FILTER_PILLS.find(p => p.toLowerCase() === target.toLowerCase());
+      if (matched) {
+        setSelectedFilter(matched);
+      }
+    }
+  }, [route.params?.category]);
 
   useEffect(() => {
     (async () => {
@@ -105,7 +117,7 @@ export function AllStylesScreen() {
   // Filter Logic
   const filteredCategories = React.useMemo(() => {
     if (selectedFilter === "Alle") return categories;
-    
+
     // Get slugs allowed for this group
     const allowedSlugs = CATEGORY_GROUPS[selectedFilter as keyof typeof CATEGORY_GROUPS] || [];
     return categories.filter(c => allowedSlugs.includes(c.slug));
@@ -119,6 +131,23 @@ export function AllStylesScreen() {
       onPress={() => navigation.navigate('Search', { initialFilter: `cat:${item.slug}` })}
     />
   );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Icon name="search" size={48} color={colors.gray300} />
+      <Text style={styles.emptyText}>Keine Styles gefunden</Text>
+      <Text style={styles.emptySubtext}>
+        In der Kategorie "{selectedFilter}" sind momentan keine Styles verfügbar.
+      </Text>
+      <Button
+        title="Alle Styles anzeigen"
+        variant="outline"
+        onPress={() => setSelectedFilter("Alle")}
+        style={{ marginTop: spacing.md }}
+      />
+    </View>
+  );
+
 
   if (loading) {
     return (
@@ -135,27 +164,27 @@ export function AllStylesScreen() {
         <View style={styles.headerRow}>
           <IconButton name="arrow-left" onPress={() => navigation.goBack()} />
           <Text style={styles.headerTitle}>Alle Styles</Text>
-          <View style={{ width: 40 }} /> 
+          <View style={{ width: 40 }} />
         </View>
 
         {/* Horizontal Filter Pills (Restored) */}
-         <ScrollView
-           horizontal
-           showsHorizontalScrollIndicator={false}
-           contentContainerStyle={styles.categoryFilterContainer}
-         >
-           {FILTER_PILLS.map((filter) => (
-             <Button
-               key={filter}
-               title={filter}
-               size="sm"
-               variant={selectedFilter === filter ? "default" : "outline"}
-               onPress={() => setSelectedFilter(filter)}
-               style={selectedFilter === filter ? styles.activeCategoryButton : styles.inactiveCategoryButton}
-               textStyle={selectedFilter === filter ? styles.activeCategoryText : styles.inactiveCategoryText}
-             />
-           ))}
-         </ScrollView>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.categoryFilterContainer}
+        >
+          {FILTER_PILLS.map((filter) => (
+            <Button
+              key={filter}
+              title={filter}
+              size="sm"
+              variant={selectedFilter === filter ? "default" : "outline"}
+              onPress={() => setSelectedFilter(filter)}
+              style={selectedFilter === filter ? styles.activeCategoryButton : styles.inactiveCategoryButton}
+              textStyle={selectedFilter === filter ? styles.activeCategoryText : styles.inactiveCategoryText}
+            />
+          ))}
+        </ScrollView>
       </View>
 
       <View style={styles.contentContainer}>
@@ -173,6 +202,7 @@ export function AllStylesScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.gridContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmptyState}
         />
       </View>
     </SafeAreaView>
@@ -206,6 +236,25 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: cardPadding,
     paddingTop: spacing.md,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: spacing.xl,
+    marginTop: spacing.xl,
+  },
+  emptyText: {
+    color: colors.gray800,
+    fontSize: FONT_SIZES.h5,
+    fontWeight: '600',
+    marginTop: spacing.md,
+    marginBottom: spacing.xs,
+  },
+  emptySubtext: {
+    color: colors.gray500,
+    fontSize: typography.body.fontSize,
+    textAlign: 'center',
+    marginBottom: spacing.md,
   },
   flexContainer: {
     backgroundColor: colors.gray50,

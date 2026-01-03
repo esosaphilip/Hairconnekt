@@ -135,23 +135,42 @@ async function ensureService(
   const existing = await repo.findOne({ where: { provider: { id: provider.id }, name } as any });
   if (existing) return existing;
 
-  let finalCategoryId = 'cat_haircuts'; // Default
+  let finalCategorySlug = 'natural-styling'; // Default fallback
   const inferenceSource = (categoryName || name).toLowerCase();
 
+  // Map keywords to slugs in seed-categories.ts
   if (inferenceSource.includes('braid') || inferenceSource.includes('cornrow') || inferenceSource.includes('rasta') || inferenceSource.includes('dread') || inferenceSource.includes('twist')) {
-    finalCategoryId = 'cat_braids';
+    if (inferenceSource.includes('cornrow')) finalCategorySlug = 'cornrows';
+    else if (inferenceSource.includes('knotless')) finalCategorySlug = 'knotless-braids';
+    else if (inferenceSource.includes('twist')) finalCategorySlug = 'twists';
+    else if (inferenceSource.includes('dread') || inferenceSource.includes('locs')) finalCategorySlug = 'locs';
+    else finalCategorySlug = 'box-braids';
   } else if (inferenceSource.includes('color') || inferenceSource.includes('farbe') || inferenceSource.includes('strähne') || inferenceSource.includes('coloration') || inferenceSource.includes('balayage')) {
-    finalCategoryId = 'cat_color';
+    finalCategorySlug = 'natural-styling'; // Fallback as we don't have Color category yet
   } else if (inferenceSource.includes('cut') || inferenceSource.includes('schnitt') || inferenceSource.includes('shave')) {
-    finalCategoryId = 'cat_haircuts';
+    finalCategorySlug = 'natural-styling'; // Fallback
   } else if (inferenceSource.includes('styling') || inferenceSource.includes('wash') || inferenceSource.includes('fön') || inferenceSource.includes('dry')) {
-    finalCategoryId = 'cat_styling';
-  } else if (inferenceSource.includes('extension') || inferenceSource.includes('verdichtung')) {
-    finalCategoryId = 'cat_extensions';
-  } else if (inferenceSource.includes('shave') || inferenceSource.includes('rasur') || inferenceSource.includes('bart')) {
-    finalCategoryId = 'cat_beard';
-  } else if (inferenceSource.includes('brow') || inferenceSource.includes('lashes') || inferenceSource.includes('kosmetik') || inferenceSource.includes('threading')) {
-    finalCategoryId = 'cat_eyebrows_lashes';
+    finalCategorySlug = 'silk-press'; // Close enough
+  } else if (inferenceSource.includes('extension') || inferenceSource.includes('verdichtung') || inferenceSource.includes('weave')) {
+    finalCategorySlug = 'weave';
+  } else if (inferenceSource.includes('wig')) {
+    finalCategorySlug = 'wig-install';
+  }
+
+  // Find the category entity
+  let categoryId: string;
+  if (catRepo) {
+    const cat = await catRepo.findOne({ where: { slug: finalCategorySlug } });
+    if (cat) {
+      categoryId = cat.id;
+    } else {
+      // Fallback if specific slug not found, try generic 'box-braids'
+      const fallback = await catRepo.findOne({ where: { slug: 'box-braids' } });
+      categoryId = fallback?.id!;
+    }
+  } else {
+    // Should not happen if we pass repo
+    throw new Error("Category Repo required for seeding services");
   }
 
   const service = repo.create({
@@ -161,7 +180,7 @@ async function ensureService(
     priceCents,
     durationMinutes,
     priceType: PriceType.FIXED,
-    categoryId: finalCategoryId,
+    categoryId, // Use looked up UUID
     isActive: true,
   });
   return repo.save(service);
@@ -204,11 +223,11 @@ async function run() {
   await ensureProviderLocation(locationRepo, graceProfile, graceAddress);
 
   // Services for Grace
-  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Cornrow', 6000, 60);
-  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Farbe & Haarschnitt', 12000, 120);
-  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Haarverdichtung', 15000, 80);
-  await ensureService(serviceRepo, graceProfile, 'Mädchen - Haarschnitt', 2500, 20);
-  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Farbe', 8000, 70);
+  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Cornrow', 6000, 60, undefined, categoryRepo);
+  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Farbe & Haarschnitt', 12000, 120, undefined, categoryRepo);
+  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Haarverdichtung', 15000, 80, undefined, categoryRepo);
+  await ensureService(serviceRepo, graceProfile, 'Mädchen - Haarschnitt', 2500, 20, undefined, categoryRepo);
+  await ensureService(serviceRepo, graceProfile, 'Damen - Afro - Farbe', 8000, 70, undefined, categoryRepo);
 
 
   // 2. Power of Hair
@@ -235,11 +254,11 @@ async function run() {
   await ensureProviderLocation(locationRepo, powerProfile, powerAddress);
 
   // Services for Power of Hair
-  await ensureService(serviceRepo, powerProfile, 'Farbsträhnen', 7500, 90);
-  await ensureService(serviceRepo, powerProfile, 'Damen - Haarschnitt & Styling', 5500, 60);
-  await ensureService(serviceRepo, powerProfile, 'Herren - Haarschnitt', 3500, 30);
-  await ensureService(serviceRepo, powerProfile, 'Balayage', 14000, 180);
-  await ensureService(serviceRepo, powerProfile, 'Kosmetik', 4500, 45);
+  await ensureService(serviceRepo, powerProfile, 'Farbsträhnen', 7500, 90, undefined, categoryRepo);
+  await ensureService(serviceRepo, powerProfile, 'Damen - Haarschnitt & Styling', 5500, 60, undefined, categoryRepo);
+  await ensureService(serviceRepo, powerProfile, 'Herren - Haarschnitt', 3500, 30, undefined, categoryRepo);
+  await ensureService(serviceRepo, powerProfile, 'Balayage', 14000, 180, undefined, categoryRepo);
+  await ensureService(serviceRepo, powerProfile, 'Kosmetik', 4500, 45, undefined, categoryRepo);
 
 
   // 3. Afro-Europashop New World
@@ -266,11 +285,11 @@ async function run() {
   await ensureProviderLocation(locationRepo, afroProfile, afroAddress);
 
   // Services for Afro-Europashop
-  await ensureService(serviceRepo, afroProfile, 'Rastazöpfe', 10000, 120);
-  await ensureService(serviceRepo, afroProfile, 'Cornrows', 6000, 60);
-  await ensureService(serviceRepo, afroProfile, 'Dreadlocks', 15000, 180);
-  await ensureService(serviceRepo, afroProfile, 'Openbraids', 12000, 150);
-  await ensureService(serviceRepo, afroProfile, 'Twist', 11000, 140);
+  await ensureService(serviceRepo, afroProfile, 'Rastazöpfe', 10000, 120, undefined, categoryRepo);
+  await ensureService(serviceRepo, afroProfile, 'Cornrows', 6000, 60, undefined, categoryRepo);
+  await ensureService(serviceRepo, afroProfile, 'Dreadlocks', 15000, 180, undefined, categoryRepo);
+  await ensureService(serviceRepo, afroProfile, 'Openbraids', 12000, 150, undefined, categoryRepo);
+  await ensureService(serviceRepo, afroProfile, 'Twist', 11000, 140, undefined, categoryRepo);
 
 
   // 4. Black Beauty Friseursalon
@@ -297,11 +316,11 @@ async function run() {
   await ensureProviderLocation(locationRepo, beautyProfile, beautyAddress);
 
   // Services for Black Beauty
-  await ensureService(serviceRepo, beautyProfile, 'Eyebrow threading', 1500, 15);
-  await ensureService(serviceRepo, beautyProfile, 'Hair colouring', 8000, 90);
-  await ensureService(serviceRepo, beautyProfile, 'Hairstyling', 5000, 45);
-  await ensureService(serviceRepo, beautyProfile, 'Hair extensions', 20000, 180);
-  await ensureService(serviceRepo, beautyProfile, 'Microblading', 25000, 120);
+  await ensureService(serviceRepo, beautyProfile, 'Eyebrow threading', 1500, 15, undefined, categoryRepo);
+  await ensureService(serviceRepo, beautyProfile, 'Hair colouring', 8000, 90, undefined, categoryRepo);
+  await ensureService(serviceRepo, beautyProfile, 'Hairstyling', 5000, 45, undefined, categoryRepo);
+  await ensureService(serviceRepo, beautyProfile, 'Hair extensions', 20000, 180, undefined, categoryRepo);
+  await ensureService(serviceRepo, beautyProfile, 'Microblading', 25000, 120, undefined, categoryRepo);
 
 
   // Clients
