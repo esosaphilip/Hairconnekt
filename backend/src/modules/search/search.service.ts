@@ -267,6 +267,8 @@ export class SearchService {
       .leftJoinAndSelect('s.provider', 'p') // Join provider to get name/avatar
       .leftJoinAndSelect('p.user', 'u') // Provider user details
       .leftJoinAndSelect('s.category', 'c') // Join category for filtering/slug
+      .leftJoinAndSelect('p.locations', 'pl') // Join locations
+      .leftJoinAndSelect('pl.address', 'pa') // Join address (aliased as pa)
       .where('s.isActive = :isActive', { isActive: true })
       .andWhere('p.isVerified = :isVerified', { isVerified: true }); // Only verified providers
 
@@ -305,20 +307,26 @@ export class SearchService {
     const services = await qb.getMany();
 
     // Map to frontend friendly format
-    const results = services.map(s => ({
-      id: s.id,
-      name: s.name,
-      price: s.priceCents,
-      duration: s.durationMinutes,
-      imageUrl: s.imageUrl,
-      categorySlug: s.category?.slug,
-      provider: {
-        id: s.provider.id,
-        name: [s.provider.user?.firstName, s.provider.user?.lastName].filter(Boolean).join(' ') || s.provider.businessName || 'Provider',
-        city: s.provider.city || 'Berlin', // Fallback
-        isVerified: s.provider.isVerified
-      }
-    }));
+    const results = services.map(s => {
+      // Resolve City from locations
+      const primaryLoc = s.provider.locations?.find(l => l.isPrimary) || s.provider.locations?.[0];
+      const city = primaryLoc?.address?.city || 'Berlin';
+
+      return {
+        id: s.id,
+        name: s.name,
+        price: s.priceCents,
+        duration: s.durationMinutes,
+        imageUrl: s.imageUrl,
+        categorySlug: s.category?.slug,
+        provider: {
+          id: s.provider.id,
+          name: [s.provider.user?.firstName, s.provider.user?.lastName].filter(Boolean).join(' ') || s.provider.businessName || 'Provider',
+          city,
+          isVerified: s.provider.isVerified
+        }
+      };
+    });
 
     return { results };
   }
