@@ -26,5 +26,17 @@ export interface IBooking {
   isReviewed: boolean;
   rating?: number;
   cancelledBy?: string | null;
+  // Expanded fields for UI requirements
+  startTime: string; // ISO string
+  endTime: string; // ISO string
+  providerId?: string;
+  address?: string; // flattened address
+  provider?: {
+    id: string;
+    name: string;
+    address?: string;
+    avatar?: string;
+    businessName?: string;
+  } | null;
   rawDate: string; // ISO string for sorting/logic
 }

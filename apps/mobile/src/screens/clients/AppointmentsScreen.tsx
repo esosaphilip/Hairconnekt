@@ -5,11 +5,11 @@ import Text from '@/components/Text';
 import Button from '@/components/Button';
 import { spacing, colors, radii, FONT_SIZES, shadows } from '@/theme/tokens';
 import { clientBookingApi } from '@/api/clientBooking';
-import { IBooking, BookingStatus } from '@/domain/models/booking';
+import { IBooking } from '@/domain/models/booking';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/Icon';
 import { on } from '@/services/eventBus';
-import LinearGradient from 'react-native-linear-gradient';
+// import LinearGradient from 'react-native-linear-gradient'; // Removed as package missing
 
 export function AppointmentsScreen() {
   const navigation = useNavigation<any>();
@@ -167,7 +167,7 @@ export function AppointmentsScreen() {
         onPress={() => navigation.navigate('AppointmentDetail', { id: nextAppointment.id })}
         style={styles.nextCardWrapper}
       >
-        {/* Gradient Background would go here. Using View with bg color/opacity for now compatible with plain RN */}
+        {/* Fallback to solid color since LinearGradient is missing */}
         <View style={[styles.nextCardInner]}>
           <View style={styles.nextHeader}>
             <Icon name="clock" size={20} color={colors.primary} />
@@ -236,8 +236,8 @@ export function AppointmentsScreen() {
 }
 
 const StatusBadge = ({ status }: { status: string }) => {
-  let bg = colors.gray100;
-  let text = colors.gray800;
+  let bg: string = colors.gray100;
+  let text: string = colors.gray800;
   let label = status;
 
   if (status === 'confirmed') { bg = '#DCFCE7'; text = '#166534'; label = 'Bestätigt'; } // green-100/800

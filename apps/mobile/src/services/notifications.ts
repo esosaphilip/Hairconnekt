@@ -80,39 +80,46 @@ export function useNotificationListeners() {
   const responseListener = useRef<Notifications.Subscription | null>(null);
 
   useEffect(() => {
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      // Notification received in foreground
-      if (typeof __DEV__ !== 'undefined' && __DEV__) {
-        console.log('[Notifications] Received:', notification);
-      }
-      // Emit event to refresh data (e.g. appointments)
-      emit('appointment_updated');
-    });
+    // Prevent crash if module is missing or not a device
+    if (!isDeviceSafe()) return;
 
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      // User tapped on notification
-      if (typeof __DEV__ !== 'undefined' && __DEV__) {
-        console.log('[Notifications] Response:', response);
-      }
-      // Future: parse data and navigate. handling basic refresh for now.
-      emit('appointment_updated');
-
-      // Attempt to navigate if data contains screen info
-      const data = response.notification.request.content.data;
-      if (data?.type === 'NEW_BOOKING' || data?.type === 'APPOINTMENT_REQUEST') {
-        const appointmentId = data.appointmentId || data.id;
-        if (appointmentId) {
-          setTimeout(() => {
-            rootNavigationRef.current?.navigate('Kalender', {
-              screen: 'AppointmentRequestScreen',
-              params: { id: appointmentId }
-            });
-          }, 100);
+    try {
+      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+        // Notification received in foreground
+        if (typeof __DEV__ !== 'undefined' && __DEV__) {
+          console.log('[Notifications] Received:', notification);
         }
-      } else if (data?.type === 'APPOINTMENT_UPDATE' || data?.appointmentId) {
+        // Emit event to refresh data (e.g. appointments)
         emit('appointment_updated');
-      }
-    });
+      });
+
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+        // User tapped on notification
+        if (typeof __DEV__ !== 'undefined' && __DEV__) {
+          console.log('[Notifications] Response:', response);
+        }
+        // Future: parse data and navigate. handling basic refresh for now.
+        emit('appointment_updated');
+
+        // Attempt to navigate if data contains screen info
+        const data = response.notification.request.content.data;
+        if (data?.type === 'NEW_BOOKING' || data?.type === 'APPOINTMENT_REQUEST') {
+          const appointmentId = data.appointmentId || data.id;
+          if (appointmentId) {
+            setTimeout(() => {
+              rootNavigationRef.current?.navigate('Kalender', {
+                screen: 'AppointmentRequestScreen',
+                params: { id: appointmentId }
+              });
+            }, 100);
+          }
+        } else if (data?.type === 'APPOINTMENT_UPDATE' || data?.appointmentId) {
+          emit('appointment_updated');
+        }
+      });
+    } catch (e) {
+      console.warn('[Notifications] Failed to add listeners', e);
+    }
 
 
     return () => {

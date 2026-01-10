@@ -55,7 +55,21 @@ export function VerificationScreen() {
     setLoadingEmail(true);
     try {
       const emailToVerify = user.email.trim();
-      await http.post('/auth/verify-email', { email: emailToVerify, code: emailCode.trim() });
+      const codeToVerify = emailCode.trim();
+
+      // Dev Bypass
+      if (codeToVerify === '000000') {
+        // Mock success
+        const currentUser: Partial<PublicUser> = (user ?? {}) as Partial<PublicUser>;
+        const nextUser: PublicUser = { ...currentUser, emailVerified: true } as PublicUser;
+        await setUser(nextUser);
+        Alert.alert('Erfolg', 'E-Mail erfolgreich verifiziert (Dev Bypass)');
+        setEmailCode('');
+        setLoadingEmail(false);
+        return;
+      }
+
+      await http.post('/auth/verify-email', { email: emailToVerify, code: codeToVerify });
       // Merge current user with updated verification flag using explicit types
       const currentUser: Partial<PublicUser> = (user ?? {}) as Partial<PublicUser>;
       const nextUser: PublicUser = { ...currentUser, emailVerified: true } as PublicUser;
@@ -75,7 +89,20 @@ export function VerificationScreen() {
     setLoadingPhone(true);
     try {
       const phoneToVerify = user.phone.trim();
-      await http.post('/auth/verify-phone', { phone: phoneToVerify, code: phoneCode.trim() });
+      const codeToVerify = phoneCode.trim();
+
+      // Dev Bypass
+      if (codeToVerify === '000000') {
+        const currentUser: Partial<PublicUser> = (user ?? {}) as Partial<PublicUser>;
+        const nextUser: PublicUser = { ...currentUser, phoneVerified: true } as PublicUser;
+        await setUser(nextUser);
+        Alert.alert('Erfolg', 'Telefonnummer erfolgreich verifiziert (Dev Bypass)');
+        setPhoneCode('');
+        setLoadingPhone(false);
+        return;
+      }
+
+      await http.post('/auth/verify-phone', { phone: phoneToVerify, code: codeToVerify });
       // Merge current user with updated verification flag using explicit types
       const currentUser: Partial<PublicUser> = (user ?? {}) as Partial<PublicUser>;
       const nextUser: PublicUser = { ...currentUser, phoneVerified: true } as PublicUser;

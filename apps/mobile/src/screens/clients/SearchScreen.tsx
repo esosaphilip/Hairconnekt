@@ -48,8 +48,8 @@ const CustomBadge = ({ label, variant, onPress, icon }: CustomBadgeProps) => {
     isAvailable
       ? styles.badgeAvailable
       : isPrimary
-      ? styles.badgePrimary
-      : styles.badgeOutline,
+        ? styles.badgePrimary
+        : styles.badgeOutline,
   ];
   const textStyle = [
     styles.badgeText,
@@ -127,12 +127,12 @@ export function SearchScreen() {
       setFavorites((prev) =>
         isFav ? prev.filter((f) => f !== id) : [...prev, id]
       );
-      
+
       try {
         if (isFav) {
-            await removeFavorite(id);
+          await removeFavorite(id);
         } else {
-            await addFavorite(id);
+          await addFavorite(id);
         }
       } catch (err) {
         // Revert on failure
@@ -150,8 +150,8 @@ export function SearchScreen() {
     setSearchTerm('');
   };
 
-  const [categories, setCategories] = useState<{id: string; name: string; slug: string}[]>([]);
-  
+  const [categories, setCategories] = useState<{ id: string; name: string; slug: string }[]>([]);
+
   // Load persisted recent searches and categories on mount
   useEffect(() => {
     let cancelled = false;
@@ -164,11 +164,11 @@ export function SearchScreen() {
         const res = await http.get('/services/categories');
         const items = Array.isArray(res.data) ? res.data : [];
         if (!cancelled && items.length > 0) {
-            setCategories(items.map((c: any) => ({
-                id: c.id, 
-                name: c.nameDe || c.name, 
-                slug: c.slug
-            })));
+          setCategories(items.map((c: any) => ({
+            id: c.id,
+            name: c.nameDe || c.name,
+            slug: c.slug
+          })));
         }
       } catch (e) {
         // ignore
@@ -190,12 +190,12 @@ export function SearchScreen() {
 
   // Effect for searching
   useEffect(() => {
-    let timeout;
+    let timeout: NodeJS.Timeout;
     async function fetchResults() {
       // Allow search if term exists OR if a category filter is active
       const categoryFilter = activeFilters.find(f => f.startsWith('cat:'));
       const hasSearchTerm = !!searchTerm.trim();
-      
+
       if (!hasSearchTerm && !categoryFilter) {
         setResults([]);
         setError(null);
@@ -208,9 +208,6 @@ export function SearchScreen() {
       try {
         // Extract pure category slug if present (remove "cat:" prefix)
         const categorySlug = categoryFilter ? categoryFilter.replace('cat:', '') : undefined;
-        
-        // Also check for provider type filters
-        // const providerType = activeFilters.find((f) => ['salon', 'individual', 'mobile'].includes(f));
 
         const data = await clientBraiderApi.search(searchTerm, { category: categorySlug });
         setResults(data);
@@ -225,7 +222,14 @@ export function SearchScreen() {
         setLoading(false);
       }
     }
-    timeout = setTimeout(fetchResults, 400);
+
+    // Immediate fetch if we have initial params matching current state (first load optimization)
+    // logic: if searchTerm equals initialTerm and we haven't fetched yet? 
+    // Simplified: just wait 50ms for initial wrapper, else 400ms
+    const isInitialParamLoad = (routeParams?.initialTerm === searchTerm || routeParams?.styleName === searchTerm) && results.length === 0 && !loading;
+    const delay = isInitialParamLoad ? 0 : 400;
+
+    timeout = setTimeout(fetchResults, delay);
     return () => clearTimeout(timeout);
   }, [searchTerm, activeFilters]);
 
@@ -253,15 +257,15 @@ export function SearchScreen() {
     const isFavorite = favorites.includes(braider.id);
     // Map IBraider to ProviderSummary expected by ProviderCard
     const providerSummary = {
-        id: braider.id,
-        name: braider.name,
-        businessName: braider.businessName,
-        rating: braider.rating,
-        reviewCount: braider.reviews?.length || 0,
-        distance: braider.distance,
-        imageUrl: braider.profileImage, // Map profileImage to imageUrl
-        isVerified: braider.isVerified,
-        // Add other necessary fields if ProviderCard needs them
+      id: braider.id,
+      name: braider.name,
+      businessName: braider.businessName,
+      rating: braider.rating,
+      reviewCount: braider.reviews?.length || 0,
+      distance: braider.distance,
+      imageUrl: braider.profileImage, // Map profileImage to imageUrl
+      isVerified: braider.isVerified,
+      // Add other necessary fields if ProviderCard needs them
     };
 
     return (
@@ -355,56 +359,56 @@ export function SearchScreen() {
       <ScrollView style={styles.content}>
         {/* Results Header */}
         {searchTerm ? (
-            <View style={styles.resultsHeader}>
+          <View style={styles.resultsHeader}>
             <View style={styles.resultsHeaderContent}>
-                <Text style={styles.resultsCountText}>
+              <Text style={styles.resultsCountText}>
                 {loading ? t('screens.search.results.searching') : t('screens.search.results.count', { count: results.length })}
-                </Text>
-                <View style={styles.viewModeButtons}>
+              </Text>
+              <View style={styles.viewModeButtons}>
                 <TouchableOpacity onPress={() => setViewMode('list')} style={[styles.viewModeButtonBase, viewMode === 'list' && styles.viewModeButtonActive]}>
-                    <Ionicons name="list-outline" size={20} color={viewMode === 'list' ? colors.primary : colors.gray400} />
+                  <Ionicons name="list-outline" size={20} color={viewMode === 'list' ? colors.primary : colors.gray400} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setViewMode('grid')} style={[styles.viewModeButtonBase, viewMode === 'grid' && styles.viewModeButtonActive, styles.viewModeButtonSpacing]}>
-                    <Ionicons name="grid-outline" size={20} color={viewMode === 'grid' ? colors.primary : colors.gray400} />
+                  <Ionicons name="grid-outline" size={20} color={viewMode === 'grid' ? colors.primary : colors.gray400} />
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setViewMode('map')} style={[styles.viewModeButtonBase, viewMode === 'map' && styles.viewModeButtonActive, styles.viewModeButtonSpacing]}>
-                    <Ionicons name="map-outline" size={20} color={viewMode === 'map' ? colors.primary : colors.gray400} />
+                  <Ionicons name="map-outline" size={20} color={viewMode === 'map' ? colors.primary : colors.gray400} />
                 </TouchableOpacity>
-                </View>
+              </View>
             </View>
 
             {/* Sort Dropdown - Simulated as TouchableOpacity */}
             <TouchableOpacity onPress={() => Alert.alert(t('screens.search.sort.title'), t('screens.search.sort.message'))}>
-                <View style={styles.sortDropdown}>
+              <View style={styles.sortDropdown}>
                 <Text style={styles.sortDropdownText}>{t('screens.search.sort.recommended')}</Text>
                 <Ionicons name="chevron-down" size={18} color={colors.gray800} />
-                </View>
+              </View>
             </TouchableOpacity>
 
             {/* Active Filters */}
             {activeFilters.length > 0 && (
-                <View style={styles.activeFiltersContainer}>
+              <View style={styles.activeFiltersContainer}>
                 {activeFilters.map((filterId) => {
-                    const chip = filterChips.find((c) => c.id === filterId);
-                    return (
+                  const chip = filterChips.find((c) => c.id === filterId);
+                  return (
                     <CustomBadge
-                        key={filterId}
-                        label={chip?.label ?? ''}
-                        variant="default"
-                        icon={
-                            <TouchableOpacity onPress={() => toggleFilter(filterId)}>
-                                <Ionicons name="close-outline" size={14} color={colors.white} style={styles.closeIconSpacing} />
-                            </TouchableOpacity>
-                        }
+                      key={filterId}
+                      label={chip?.label ?? ''}
+                      variant="default"
+                      icon={
+                        <TouchableOpacity onPress={() => toggleFilter(filterId)}>
+                          <Ionicons name="close-outline" size={14} color={colors.white} style={styles.closeIconSpacing} />
+                        </TouchableOpacity>
+                      }
                     />
-                    );
+                  );
                 })}
                 <TouchableOpacity onPress={() => setActiveFilters([])}>
-                    <Text style={styles.resetFilterText}>{t('screens.search.activeFilters.reset')}</Text>
+                  <Text style={styles.resetFilterText}>{t('screens.search.activeFilters.reset')}</Text>
                 </TouchableOpacity>
-                </View>
+              </View>
             )}
-            </View>
+          </View>
         ) : null}
 
         {/* Results List / Status */}

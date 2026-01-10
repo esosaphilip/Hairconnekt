@@ -7,7 +7,7 @@ import { colors, spacing, radii, shadows } from '@/theme/tokens';
 import type { BookingsStackScreenProps } from '@/navigation/types';
 import { http } from '@/api/http';
 
-export default function AppointmentDetailScreen({ route, navigation }: BookingsStackScreenProps<'AppointmentDetail'>) {
+export default function AppointmentDetailScreen({ route, navigation }: any) {
   const { id } = route.params;
   const [appointment, setAppointment] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
@@ -150,14 +150,14 @@ export default function AppointmentDetailScreen({ route, navigation }: BookingsS
               title="Profil"
               variant="outline"
               size="sm"
-              onPress={() => navigation.navigate('ProviderProfile', { providerId: appointment.providerId })}
+              onPress={() => navigation.navigate('ProviderDetail', { id: appointment.providerId })}
             />
           </View>
           <View style={styles.divider} />
           <View style={styles.providerDetails}>
             <View style={styles.detailRow}>
               <Icon name="map-pin" size={16} color={colors.gray400} />
-              <Text style={[styles.bodyText, { flex: 1 }]}>{appointment.provider?.address || 'Adresse nicht verfügbar'}</Text>
+              <Text style={[styles.bodyText, { flex: 1 }]}>{appointment.provider?.address || appointment.address || 'Adresse nicht verfügbar'}</Text>
               <TouchableOpacity>
                 <Icon name="navigation" size={16} color={colors.primary} />
               </TouchableOpacity>
