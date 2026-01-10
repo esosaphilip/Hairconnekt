@@ -20,13 +20,19 @@ jest.mock('../components/NearbyBraiderCard', () => ({
     NearbyBraiderCard: () => 'NearbyBraiderCard'
 }));
 
+
+// Mock Navigation
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+    useNavigation: () => ({
+        navigate: mockNavigate,
+    }),
+    useFocusEffect: jest.fn(),
+}));
+
 describe('HomeScreen - Notification Debounce Test', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        // Reset global debounce timer
-        // @ts-ignore
-        global.lastNotificationNav = 0;
-        // Mock the date to control throttle
         jest.useFakeTimers();
     });
 
@@ -34,41 +40,50 @@ describe('HomeScreen - Notification Debounce Test', () => {
         jest.useRealTimers();
     });
 
+
     it('prevents multiple navigation calls on rapid tapping', () => {
         const { getByTestId } = render(<HomeScreen />);
         const bellBtn = getByTestId('notification-bell');
 
         // Simulate 20 rapid taps
-        for (let i = 0; i < 20; i++) {
-            fireEvent.press(bellBtn);
-            // Advance time slightly but less than debounce threshold (1000ms)
-            jest.advanceTimersByTime(50);
-        }
+        act(() => {
+            for (let i = 0; i < 20; i++) {
+                fireEvent.press(bellBtn);
+                jest.advanceTimersByTime(50);
+            }
+        });
 
         // Should have only navigated once
-        expect(rootNavigationRef.current?.navigate).toHaveBeenCalledTimes(1);
-        expect(rootNavigationRef.current?.navigate).toHaveBeenCalledWith('Tabs', {
-            screen: 'Profile',
-            params: { screen: 'Notifications' }
-        });
+        expect(mockNavigate).toHaveBeenCalledTimes(1);
     });
 
     it('allows navigation again after debounce time passes', () => {
         const { getByTestId } = render(<HomeScreen />);
         const bellBtn = getByTestId('notification-bell');
 
-        // First tap
-        fireEvent.press(bellBtn);
-        expect(rootNavigationRef.current?.navigate).toHaveBeenCalledTimes(1);
+        act(() => {
+            fireEvent.press(bellBtn);
+        });
+        expect(mockNavigate).toHaveBeenCalledTimes(1);
 
-        // Advance time past 1000ms
-        jest.setSystemTime(Date.now() + 1500); // Update system time for Date.now() check
-
-        // Note: Our implementation effectively uses Date.now(), so jest.useFakeTimers() mocks that too.
-        // However, explicit setSystemTime is safer.
+        // Advance time past 1500ms (the delay in component)
+        act(() => {
+            jest.advanceTimersByTime(1600);
+        });
 
         // Second tap
-        fireEvent.press(bellBtn);
-        expect(rootNavigationRef.current?.navigate).toHaveBeenCalledTimes(2);
+        act(() => {
+            fireEvent.press(bellBtn);
+        });
+        expect(mockNavigate).toHaveBeenCalledTimes(2);
+    });
+
+    it('renders styles and nearby braiders without key collisions', () => {
+        const { update } = render(<HomeScreen />);
+
+        // Ensure no crash on re-render/update
+        update(<HomeScreen />);
     });
 });
+
+

@@ -103,6 +103,7 @@ export type ProviderCalendarStackParamList = {
 export type ProviderClientsStackParamList = {
   ProviderClients: undefined;
   ProviderClientDetail: { id: string };
+  ProviderAddClientScreen: undefined;
 };
 
 // Provider More Stack

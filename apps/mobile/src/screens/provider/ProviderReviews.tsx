@@ -194,26 +194,29 @@ export function ProviderReviews() {
       setError(null);
       try {
         const res = await http.get('/reviews/provider/me');
+        // Backend returns standard api response { success: true, data: [...] } or just [...]
         const payload = res?.data;
-        let list = [];
+        let list: any[] = [];
+        
         if (Array.isArray(payload)) {
           list = payload;
         } else if (payload && typeof payload === 'object') {
-          if ('data' in payload && Array.isArray((payload as any).data)) {
-            list = (payload as any).data;
-          } else if ('items' in payload && Array.isArray((payload as any).items)) {
-            list = (payload as any).items;
-          } else if ('reviews' in payload && Array.isArray((payload as any).reviews)) {
-            list = (payload as any).reviews;
-          }
+            // Handle { success: true, data: [...] } wrapper
+            if ('data' in payload && Array.isArray((payload as any).data)) {
+                list = (payload as any).data;
+            } else if ('items' in payload && Array.isArray((payload as any).items)) {
+                list = (payload as any).items;
+            } else if ('reviews' in payload && Array.isArray((payload as any).reviews)) {
+                list = (payload as any).reviews;
+            }
         }
 
         const mapped: Review[] = list.map((r: any) => ({
           id: r.id,
           client: r.isAnonymous
             ? { name: 'Anonym', image: null, verified: false }
-            : { name: r.client?.name ?? 'Kunde', image: r.client?.avatarUrl ?? null, verified: true },
-          rating: r.rating ?? 0,
+            : { name: [r.client?.firstName, r.client?.lastName].filter(Boolean).join(' ') || 'Kunde', image: r.client?.profilePictureUrl ?? null, verified: !!r.client?.emailVerified },
+          rating: Number(r.rating) || 0,
           date: r.createdAt ? formatDateDE(r.createdAt) : '',
           service: Array.isArray(r.appointment?.services) && r.appointment.services.length > 0
             ? r.appointment.services[0]?.name
@@ -221,7 +224,7 @@ export function ProviderReviews() {
           text: r.comment ?? '',
           helpful: 0,
           hasResponse: !!r.providerResponse,
-          response: r.providerResponse ? { text: r.providerResponse, date: formatDateDE(r.createdAt) } : undefined,
+          response: r.providerResponse ? { text: r.providerResponse, date: formatDateDE(r.updatedAt || r.createdAt) } : undefined,
           images: Array.isArray(r.images) ? r.images.map((img: any) => img.url) : [],
         }));
         if (mounted) setReviewsData(mapped);

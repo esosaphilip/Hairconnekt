@@ -47,20 +47,20 @@ export function HomeScreen() {
 
   const { location } = useLocation();
   const navigation = useNavigation();
-  const [isNavigating, setIsNavigating] = React.useState(false);
+  const isNavigating = React.useRef(false);
 
   const handleNotificationPress = React.useCallback(() => {
-    if (isNavigating) return;
-    setIsNavigating(true);
+    if (isNavigating.current) return;
+    isNavigating.current = true;
 
     // @ts-ignore
     navigation.navigate('Tabs', { screen: 'Profile', params: { screen: 'Notifications' } });
 
     // Reset guard after delay
     setTimeout(() => {
-      setIsNavigating(false);
+      isNavigating.current = false;
     }, 1500);
-  }, [isNavigating, navigation]);
+  }, [navigation]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -214,11 +214,9 @@ export function HomeScreen() {
           </View>
           <FlatList
             data={popularCategories}
-            keyExtractor={(item, index) => (item.id ? `style-${item.id}` : `style-${index}`)}
+            keyExtractor={(item) => `style-${item.id}`}
             renderItem={({ item }) => (
-              <View key={item.id ? `style-${item.id}` : undefined}>
-                <PopularStyleCard item={item} />
-              </View>
+              <PopularStyleCard item={item} />
             )}
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -239,8 +237,8 @@ export function HomeScreen() {
             <Text style={styles.errorText}>{nearbyError}</Text>
           )}
           <View style={styles.nearbyList}>
-            {(nearby || []).map((braider, index) => (
-              <View key={`nearby-${braider.id}-${index}`}>
+            {(nearby || []).map((braider) => (
+              <View key={`nearby-${braider.id}`}>
                 <NearbyBraiderCard
                   braider={braider}
                   isFavorite={favorites.includes(braider.id)}

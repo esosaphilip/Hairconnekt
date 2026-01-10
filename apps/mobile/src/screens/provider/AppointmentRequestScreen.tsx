@@ -73,9 +73,9 @@ const getInitials = (name: string) =>
 
 
 export function AppointmentRequestScreen() {
-  const navigation = useNavigation() as any;
-  const route = useRoute() as any;
-  const { id } = route.params;
+  const navigation = useNavigation<any>();
+  const route = useRoute<any>();
+  const { id } = route.params || {};
 
   const [request, setRequest] = useState<IAppointmentRequest | null>(null);
   const [loading, setLoading] = useState(true);

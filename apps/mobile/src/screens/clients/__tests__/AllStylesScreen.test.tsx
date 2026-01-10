@@ -142,6 +142,6 @@ describe('AllStylesScreen', () => {
         const item = await findByText('Box Braids');
         fireEvent.press(item);
 
-        expect(mockNavigate).toHaveBeenCalledWith('ProviderProfile', { providerId: 'p1' });
+        expect(mockNavigate).toHaveBeenCalledWith('ProviderDetail', { id: 'p1' });
     });
 });

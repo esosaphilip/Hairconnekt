@@ -107,6 +107,14 @@ export function ProviderProfileScreen() {
       start: string;
       end: string;
     }>;
+    stats?: {
+      appointments: number;
+      upcoming: number;
+      completed: number;
+      cancelled: number;
+      favorites: number;
+      reviews: number;
+    };
   };
   const [profile, setProfile] = React.useState<ProviderProfile | null>(null);
   const [dashboard, setDashboard] = React.useState<Dashboard | null>(null);
@@ -328,15 +336,15 @@ export function ProviderProfileScreen() {
               <Ionicons name="star" size={16} color="#F59E0B" />
               <Text style={{ marginLeft: 4 }}>
                 {publicData?.rating != null ? publicData.rating.toFixed(1) : (dashboard?.stats?.ratingAverage ?? 0).toFixed(1)}
-                {' '}({publicData?.reviews ?? dashboard?.stats?.reviewCount ?? 0} Bewertungen)
+                {' '}({profile?.stats?.reviews ?? publicData?.reviews ?? dashboard?.stats?.reviewCount ?? 0} Bewertungen)
               </Text>
             </View>
             <Text style={{ color: colors.gray600, fontSize: 12 }}>
               {(() => {
                 const created = profile?.createdAt ? new Date(profile.createdAt) : null;
                 const seit = created ? created.toLocaleDateString('de-DE', { month: 'long', year: 'numeric' }) : '—';
-                const apptCount = dashboard?.todayAppointments?.length;
-                const apptText = typeof apptCount === 'number' ? `${apptCount} Termine heute` : '—';
+                const apptCount = profile?.stats?.appointments ?? dashboard?.todayAppointments?.length;
+                const apptText = typeof apptCount === 'number' ? `${apptCount} Termine gesamt` : '—';
                 return `Mitglied seit ${seit} · ${apptText}`;
               })()}
             </Text>
@@ -469,20 +477,20 @@ export function ProviderProfileScreen() {
           <Text style={[styles.sectionTitle, { marginBottom: spacing.sm }]}>Statistiken</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{Array.isArray(dashboard?.todayAppointments) ? dashboard.todayAppointments.length : 0}</Text>
-              <Text style={styles.statLabel}>Termine heute</Text>
+              <Text style={styles.statValue}>{profile?.stats?.appointments ?? 0}</Text>
+              <Text style={styles.statLabel}>Termine gesamt</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>{typeof dashboard?.stats?.reviewCount === 'number' ? dashboard.stats.reviewCount : 0}</Text>
-              <Text style={styles.statLabel}>Bewertungen</Text>
+              <Text style={styles.statValue}>{profile?.stats?.upcoming ?? 0}</Text>
+              <Text style={styles.statLabel}>Anstehend</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>—</Text>
-              <Text style={styles.statLabel}>Annahmerate</Text>
+              <Text style={styles.statValue}>{profile?.stats?.completed ?? 0}</Text>
+              <Text style={styles.statLabel}>Abgeschlossen</Text>
             </View>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>—</Text>
-              <Text style={styles.statLabel}>Ø Reaktionszeit</Text>
+              <Text style={styles.statValue}>{profile?.stats?.favorites ?? 0}</Text>
+              <Text style={styles.statLabel}>Favoriten</Text>
             </View>
           </View>
         </Card>

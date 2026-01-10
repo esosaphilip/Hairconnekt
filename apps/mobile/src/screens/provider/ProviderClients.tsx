@@ -90,8 +90,7 @@ export function ProviderClients() {
   }, [data, searchQuery]);
 
   const goToAddClient = () => {
-    // TODO: Navigate to add client screen when implemented
-    // navigation.navigate('AddClient');
+    navigation.navigate('ProviderAddClientScreen');
   };
 
   const goToClient = (id: string) => {

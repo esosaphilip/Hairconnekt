@@ -16,6 +16,7 @@ export interface PopularStyle {
     name: string;
     slug: string;
     iconUrl?: string;
+    price?: number;
 }
 
 export function useHomeScreen() {
@@ -30,18 +31,35 @@ export function useHomeScreen() {
     const [nearbyLoading, setNearbyLoading] = useState<boolean>(false);
     const [nearbyError, setNearbyError] = useState<string | null>(null);
 
-    // Hardcoded popular categories with fallback images
+    // Fetch popular/random services for the dashboard
     useEffect(() => {
         (async () => {
-            // Fallback to static list (for immediate restoration)
-            const staticCategories: PopularStyle[] = [
-                { id: 'cat_braids', name: 'Braids', slug: 'braids', iconUrl: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=400' },
-                { id: 'cat_twists', name: 'Twists', slug: 'twists', iconUrl: 'https://images.unsplash.com/photo-1628045667794-fb4d99c30f4a?auto=format&fit=crop&q=80&w=400' },
-                { id: 'cat_locs', name: 'Locs', slug: 'locs', iconUrl: 'https://images.unsplash.com/photo-1520186717578-831e353272cc?auto=format&fit=crop&q=80&w=400' },
-                { id: 'cat_natural', name: 'Natural', slug: 'natural', iconUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&q=80&w=400' },
-                { id: 'cat_weave', name: 'Weaves', slug: 'weave', iconUrl: 'https://images.unsplash.com/photo-1583766395091-758f2648fb46?auto=format&fit=crop&q=80&w=400' }
-            ];
-            setPopularCategories(staticCategories);
+            try {
+                // Fetch random services (using search with empty query + limit)
+                // In a real app, might want a specific 'getPopular' endpoint
+                const services = await clientBraiderApi.searchServices({ limit: 5 });
+
+                const styles: PopularStyle[] = services.map(s => ({
+                    id: s.id,
+                    name: s.name,
+                    slug: s.id, // Using ID as slug for search/nav
+                    iconUrl: s.imageUrl,
+                    price: s.price
+                }));
+
+                setPopularCategories(styles);
+            } catch (error) {
+                logger.error('Failed to fetch popular styles', error);
+                // Fallback to static list on error
+                const staticCategories: PopularStyle[] = [
+                    { id: 'cat_braids', name: 'Braids', slug: 'braids', iconUrl: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=400' },
+                    { id: 'cat_twists', name: 'Twists', slug: 'twists', iconUrl: 'https://images.unsplash.com/photo-1628045667794-fb4d99c30f4a?auto=format&fit=crop&q=80&w=400' },
+                    { id: 'cat_locs', name: 'Locs', slug: 'locs', iconUrl: 'https://images.unsplash.com/photo-1520186717578-831e353272cc?auto=format&fit=crop&q=80&w=400' },
+                    { id: 'cat_natural', name: 'Natural', slug: 'natural', iconUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&q=80&w=400' },
+                    { id: 'cat_weave', name: 'Weaves', slug: 'weave', iconUrl: 'https://images.unsplash.com/photo-1583766395091-758f2648fb46?auto=format&fit=crop&q=80&w=400' }
+                ];
+                setPopularCategories(staticCategories);
+            }
         })();
     }, []);
 
