@@ -169,7 +169,7 @@ export function AllStylesScreen() {
       // Let's stick to Search for now to be safe, but filtered by this service name?
       // Or just search by category? The old one navigated to search by Category.
       // Let's navigate to ProviderProfile as that makes more sense for a Service Card.
-      onPress={() => navigation.navigate('ProviderDetail', { id: item.provider.id })}
+      onPress={() => navigation.navigate('Tabs', { screen: 'Search', params: { styleName: item.name } })}
     />
   );
 

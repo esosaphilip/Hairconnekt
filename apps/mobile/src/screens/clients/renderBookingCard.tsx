@@ -34,9 +34,20 @@ export function renderBookingCard(
   const status = b.status;
   const ratingNum = b.rating || 4.8; // Default to 4.8 if missing for visuals
 
-  // Calculate relative time (dummy logic or simplified text processing if not available)
-  // Ideally, use b.rawDate to calculate "In 25 Std."
-  const relativeTime = "In 25 Std."; // Placeholder or calculated from b.rawDate
+  // Calculate relative time
+  const now = new Date();
+  const start = new Date(b.startTime);
+  const diffMs = start.getTime() - now.getTime();
+  const diffHrs = Math.ceil(diffMs / (1000 * 60 * 60));
+
+  let relativeTime = "";
+  if (diffHrs > 0 && diffHrs < 24) {
+    relativeTime = `In ${diffHrs} Std.`;
+  } else if (diffHrs < 0) {
+    relativeTime = ""; // Don't show for past/started
+  } else {
+    relativeTime = ""; // Don't show for > 24h (date is enough)
+  }
 
   const firstChar = providerName.length > 0 ? providerName.charAt(0) : "?";
   const fallbackLabel = firstChar.toUpperCase();

@@ -150,7 +150,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
               title="Profil"
               variant="outline"
               size="sm"
-              onPress={() => navigation.navigate('ProviderDetail', { id: appointment.providerId })}
+              onPress={() => navigation.navigate('ProviderProfile', { providerId: appointment.providerId })}
             />
           </View>
           <View style={styles.divider} />
@@ -174,16 +174,16 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           <Text style={[styles.cardTitle, { marginBottom: spacing.md }]}>Service-Details</Text>
           <View style={styles.kvRow}>
             <Text style={styles.label}>Service</Text>
-            <Text style={styles.value}>{appointment.serviceName}</Text>
+            <Text style={styles.value}>{appointment.service?.name || appointment.serviceName}</Text>
           </View>
           <View style={styles.kvRow}>
             <Text style={styles.label}>Dauer</Text>
-            <Text style={styles.value}>{appointment.duration} min</Text>
+            <Text style={styles.value}>{appointment.service?.duration || appointment.duration} min</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.kvRow}>
             <Text style={styles.label}>Gesamtpreis</Text>
-            <Text style={[styles.value, { color: colors.primary, fontWeight: '700' }]}>{appointment.price} €</Text>
+            <Text style={[styles.value, { color: colors.primary, fontWeight: '700' }]}>{appointment.totalPrice || appointment.price} €</Text>
           </View>
         </View>
 

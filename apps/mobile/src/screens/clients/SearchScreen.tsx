@@ -82,12 +82,12 @@ export function SearchScreen() {
   useEffect(() => {
     if (routeParams?.initialFilter) {
       setActiveFilters([routeParams.initialFilter]);
-    } else if (routeParams?.initialTerm) {
+    } else if (routeParams?.initialTerm || routeParams?.styleName) {
       // If we just have a term but no filter, clear filters (optional logic, depends on UX preference)
       // setActiveFilters([]); 
-      setSearchTerm(routeParams.initialTerm);
+      setSearchTerm(routeParams.initialTerm || routeParams.styleName || '');
     }
-  }, [routeParams?.initialFilter, routeParams?.initialTerm]);
+  }, [routeParams?.initialFilter, routeParams?.initialTerm, routeParams?.styleName]);
 
   const [favorites, setFavorites] = useState<string[]>([]);
   const [results, setResults] = useState<IBraider[]>([]);
