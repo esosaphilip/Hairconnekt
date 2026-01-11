@@ -1,13 +1,47 @@
+import React from 'react';
+import { render, fireEvent, act } from '@testing-library/react-native';
+import { HomeScreen } from '../HomeScreen';
+import { NavigationContainer } from '@react-navigation/native';
 
-it('renders popular styles without key collisions', () => {
-    // Mock data with duplicate IDs if any, to test keyExtractor resilience if we were processing raw data
-    // But here we just test that it renders fine
-    const { getByText, getAllByText } = render(<HomeScreen />);
+// Mock dependencies
+jest.mock('@/context/LocationContext', () => ({
+    useLocation: () => ({
+        location: { coords: { latitude: 0, longitude: 0 } },
+        errorMsg: null,
+    }),
+}));
 
-    // Ensure "Braids" is rendered
-    expect(getByText('Braids')).toBeTruthy();
+// Mock navigation
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => {
+    const actualNav = jest.requireActual('@react-navigation/native');
+    return {
+        ...actualNav,
+        useNavigation: () => ({
+            navigate: mockNavigate,
+        }),
+        useFocusEffect: jest.fn(),
+    };
+});
 
-    // Ensure keys are stable (indirectly by checking no errors during re-render)
-    const { update } = render(<HomeScreen />);
-    update(<HomeScreen />);
+describe('HomeScreen', () => {
+    it('renders without crashing', () => {
+        render(<HomeScreen />);
+    });
+
+    it('navigates to Notifications on bell icon press', async () => {
+        const { getByTestId } = render(<HomeScreen />);
+
+        const bellButton = getByTestId('notification-bell');
+        expect(bellButton).toBeTruthy();
+
+        await act(async () => {
+            fireEvent.press(bellButton);
+        });
+
+        expect(mockNavigate).toHaveBeenCalledWith('Tabs', {
+            screen: 'Profile',
+            params: { screen: 'Notifications' }
+        });
+    });
 });

@@ -95,6 +95,7 @@ export function AppointmentsScreen() {
         style={styles.card}
         onPress={() => navigation.navigate('AppointmentDetail', { id: item.id })}
       >
+
         {/* Header: Date | Time | Status */}
         <View style={styles.cardHeader}>
           <View>
@@ -104,6 +105,12 @@ export function AppointmentsScreen() {
             <Text style={styles.timeText}>
               {new Date(item.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(item.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr
             </Text>
+            {/* Show "In X Std." for upcoming items */}
+            {activeTab === 'upcoming' && new Date(item.startTime) > new Date() && (
+              <Text style={styles.relativeTimeText}>
+                In {Math.ceil((new Date(item.startTime).getTime() - Date.now()) / (1000 * 60 * 60))} Std.
+              </Text>
+            )}
           </View>
           <StatusBadge status={item.status} />
         </View>
@@ -116,7 +123,7 @@ export function AppointmentsScreen() {
           />
           <View style={styles.providerInfo}>
             <Text style={styles.providerName}>{item.providerName}</Text>
-            {/* Rating Mock */}
+            <Text style={styles.providerBusiness}>{item.provider?.businessName || 'Business Name'}</Text>
             <View style={styles.ratingRow}>
               <Icon name="star" size={14} color="#FBBF24" />
               <Text style={styles.ratingText}>4.8</Text>
@@ -137,6 +144,7 @@ export function AppointmentsScreen() {
             <View style={styles.serviceTag}>
               <Text style={styles.serviceTagText}>{item.serviceName}</Text>
             </View>
+            {/* Mocking secondary service for visuals if needed or just showing main */}
           </View>
         </View>
 
@@ -305,6 +313,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.md },
   dateText: { fontSize: 16, fontWeight: '600', color: colors.gray900 },
   timeText: { fontSize: 14, color: colors.gray600, marginTop: 2 },
+  relativeTimeText: { fontSize: 14, color: '#D97706', fontWeight: '500', marginTop: 4 }, // Orange/Brown for "In X Std."
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 },
   statusText: { fontSize: 12, fontWeight: '600' },
 
@@ -312,7 +321,8 @@ const styles = StyleSheet.create({
   avatar: { width: 40, height: 40, borderRadius: 20, marginRight: spacing.sm },
   providerInfo: { flex: 1 },
   providerName: { fontSize: 16, fontWeight: '600', color: colors.gray900 },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  providerBusiness: { fontSize: 14, color: colors.gray500, marginTop: 2 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
   ratingText: { fontSize: 12, color: colors.gray700 },
 
   detailsBlock: { marginBottom: spacing.md, gap: spacing.sm },
@@ -320,8 +330,8 @@ const styles = StyleSheet.create({
   addressText: { fontSize: 14, color: colors.gray800 },
   distanceText: { fontSize: 12, color: colors.gray500 },
   servicesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  serviceTag: { backgroundColor: colors.gray100, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 12 },
-  serviceTagText: { fontSize: 12, color: colors.gray700 },
+  serviceTag: { backgroundColor: colors.secondary, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }, // Red/Pink bg
+  serviceTagText: { fontSize: 12, color: colors.white, fontWeight: '600' },
 
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.gray100 },
   price: { fontSize: 16, fontWeight: '700', color: colors.primary },

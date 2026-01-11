@@ -1,4 +1,4 @@
-export type BookingStatus = 'upcoming' | 'completed' | 'cancelled';
+export type BookingStatus = 'upcoming' | 'completed' | 'cancelled' | 'confirmed' | 'pending';
 
 export interface IBookingService {
   name: string;

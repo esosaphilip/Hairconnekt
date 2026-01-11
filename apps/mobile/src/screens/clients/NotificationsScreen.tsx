@@ -9,6 +9,7 @@ import {
   Image,
   Alert,
   Platform,
+  FlatList,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from '../../components/Icon';
@@ -18,7 +19,7 @@ import Text from '../../components/Text';
 import Button from '../../components/Button';
 import Avatar from '../../components/avatar'; // Custom Avatar component
 import { spacing } from '../../theme/tokens';
-import { notificationsApi, type BackendNotification } from '@/services/notifications'; // Assuming API service is available
+import { notificationsApi, type BackendNotification } from '@/api/notifications';
 
 // --- Brand Color Constant ---
 const PRIMARY_COLOR = '#8B4513';
@@ -236,86 +237,96 @@ export function NotificationsScreen() {
     </Pressable>
   );
 
-  const NotificationListContent = ({ list }: { list: NotificationItem[] }) => {
-    if (loading) {
-        return (
-            <View style={styles.emptyContainer}>
-                <ActivityIndicator size="large" color={PRIMARY_COLOR} />
-                <Text style={styles.loadingText}>Lädt Benachrichtigungen...</Text>
-            </View>
-        );
-    }
+  const renderNotificationItem = useCallback(({ item }: { item: NotificationItem }) => {
+    const isUnread = !item.isRead;
+    const iconColorStyle = getNotificationColorStyle(item.type);
 
-    if (list.length === 0) {
-      const isUnreadTab = activeTab === 'unread';
+    return (
+      <Pressable
+        onPress={() => handleNotificationClick(item)}
+        style={({ pressed }) => [
+          styles.notificationItem,
+          { backgroundColor: pressed ? '#F9FAFB' : '#fff' },
+          isUnread ? styles.notificationUnread : null,
+        ]}
+      >
+        <View style={styles.notificationInner}>
+          {item.avatar ? (
+            <Avatar style={styles.avatarContainer}>
+              <Image source={{ uri: item.avatar }} style={styles.avatarImage} />
+            </Avatar>
+          ) : (
+            <View
+              style={[
+                styles.iconWrapper,
+                { backgroundColor: iconColorStyle.backgroundColor },
+              ]}
+            >
+              {getNotificationIcon(item.type, iconColorStyle.textColor)}
+            </View>
+          )}
+          <View style={styles.notificationTextContainer}>
+            <View style={styles.titleRow}>
+              <Text style={styles.notificationTitle}>{item.title}</Text>
+              {isUnread && <View style={styles.unreadDot} />}
+            </View>
+            <Text style={styles.notificationMessage}>{item.message}</Text>
+            <Text style={styles.notificationTime}>{item.time}</Text>
+          </View>
+        </View>
+      </Pressable>
+    );
+  }, []);
+
+  const ListEmptyComponent = useMemo(() => {
+    if (loading) {
       return (
         <View style={styles.emptyContainer}>
-          <View style={styles.emptyIconContainer}>
-            {isUnreadTab ? (
-              <Icon name="checkmark-done" size={40} color="#9CA3AF" />
-            ) : (
-              <Icon name="calendar" size={40} color="#9CA3AF" />
-            )}
-          </View>
-          <Text style={styles.emptyTitle}>
-            {isUnreadTab ? 'Alles erledigt!' : 'Keine Benachrichtigungen'}
-          </Text>
-          <Text style={styles.emptySubtitle}>
-            {isUnreadTab
-              ? 'Du hast alle Benachrichtigungen gelesen'
-              : 'Du hast aktuell keine neuen Benachrichtigungen'}
-          </Text>
+          <ActivityIndicator size="large" color={PRIMARY_COLOR} />
+          <Text style={styles.loadingText}>Lädt Benachrichtigungen...</Text>
         </View>
       );
     }
-
+    const isUnreadTab = activeTab === 'unread';
     return (
-      <View style={styles.listDivide}>
-        {list.map((notification) => {
-          const isUnread = !notification.isRead;
-          const iconColorStyle = getNotificationColorStyle(notification.type);
-          
-          return (
-            <Pressable
-              key={notification.id}
-              onPress={() => handleNotificationClick(notification)}
-              style={({ pressed }) => [
-                styles.notificationItem,
-                { backgroundColor: pressed ? '#F9FAFB' : '#fff' },
-                isUnread ? styles.notificationUnread : null,
-              ]}
-            >
-              <View style={styles.notificationInner}>
-                {notification.avatar ? (
-                  // Custom Avatar/Image component
-                  <Avatar style={styles.avatarContainer}>
-                    <Image source={{ uri: notification.avatar }} style={styles.avatarImage} />
-                  </Avatar>
-                ) : (
-                  <View
-                    style={[
-                      styles.iconWrapper,
-                      { backgroundColor: iconColorStyle.backgroundColor },
-                    ]}
-                  >
-                    {getNotificationIcon(notification.type, iconColorStyle.textColor)}
-                  </View>
-                )}
-                <View style={styles.notificationTextContainer}>
-                  <View style={styles.titleRow}>
-                    <Text style={styles.notificationTitle}>{notification.title}</Text>
-                    {isUnread && <View style={styles.unreadDot} />}
-                  </View>
-                  <Text style={styles.notificationMessage}>{notification.message}</Text>
-                  <Text style={styles.notificationTime}>{notification.time}</Text>
-                </View>
-              </View>
-            </Pressable>
-          );
-        })}
+      <View style={styles.emptyContainer}>
+        <View style={styles.emptyIconContainer}>
+          {isUnreadTab ? (
+            <Icon name="checkmark-done" size={40} color="#9CA3AF" />
+          ) : (
+            <Icon name="calendar" size={40} color="#9CA3AF" />
+          )}
+        </View>
+        <Text style={styles.emptyTitle}>
+          {isUnreadTab ? 'Alles erledigt!' : 'Keine Benachrichtigungen'}
+        </Text>
+        <Text style={styles.emptySubtitle}>
+          {isUnreadTab
+            ? 'Du hast alle Benachrichtigungen gelesen'
+            : 'Du hast aktuell keine neuen Benachrichtigungen'}
+        </Text>
       </View>
     );
-  };
+  }, [loading, activeTab]);
+
+  const ListFooterComponent = useMemo(() => {
+    if (items.length === 0) return null;
+    return (
+      <>
+        <View style={styles.clearAllContainer}>
+          <Button
+            title="Alle Benachrichtigungen löschen"
+            variant="outline"
+            icon={<Icon name="trash-outline" size={16} color="#DC2626" style={styles.iconMargin} />}
+            onPress={handleClearAll}
+            style={styles.clearAllButton}
+            textStyle={styles.clearAllButtonText}
+          />
+        </View>
+        <View style={{ height: spacing.lg }} />
+      </>
+    );
+  }, [items.length]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -346,24 +357,15 @@ export function NotificationsScreen() {
         </TabsList>
       </View>
 
-      <ScrollView style={styles.scrollView}>
-        <NotificationListContent list={notificationsToDisplay} />
-
-        {/* Clear All Button */}
-        {items.length > 0 && (
-          <View style={styles.clearAllContainer}>
-            <Button
-              title="Alle Benachrichtigungen löschen"
-              variant="outline"
-              icon={<Icon name="trash-outline" size={16} color="#DC2626" style={styles.iconMargin} />}
-              onPress={handleClearAll}
-              style={styles.clearAllButton}
-              textStyle={styles.clearAllButtonText}
-            />
-          </View>
-        )}
-        <View style={{ height: spacing.lg }} />
-      </ScrollView>
+      <FlatList
+        data={notificationsToDisplay}
+        renderItem={renderNotificationItem}
+        keyExtractor={(item: NotificationItem) => item.id}
+        contentContainerStyle={styles.scrollView}
+        ListEmptyComponent={ListEmptyComponent}
+        ListFooterComponent={ListFooterComponent}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 }
@@ -562,8 +564,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   loadingText: {
-      color: GRAY_TEXT,
-      marginTop: spacing.sm
+    color: GRAY_TEXT,
+    marginTop: spacing.sm
   },
 
   // Footer

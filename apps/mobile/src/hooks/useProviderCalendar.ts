@@ -32,7 +32,7 @@ export function useProviderCalendar(year: number, month: number) {
                     newMarked[dateKey] = { dots: [] };
                 }
 
-                let color = colors.gray300;
+                let color: string = colors.gray300;
                 if (apt.status === 'CONFIRMED') color = colors.success || '#22C55E';
                 else if (apt.status === 'PENDING') color = colors.warning || '#EAB308';
                 else if (apt.status === 'IN_PROGRESS') color = colors.info || '#3B82F6';
