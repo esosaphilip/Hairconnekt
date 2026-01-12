@@ -39,12 +39,14 @@ export class SearchService {
     const qb = this.providersRepo
       .createQueryBuilder('p')
       .leftJoinAndSelect('p.user', 'u')
+      .leftJoin('p.services', 's_search') // Join services for name search
       .where(
         [
           'LOWER(p.business_name) LIKE :filterLower',
           'LOWER(p.bio) LIKE :filterLower',
           'LOWER(u.first_name) LIKE :filterLower',
           'LOWER(u.last_name) LIKE :filterLower',
+          'LOWER(s_search.name) LIKE :filterLower', // Add service name search
         ].join(' OR '),
         { filterLower },
       )

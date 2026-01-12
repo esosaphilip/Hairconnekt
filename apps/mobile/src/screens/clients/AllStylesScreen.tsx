@@ -11,6 +11,7 @@ import {
   Dimensions,
   ActivityIndicator,
 } from 'react-native';
+import { getStyleImage } from '@/utils/styleImages';
 import type { ListRenderItem } from 'react-native';
 import { useNavigation, useRoute, type NavigationProp, type RouteProp } from '@react-navigation/native';
 import Button from '@/components/Button';
@@ -68,7 +69,7 @@ const StyleCard = ({ service, onPress }: StyleCardProps) => {
     >
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: service.imageUrl || 'https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=800&q=80' }}
+          source={getStyleImage(service.categorySlug || service.name || 'default', service.imageUrl)}
           style={styles.styleImage}
           resizeMode="cover"
         />

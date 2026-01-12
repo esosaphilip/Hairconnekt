@@ -55,8 +55,8 @@ export function useHomeScreen() {
                     { id: 'cat_braids', name: 'Braids', slug: 'braids', iconUrl: 'https://images.unsplash.com/photo-1519699047748-de8e457a634e?auto=format&fit=crop&q=80&w=400' },
                     { id: 'cat_twists', name: 'Twists', slug: 'twists', iconUrl: 'https://images.unsplash.com/photo-1628045667794-fb4d99c30f4a?auto=format&fit=crop&q=80&w=400' },
                     { id: 'cat_locs', name: 'Locs', slug: 'locs', iconUrl: 'https://images.unsplash.com/photo-1520186717578-831e353272cc?auto=format&fit=crop&q=80&w=400' },
+                    { id: 'cat_microblading', name: 'Microblading', slug: 'microblading', iconUrl: 'https://images.unsplash.com/photo-1596704017235-d961726d9e0f?auto=format&fit=crop&q=80&w=400' },
                     { id: 'cat_natural', name: 'Natural', slug: 'natural', iconUrl: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?auto=format&fit=crop&q=80&w=400' },
-                    { id: 'cat_weave', name: 'Weaves', slug: 'weave', iconUrl: 'https://images.unsplash.com/photo-1583766395091-758f2648fb46?auto=format&fit=crop&q=80&w=400' }
                 ];
                 setPopularCategories(staticCategories);
             }

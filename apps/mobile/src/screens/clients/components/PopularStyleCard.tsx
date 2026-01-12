@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, Image } from 'react-native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { styles } from '../HomeScreen.styles';
 import { PopularStyle } from '../hooks/useHomeScreen';
+import { getStyleImage } from '@/utils/styleImages';
 
 interface PopularStyleCardProps {
     item: PopularStyle;
@@ -25,7 +26,7 @@ export const PopularStyleCard: React.FC<PopularStyleCardProps> = ({ item }) => {
         >
             <View style={styles.popularStyleImageContainer}>
                 <Image
-                    source={{ uri: item.iconUrl || 'https://images.unsplash.com/photo-1560869713-7d0a29430803?auto=format&fit=crop&w=400&q=80' }}
+                    source={getStyleImage(item.slug || 'default', item.iconUrl)}
                     style={styles.popularStyleImage}
                 />
                 <View style={styles.imageOverlay} />
