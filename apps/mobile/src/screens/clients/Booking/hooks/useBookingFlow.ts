@@ -116,8 +116,9 @@ export const useBookingFlow = (id: string) => {
                 });
 
                 setStep('confirmation');
-            } catch (err) {
-                Alert.alert("Fehler", "Buchung fehlgeschlagen: " + (err instanceof Error ? err.message : String(err)));
+            } catch (err: any) {
+                const errorMessage = err?.response?.data?.message || (err instanceof Error ? err.message : String(err));
+                Alert.alert("Fehler", "Buchung fehlgeschlagen: " + errorMessage);
             } finally {
                 setLoadingProvider(false);
             }

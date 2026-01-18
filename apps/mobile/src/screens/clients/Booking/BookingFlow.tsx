@@ -249,7 +249,7 @@ export function BookingFlow() {
                                 <View style={styles.mobileServiceInfo}>
                                     <Text style={styles.mobileServiceText}>
                                         <Icon name="map-pin" size={14} color={colors.gray600} style={styles.mrXs} />
-                                        Musterstraße 123, 44137 Dortmund
+                                        Adresse wird nach Buchung geteilt
                                     </Text>
                                     <Text style={styles.mobileServiceFee}>
                                         Zusätzliche Gebühr: +€15
