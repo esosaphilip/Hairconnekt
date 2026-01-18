@@ -139,7 +139,8 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
   const getStatusBadgeStyle = (status: string) => {
-    switch (status) {
+    const s = (status || '').toLowerCase();
+    switch (s) {
       case 'upcoming': return { bg: '#DCFCE7', text: '#166534', label: 'Bevorstehend' };
       case 'confirmed': return { bg: '#DCFCE7', text: '#166534', label: 'Bestätigt' };
       case 'completed': return { bg: '#F3F4F6', text: '#374151', label: 'Abgeschlossen' };
@@ -149,6 +150,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   };
 
   const statusStyle = getStatusBadgeStyle(appointment.status);
+  const isActionable = ['upcoming', 'confirmed'].includes((appointment.status || '').toLowerCase());
 
   return (
     <SafeAreaView style={styles.container}>
@@ -161,9 +163,9 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           <Text style={styles.headerTitle}>Termindetails</Text>
           <Text style={styles.headerSub}>#{id.substring(0, 8)}</Text>
         </View>
-        {(appointment.status === 'upcoming' || appointment.status === 'confirmed') && (
-          <TouchableOpacity style={styles.moreBtn} onPress={handleMoreOptions}>
-            <Icon name="more-vertical" size={20} color={colors.gray800} />
+        {isActionable && (
+          <TouchableOpacity style={styles.moreBtn} onPress={handleMoreOptions} testID="more-options-btn">
+            <Icon name="more-vertical" size={24} color={colors.gray800} />
           </TouchableOpacity>
         )}
       </View>
@@ -212,7 +214,14 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
               title="Profil"
               variant="outline"
               size="sm"
-              onPress={() => navigation.navigate('ProviderDetail', { id: appointment.providerId })}
+              onPress={() => {
+                const pid = appointment.providerId || appointment.provider?.id;
+                if (pid) {
+                  navigation.navigate('ProviderDetail', { id: pid });
+                } else {
+                  Alert.alert('Fehler', 'Keine Provider-ID gefunden');
+                }
+              }}
             />
           </View>
           <View style={styles.divider} />
@@ -249,8 +258,24 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           </View>
         </View>
 
+        {/* Notes (Hinweise) */}
+        <View style={[styles.card, { backgroundColor: '#FEFCE8', borderColor: '#FEF9C3', borderWidth: 1 }]}>
+          <Text style={[styles.cardTitle, { marginBottom: spacing.xs }]}>Hinweise</Text>
+          <Text style={[styles.bodyText, { color: '#854D0E' }]}>
+            {appointment.notes || 'Bitte eigene Extensions mitbringen (Farbe: 1B)'}
+          </Text>
+        </View>
+
+        {/* Cancellation Policy (Stornierungsbedingungen) */}
+        <View style={[styles.card, { backgroundColor: '#EFF6FF', borderColor: '#DBEAFE', borderWidth: 1 }]}>
+          <Text style={[styles.cardTitle, { marginBottom: spacing.xs }]}>Stornierungsbedingungen</Text>
+          <Text style={[styles.bodyText, { color: '#1E40AF' }]}>
+            Kostenlose Stornierung bis 24 Stunden vor dem Termin.
+          </Text>
+        </View>
+
         {/* Actions */}
-        {(appointment.status === 'upcoming' || appointment.status === 'confirmed') && (
+        {isActionable && (
           <View style={styles.actions}>
             <Button
               title="Nachricht senden"
