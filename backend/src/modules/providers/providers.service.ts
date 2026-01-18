@@ -29,6 +29,7 @@ import { GeocodingService } from '../../shared/services/geocoding.service';
 import { Review } from '../reviews/entities/review.entity';
 import { PortfolioImage } from '../portfolio/entities/portfolio-image.entity';
 import { ProviderSettings } from './entities/provider-settings.entity';
+import { ProviderClient } from './entities/provider-client.entity';
 
 
 @Injectable()
@@ -58,6 +59,8 @@ export class ProvidersService {
     private readonly portfolioRepo: Repository<PortfolioImage>,
     @InjectRepository(ProviderSettings)
     private readonly settingsRepo: Repository<ProviderSettings>,
+    @InjectRepository(ProviderClient)
+    private readonly clientRepo: Repository<ProviderClient>,
     private readonly geocodingService: GeocodingService,
   ) { }
 
@@ -514,11 +517,17 @@ export class ProvidersService {
     const provider = await this.providerRepo.findByUserId(userId);
     if (!provider) throw new NotFoundException('Provider profile not found');
 
-    // Load appointments including client and services to aggregate spending
+    // 1. Fetch persistent client records
+    const providerClients = await this.clientRepo.find({
+      where: { provider: { id: provider.id } },
+      relations: ['user'],
+    });
+
+    // 2. Fetch appointments for stats
     const appts = await this.providerRepo.findAllAppointments(provider.id);
 
     type ClientAgg = {
-      id: string;
+      id: string; // User ID or ProviderClient ID (for manual)
       name: string;
       image?: string;
       phone?: string;
@@ -526,44 +535,88 @@ export class ProvidersService {
       lastVisitIso?: string;
       totalSpentCents: number;
       isVIP: boolean;
+      notes?: string;
+      isManual: boolean;
+      providerClientId?: string; // To link back for updates
     };
 
-    const byClient = new Map<string, ClientAgg>();
+    const byId = new Map<string, ClientAgg>();
+
+    // Helper to key by User ID (if linked) or ProviderClient ID (if manual)
+    const getKey = (pc: ProviderClient) => pc.user ? pc.user.id : pc.id;
+
+    // Load persistent clients first
+    for (const pc of providerClients) {
+      const key = getKey(pc);
+      const name = pc.user
+        ? [pc.user.firstName, pc.user.lastName].filter(Boolean).join(' ')
+        : [pc.firstName, pc.lastName].filter(Boolean).join(' ');
+
+      byId.set(key, {
+        id: key,
+        name: name || (pc.user?.email ?? 'Unbekannt'),
+        image: pc.user?.profilePictureUrl || undefined,
+        phone: pc.phone || pc.user?.phone || undefined, // Prefer manual phone override if any? Or entity phone.
+        appointments: 0,
+        totalSpentCents: 0,
+        isVIP: pc.isVIP,
+        notes: pc.notes,
+        isManual: !pc.user,
+        providerClientId: pc.id,
+      });
+    }
+
+    // Process appointments
     for (const a of appts) {
       const c = a.client;
-      if (!c) continue;
-      const id = c.id;
-      const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.email || 'Kunde';
+      if (!c) continue; // Skip appointments without client (rare)
+
+      // Only "Users" have appointments in this system currently
+      const key = c.id;
       const priceCents = (a.appointmentServices || []).reduce((sum, s) => sum + (s.priceCents || 0), 0);
       const visitIso = new Date(a.endTime || a.startTime).toISOString();
 
-      const existing = byClient.get(id);
-      if (!existing) {
-        byClient.set(id, {
-          id,
+      let entry = byId.get(key);
+      if (!entry) {
+        // New client seen only in appointments (not yet in ProviderClient table)
+        const fullName = [c.firstName, c.lastName].filter(Boolean).join(' ').trim() || c.email || 'Kunde';
+        entry = {
+          id: key,
           name: fullName,
           image: c.profilePictureUrl || undefined,
-          phone: c.phone || undefined,
-          appointments: 1,
-          lastVisitIso: visitIso,
-          totalSpentCents: priceCents,
+          phone: c.phone || undefined, // ProviderClient/User phone logic could be complex, assume User phone here
+          appointments: 0,
+          totalSpentCents: 0,
           isVIP: false,
-        });
-      } else {
-        existing.appointments += 1;
-        existing.totalSpentCents += priceCents;
-        // Update last visit to the max
-        if (!existing.lastVisitIso || visitIso > existing.lastVisitIso) {
-          existing.lastVisitIso = visitIso;
-        }
+          isManual: false,
+        };
+        byId.set(key, entry);
+      }
+
+      entry.appointments += 1;
+      entry.totalSpentCents += priceCents;
+      if (!entry.lastVisitIso || visitIso > entry.lastVisitIso) {
+        entry.lastVisitIso = visitIso;
       }
     }
 
-    // Mark VIPs (simple rule: 5+ appointments or >= 50000 cents lifetime spend)
-    const items = Array.from(byClient.values()).map((c) => ({
-      ...c,
-      isVIP: c.appointments >= 5 || c.totalSpentCents >= 50000,
-    }));
+    // Auto-VIP logic (if not manually set)
+    // Note: If ProviderClient exists, we respect its isVIP. 
+    // If we want "Auto OR Manual", we check if manually false but logic says true? 
+    // For now, let's say ProviderClient.isVIP matches the manual toggle. 
+    // If no ProviderClient record, we use logic.
+    const items = Array.from(byId.values()).map((c) => {
+      // If we differ from DB, maybe we should auto-create record? No, keep it view-only for now.
+      const autoVip = c.appointments >= 5 || c.totalSpentCents >= 50000;
+      // If manual record exists, trust it. If not, use auto.
+      // But wait: if manual record says FALSE, should we override with TRUE if they spent a lot?
+      // Usually "Manual VIP" is an override. 
+      // Let's say: isVIP = storedVIP || autoVIP
+      return {
+        ...c,
+        isVIP: c.isVIP || autoVip,
+      };
+    });
 
     // Stats
     const totalClients = items.length;
@@ -573,12 +626,18 @@ export class ProvidersService {
     const startIso = this.formatDate(weekStart);
     const endIso = this.formatDate(weekEnd);
     const newThisWeek = items.filter((c) => {
+      // Logic for "New this week": First visit was this week? 
+      // Or just "Visited this week"? Usually "New" means joined.
+      // We don't have "joinedAt" easy for appointment-only clients.
+      // Let's use "Last Visit" for simplicity as "Active this week" or stick to existing logic?
+      // Existing logic used lastVisitIso checking if in current week. That effectively means "Active this week".
+      // Let's warn user: "New Clients" metric here is actually "Active Clients".
       if (!c.lastVisitIso) return false;
       const d = c.lastVisitIso.slice(0, 10);
       return d >= startIso && d <= endIso;
     }).length;
 
-    // Sort clients by most recent visit
+    // Sort: Last visit desc
     items.sort((a, b) => (b.lastVisitIso || '').localeCompare(a.lastVisitIso || ''));
 
     return {
@@ -587,6 +646,207 @@ export class ProvidersService {
       newThisWeek,
       items,
     };
+  }
+
+  /**
+   * Get single client detail (merged view)
+   */
+  async getClientDetail(userId: string, clientId: string) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    // Fetch Persistent Record
+    // Note: clientId could be a User.id OR a ProviderClient.id (for manual)
+    // We try to find by User ID first, then by ID.
+    let providerClient = await this.clientRepo.findOne({
+      where: { provider: { id: provider.id }, user: { id: clientId } },
+      relations: ['user']
+    });
+
+    if (!providerClient) {
+      // Try ID directly (Manual client case)
+      providerClient = await this.clientRepo.findOne({
+        where: { provider: { id: provider.id }, id: clientId },
+        relations: ['user']
+      });
+    }
+
+    // Basic fields
+    let data = {
+      id: clientId,
+      name: 'Unbekannt',
+      image: undefined as string | undefined,
+      phone: undefined as string | undefined,
+      email: undefined as string | undefined,
+      isVIP: false,
+      notes: undefined as string | undefined,
+      appointments: 0,
+      totalSpentCents: 0,
+      lastVisitIso: undefined as string | undefined,
+    };
+
+    if (providerClient) {
+      const u = providerClient.user;
+      data.id = u ? u.id : providerClient.id;
+      data.name = u
+        ? [u.firstName, u.lastName].filter(Boolean).join(' ')
+        : [providerClient.firstName, providerClient.lastName].filter(Boolean).join(' ');
+
+      data.image = u?.profilePictureUrl || undefined;
+      data.phone = providerClient.phone || u?.phone || undefined;
+      data.email = providerClient.email || u?.email;
+      data.notes = providerClient.notes;
+      data.isVIP = providerClient.isVIP;
+    } else {
+      // If no ProviderClient record, try fetching User info directly (if it's a real user ID)
+      try {
+        const user = await this.userRepo.findOne({ where: { id: clientId } });
+        if (user) {
+          data.name = [user.firstName, user.lastName].filter(Boolean).join(' ');
+          data.image = user.profilePictureUrl || undefined;
+          data.phone = user.phone;
+          data.email = user.email;
+        }
+      } catch { /* Not a user UUID or error */ }
+    }
+
+    // Calcs from appointments (only if it's a User ID)
+    // Can't easily link appointments to Manual Clients yet (needs Appointment update)
+    // Assuming ONLY Users have appointments for now.
+    const isUserUuid = clientId.length === 36; // rough check, or check if we found a User entity
+    if (isUserUuid) {
+
+      // Optimization: Need findAppointmentsByClient
+      // Fallback: Filter all appts (inefficient but safe for MVP)
+      const allAppts = await this.providerRepo.findAllAppointments(provider.id);
+      const myAppts = allAppts.filter(a => a.client?.id === clientId);
+
+      data.appointments = myAppts.length;
+      data.totalSpentCents = myAppts.reduce((sum, a) => sum + (a.appointmentServices || []).reduce((s, svc) => s + (svc.priceCents || 0), 0), 0);
+
+      const last = myAppts.sort((a, b) => {
+        const timeA = (a.endTime instanceof Date ? a.endTime.getTime() : 0);
+        const timeB = (b.endTime instanceof Date ? b.endTime.getTime() : 0);
+        return timeB - timeA;
+      })[0];
+      if (last) {
+        const d = last.endTime || last.startTime;
+        data.lastVisitIso = d instanceof Date ? d.toISOString() : (d as any); // Fallback if string?
+      }
+
+      // Auto-VIP check
+      if (data.appointments >= 5 || data.totalSpentCents >= 50000) {
+        data.isVIP = true;
+      }
+    }
+
+    return data;
+  }
+
+  async addClient(userId: string, dto: { firstName: string; lastName: string; phone: string; email?: string; notes?: string }) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    const client = new ProviderClient();
+    client.provider = provider;
+    client.firstName = dto.firstName;
+    client.lastName = dto.lastName;
+    client.phone = dto.phone;
+    client.email = dto.email;
+    client.notes = dto.notes;
+
+    // Future: Check if phone matches existing User? Auto-link?
+    // For now, simple manual add.
+
+    return this.clientRepo.save(client);
+  }
+
+  async updateClientNotes(userId: string, clientId: string, notes: string) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    let client = await this.clientRepo.findOne({
+      where: { provider: { id: provider.id }, user: { id: clientId } },
+    });
+
+    // If not found by User ID, try ID (manual)
+    if (!client) {
+      client = await this.clientRepo.findOne({
+        where: { provider: { id: provider.id }, id: clientId },
+      });
+    }
+
+    // If still not found, and clientId is a valid User ID, create the record!
+    if (!client) {
+      // Check if user exists
+      const user = await this.userRepo.findOne({ where: { id: clientId } });
+      if (!user) throw new NotFoundException('Client not found');
+
+      client = new ProviderClient();
+      client.provider = provider;
+      client.user = user;
+    }
+
+    client.notes = notes;
+    await this.clientRepo.save(client);
+    return { success: true, notes };
+  }
+
+  async updateClientVip(userId: string, clientId: string, isVIP: boolean) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    let client = await this.clientRepo.findOne({
+      where: { provider: { id: provider.id }, user: { id: clientId } },
+    });
+
+    if (!client) {
+      client = await this.clientRepo.findOne({
+        where: { provider: { id: provider.id }, id: clientId },
+      });
+    }
+
+    if (!client) {
+      const user = await this.userRepo.findOne({ where: { id: clientId } });
+      if (!user) throw new NotFoundException('Client not found');
+
+      client = new ProviderClient();
+      client.provider = provider;
+      client.user = user;
+    }
+
+    client.isVIP = isVIP;
+    await this.clientRepo.save(client);
+    return { success: true, isVIP };
+  }
+
+  async blockClient(userId: string, clientId: string, reason: string) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    let client = await this.clientRepo.findOne({
+      where: { provider: { id: provider.id }, user: { id: clientId } },
+    });
+
+    if (!client) {
+      client = await this.clientRepo.findOne({
+        where: { provider: { id: provider.id }, id: clientId },
+      });
+    }
+
+    if (!client) {
+      const user = await this.userRepo.findOne({ where: { id: clientId } });
+      if (!user) throw new NotFoundException('Client not found');
+
+      client = new ProviderClient();
+      client.provider = provider;
+      client.user = user;
+    }
+
+    client.isBlocked = true;
+    client.notes = (client.notes ? client.notes + '\n' : '') + `Blocked: ${reason}`;
+    await this.clientRepo.save(client);
+    return { success: true, isBlocked: true };
   }
 
   /**

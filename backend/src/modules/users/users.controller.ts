@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Delete, Param, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, Delete, Param, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { UsersService } from './users.service';
@@ -36,7 +36,28 @@ export class UsersController {
     return this.usersService.updateFcmToken(userId, body.fcmToken);
   }
 
-  // Avatar upload endpoint temporarily disabled until StorageModule is ready
+  @Get('me/preferences')
+  @UseGuards(JwtAuthGuard)
+  async getPreferences(@Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    return this.usersService.getPreferences(userId);
+  }
+
+  @Patch('me/preferences')
+  @UseGuards(JwtAuthGuard)
+  async updatePreferences(@Req() req: Request, @Body() body: any) {
+    const userId = (req.user as any)?.sub;
+    return this.usersService.updatePreferences(userId, body);
+  }
+
+  // Avatar upload endpoint
+  @Post('me/avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(require('@nestjs/platform-express').FileInterceptor('file'))
+  async uploadAvatar(@Req() req: Request, @UploadedFile() file: any) {
+    const userId = (req.user as any)?.sub;
+    return this.usersService.uploadProfilePicture(userId, file);
+  }
 
   @Post(':id/block')
   @UseGuards(JwtAuthGuard)

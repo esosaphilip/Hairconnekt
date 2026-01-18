@@ -16,6 +16,7 @@ import { ProviderSpecialization } from './entities/provider-specialization.entit
 import { ProviderCertification } from './entities/provider-certification.entity';
 import { ProviderSettings } from './entities/provider-settings.entity';
 import { VerificationDocument } from './entities/verification-document.entity';
+import { ProviderClient } from './entities/provider-client.entity';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { AppointmentService } from '../appointments/entities/appointment-service.entity';
 import { Review } from '../reviews/entities/review.entity';
@@ -45,6 +46,7 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
       User,
       Address,
       ProviderSettings,
+      ProviderClient,
     ]),
     StorageModule,
     ServicesModule,

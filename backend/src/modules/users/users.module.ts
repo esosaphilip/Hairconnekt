@@ -16,18 +16,20 @@ import { PreferencesController } from './preferences.controller';
 
 import { TypeORMUserRepository } from '../../infrastructure/repositories/TypeORMUserRepository';
 import { TypeORMAddressRepository } from '../../infrastructure/repositories/TypeORMAddressRepository';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      User, 
-      Address, 
-      ClientProfile, 
-      BlockedUser, 
+      User,
+      Address,
+      ClientProfile,
+      BlockedUser,
       UserReport,
       Appointment,
       Favorite
     ]),
+    StorageModule,
   ],
   controllers: [UsersController, AddressesController, PreferencesController],
   providers: [

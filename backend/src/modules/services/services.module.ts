@@ -6,10 +6,12 @@ import { Service } from './entities/service.entity';
 import { ServiceCategory } from './entities/service-category.entity';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 
+import { StorageModule } from '../storage/storage.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([Service, ServiceCategory, ProviderProfile])],
+  imports: [TypeOrmModule.forFeature([Service, ServiceCategory, ProviderProfile]), StorageModule],
   controllers: [ServicesController],
   providers: [ServicesService],
   exports: [ServicesService],
 })
-export class ServicesModule {}
+export class ServicesModule { }

@@ -12,6 +12,8 @@ import {
   InternalServerErrorException,
   Logger,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -100,5 +102,17 @@ export class ServicesController {
   ) {
     const providerId = await this.resolveProviderId(req);
     return this.servicesService.delete(id, providerId);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER, UserType.BOTH)
+  @Post('image')
+  @UseInterceptors(require('@nestjs/platform-express').FileInterceptor('file'))
+  async uploadServiceImage(
+    @Req() req: Request & { user: any },
+    @UploadedFile() file: any,
+  ) {
+    const providerId = await this.resolveProviderId(req);
+    return this.servicesService.uploadImage(providerId, file);
   }
 }

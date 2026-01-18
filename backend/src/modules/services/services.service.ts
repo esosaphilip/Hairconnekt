@@ -5,6 +5,8 @@ import { Service, PriceType } from './entities/service.entity';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { ServiceCategory } from './entities/service-category.entity';
 
+import { StorageService } from '../storage/storage.service';
+
 @Injectable()
 export class ServicesService {
   constructor(
@@ -14,6 +16,7 @@ export class ServicesService {
     private readonly providerProfileRepository: Repository<ProviderProfile>,
     @InjectRepository(ServiceCategory)
     private readonly serviceCategoryRepository: Repository<ServiceCategory>,
+    private readonly storageService: StorageService,
   ) { }
 
   async listCategories(): Promise<ServiceCategory[]> {
@@ -209,5 +212,15 @@ export class ServicesService {
     }
 
     await this.serviceRepository.remove(service);
+  }
+
+  async uploadImage(providerId: string, file: any) {
+    if (!file?.buffer || !file?.originalname) {
+      throw new BadRequestException('Image file is required');
+    }
+
+    // Upload to R2 (using generic provider context)
+    const { url } = await this.storageService.uploadImage(providerId, file.buffer, file.originalname);
+    return { url };
   }
 }

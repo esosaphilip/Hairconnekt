@@ -19,6 +19,7 @@ import { Appointment } from '../../appointments/entities/appointment.entity';
 import { ProviderSpecialization } from './provider-specialization.entity';
 import { ProviderCertification } from './provider-certification.entity';
 import { ProviderSettings } from './provider-settings.entity';
+import { ProviderClient } from './provider-client.entity';
 import sanitizeHtml from 'sanitize-html';
 import { UpdateBioDto } from '../dto/update-bio.dto';
 import { UpdateSocialMediaDto } from '../dto/update-social-media.dto';
@@ -105,6 +106,9 @@ export class ProviderProfile {
 
   @Column({ name: 'cancellation_policy', type: 'text' })
   cancellationPolicy: string;
+
+  @OneToMany(() => ProviderClient, (pc) => pc.provider)
+  clients: ProviderClient[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt: Date;

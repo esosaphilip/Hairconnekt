@@ -4,10 +4,13 @@ import { Repository } from 'typeorm';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { IAddressRepository } from '../../domain/repositories/IAddressRepository';
 import { User } from './entities/user.entity';
+import { ClientProfile } from './entities/client-profile.entity';
 import { BlockedUser } from './entities/blocked-user.entity';
 import { UserReport, ReportStatus, ReportReason } from './entities/report.entity';
 import { Appointment, AppointmentStatus } from '../appointments/entities/appointment.entity';
 import { Favorite } from '../favorites/entities/favorite.entity';
+
+import { StorageService } from '../storage/storage.service';
 
 @Injectable()
 export class UsersService {
@@ -24,6 +27,7 @@ export class UsersService {
     private readonly appointmentRepo: Repository<Appointment>,
     @InjectRepository(Favorite)
     private readonly favoriteRepo: Repository<Favorite>,
+    private readonly storageService: StorageService,
   ) { }
 
   async blockUser(blockerId: string, blockedId: string): Promise<void> {
@@ -204,5 +208,50 @@ export class UsersService {
     address.isDefault = true;
     await this.addressesRepo.save(address);
     return { success: true };
+  }
+
+  async getPreferences(userId: string) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+    return user.clientProfile || null;
+  }
+
+  async updatePreferences(userId: string, payload: Partial<ClientProfile>) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!user.clientProfile) {
+      user.clientProfile = new ClientProfile();
+    }
+
+    const allowed = ['dateOfBirth', 'gender', 'hairType', 'hairLength', 'preferredStyles', 'allergies', 'notes'];
+    for (const key of allowed) {
+      if (payload[key as keyof ClientProfile] !== undefined) {
+        (user.clientProfile as any)[key] = payload[key as keyof ClientProfile];
+      }
+    }
+
+    await this.userRepo.save(user);
+    return user.clientProfile;
+  }
+
+  async uploadProfilePicture(userId: string, file: any) {
+    const user = await this.userRepo.findById(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (!file?.buffer || !file?.originalname) {
+      throw new Error('Image file is required');
+    }
+
+    // Upload to storage using R2
+    const { url } = await this.storageService.uploadImage(user.id, file.buffer, file.originalname);
+
+    user.profilePictureUrl = url;
+    await this.userRepo.save(user);
+
+    return {
+      success: true,
+      profilePictureUrl: url
+    };
   }
 }

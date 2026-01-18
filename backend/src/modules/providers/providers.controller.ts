@@ -196,6 +196,52 @@ export class ProvidersController {
     return { success: true, data };
   }
 
+  @Get('clients/:clientId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async getClientDetail(@Req() req: Request, @Param('clientId') clientId: string) {
+    const userId = (req.user as any)?.sub;
+    const data = await this.providersService.getClientDetail(userId, clientId);
+    return { success: true, data };
+  }
+
+  @Post('clients')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async addClient(@Req() req: Request, @Body() body: any) {
+    const userId = (req.user as any)?.sub;
+    const data = await this.providersService.addClient(userId, body);
+    return { success: true, data };
+  }
+
+  @Patch('clients/:clientId/notes')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async updateClientNotes(@Req() req: Request, @Param('clientId') clientId: string, @Body() body: { providerNotes: string }) {
+    const userId = (req.user as any)?.sub;
+    // Note: API client sends 'providerNotes', service expects 'notes'
+    const data = await this.providersService.updateClientNotes(userId, clientId, body.providerNotes);
+    return { success: true, data };
+  }
+
+  @Patch('clients/:clientId/vip-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async updateClientVip(@Req() req: Request, @Param('clientId') clientId: string, @Body() body: { isVIP: boolean }) {
+    const userId = (req.user as any)?.sub;
+    const data = await this.providersService.updateClientVip(userId, clientId, body.isVIP);
+    return { success: true, data };
+  }
+
+  @Post('clients/:clientId/block')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  async blockClient(@Req() req: Request, @Param('clientId') clientId: string, @Body() body: { reason: string }) {
+    const userId = (req.user as any)?.sub;
+    const data = await this.providersService.blockClient(userId, clientId, body.reason);
+    return { success: true, data };
+  }
+
   // Public endpoint: nearby providers by lat/lon
   @Get('nearby')
   @UseInterceptors(AppCacheInterceptor)

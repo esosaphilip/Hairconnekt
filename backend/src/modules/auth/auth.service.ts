@@ -704,4 +704,19 @@ export class AuthService {
     const multipliers: any = { s: 1000, m: 60_000, h: 3_600_000, d: 86_400_000 };
     return val * multipliers[unit];
   }
+
+  async changePassword(userId: string, dto: { currentPassword: string; newPassword: string }) {
+    const user = await this.usersRepo.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const ok = await this.verifyPassword(dto.currentPassword, user.passwordHash);
+    if (!ok) {
+      throw new BadRequestException('Incorrect current password');
+    }
+
+    user.passwordHash = await this.hashPassword(dto.newPassword);
+    await this.usersRepo.save(user);
+
+    return { success: true };
+  }
 }

@@ -11,9 +11,21 @@ import { VerifyEmailDto } from './dto/verify-email.dto';
 import { VerifyPhoneDto } from './dto/verify-phone.dto';
 import { ResendVerificationDto } from './dto/resend-verification.dto';
 
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { UseGuards, Req } from '@nestjs/common';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Request } from 'express';
+
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  changePassword(@Req() req: Request, @Body() dto: ChangePasswordDto) {
+    const userId = (req.user as any)?.sub;
+    return this.authService.changePassword(userId, dto);
+  }
 
   @Post('register')
   register(@Body() dto: RegisterDto) {
