@@ -73,7 +73,11 @@ export function HomeScreen() {
           <View style={styles.headerTopRow}>
             {isAuthenticated ? (
               <View style={styles.userInfo}>
-                <Avatar size={40} style={styles.initialsAvatar}>
+                <Avatar 
+                  size={40} 
+                  style={styles.initialsAvatar} 
+                  source={user?.profilePictureUrl ? { uri: user.profilePictureUrl } : undefined}
+                >
                   <Text style={styles.initialsText}>{initials}</Text>
                 </Avatar>
                 <View>

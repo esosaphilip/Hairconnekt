@@ -200,7 +200,7 @@ export function SettingsScreen() {
           <View style={styles.card}>
             {accountSettings.map((item, index) => (
               <React.Fragment key={index}>
-                <SettingItemRow item={item} />
+                <SettingRow item={item} />
                 {index < accountSettings.length - 1 && <View style={styles.separator} />}
               </React.Fragment>
             ))}
@@ -213,7 +213,7 @@ export function SettingsScreen() {
           <View style={styles.card}>
             {appSettings.map((item, index) => (
               <React.Fragment key={index}>
-                <SettingItemRow item={item} />
+                <SettingRow item={item} />
                 {index < appSettings.length - 1 && <View style={styles.separator} />}
               </React.Fragment>
             ))}
@@ -224,13 +224,13 @@ export function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Rechtliches & Support</Text>
           <View style={styles.card}>
-            <SettingItemRow item={{
+            <SettingRow item={{
               icon: IconNames.FileText,
               label: "Nutzungsbedingungen",
               route: "TermsScreen"
             }} />
             <View style={styles.separator} />
-            <SettingItemRow item={{
+            <SettingRow item={{
               icon: IconNames.LifeBuoy,
               label: "Hilfe & Support",
               route: "SupportScreen"

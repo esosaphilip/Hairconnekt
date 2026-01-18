@@ -161,7 +161,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           <Text style={styles.headerTitle}>Termindetails</Text>
           <Text style={styles.headerSub}>#{id.substring(0, 8)}</Text>
         </View>
-        {appointment.status === 'upcoming' && (
+        {(appointment.status === 'upcoming' || appointment.status === 'confirmed') && (
           <TouchableOpacity style={styles.moreBtn} onPress={handleMoreOptions}>
             <Icon name="more-vertical" size={20} color={colors.gray800} />
           </TouchableOpacity>
@@ -212,7 +212,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
               title="Profil"
               variant="outline"
               size="sm"
-              onPress={() => navigation.navigate('ProviderProfile', { providerId: appointment.providerId })}
+              onPress={() => navigation.navigate('ProviderDetail', { id: appointment.providerId })}
             />
           </View>
           <View style={styles.divider} />

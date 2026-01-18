@@ -42,6 +42,7 @@ export type PublicUser = {
   firstName?: string | null;
   lastName?: string | null;
   userType?: string | null;
+  profilePictureUrl?: string | null; // Added
   // Verification flags used across mobile screens
   emailVerified?: boolean;
   phoneVerified?: boolean;
