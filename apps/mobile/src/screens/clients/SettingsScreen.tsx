@@ -22,6 +22,7 @@ import { logger } from '@/services/logger';
 import { showMessage } from 'react-native-flash-message';
 import { useAuth } from '@/auth/AuthContext';
 import { clientUserApi } from '@/api/clientUser';
+import { clientUserApi } from '@/api/clientUser';
 
 // --- Config & Types ---
 // Mapping Lucide icons to string names for the generic Icon component
@@ -153,11 +154,6 @@ export function SettingsScreen() {
       route: "NotificationSettingsScreen",
     },
   ];
-
-  // ... imports ...
-  import { clientUserApi } from '@/api/clientUser';
-
-  // ... Inside SettingsScreen component ...
 
   const { logout } = useAuth();
   // State for language selection (MVP: just toggling or simple selection)
