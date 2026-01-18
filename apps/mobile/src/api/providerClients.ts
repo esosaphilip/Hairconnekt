@@ -16,11 +16,11 @@ export const providerClientsApi = {
       // And then usage: data?.items
       // But here in providerClientsApi.ts, we were returning (payload as any).data
       // This suggests payload.data IS the object containing { items: ... }
-      
+
       // However, if we want to return Domain Models, we should probably return the whole structure mapped.
       // But `ClientAdapter.toDomain` maps a single client.
       // Let's assume payload.data has an `items` array.
-      
+
       const dataObj = (payload as any).data;
       if (dataObj && Array.isArray(dataObj.items)) {
         return {
@@ -31,6 +31,11 @@ export const providerClientsApi = {
       return dataObj;
     }
     return payload;
+  },
+
+  async create(data: { firstName: string; lastName: string; phone: string; email?: string; notes?: string }) {
+    const res = await http.post('/providers/clients', data);
+    return res?.data;
   },
 
   async detail(clientId: string): Promise<IClient | null> {

@@ -29,7 +29,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import CustomTimePicker from '../../components/CustomTimePicker'; // Placeholder for RN Time Picker
 import { colors } from '../../theme/tokens';
-import { usersApi } from '../../services/users';
+import { notificationsApi } from '../../api/notifications';
 
 // Interfaces for settings
 interface NotificationSetting {
@@ -69,11 +69,11 @@ export default function NotificationSettingsScreen() {
 
   const loadSettings = async () => {
     try {
-      const data = await usersApi.getMe();
-      if (data.notificationPreferences) {
-        setPushEnabled(data.notificationPreferences.push ?? true);
-        setEmailEnabled(data.notificationPreferences.email ?? true);
-        setSmsEnabled(data.notificationPreferences.sms ?? false);
+      const data = await notificationsApi.getPreferences();
+      if (data) {
+        setPushEnabled(data.pushEnabled ?? true);
+        setEmailEnabled(data.emailEnabled ?? true);
+        setSmsEnabled(data.smsEnabled ?? false);
       }
     } catch (e) {
       console.error('Failed to load settings', e);
@@ -120,12 +120,10 @@ export default function NotificationSettingsScreen() {
     setLoading(true);
 
     try {
-      await usersApi.updateMe({
-        notificationPreferences: {
-          push: pushEnabled,
-          email: emailEnabled,
-          sms: smsEnabled,
-        }
+      await notificationsApi.updatePreferences({
+        pushEnabled,
+        emailEnabled,
+        smsEnabled,
       });
 
       showToast('Einstellungen gespeichert');

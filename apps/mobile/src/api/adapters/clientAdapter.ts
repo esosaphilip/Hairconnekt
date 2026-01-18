@@ -23,6 +23,7 @@ interface ClientDTO {
   appointments?: number;
   totalSpentCents?: number;
   lastVisitIso?: string;
+  notes?: string;
 }
 
 export const ClientAdapter = {
@@ -30,12 +31,12 @@ export const ClientAdapter = {
     const name = [dto.firstName, dto.lastName].filter(Boolean).join(' ') || dto.name || 'Unbekannt';
     const image = dto.profilePictureUrl || dto.avatar || dto.image;
     const phone = dto.contactInfo?.phone || dto.phone;
-    
+
     // Normalize stats
     // Ideally API should return consistently.
     // List endpoint returns flattened: appointments, totalSpentCents
     // Detail endpoint returns nested: stats.totalAppointments, stats.totalSpent (EUR)
-    
+
     let appointments = 0;
     let totalSpentCents = 0;
     let lastVisitIso: string | undefined = undefined;
@@ -53,15 +54,15 @@ export const ClientAdapter = {
 
     // Helper for relative time (simplified for now)
     const formatRelativeGerman = (iso?: string) => {
-        if (!iso) return '';
-        try {
-            const date = new Date(iso);
-            const now = new Date();
-            const diffMs = now.getTime() - date.getTime();
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            if (diffDays < 1) return 'gerade eben';
-            return `vor ${diffDays} Tagen`;
-        } catch { return ''; }
+      if (!iso) return '';
+      try {
+        const date = new Date(iso);
+        const now = new Date();
+        const diffMs = now.getTime() - date.getTime();
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        if (diffDays < 1) return 'gerade eben';
+        return `vor ${diffDays} Tagen`;
+      } catch { return ''; }
     };
 
     const stats: IClientStats = {
@@ -78,6 +79,7 @@ export const ClientAdapter = {
       phone,
       email: dto.email,
       isVIP: !!dto.isVIP,
+      notes: dto.notes,
       stats,
       // Shortcuts for list views
       appointments: stats.appointments,

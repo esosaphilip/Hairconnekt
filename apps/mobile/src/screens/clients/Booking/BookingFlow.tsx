@@ -71,57 +71,59 @@ export function BookingFlow() {
 
     if (step === 'confirmation') {
         return (
-            <SafeAreaView style={styles.confirmationContainer}>
-                <View style={styles.checkIconContainer}>
-                    <Icon name="check" size={40} color={colors.white} />
-                </View>
-                <Text style={styles.confirmationTitle}>Termin bestätigt! 🎉</Text>
-                <Text style={styles.confirmationSubtitle}>Dein Termin wurde erfolgreich gebucht</Text>
+            <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
+                <ScrollView contentContainerStyle={[styles.confirmationContainer, { flexGrow: 1 }]}>
+                    <View style={styles.checkIconContainer}>
+                        <Icon name="check" size={40} color={colors.white} />
+                    </View>
+                    <Text style={styles.confirmationTitle}>Termin bestätigt! 🎉</Text>
+                    <Text style={styles.confirmationSubtitle}>Dein Termin wurde erfolgreich gebucht</Text>
 
-                <Card style={styles.confirmationCard}>
-                    <View style={styles.centerBlock}>
-                        <Text style={styles.bookingNumberLabel}>Buchungsnummer</Text>
-                        <Text style={styles.bookingNumberValue}>#BK-20251028-0042</Text>
-                    </View>
-                    <View style={styles.separator} />
-                    <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Datum:</Text>
-                        <Text>{selectedDate ? DateService.formatWeekdayDateMonth(selectedDate) : ''}</Text>
-                    </View>
-                    <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Uhrzeit:</Text>
-                        <Text>{selectedTime} Uhr</Text>
-                    </View>
-                    <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Dauer:</Text>
-                        <Text>{getTotalDuration()}</Text>
-                    </View>
-                    <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Gesamtpreis:</Text>
-                        <Text style={styles.totalPriceValue}>€{getTotalPrice()}</Text>
-                    </View>
-                </Card>
+                    <Card style={styles.confirmationCard}>
+                        <View style={styles.centerBlock}>
+                            <Text style={styles.bookingNumberLabel}>Buchungsnummer</Text>
+                            <Text style={styles.bookingNumberValue}>#BK-20251028-0042</Text>
+                        </View>
+                        <View style={styles.separator} />
+                        <View style={styles.detailItem}>
+                            <Text style={styles.detailLabel}>Datum:</Text>
+                            <Text>{selectedDate ? DateService.formatWeekdayDateMonth(selectedDate) : ''}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                            <Text style={styles.detailLabel}>Uhrzeit:</Text>
+                            <Text>{selectedTime} Uhr</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                            <Text style={styles.detailLabel}>Dauer:</Text>
+                            <Text>{getTotalDuration()}</Text>
+                        </View>
+                        <View style={styles.detailItem}>
+                            <Text style={styles.detailLabel}>Gesamtpreis:</Text>
+                            <Text style={styles.totalPriceValue}>€{getTotalPrice()}</Text>
+                        </View>
+                    </Card>
 
-                <View style={styles.buttonGroup}>
-                    <Button
-                        title="Zum Kalender hinzufügen"
-                        onPress={() => { /* Implement Add to Calendar logic */ }}
-                        style={styles.calendarButton}
-                        icon="calendar"
-                    />
-                    <Button
-                        title="Zu meinen Terminen"
-                        variant="outline"
-                        onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Appointments' })}
-                        style={styles.mtMd}
-                    />
-                    <Button
-                        title="Zurück zur Startseite"
-                        variant="ghost"
-                        onPress={() => rootNavigationRef.current?.navigate('Home')}
-                        style={styles.mtMd}
-                    />
-                </View>
+                    <View style={styles.buttonGroup}>
+                        <Button
+                            title="Zum Kalender hinzufügen"
+                            onPress={() => { /* Implement Add to Calendar logic */ }}
+                            style={styles.calendarButton}
+                            icon="calendar"
+                        />
+                        <Button
+                            title="Zu meinen Terminen"
+                            variant="outline"
+                            onPress={() => rootNavigationRef.current?.navigate('Tabs', { screen: 'Appointments' })}
+                            style={styles.mtMd}
+                        />
+                        <Button
+                            title="Zurück zur Startseite"
+                            variant="ghost"
+                            onPress={() => rootNavigationRef.current?.navigate('Home')}
+                            style={styles.mtMd}
+                        />
+                    </View>
+                </ScrollView>
             </SafeAreaView>
         );
     }

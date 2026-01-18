@@ -1,10 +1,10 @@
 import React from 'react';
 import { render, waitFor, fireEvent } from '@testing-library/react-native';
 import { NotificationsScreen } from '../NotificationsScreen';
-import { notificationsApi } from '@/services/notifications';
+import { notificationsApi } from '@/api/notifications';
 
 // Mock the API
-jest.mock('@/services/notifications', () => ({
+jest.mock('@/api/notifications', () => ({
     notificationsApi: {
         list: jest.fn(),
         markAllRead: jest.fn(),

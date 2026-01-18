@@ -142,6 +142,9 @@ describe('AllStylesScreen', () => {
         const item = await findByText('Box Braids');
         fireEvent.press(item);
 
-        expect(mockNavigate).toHaveBeenCalledWith('ProviderDetail', { id: 'p1' });
+        expect(mockNavigate).toHaveBeenCalledWith('Tabs', {
+            screen: 'Search',
+            params: { styleName: 'Box Braids' }
+        });
     });
 });

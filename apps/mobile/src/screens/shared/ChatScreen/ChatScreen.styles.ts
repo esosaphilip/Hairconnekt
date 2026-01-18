@@ -60,6 +60,13 @@ export const styles = StyleSheet.create({
         borderColor: '#fff',
         borderRadius: 6,
     },
+    userInfoText: {
+        marginLeft: 8,
+    },
+    headerButton: {
+        padding: 8,
+        marginLeft: 4,
+    },
     userNameTextWrapper: {
         flex: 1,
     },

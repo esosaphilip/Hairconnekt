@@ -42,20 +42,9 @@ export function ProviderPhotoUploadScreen() {
 
         try {
             setUploading(true);
-            const fileName = `profile-photo-${Date.now()}.jpg`;
 
-            // 1. Upload to Firebase Storage (Client Side)
-            const { getAuthBundle } = require('../../auth/tokenStorage');
-            const bundle = await getAuthBundle();
-            const userId = bundle?.user?.id;
-            if (!userId) throw new Error('User not found');
-
-            const path = `providers/${userId}/profile/${fileName}`;
-            const { uploadImageToFirebase } = require('../../services/imageUpload');
-            const downloadUrl = await uploadImageToFirebase(image, path);
-
-            // 2. Update Backend with URL
-            await providersApi.updateProfile({ profilePictureUrl: downloadUrl });
+            // Upload directly to backend (handles R2 storage and DB update)
+            await providersApi.uploadProfilePicture(image);
 
             Alert.alert(
                 'Erfolg',

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/textarea';
 import { colors, spacing, radii, typography } from '@/theme/tokens';
 import { http } from '@/api/http';
 import { useNavigation } from '@react-navigation/native';
+import { providerClientsApi } from '@/api/providerClients';
 
 export function ProviderAddClientScreen() {
   const navigation = useNavigation();
@@ -42,12 +43,9 @@ export function ProviderAddClientScreen() {
       // Assuming a generic endpoint or leveraging the user creation logic
       // Since specific "Add Client" endpoint might not exist, we often use the user creation or a specific provider-client-link endpoint.
       // Based on previous context, we might rely on "create appointment" to create a client, or we check if a "create client" endpoint exists.
-      // If not, we'll assume a standard POST /users or POST /providers/me/clients endpoint.
-      // Let's assume POST /providers/me/clients exists or we use a temporary placeholder if backend isn't ready.
-      // Actually, looking at the codebase, `ProvidersController` usually handles this.
-      // I will assume POST /providers/me/clients for now. If it fails, I'll catch it.
-      
-      await http.post('/providers/me/clients', {
+      // If not, we'll assume a standard POST /providers/me/clients for now. If it fails, I'll catch it.
+
+      await providerClientsApi.create({
         firstName: formData.firstName,
         lastName: formData.lastName,
         phone: formData.phone,
@@ -86,7 +84,7 @@ export function ProviderAddClientScreen() {
             <Text style={styles.label}>Vorname *</Text>
             <Input
               value={formData.firstName}
-              onChangeText={(t) => setFormData({ ...formData, firstName: t })}
+              onChangeText={(t) => setFormData(prev => ({ ...prev, firstName: t }))}
               placeholder="z.B. Maria"
               style={styles.inputMarginTop}
             />
@@ -96,7 +94,7 @@ export function ProviderAddClientScreen() {
             <Text style={styles.label}>Nachname *</Text>
             <Input
               value={formData.lastName}
-              onChangeText={(t) => setFormData({ ...formData, lastName: t })}
+              onChangeText={(t) => setFormData(prev => ({ ...prev, lastName: t }))}
               placeholder="z.B. Musterfrau"
               style={styles.inputMarginTop}
             />
@@ -106,7 +104,7 @@ export function ProviderAddClientScreen() {
             <Text style={styles.label}>Telefon *</Text>
             <Input
               value={formData.phone}
-              onChangeText={(t) => setFormData({ ...formData, phone: t })}
+              onChangeText={(t) => setFormData(prev => ({ ...prev, phone: t }))}
               placeholder="+49 123 4567890"
               keyboardType="phone-pad"
               style={styles.inputMarginTop}
@@ -117,7 +115,7 @@ export function ProviderAddClientScreen() {
             <Text style={styles.label}>E-Mail (Optional)</Text>
             <Input
               value={formData.email}
-              onChangeText={(t) => setFormData({ ...formData, email: t })}
+              onChangeText={(t) => setFormData(prev => ({ ...prev, email: t }))}
               placeholder="maria@example.com"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -131,7 +129,7 @@ export function ProviderAddClientScreen() {
           <View style={styles.mtSm}>
             <Textarea
               value={formData.notes}
-              onChangeText={(t) => setFormData({ ...formData, notes: t })}
+              onChangeText={(t) => setFormData(prev => ({ ...prev, notes: t }))}
               placeholder="Allergien, Vorlieben, etc."
               style={styles.textarea}
             />

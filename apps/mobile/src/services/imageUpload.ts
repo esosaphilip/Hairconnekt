@@ -11,22 +11,11 @@ const guessMimeFromUri = (uri: string): string => {
 
 /**
  * Shared utility for uploading images to Firebase Storage
+ * @deprecated Use backend API endpoints instead
  */
 export const uploadImageToFirebase = async (
     uri: string,
     path: string
 ): Promise<string> => {
-    if (!uri) throw new Error('Image URI is required');
-
-    // Dynamic import to avoid cycles or context issues
-    const { getStorageRef } = require('../config/firebase');
-
-    const ref = getStorageRef(path);
-
-    // Only for React Native Firebase (native)
-    // For local checks or web, logic might differ but basic RN usage assumes file path uri
-    await ref.putFile(uri);
-
-    const url = await ref.getDownloadURL();
-    return url;
+    throw new Error('uploadImageToFirebase is deprecated. Use api/users or api/providers instead.');
 };

@@ -241,4 +241,33 @@ export const providersApi = {
     }
     return payload;
   },
+
+  async uploadProfilePicture(uri: string): Promise<{ profilePictureUrl: string; success: boolean }> {
+    const formData = new FormData();
+    formData.append('file', {
+      uri,
+      name: 'profile.jpg',
+      type: 'image/jpeg',
+    } as any);
+
+    const res = await http.post('/providers/profile-picture', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
+
+  async uploadServiceImage(uri: string): Promise<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', {
+      uri,
+      name: 'service.jpg',
+      type: 'image/jpeg',
+    } as any);
+
+    // Endpoint: POST /providers/me/services/image
+    const res = await http.post('/providers/me/services/image', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  },
 };

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
     View,
     Text,
@@ -29,18 +29,10 @@ import { Avatar, AvatarImage } from '../../../components/avatar';
 import { Button } from '../../../components/Button';
 import { http } from "../../../api/http";
 import { RootStackParamList } from '../../../navigation/types';
-import { MessageBubble, IMessage } from './components/MessageBubble';
+import { chatApi } from '../../../api/chat';
+import { IMessage, MessageBubble } from './components/MessageBubble';
 import { ReportModal } from './components/ReportModal';
 import { styles } from './ChatScreen.styles';
-
-const mockChats: Record<string, any> = {
-    "1": {
-        provider: { id: "1", name: "Support", avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100", isOnline: true },
-        messages: [
-            { id: "1", text: "Hallo! Wie kann ich dir helfen?", sender: "provider", timestamp: new Date().toISOString() }
-        ]
-    }
-};
 
 type ChatScreenRouteProp = RouteProp<RootStackParamList, 'ChatScreen'>;
 
@@ -49,41 +41,97 @@ export function ChatScreen() {
     const route = useRoute<ChatScreenRouteProp>();
     const params = route.params || {};
 
-    // Support both id (conversationId) and userId (direct chat)
-    const id = params.id || params.userId || "1";
-
-    // Fallback to mock chat if id not found, or create a temporary structure
-    const chat = mockChats[id] || {
-        provider: { id: id, name: "Chat", avatar: null, isOnline: false },
-        messages: []
-    };
-
     const [message, setMessage] = useState("");
-    const [messages, setMessages] = useState<IMessage[]>(chat?.messages || []);
+    const [messages, setMessages] = useState<IMessage[]>([]);
+    const [provider, setProvider] = useState<any>(
+        (params as any).clientName ? { id: (params as any).clientId, name: (params as any).clientName } : null
+    );
+    // ^ Init from params if available (e.g. from AppointmentDetails)
+
+    const [conversationId, setConversationId] = useState<string | null>((params as any).conversationId || (params as any).id || null);
     const [isBlocked, setIsBlocked] = useState(false);
     const [reportModalVisible, setReportModalVisible] = useState(false);
     const actionSheetRef = useRef<ActionSheet>(null);
     const flatListRef = useRef<FlatList>(null);
 
-    const handleSend = () => {
-        if (!message.trim()) return;
+    // Initial load or create conversation
+    useEffect(() => {
+        const initChat = async () => {
+            try {
+                let convId = conversationId;
 
-        const newMessage: IMessage = {
-            id: Date.now().toString(),
+                // If we have a userId but no conversationId, try to start/get conversation
+                if (!convId && (params as any).userId) {
+                    const conv = await chatApi.startConversation((params as any).userId);
+                    convId = conv.id;
+                    setConversationId(conv.id);
+                }
+
+                if (convId) {
+                    loadMessages(convId);
+                    // Set up poller for new messages (MVP)
+                    const interval = setInterval(() => loadMessages(convId!), 5000);
+                    return () => clearInterval(interval);
+                }
+            } catch (error) {
+                console.error("Failed to init chat", error);
+                Alert.alert("Fehler", "Chat konnte nicht geladen werden.");
+            }
+        };
+        initChat();
+    }, [conversationId]);
+
+    const loadMessages = async (convId: string) => {
+        try {
+            const data = await chatApi.getMessages(convId);
+            setMessages(data);
+
+            if (!provider) {
+                const convs = await chatApi.getConversations();
+                const currentConv = convs.find(c => c.id === convId);
+                if (currentConv) {
+                    setProvider({
+                        id: currentConv.otherUser.id,
+                        name: currentConv.otherUser.name,
+                        avatar: currentConv.otherUser.avatar,
+                        isOnline: false
+                    });
+                }
+            }
+        } catch (error) {
+            console.log("Polling error (silent)", error);
+        }
+    };
+
+    const handleSend = async () => {
+        if (!message.trim() || !conversationId) return;
+
+        const optimisitcId = Date.now().toString();
+        const optimisticMessage: IMessage = {
+            id: optimisitcId,
             text: message,
             sender: 'me',
             timestamp: new Date().toISOString(),
         };
 
-        setMessages([...messages, newMessage]);
+        setMessages(prev => [...prev, optimisticMessage]);
         setMessage("");
+
+        try {
+            await chatApi.sendMessage(conversationId, optimisticMessage.text);
+            loadMessages(conversationId);
+        } catch (error) {
+            console.error("Failed to send", error);
+            Alert.alert("Fehler", "Nachricht konnte nicht gesendet werden.");
+            setMessages(prev => prev.filter(m => m.id !== optimisitcId));
+        }
     };
 
     const handleBooking = () => {
         actionSheetRef.current?.hide();
         navigation.navigate("CreateAppointment", {
-            clientId: (params as any).userId || chat.provider.id,
-            clientName: chat.provider.name
+            clientId: provider?.id,
+            clientName: provider?.name
         });
     };
 
@@ -107,10 +155,13 @@ export function ChatScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
-                            await http.post(`/users/${chat.provider.id}/block`);
-                            setIsBlocked(true);
-                            Alert.alert("Erfolg", "Nutzer wurde blockiert.");
-                            navigation.goBack();
+                            // Assuming provider.id is available
+                            if (provider?.id) {
+                                await http.post(`/users/${provider.id}/block`);
+                                setIsBlocked(true);
+                                Alert.alert("Erfolg", "Nutzer wurde blockiert.");
+                                navigation.goBack();
+                            }
                         } catch (error) {
                             Alert.alert("Fehler", "Blockieren fehlugeschlagen.");
                         }
@@ -127,12 +178,14 @@ export function ChatScreen() {
 
     const submitReport = async (reason: string) => {
         try {
-            await http.post(`/users/${chat.provider.id}/report`, {
-                reason,
-                details: "Reported from ChatScreen",
-            });
-            setReportModalVisible(false);
-            Alert.alert("Danke", "Dein Bericht wurde gesendet und wird überprüft.");
+            if (provider?.id) {
+                await http.post(`/users/${provider.id}/report`, {
+                    reason,
+                    details: "Reported from ChatScreen",
+                });
+                setReportModalVisible(false);
+                Alert.alert("Danke", "Dein Bericht wurde gesendet und wird überprüft.");
+            }
         } catch (error) {
             Alert.alert("Fehler", "Melden fehlgeschlagen.");
             setReportModalVisible(false);
@@ -153,39 +206,37 @@ export function ChatScreen() {
 
                     <TouchableOpacity
                         style={styles.userInfoContainer}
-                        onPress={() => navigation.navigate("ProviderProfile", { id: chat.provider.id })}
+                        onPress={() => provider && navigation.navigate("ProviderProfile", { id: provider.id })}
                         activeOpacity={0.7}
                     >
                         <View style={styles.avatarWrapper}>
                             <Avatar size={40}>
-                                {chat.provider.avatar ? (
-                                    <Image source={{ uri: chat.provider.avatar }} style={styles.avatarImage} />
+                                {provider?.avatar ? (
+                                    <Image source={{ uri: provider.avatar }} style={styles.avatarImage} />
                                 ) : (
                                     <View style={[styles.avatarImage, { backgroundColor: '#E5E7EB', alignItems: 'center', justifyContent: 'center' }]}>
                                         <User size={24} color="#6B7280" />
                                     </View>
                                 )}
                             </Avatar>
-                            {chat.provider.isOnline && (
+                            {provider?.isOnline && (
                                 <View style={styles.onlineIndicator} />
                             )}
                         </View>
-                        <View style={styles.userNameTextWrapper}>
-                            <Text style={styles.userName}>{chat.provider.name}</Text>
-                            <Text style={styles.userStatus}>
-                                {chat.provider.isOnline ? "Online" : "Zuletzt online vor 2 Std."}
-                            </Text>
+                        <View style={styles.userInfoText}>
+                            <Text style={styles.userName}>{provider?.name || "Unbekannt"}</Text>
+                            {provider?.isOnline && <Text style={styles.userStatus}>Online</Text>}
                         </View>
                     </TouchableOpacity>
 
                     <View style={styles.headerActions}>
-                        <TouchableOpacity onPress={() => handleCall("voice")} style={styles.actionButton}>
+                        <TouchableOpacity onPress={() => handleCall('voice')} style={styles.headerButton}>
                             <Phone size={20} color="#1F2937" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleCall("video")} style={styles.actionButton}>
+                        <TouchableOpacity onPress={() => handleCall('video')} style={styles.headerButton}>
                             <Video size={20} color="#1F2937" />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => actionSheetRef.current?.show()} style={styles.actionButton}>
+                        <TouchableOpacity onPress={() => actionSheetRef.current?.show()} style={styles.headerButton}>
                             <MoreVertical size={20} color="#1F2937" />
                         </TouchableOpacity>
                     </View>
@@ -198,8 +249,8 @@ export function ChatScreen() {
                     renderItem={({ item }) => (
                         <MessageBubble
                             message={item}
-                            providerAvatar={chat.provider.avatar}
-                            providerName={chat.provider.name}
+                            providerAvatar={provider?.avatar}
+                            providerName={provider?.name}
                         />
                     )}
                     contentContainerStyle={styles.messagesList}
@@ -252,7 +303,9 @@ export function ChatScreen() {
                         style={styles.actionSheetItem}
                         onPress={() => {
                             actionSheetRef.current?.hide();
-                            navigation.navigate("ProviderProfile", { id: chat.provider.id });
+                            if (provider?.id) {
+                                navigation.navigate("ProviderProfile", { id: provider.id });
+                            }
                         }}
                     >
                         <User size={20} color="#1F2937" style={styles.actionSheetIcon} />

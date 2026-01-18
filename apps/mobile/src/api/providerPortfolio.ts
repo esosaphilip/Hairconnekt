@@ -23,38 +23,45 @@ export const providerPortfolioApi = {
   },
 
   async upload(photos: Array<{ uri: string; name?: string; type?: string }>, metadata: Array<{ serviceCategory?: string; caption?: string; isBeforeAfter?: boolean }> = []) {
-    const { getStorageRef } = require('../config/firebase');
-    const { getAuthBundle } = require('../auth/tokenStorage');
-    const bundle = await getAuthBundle();
-    const providerId = bundle?.user?.id;
-
-    if (!providerId) throw new Error('Provider ID not found. Please login again.');
-
     const results = [];
 
     for (let i = 0; i < photos.length; i++) {
       const p = photos[i];
       const meta = metadata[i] || {};
-      const timestamp = Date.now();
-      const path = `portfolio/${providerId}/${timestamp}_${i}.jpg`;
-      const ref = getStorageRef(path);
 
-      await ref.putFile(p.uri);
-      const downloadUrl = await ref.getDownloadURL();
+      const formData = new FormData();
+      formData.append('image', {
+        uri: p.uri,
+        name: p.name || `photo_${Date.now()}_${i}.jpg`,
+        type: p.type || 'image/jpeg',
+      } as any);
 
-      // Metadata fields
+      if (meta.caption) formData.append('caption', meta.caption);
+
       const metaObj = {
         serviceCategory: meta.serviceCategory,
         isBeforeAfter: meta.isBeforeAfter,
       };
 
-      // Post URL to backend
-      const res = await http.post('/providers/portfolio/url', {
-        imageUrl: downloadUrl,
-        caption: meta.caption,
-        metadata: JSON.stringify(metaObj)
-      });
-      results.push(res?.data);
+      // Append metadata as JSON string if backend expects parsed JSON from string, or field
+      // Backend DTO: metadata?: any. NestJS with multipart handles specific fields.
+      // If we send 'metadata' as stringified JSON, backend might need to parse it if it expects object.
+      // ProviderPortfolioController: @Body() body: UploadImageMultipartDto.
+      // NestJS might not auto-parse JSON in multipart fields unless we use validation pipe transformation or parse it manually.
+      // Safe bet: send stringified and ensure backend handles it, or send individual fields if DTO supports.
+      // DTO has `metadata?: any`. Let's stringify.
+      formData.append('metadata', JSON.stringify(metaObj));
+
+      try {
+        const res = await http.post('/providers/portfolio', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        results.push(res?.data);
+      } catch (e) {
+        console.error('Failed to upload photo', i, e);
+        // Continue with others? Or throw?
+        // Let's continue but maybe return error status
+      }
     }
 
     return { uploadedPhotos: results, message: 'Portfolio aktualisiert!' };

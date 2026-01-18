@@ -10,6 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import Icon from '@/components/Icon';
 import { on } from '@/services/eventBus';
 import { renderBookingCard } from './renderBookingCard';
+import Avatar, { AvatarImage, AvatarFallback } from '@/components/avatar';
 
 export function AppointmentsScreen() {
   const navigation = useNavigation<any>();
@@ -85,25 +86,86 @@ export function AppointmentsScreen() {
 
   const NextAppointmentCard = () => {
     if (!nextAppointment) return null;
+
+    // Calculate fallback avatar label
+    const firstChar = nextAppointment.providerName?.charAt(0) || '?';
+    const fallbackLabel = firstChar.toUpperCase();
+
     return (
-      <TouchableOpacity
-        onPress={() => navigation.navigate('AppointmentDetail', { id: nextAppointment.id })}
-        style={styles.heroCardWrapper}
-        activeOpacity={0.9}
-      >
-        <View style={styles.heroCardContent}>
-          <View style={styles.heroHeader}>
+      <View style={styles.heroCardWrapper}>
+        {/* Header Section */}
+        <View style={styles.heroHeaderRow}>
+          <View style={styles.heroHeaderTitleRow}>
             <Icon name="clock" size={20} color="#92400E" />
             <Text style={styles.heroTitle}>Dein nächster Termin</Text>
           </View>
-
-          <Text style={styles.heroTimeRemaining}>In {nextAppointment.hoursUntil} Stunden</Text>
-
-          <Text style={styles.heroDateTime}>
-            {new Date(nextAppointment.startTime).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'short' })} • {new Date(nextAppointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(nextAppointment.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} Uhr
-          </Text>
+          <Text style={styles.heroTimeRemaining}>In {nextAppointment.hoursUntil} Std.</Text>
         </View>
-      </TouchableOpacity>
+
+        {/* Card Body - resembling RenderBookingCard but highlighted */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('AppointmentDetail', { id: nextAppointment.id })}
+          activeOpacity={0.9}
+          style={styles.heroInnerCard}
+        >
+          {/* Provider Info Row */}
+          <View style={styles.heroProviderRow}>
+            <View style={styles.avatarContainer}>
+              <Avatar size={56} style={styles.heroAvatar}>
+                {nextAppointment.providerImage ? (
+                  <AvatarImage uri={nextAppointment.providerImage} style={styles.heroAvatarImage} />
+                ) : (
+                  <AvatarFallback label={fallbackLabel} style={{ backgroundColor: colors.primary + '20' }} textStyle={{ color: colors.primary }} />
+                )}
+              </Avatar>
+              {/* Online Indicator could go here if needed */}
+            </View>
+
+            <View style={styles.heroProviderInfo}>
+              <Text style={styles.heroProviderName}>{nextAppointment.providerName}</Text>
+              <View style={styles.heroRatingRow}>
+                <Icon name="star" size={14} color={colors.accentGold} />
+                <Text style={styles.heroRatingText}>{nextAppointment.rating || 4.8}</Text>
+                <Text style={styles.heroReviewCount}>({nextAppointment.reviewCount || 12} Bewertungen)</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Divider */}
+          <View style={styles.heroDivider} />
+
+          {/* Details Row */}
+          <View style={styles.heroDetailsRow}>
+            <View style={styles.heroDetailItem}>
+              <Icon name="calendar" size={16} color={colors.gray600} />
+              <Text style={styles.heroDetailText}>
+                {new Date(nextAppointment.startTime).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' })}
+              </Text>
+            </View>
+            <View style={styles.heroDetailItem}>
+              <Icon name="clock" size={16} color={colors.gray600} />
+              <Text style={styles.heroDetailText}>
+                {new Date(nextAppointment.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </View>
+            <View style={styles.heroDetailItem}>
+              <Icon name="map-pin" size={16} color={colors.gray600} />
+              <Text style={styles.heroDetailText} numberOfLines={1}>
+                {nextAppointment.location || nextAppointment.provider?.address || 'Adresse laden...'}
+              </Text>
+            </View>
+          </View>
+
+          {/* Service Badge / Price */}
+          <View style={styles.heroFooter}>
+            <View style={styles.heroServiceBadge}>
+              <Text style={styles.heroServiceText}>{nextAppointment.serviceName}</Text>
+            </View>
+            <Text style={styles.heroPrice}>{nextAppointment.price}</Text>
+          </View>
+
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -228,11 +290,65 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     padding: spacing.md,
   },
-  heroCardContent: {},
-  heroHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  heroTitle: { fontSize: 14, fontWeight: '500', color: '#92400E' }, // amber-800
-  heroTimeRemaining: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 4 },
-  heroDateTime: { fontSize: 14, color: '#4B5563' },
+  heroHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  heroHeaderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  heroTitle: { fontSize: 14, fontWeight: '600', color: '#92400E' },
+  heroTimeRemaining: { fontSize: 15, fontWeight: '700', color: '#92400E' },
+
+  heroInnerCard: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 12,
+    ...shadows.sm,
+  },
+  heroProviderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  avatarContainer: { marginRight: 12 },
+  heroAvatar: { width: 56, height: 56, borderRadius: 28 },
+  heroAvatarImage: { width: 56, height: 56, borderRadius: 28 },
+  heroProviderInfo: { flex: 1, justifyContent: 'center' },
+  heroProviderName: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 2 },
+  heroRatingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  heroRatingText: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  heroReviewCount: { fontSize: 13, color: '#6B7280' },
+
+  heroDivider: { height: 1, backgroundColor: '#F3F4F6', marginBottom: 12 },
+
+  heroDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    gap: 8,
+  },
+  heroDetailItem: { flexDirection: 'row', alignItems: 'center', gap: 6, flex: 1 },
+  heroDetailText: { fontSize: 13, color: '#4B5563', flex: 1 },
+
+  heroFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  heroServiceBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  heroServiceText: { fontSize: 13, fontWeight: '500', color: '#374151' },
+  heroPrice: { fontSize: 16, fontWeight: '700', color: '#111827' },
 
   emptyContainer: { alignItems: 'center', justifyContent: 'center', padding: 40 },
   emptyTitle: { fontSize: 16, fontWeight: '500', color: '#374151', marginTop: 16 },

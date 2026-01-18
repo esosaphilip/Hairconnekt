@@ -115,29 +115,26 @@ export const usersApi = {
   },
 
   // POST /users/me/avatar (multipart)
-  // Create Firebase Storage reference and upload
   async uploadAvatar(image: UploadImage): Promise<{ url: string }> {
     try {
       const uri = typeof image === 'string' ? image : image?.uri;
       if (!uri) throw new Error('Image URI is required');
 
-      // Dynamic import to avoid cycles if needed, or use the helper
-      const { getStorageRef } = require('../config/firebase');
-      const { getAuthBundle } = require('../auth/tokenStorage');
-      const bundle = await getAuthBundle();
-      const userId = bundle?.user?.id;
+      const formData = new FormData();
+      formData.append('file', {
+        uri,
+        name: 'avatar.jpg',
+        type: guessMimeFromUri(uri),
+      } as any);
 
-      if (!userId) throw new Error('User ID not found');
+      const res = await http.post<{ profilePictureUrl: string; url?: string }>('/users/me/avatar', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
 
-      const filename = 'photo.jpg'; // overwrite previous
-      const path = `profiles/${userId}/${filename}`;
-      const ref = getStorageRef(path);
-
-      await ref.putFile(uri);
-      const url = await ref.getDownloadURL();
-
-      // Update backend with new URL
-      await usersApi.updateMe({ profilePictureUrl: url });
+      const url = res.data.profilePictureUrl || res.data.url;
+      if (!url) throw new Error('Upload returned no URL');
 
       return { url };
     } catch (error) {

@@ -12,6 +12,7 @@ export interface IClient {
   phone?: string;
   email?: string;
   isVIP: boolean;
+  notes?: string;
   stats: IClientStats;
   // Details often needed in list views
   appointments: number; // Shortcut to stats.appointments

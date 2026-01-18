@@ -27,4 +27,16 @@ export const clientUserApi = {
     setDefaultAddress: async (id: string): Promise<void> => {
         await apiClient.patch(`/users/me/addresses/${id}/default`);
     },
+
+    updateLanguage: async (language: string): Promise<void> => {
+        await apiClient.patch('/users/me/language', { preferredLanguage: language });
+    },
+
+    deleteAccount: async (): Promise<void> => {
+        await apiClient.delete('/users/me');
+    },
+
+    changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
+        await apiClient.post('/auth/change-password', data);
+    },
 };

@@ -26,6 +26,7 @@ import { AllStylesScreen } from '@/screens/clients/AllStylesScreen';
 import { MapViewScreen } from '@/screens/clients/MapViewScreen';
 import { VerificationScreen } from '@/screens/shared/VerificationScreen';
 import { BookingFlow } from '@/screens/clients/Booking/BookingFlow';
+import { PasswordResetScreen } from '@/screens/shared/PasswordResetScreen';
 import { LoginScreen } from '@/screens/shared/UserManualScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -46,7 +47,9 @@ function LoginRoute({ route, navigation }: RootStackScreenProps<'Login'>) {
             onRegisterPress={(userType) => {
                 navigation.navigate('Register', { userType });
             }}
-            onForgotPasswordPress={() => { }}
+            onForgotPasswordPress={() => {
+                navigation.navigate('PasswordReset');
+            }}
             onLoginSuccess={() => { }}
         />
     );
@@ -228,6 +231,7 @@ export function RootNavigator() {
                     <Stack.Screen name="Splash" component={SplashScreen} options={{ headerShown: false }} />
                     <Stack.Screen name="Welcome" component={WelcomeScreen} options={{ headerShown: false }} />
                     <Stack.Screen name="Login" component={LoginRoute} options={{ title: 'Anmelden' }} />
+                    <Stack.Screen name="PasswordReset" component={PasswordResetScreen} options={{ headerShown: false }} />
                     <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Registrieren' }} />
                     <Stack.Screen name="SignInPrompt" component={SignInPrompt} options={{ title: 'Anmelden oder fortfahren' }} />
                     <Stack.Screen name="ClientOnboarding" component={ClientOnboardingScreen} options={{ headerShown: false }} />

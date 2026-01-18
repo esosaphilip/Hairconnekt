@@ -24,6 +24,7 @@ export type RootStackParamList = {
   ProviderNotificationsScreen: undefined;
   Booking: { id?: string; providerId?: string; serviceName?: string } | undefined;
   ChatScreen: { id?: string; conversationId?: string; userId?: string } | undefined;
+  PasswordReset: { token?: string } | undefined;
 };
 
 // Client Tabs

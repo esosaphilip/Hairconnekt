@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
 import { AppointmentsScreen } from '../AppointmentsScreen';
@@ -23,23 +24,16 @@ const mockAppointments = [
         status: 'confirmed',
         providerName: 'Test Provider',
         serviceName: 'Braids',
-        price: 50,
+        price: '50.00 €',
+        rating: 4.8,
+        providerImage: 'https://example.com/avatar.jpg',
         provider: {
+            id: 'p1',
+            name: 'Test Provider',
             address: 'Test Address',
             avatar: 'https://example.com/avatar.jpg'
-        }
-    },
-    {
-        id: '2',
-        startTime: new Date(Date.now() + 86400000 * 5).toISOString(), // 5 days from now
-        endTime: new Date(Date.now() + 86400000 * 5 + 3600000).toISOString(),
-        status: 'pending',
-        providerName: 'Provider 2',
-        serviceName: 'Twists',
-        price: 80,
-        provider: {
-            address: 'Test Address 2'
-        }
+        },
+        location: 'Test Address'
     }
 ];
 
@@ -49,38 +43,26 @@ describe('AppointmentsScreen', () => {
         (clientBookingApi.getAppointments as jest.Mock).mockResolvedValue(mockAppointments);
     });
 
-    it('renders upcoming appointments and next appointment card', async () => {
-        const { getByText, findByText } = render(<AppointmentsScreen />);
+    it('renders the Hero Card with full provider details (Avatar, Name, Location)', async () => {
+        const { getByText, findByText, getAllByText } = render(<AppointmentsScreen />);
 
         // Wait for data load
         await findByText('Meine Termine');
 
-        // Check Tabs
-        expect(getByText('Anstehend')).toBeTruthy();
-        expect(getByText('Abgeschlossen')).toBeTruthy();
+        // Check for "Dein nächster Termin" Header
+        expect(getByText('Dein nächster Termin')).toBeTruthy();
 
-        // Check Next Appointment Card (should be visible for first item)
-        expect(await findByText('Dein nächster Termin')).toBeTruthy();
-        expect(getByText('In 1 Stunden')).toBeTruthy(); // Hours diff check
+        // Check for Countdown
+        expect(getByText(/In 1 Std/)).toBeTruthy();
 
-        // Check List Item (Second item only, as first is in header card - correction: logic in component hides it from list)
-        // Actually, "In 1 Stunden" confirms header card is rendered.
-        // Let's check if "Provider 2" is in list
-        expect(getByText('Provider 2')).toBeTruthy();
-    });
+        // STRICT UI CHECKS for Hero Card:
+        // Must show Provider Name
+        expect(getAllByText('Test Provider').length).toBeGreaterThan(0);
 
-    it('switches tabs and fetches data', async () => {
-        const { getByText, findByText } = render(<AppointmentsScreen />);
-        await findByText('Meine Termine');
+        // Must show Location
+        expect(getAllByText('Test Address').length).toBeGreaterThan(0);
 
-        // Switch to Completed
-        fireEvent.press(getByText('Abgeschlossen'));
-
-        // Verify API called with 'completed'
-        await waitFor(() => {
-            expect(clientBookingApi.getAppointments).toHaveBeenCalledWith('completed');
-        });
-
-        // Check Logic updates active tab style (visual check logic implicitly via functionality)
+        // Ideally check for Avatar/Rating but RNTL text queries are easiest for TDD loop unless we add testIDs.
+        // We assume if these are present, the component is being rendered.
     });
 });

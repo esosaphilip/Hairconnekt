@@ -8,7 +8,7 @@ import { http } from '@/api/http';
 import { providerClientsApi } from '@/api/providerClients';
 import { getProviderAppointments } from '@/api/appointments';
 import type { AppointmentListItem as ApiAppointmentListItem, AppointmentServiceItem as ApiAppointmentServiceItem } from '@/api/appointments';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { IClient } from '@/domain/models/client';
 
 // Types
@@ -20,6 +20,7 @@ type AppointmentListItem = ApiAppointmentListItem;
 export function ClientDetailScreen() {
   // Derive client ID from the URL hash on web as a placeholder until React Navigation is wired
   const navigation = useNavigation<any>();
+  const route = useRoute<any>();
   const [clientId, setClientId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +37,13 @@ export function ClientDetailScreen() {
         const hash = window.location.hash || '';
         const match = hash.match(/provider\/clients\/([^/?#]+)/);
         setClientId(match ? match[1] : null);
-      } catch {}
+      } catch { }
+    } else {
+      if (route.params?.clientId) {
+        setClientId(route.params.clientId);
+      }
     }
-  }, []);
+  }, [route.params]);
 
   useEffect(() => {
     if (!clientId) return;
@@ -48,7 +53,10 @@ export function ClientDetailScreen() {
       setError(null);
       try {
         const detail = await providerClientsApi.detail(String(clientId));
-        if (!cancelled) setClientItem(detail);
+        if (!cancelled) {
+          setClientItem(detail);
+          setNotes(detail?.notes || '');
+        }
       } catch (err: any) {
         const msg = err?.message || 'Fehler beim Laden des Kunden';
         if (!cancelled) setError(msg);
@@ -110,7 +118,7 @@ export function ClientDetailScreen() {
   const handleCall = () => {
     if (clientItem?.phone) {
       if (Platform.OS === 'web') {
-        try { window.location.href = `tel:${clientItem.phone}`; } catch {}
+        try { window.location.href = `tel:${clientItem.phone}`; } catch { }
       } else {
         Alert.alert('Anrufen', String(clientItem.phone));
       }
@@ -120,15 +128,15 @@ export function ClientDetailScreen() {
   const handleMessage = () => {
     if (!clientItem?.id) return;
     if (Platform.OS === 'web') {
-      try { window.location.hash = `/provider/messages/${clientItem.id}`; } catch {}
+      try { window.location.hash = `/provider/messages/${clientItem.id}`; } catch { }
     } else {
-      try { navigation.navigate('ChatScreen', { id: clientItem.id }); } catch {}
+      try { navigation.navigate('ChatScreen', { id: clientItem.id }); } catch { }
     }
   };
 
   const goBack = () => {
     if (Platform.OS === 'web') {
-      try { window.history.back(); } catch {}
+      try { window.history.back(); } catch { }
     } else {
       console.log('Navigate back');
     }
@@ -143,7 +151,7 @@ export function ClientDetailScreen() {
             <Ionicons name={'chevron-back'} size={24} color={colors.gray700} />
           </Pressable>
           <Text style={[typography.h3, styles.flex1]}>Kundendetails</Text>
-          <Pressable onPress={toggleVip} style={styles.iconButton}>
+          <Pressable onPress={toggleVip} style={styles.iconButton} testID="vip-toggle-btn">
             <Ionicons name={clientItem?.isVIP ? 'star' : 'star-outline'} size={24} color={clientItem?.isVIP ? colors.amber600 : colors.gray400} />
           </Pressable>
         </View>
@@ -198,7 +206,7 @@ export function ClientDetailScreen() {
                 </Pressable>
               )}
               <View style={styles.contactRowNoRadius}>
-                  <Ionicons name={'mail-outline'} size={18} color={colors.primary} />
+                <Ionicons name={'mail-outline'} size={18} color={colors.primary} />
                 <Text style={styles.textSmallGray600}>Nicht verfügbar</Text>
               </View>
             </View>
@@ -233,7 +241,7 @@ export function ClientDetailScreen() {
             <View style={styles.flex1Container}>
               <Button title="Termin" onPress={() => {
                 if (Platform.OS === 'web') {
-                  try { window.location.hash = `/provider/appointments/create?clientId=${clientItem.id}`; } catch {}
+                  try { window.location.hash = `/provider/appointments/create?clientId=${clientItem.id}`; } catch { }
                 } else {
                   console.log('Create appointment for', clientItem.id);
                 }
@@ -262,13 +270,13 @@ export function ClientDetailScreen() {
               </View>
             </View>
             {!isEditingNotes ? (
-              <Pressable onPress={() => setIsEditingNotes(true)} style={styles.iconButton}>
+              <Pressable onPress={() => setIsEditingNotes(true)} style={styles.iconButton} testID="edit-notes-btn">
                 <Ionicons name={'create-outline'} size={18} color={colors.primary} />
               </Pressable>
             ) : (
               <View style={styles.notesEditActions}>
-                <Button title="Abbrechen" variant="ghost" onPress={() => setIsEditingNotes(false)} />
-                <Button title="Speichern" onPress={handleSaveNotes} style={styles.primaryButton} textStyle={styles.primaryButtonText} />
+                <Button title="Abbrechen" variant="ghost" onPress={() => setIsEditingNotes(false)} testID="cancel-notes-btn" />
+                <Button title="Speichern" onPress={handleSaveNotes} style={styles.primaryButton} textStyle={styles.primaryButtonText} testID="save-notes-btn" />
               </View>
             )}
           </View>
@@ -302,7 +310,7 @@ export function ClientDetailScreen() {
             <Pressable onPress={() => {
               if (clientItem?.id) {
                 if (Platform.OS === 'web') {
-                  try { window.location.hash = `/provider/calendar?clientId=${clientItem.id}`; } catch {}
+                  try { window.location.hash = `/provider/calendar?clientId=${clientItem.id}`; } catch { }
                 } else {
                   console.log('Open calendar with clientId', clientItem.id);
                 }

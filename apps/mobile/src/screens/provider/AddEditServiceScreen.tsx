@@ -112,17 +112,8 @@ export function AddEditServiceScreen() {
   const uploadServiceImage = async (uri: string) => {
     try {
       setUploadingImage(true);
-      const { getAuthBundle } = require('@/auth/tokenStorage');
-      const bundle = await getAuthBundle();
-      const userId = bundle?.user?.id;
-      if (!userId) throw new Error('User not found');
 
-      const fileName = `service-${Date.now()}.jpg`;
-      const path = `providers/${userId}/services/${fileName}`;
-
-      const { uploadImageToFirebase } = require('@/services/imageUpload');
-      const url = await uploadImageToFirebase(uri, path);
-
+      const { url } = await providersApi.uploadServiceImage(uri);
       setFormData(prev => ({ ...prev, imageUrl: url }));
     } catch (e: any) {
       console.error('Service image upload failed', e);
@@ -183,24 +174,46 @@ export function AddEditServiceScreen() {
       try {
         const res = await http.get('/providers/me/services');
         const data = (res?.data && (res.data as any).data) ? (res.data as any).data : res?.data;
-        const items: any[] = (data?.services ?? data?.items ?? []);
+        const items: any[] = (data?.services ?? data?.items ?? (Array.isArray(data) ? data : []));
         const found = items.find((s: any) => String(s.id) === String(serviceId));
+
         if (found) {
+          // Extract category ID if it's an object
+          let catId = '';
+          if (found.category && typeof found.category === 'object') {
+            catId = found.category.id || '';
+          } else if (found.categoryId) {
+            catId = found.categoryId;
+          } else {
+            catId = String(found.category || '');
+          }
+
+          // Prioritize priceCents and durationMinutes
+          const priceVal = found.priceCents !== undefined
+            ? found.priceCents / 100
+            : (typeof found.price === 'number' ? found.price : 100);
+
+          const durationVal = found.durationMinutes !== undefined
+            ? found.durationMinutes
+            : (typeof found.duration === 'number' ? found.duration : 60);
+
           setFormData({
             name: String(found.name || ''),
-            category: String(found?.category || ''),
-            description: found?.description || '',
-            price: typeof found.price === 'number' ? found.price : 100,
-            duration: typeof found.duration === 'number' ? found.duration : 180,
-            deposit: 0,
-            isActive: !!found.isActive,
-            allowOnlineBooking: true,
-            requiresConsultation: false,
+            category: catId,
+            description: found.description || '',
+            price: priceVal,
+            duration: durationVal,
+            deposit: found.deposit !== undefined ? found.deposit : 0,
+            isActive: found.isActive !== undefined ? !!found.isActive : true,
+            allowOnlineBooking: found.allowOnlineBooking !== undefined ? !!found.allowOnlineBooking : true,
+            requiresConsultation: !!found.requiresConsultation,
             tags: Array.isArray(found.tags) ? found.tags : [],
             imageUrl: found.imageUrl || '',
           });
         }
-      } catch { }
+      } catch (err) {
+        console.warn('Failed to load service details', err);
+      }
     })();
   }, [serviceId]);
 
@@ -255,9 +268,12 @@ export function AddEditServiceScreen() {
         }, 500);
       } else {
         const res = await http.post('/providers/me/services', body);
-        // Only show success if we got a valid ID back
-        if (res?.data?.id || (res?.data as any)?.data?.id) {
-          const msg = (res?.data && (res.data as any)?.data?.message) || 'Dienst gespeichert';
+        // Accept 200 or 201. Check for ID in various locations just to be safe.
+        const responseData = res.data;
+        const createdId = responseData?.id || responseData?.data?.id || responseData?.serviceId;
+
+        if (res.status === 200 || res.status === 201) {
+          const msg = (responseData?.message) || (responseData?.data?.message) || 'Dienst gespeichert';
           setMessage(String(msg));
           // Small delay to ensure state is settled before navigation
           setTimeout(() => {
@@ -265,11 +281,7 @@ export function AddEditServiceScreen() {
             else navigation.navigate('ServicesManagementScreen' as never);
           }, 500);
         } else {
-          // Fallback if no ID returned, though unlikely with 201
-          setMessage('Dienst gespeichert (Keine ID erhalten)');
-          setTimeout(() => {
-            if (navigation.canGoBack()) navigation.goBack();
-          }, 1000);
+          throw new Error('Unerwartete Antwort vom Server');
         }
       }
 

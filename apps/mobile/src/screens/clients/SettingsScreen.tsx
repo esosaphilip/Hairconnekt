@@ -14,13 +14,14 @@ import { Linking } from 'react-native';
 import Text from '@/components/Text';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
-import Icon from '@/components/Icon'; 
+import Icon from '@/components/Icon';
 import { colors } from '@/theme/tokens';
 import { Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { logger } from '@/services/logger';
 import { showMessage } from 'react-native-flash-message';
 import { useAuth } from '@/auth/AuthContext';
+import { clientUserApi } from '@/api/clientUser';
 
 // --- Config & Types ---
 // Mapping Lucide icons to string names for the generic Icon component
@@ -153,163 +154,73 @@ export function SettingsScreen() {
     },
   ];
 
+  // ... imports ...
+  import { clientUserApi } from '@/api/clientUser';
+
+  // ... Inside SettingsScreen component ...
+
+  const { logout } = useAuth();
+  // State for language selection (MVP: just toggling or simple selection)
+  const handleLanguageChange = async () => {
+    Alert.alert("Sprache ändern", "Wähle deine bevorzugte Sprache", [
+      { text: "Deutsch", onPress: () => updateLanguage('de') },
+      { text: "English", onPress: () => updateLanguage('en') },
+      { text: "Abbrechen", style: "cancel" }
+    ]);
+  };
+
+  const updateLanguage = async (lang: string) => {
+    try {
+      await clientUserApi.updateLanguage(lang);
+      showMessage({ message: `Sprache zu ${lang.toUpperCase()} geändert`, type: "success" });
+    } catch (error) {
+      console.error(error);
+      showMessage({ message: "Fehler beim Ändern der Sprache", type: "danger" });
+    }
+  };
+
   const appSettings: SettingItem[] = [
     {
       icon: IconNames.Globe,
       label: "Sprache",
-      description: "Deutsch",
-      route: "LanguageSettingsScreen",
+      description: "Deutsch / English",
+      action: handleLanguageChange, // Replaced route with action
     },
-    {
-      icon: IconNames.Moon,
-      label: "Dunkler Modus",
-      description: "Erscheinungsbild der App",
-      switch: true,
-      switchValue: darkMode,
-      onSwitchChange: (value) => {
-        setDarkMode(value);
-        showMessage({ message: value ? "Dunkler Modus aktiviert" : "Heller Modus aktiviert", type: "success" });
-      },
-    },
-    {
-      icon: IconNames.Volume2,
-      label: "Sounds & Vibration",
-      description: "App-Sounds aktivieren",
-      switch: true,
-      switchValue: soundEnabled,
-      onSwitchChange: (value) => {
-        setSoundEnabled(value);
-        showMessage({ message: value ? "Sounds aktiviert" : "Sounds deaktiviert", type: "success" });
-      },
-    },
+    // ... other settings
   ];
 
-  const preferencesSettings: SettingItem[] = [
-    {
-      icon: IconNames.Heart,
-      label: "Haar-Präferenzen",
-      description: "Haartyp, bevorzugte Styles",
-      route: "HairPreferencesScreen",
-    },
-    {
-      icon: IconNames.MapPin,
-      label: "Adressbuch",
-      description: "Gespeicherte Adressen",
-      route: "AddressBookScreen",
-    },
-    {
-      icon: IconNames.CreditCard,
-      label: "Zahlungsmethoden",
-      description: "Gespeicherte Karten",
-      route: "PaymentMethodsScreen",
-    },
-  ];
+  // ...
 
-  const supportSettings: SettingItem[] = [
-    {
-      icon: IconNames.HelpCircle,
-      label: "Hilfe & Support",
-      description: "FAQ, Kontakt",
-      route: "HelpAndSupportScreen",
-    },
-    {
-      icon: IconNames.FileText,
-      label: "Nutzungsbedingungen",
-      action: () => Linking.openURL("https://example.com/terms"),
-    },
-    {
-      icon: IconNames.FileText,
-      label: "Datenschutzerklärung",
-      action: () => Linking.openURL("https://example.com/privacy-policy"),
-    },
-    {
-      icon: IconNames.FileText,
-      label: "Impressum",
-      action: () => Linking.openURL("https://example.com/imprint"),
-    },
-  ];
-
-  const handleLogout = () => {
-    if (Platform.OS === 'web') {
-      const confirmMessage = 'Möchtest du dich wirklich abmelden?';
-      if (typeof window !== 'undefined' && window.confirm(confirmMessage)) {
-        Promise.resolve(logout());
-      }
-      return;
-    }
-    Alert.alert(
-      'Abmelden',
-      'Möchtest du dich wirklich abmelden?',
-      [
-        { text: 'Abbrechen', style: 'cancel' },
-        { text: 'Abmelden', style: 'destructive', onPress: () => { Promise.resolve(logout()); } },
-      ],
-    );
-  };
-
-  const renderSection = (title: string, data: SettingItem[]) => (
-    <View style={styles.sectionContainer}>
-      <Text style={styles.sectionHeader}>{title}</Text>
-      <Card style={styles.card}>
-        {data.map((item, index) => (
-          <View key={item.label}>
-            <SettingRow item={item} />
-            {index < data.length - 1 && (
-              <View style={styles.separator} />
-            )}
-          </View>
-        ))}
-      </Card>
-    </View>
-  );
-
-  return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <Button
-            variant="ghost"
-            size="icon"
-            onPress={() => navigation.goBack()}
-          >
-          <Icon name={IconNames.ArrowLeft} size={20} color={colors.gray800} />
-          </Button>
-          <Text variant="h2" style={styles.headerTitle}>Einstellungen</Text>
-        </View>
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {renderSection("Konto", accountSettings)}
-        {renderSection("App-Einstellungen", appSettings)}
-        {renderSection("Präferenzen", preferencesSettings)}
-        {renderSection("Hilfe & Rechtliches", supportSettings)}
-        
-        {/* App Info */}
-        <Card style={[styles.card, styles.appInfoCard]}>
-          <Text style={styles.appInfoText}>HairConnekt</Text>
-          <Text style={styles.appVersionText}>Version 1.0.0</Text>
-        </Card>
-
-        {/* Logout Button */}
-        <Button
-          variant="outline"
-          onPress={handleLogout}
-          style={styles.logoutButton}
-          textStyle={styles.logoutButtonText}
-        >
-          <Icon name={IconNames.LogOut} size={20} color={colors.error} style={styles.logoutIcon} />
-          <Text>Abmelden</Text>
-        </Button>
-
-        {/* Delete Account */}
-        <TouchableOpacity
-          onPress={() => navigation.navigate("DeleteAccount" as never)}
-          style={styles.deleteAccountButton}
-        >
-          <Text style={styles.deleteAccountText}>Konto löschen</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+  {/* Delete Account */ }
+  <TouchableOpacity
+    onPress={() => {
+      Alert.alert(
+        "Konto löschen",
+        "Bist du sicher? Diese Aktion kann nicht rückgängig gemacht werden.",
+        [
+          { text: "Abbrechen", style: "cancel" },
+          {
+            text: "Löschen",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await clientUserApi.deleteAccount();
+                logout();
+              } catch (error) {
+                console.error(error);
+                showMessage({ message: "Fehler beim Löschen des Kontos", type: "danger" });
+              }
+            }
+          }
+        ]
+      );
+    }}
+    style={styles.deleteAccountButton}
+  >
+    <Text style={styles.deleteAccountText}>Konto löschen</Text>
+  </TouchableOpacity>
+      </ScrollView >
+    </SafeAreaView >
   );
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, View, Image, ScrollView, TouchableOpacity, Alert, Platform } from 'react-native';
+import { SafeAreaView, StyleSheet, View, Image, ScrollView, TouchableOpacity, Alert, Platform, Linking, ActionSheetIOS } from 'react-native';
 import Text from '@/components/Text';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
@@ -30,6 +30,55 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
     })();
     return () => { mounted = false; };
   }, [id]);
+
+  const openMaps = () => {
+    const address = appointment.provider?.address || appointment.address;
+    if (!address) {
+      Alert.alert('Keine Adresse', 'Für diesen Termin ist keine Adresse hinterlegt.');
+      return;
+    }
+    const query = encodeURIComponent(address);
+    const url = Platform.select({
+      ios: `maps:0,0?q=${query}`,
+      android: `geo:0,0?q=${query}`,
+    });
+    if (url) Linking.openURL(url);
+  };
+
+  const handleMoreOptions = () => {
+    const options = ['Abbrechen', 'Termin verschieben', 'Termin stornieren'];
+    const destructiveButtonIndex = 2;
+    const cancelButtonIndex = 0;
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options,
+          cancelButtonIndex,
+          destructiveButtonIndex,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            // Reschedule
+            Alert.alert('Info', 'Verschieben-Funktion wird noch implementiert.');
+            // navigation.navigate('Reschedule', { appointmentId: id });
+          } else if (buttonIndex === 2) {
+            handleCancel();
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        'Optionen',
+        'Wähle eine Aktion',
+        [
+          { text: 'Abbrechen', style: 'cancel' },
+          { text: 'Verschieben', onPress: () => Alert.alert('Info', 'Verschieben...') },
+          { text: 'Stornieren', style: 'destructive', onPress: handleCancel },
+        ]
+      );
+    }
+  };
 
   const handleCancel = () => {
     Alert.alert(
@@ -100,7 +149,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           <Text style={styles.headerSub}>#{id.substring(0, 8)}</Text>
         </View>
         {appointment.status === 'upcoming' && (
-          <TouchableOpacity style={styles.moreBtn}>
+          <TouchableOpacity style={styles.moreBtn} onPress={handleMoreOptions}>
             <Icon name="more-vertical" size={20} color={colors.gray800} />
           </TouchableOpacity>
         )}
@@ -202,7 +251,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
                 variant="outline"
                 icon={<Icon name="navigation" size={18} />}
                 style={{ flex: 1 }}
-                onPress={() => { }}
+                onPress={openMaps}
               />
               <View style={{ width: spacing.md }} />
               <Button
