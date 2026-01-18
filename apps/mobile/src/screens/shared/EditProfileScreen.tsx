@@ -32,7 +32,7 @@ type ProfileData = {
 
 export function EditProfileScreen() {
   const { user, setUser } = useAuth();
-  const isProvider = user?.type === 'PROVIDER';
+  const isProvider = user?.userType === 'PROVIDER';
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +142,7 @@ export function EditProfileScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets?.[0]) {
         const uri = result.assets[0].uri;
 
         // Optimistic update
