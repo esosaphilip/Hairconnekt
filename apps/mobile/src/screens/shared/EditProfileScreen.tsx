@@ -150,11 +150,18 @@ export function EditProfileScreen() {
 
         // Upload in background
         try {
-          await usersApi.uploadAvatar(uri);
+          const uploaded = await usersApi.uploadAvatar(uri);
+          const profilePictureUrl = uploaded.url;
+
+          // Update auth context with new image URL
+          if (user && profilePictureUrl) {
+            await setUser({ ...user, profilePictureUrl });
+          }
         } catch (e) {
           console.error('Upload failed', e);
           Alert.alert('Fehler', 'Bild konnte nicht hochgeladen werden.');
-          // Revert on failure if needed, or just let error stay
+          // Revert on failure
+          setProfileImage(null);
         }
       }
     } catch (e) {

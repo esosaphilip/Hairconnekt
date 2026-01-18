@@ -274,7 +274,7 @@ export default function ProviderProfile() {
             </Text>
             <View style={styles.galleryGrid}>
               {(provider.portfolioImages || []).map((uri, i) => (
-                <Image key={i} source={{ uri }} style={styles.galleryImage} />
+                <Image key={i} source={{ uri }} style={styles.galleryImage} testID="gallery-image" />
               ))}
             </View>
             {(!provider.portfolioImages || provider.portfolioImages.length === 0) && (
