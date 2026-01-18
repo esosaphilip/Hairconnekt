@@ -1,4 +1,11 @@
 import { IBraider } from '../../domain/models/braider';
+import { BASE_URL } from '../../config';
+
+const normalizeUrl = (url?: string) => {
+  if (!url) return undefined;
+  if (url.startsWith('http') || url.startsWith('data:')) return url;
+  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+};
 
 // DTO for List/Search
 interface NearbyProviderDTO {
@@ -96,8 +103,8 @@ export const BraiderAdapter = {
       // Controller: address not explicitly top level in getPublicProfileById return?
       // Actually it returns 'business', 'name', etc.
       // Let's assume address is not critical or is handled by base if 'business' serves as location
-      coverImage: dto.imageUrl || dto.coverImage, // Cover image
-      profileImage: profile.user?.profilePictureUrl || profile.profilePictureUrl || dto.imageUrl,
+      coverImage: normalizeUrl(dto.imageUrl || dto.coverImage), // Cover image
+      profileImage: normalizeUrl(profile.user?.profilePictureUrl || profile.profilePictureUrl || dto.imageUrl),
       languages: profile.languages || dto.languages || [],
 
       // Use real data from backend, fallback to mock/defaults if missing (for demo/UI completeness)
@@ -125,7 +132,9 @@ export const BraiderAdapter = {
 
       services: services, // Real services
 
-      portfolioImages: (dto.portfolio && dto.portfolio.length) ? dto.portfolio : [],
+      portfolioImages: (dto.portfolio && dto.portfolio.length) 
+        ? dto.portfolio.map((img: string) => normalizeUrl(img)).filter(Boolean)
+        : [],
 
       reviews: (dto.recentReviews && dto.recentReviews.length) ? (dto.recentReviews || []).map((r: any) => ({
         id: r.id,

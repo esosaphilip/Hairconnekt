@@ -74,9 +74,9 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         'Wähle eine Aktion',
         [
           { text: 'Abbrechen', style: 'cancel' },
-          { 
-            text: 'Termin verschieben', 
-            onPress: () => navigation.navigate('RescheduleAppointment', { id }) 
+          {
+            text: 'Termin verschieben',
+            onPress: () => navigation.navigate('RescheduleAppointment', { id })
           },
           { text: 'Termin stornieren', style: 'destructive', onPress: handleCancel },
         ]
@@ -141,6 +141,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   const getStatusBadgeStyle = (status: string) => {
     const s = (status || '').toLowerCase();
     switch (s) {
+      case 'pending': return { bg: '#FEF3C7', text: '#92400E', label: 'Ausstehend' };
       case 'upcoming': return { bg: '#DCFCE7', text: '#166534', label: 'Bevorstehend' };
       case 'confirmed': return { bg: '#DCFCE7', text: '#166534', label: 'Bestätigt' };
       case 'completed': return { bg: '#F3F4F6', text: '#374151', label: 'Abgeschlossen' };
@@ -150,7 +151,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   };
 
   const statusStyle = getStatusBadgeStyle(appointment.status);
-  const isActionable = ['upcoming', 'confirmed'].includes((appointment.status || '').toLowerCase());
+  const isActionable = ['pending', 'upcoming', 'confirmed'].includes((appointment.status || '').toLowerCase());
 
   return (
     <SafeAreaView style={styles.container}>
@@ -308,7 +309,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         {/* Review Button (Completed only) */}
         {appointment.status === 'completed' && (
           <View style={styles.actions}>
-             <Button
+            <Button
               title="Bewerten"
               icon={<Icon name="star" size={18} color="white" />}
               onPress={() => navigation.navigate('WriteReview', { appointmentId: id })}
