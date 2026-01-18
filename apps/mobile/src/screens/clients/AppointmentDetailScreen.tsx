@@ -61,8 +61,8 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         (buttonIndex) => {
           if (buttonIndex === 1) {
             // Reschedule
-            Alert.alert('Info', 'Verschieben-Funktion wird noch implementiert.');
-            // navigation.navigate('Reschedule', { appointmentId: id });
+            // TODO: Navigate to Reschedule Screen
+            navigation.navigate('RescheduleAppointment', { id });
           } else if (buttonIndex === 2) {
             handleCancel();
           }
@@ -74,8 +74,11 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         'Wähle eine Aktion',
         [
           { text: 'Abbrechen', style: 'cancel' },
-          { text: 'Verschieben', onPress: () => Alert.alert('Info', 'Verschieben...') },
-          { text: 'Stornieren', style: 'destructive', onPress: handleCancel },
+          { 
+            text: 'Termin verschieben', 
+            onPress: () => navigation.navigate('RescheduleAppointment', { id }) 
+          },
+          { text: 'Termin stornieren', style: 'destructive', onPress: handleCancel },
         ]
       );
     }
@@ -121,6 +124,14 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
     );
   }
 
+  // Helper to safely get nested service details
+  const serviceName = appointment.service?.name || appointment.serviceName || 'Service';
+  const duration = appointment.service?.duration || appointment.duration;
+  const durationText = typeof duration === 'number' ? `${duration} min` : (duration || '—');
+  const priceVal = appointment.totalPrice || appointment.price;
+  const priceText = typeof priceVal === 'number' ? `${priceVal} €` : (priceVal || '—');
+
+  // Helper to get formatted date parts
   const dateObj = new Date(appointment.startTime);
   const day = dateObj.getDate();
   const month = dateObj.toLocaleString('de-DE', { month: 'short' }).toUpperCase();
@@ -130,6 +141,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   const getStatusBadgeStyle = (status: string) => {
     switch (status) {
       case 'upcoming': return { bg: '#DCFCE7', text: '#166534', label: 'Bevorstehend' };
+      case 'confirmed': return { bg: '#DCFCE7', text: '#166534', label: 'Bestätigt' };
       case 'completed': return { bg: '#F3F4F6', text: '#374151', label: 'Abgeschlossen' };
       case 'cancelled': return { bg: '#FEE2E2', text: '#991B1B', label: 'Storniert' };
       default: return { bg: colors.gray100, text: colors.gray800, label: status };
@@ -224,45 +236,59 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           <Text style={[styles.cardTitle, { marginBottom: spacing.md }]}>Service-Details</Text>
           <View style={styles.kvRow}>
             <Text style={styles.label}>Service</Text>
-            <Text style={styles.value}>{appointment.service?.name || appointment.serviceName}</Text>
+            <Text style={styles.value}>{serviceName}</Text>
           </View>
           <View style={styles.kvRow}>
             <Text style={styles.label}>Dauer</Text>
-            <Text style={styles.value}>{appointment.service?.duration || appointment.duration} min</Text>
+            <Text style={styles.value}>{durationText}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.kvRow}>
             <Text style={styles.label}>Gesamtpreis</Text>
-            <Text style={[styles.value, { color: colors.primary, fontWeight: '700' }]}>{appointment.totalPrice || appointment.price} €</Text>
+            <Text style={[styles.value, { color: colors.primary, fontWeight: '700' }]}>{priceText}</Text>
           </View>
         </View>
 
         {/* Actions */}
-        {appointment.status === 'upcoming' && (
+        {(appointment.status === 'upcoming' || appointment.status === 'confirmed') && (
           <View style={styles.actions}>
             <Button
               title="Nachricht senden"
               icon={<Icon name="message-circle" size={18} color="white" />}
               onPress={() => navigation.navigate('Chat', { recipientId: appointment.providerId })}
-              style={{ marginBottom: spacing.sm }}
+              style={{ marginBottom: spacing.sm, backgroundColor: colors.primary }}
             />
             <View style={styles.secondaryActions}>
               <Button
                 title="Route"
                 variant="outline"
-                icon={<Icon name="navigation" size={18} />}
-                style={{ flex: 1 }}
+                icon={<Icon name="navigation" size={18} color={colors.primary} />}
+                style={{ flex: 1, borderColor: colors.primary }}
+                textStyle={{ color: colors.primary }}
                 onPress={openMaps}
               />
               <View style={{ width: spacing.md }} />
               <Button
                 title="Verschieben"
                 variant="outline"
-                icon={<Icon name="edit" size={18} />}
-                style={{ flex: 1 }}
-                onPress={() => handleCancel()} // Reuse cancel for now or proper reschedule
+                icon={<Icon name="edit" size={18} color={colors.primary} />}
+                style={{ flex: 1, borderColor: colors.primary }}
+                textStyle={{ color: colors.primary }}
+                onPress={() => navigation.navigate('RescheduleAppointment', { id })}
               />
             </View>
+          </View>
+        )}
+
+        {/* Review Button (Completed only) */}
+        {appointment.status === 'completed' && (
+          <View style={styles.actions}>
+             <Button
+              title="Bewerten"
+              icon={<Icon name="star" size={18} color="white" />}
+              onPress={() => navigation.navigate('WriteReview', { appointmentId: id })}
+              style={{ backgroundColor: colors.primary }}
+            />
           </View>
         )}
 
