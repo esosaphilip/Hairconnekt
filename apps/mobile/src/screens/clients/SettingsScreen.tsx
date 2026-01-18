@@ -184,36 +184,93 @@ export function SettingsScreen() {
     // ... other settings
   ];
 
-  // ...
+  ];
 
-  {/* Delete Account */ }
-  <TouchableOpacity
-    onPress={() => {
-      Alert.alert(
-        "Konto löschen",
-        "Bist du sicher? Diese Aktion kann nicht rückgängig gemacht werden.",
-        [
-          { text: "Abbrechen", style: "cancel" },
-          {
-            text: "Löschen",
-            style: "destructive",
-            onPress: async () => {
-              try {
-                await clientUserApi.deleteAccount();
-                logout();
-              } catch (error) {
-                console.error(error);
-                showMessage({ message: "Fehler beim Löschen des Kontos", type: "danger" });
-              }
-            }
-          }
-        ]
-      );
-    }}
-    style={styles.deleteAccountButton}
-  >
-    <Text style={styles.deleteAccountText}>Konto löschen</Text>
-  </TouchableOpacity>
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Einstellungen</Text>
+        </View>
+
+        {/* Account Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Konto</Text>
+          <View style={styles.card}>
+            {accountSettings.map((item, index) => (
+              <React.Fragment key={index}>
+                <SettingItemRow item={item} />
+                {index < accountSettings.length - 1 && <View style={styles.separator} />}
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        {/* App Settings */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>App</Text>
+          <View style={styles.card}>
+            {appSettings.map((item, index) => (
+              <React.Fragment key={index}>
+                <SettingItemRow item={item} />
+                {index < appSettings.length - 1 && <View style={styles.separator} />}
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+
+        {/* Legal & Danger Zone */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Rechtliches & Support</Text>
+          <View style={styles.card}>
+            <SettingItemRow item={{
+              icon: IconNames.FileText,
+              label: "Nutzungsbedingungen",
+              route: "TermsScreen"
+            }} />
+            <View style={styles.separator} />
+            <SettingItemRow item={{
+              icon: IconNames.LifeBuoy,
+              label: "Hilfe & Support",
+              route: "SupportScreen"
+            }} />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <TouchableOpacity style={styles.logoutButton} onPress={logout}>
+            <Text style={styles.logoutText}>Abmelden</Text>
+          </TouchableOpacity>
+        </View>
+
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert(
+              "Konto löschen",
+              "Bist du sicher? Diese Aktion kann nicht rückgängig gemacht werden.",
+              [
+                { text: "Abbrechen", style: "cancel" },
+                {
+                  text: "Löschen",
+                  style: "destructive",
+                  onPress: async () => {
+                    try {
+                      await clientUserApi.deleteAccount();
+                      logout();
+                    } catch (error) {
+                      console.error(error);
+                      showMessage({ message: "Fehler beim Löschen des Kontos", type: "danger" });
+                    }
+                  }
+                }
+              ]
+            );
+          }}
+          style={styles.deleteAccountButton}
+        >
+          <Text style={styles.deleteAccountText}>Konto löschen</Text>
+        </TouchableOpacity>
       </ScrollView >
     </SafeAreaView >
   );
