@@ -154,7 +154,7 @@ export function SettingsScreen() {
     },
   ];
 
-  const { logout } = useAuth();
+
   // State for language selection (MVP: just toggling or simple selection)
   const handleLanguageChange = async () => {
     Alert.alert("Sprache ändern", "Wähle deine bevorzugte Sprache", [
