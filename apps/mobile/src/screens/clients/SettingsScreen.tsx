@@ -184,7 +184,7 @@ export function SettingsScreen() {
     // ... other settings
   ];
 
-  ];
+
 
   return (
     <SafeAreaView style={styles.container}>
