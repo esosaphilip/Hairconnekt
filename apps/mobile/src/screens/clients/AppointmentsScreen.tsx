@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { SafeAreaView, View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, RefreshControl, Image, ImageStyle } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator, TouchableOpacity, RefreshControl, Image, ImageStyle } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Card from '@/components/Card';
 import Text from '@/components/Text';
 import Button from '@/components/Button';

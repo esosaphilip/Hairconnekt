@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, StyleSheet, View, Image, ScrollView, TouchableOpacity, Alert, Platform, Linking, ActionSheetIOS } from 'react-native';
+import { StyleSheet, View, Image, ScrollView, TouchableOpacity, Alert, Platform, Linking, ActionSheetIOS } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Text from '@/components/Text';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
