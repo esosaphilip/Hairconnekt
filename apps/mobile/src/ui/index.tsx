@@ -36,7 +36,8 @@ import { Badge as ComponentsBadge } from '../components/badge';
 export const Badge = ComponentsBadge;
 
 // Re-export Avatar from components to ensure full functionality (source prop, etc.)
-export { Avatar } from '../components/avatar';
+import { Avatar } from '../components/avatar';
+export { Avatar };
 export type { AvatarProps } from '../components/avatar';
 
 export const Button = ComponentsButton;
