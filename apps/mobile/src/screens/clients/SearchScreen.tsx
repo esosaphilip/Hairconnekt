@@ -190,7 +190,7 @@ export function SearchScreen() {
 
   // Effect for searching
   useEffect(() => {
-    let timeout: NodeJS.Timeout;
+    let timeout: ReturnType<typeof setTimeout>;
     async function fetchResults() {
       // Allow search if term exists OR if a category filter is active
       const categoryFilter = activeFilters.find(f => f.startsWith('cat:'));
@@ -210,7 +210,9 @@ export function SearchScreen() {
         const categorySlug = categoryFilter ? categoryFilter.replace('cat:', '') : undefined;
 
         const data = await clientBraiderApi.search(searchTerm, { category: categorySlug });
-        setResults(data);
+        // Deduplicate by ID to prevent Fabric key errors
+        const unique = Array.from(new Map(data.map(item => [item.id, item])).values());
+        setResults(unique);
       } catch (err) {
         const message =
           err instanceof Error

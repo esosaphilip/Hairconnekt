@@ -37,6 +37,13 @@ try {
 }
 
 export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
+  // Safety check first
+  if (!isDeviceSafe()) {
+    // eslint-disable-next-line no-console
+    console.log('Must use physical device for Push Notifications or native module missing');
+    return undefined;
+  }
+
   if (Platform.OS === 'android') {
     await Notifications.setNotificationChannelAsync('default', {
       name: 'default',
@@ -46,39 +53,26 @@ export async function registerForPushNotificationsAsync(): Promise<string | unde
     });
   }
 
-  if (!isDeviceSafe()) {
-    // eslint-disable-next-line no-console
-    console.log('Must use physical device for Push Notifications or native module missing');
-    return undefined;
-  }
-
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
-
   if (existingStatus !== 'granted') {
     const { status } = await Notifications.requestPermissionsAsync();
     finalStatus = status;
   }
 
   if (finalStatus !== 'granted') {
-    // eslint-disable-next-line no-console
     console.log('Failed to get push token for push notification!');
     return undefined;
   }
 
   try {
-    // Get the device push token (for direct FCM usage)
-    // Note: ensure your app.json has the googleServicesFile configured for this to return an FCM token
     const tokenData = await Notifications.getDevicePushTokenAsync();
     return tokenData.data;
   } catch (e: any) {
-    // eslint-disable-next-line no-console
     console.error('Error getting push token:', e);
     return undefined;
   }
 }
-
-
 
 export function useNotificationListeners() {
   const notificationListener = useRef<Notifications.Subscription | null>(null);
@@ -88,52 +82,56 @@ export function useNotificationListeners() {
     // Prevent crash if module is missing or not a device
     if (!isDeviceSafe()) return;
 
-    try {
-      notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-        // Notification received in foreground
-        if (typeof __DEV__ !== 'undefined' && __DEV__) {
-          console.log('[Notifications] Received:', notification);
-        }
-        // Emit event to refresh data (e.g. appointments)
-        emit('appointment_updated');
-      });
+    let timer: ReturnType<typeof setTimeout>;
 
-      responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-        // User tapped on notification
-        if (typeof __DEV__ !== 'undefined' && __DEV__) {
-          console.log('[Notifications] Response:', response);
-        }
-        // Future: parse data and navigate. handling basic refresh for now.
-        emit('appointment_updated');
-
-        // Attempt to navigate if data contains screen info
-        const data = response.notification.request.content.data;
-        if (data?.type === 'NEW_BOOKING' || data?.type === 'APPOINTMENT_REQUEST') {
-          const appointmentId = data.appointmentId || data.id;
-          if (appointmentId) {
-            setTimeout(() => {
-              rootNavigationRef.current?.navigate('Kalender', {
-                screen: 'AppointmentRequestScreen',
-                params: { id: appointmentId }
-              });
-            }, 100);
+    const setupListeners = () => {
+      try {
+        notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+          if (typeof __DEV__ !== 'undefined' && __DEV__) {
+            console.log('[Notifications] Received:', notification);
           }
-        } else if (data?.type === 'APPOINTMENT_UPDATE' || data?.appointmentId) {
           emit('appointment_updated');
-        }
-      });
-    } catch (e) {
-      console.warn('[Notifications] Failed to add listeners', e);
-    }
+        });
 
+        responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+          if (typeof __DEV__ !== 'undefined' && __DEV__) {
+            console.log('[Notifications] Response:', response);
+          }
+          emit('appointment_updated');
+
+          const data = response.notification.request.content.data;
+          if (data?.type === 'NEW_BOOKING' || data?.type === 'APPOINTMENT_REQUEST') {
+            const appointmentId = data.appointmentId || data.id;
+            if (appointmentId) {
+              setTimeout(() => {
+                rootNavigationRef.current?.navigate('Kalender', {
+                  screen: 'AppointmentRequestScreen',
+                  params: { id: appointmentId }
+                });
+              }, 100);
+            }
+          } else if (data?.type === 'APPOINTMENT_UPDATE' || data?.appointmentId) {
+            emit('appointment_updated');
+          }
+        });
+      } catch (e) {
+        console.warn('[Notifications] Failed to add listeners', e);
+      }
+    };
+
+    // Delay listener attachment (fix for crash on some Android devices/simulators)
+    timer = setTimeout(setupListeners, 1000);
 
     return () => {
+      clearTimeout(timer);
       if (notificationListener.current) {
         notificationListener.current.remove();
+        notificationListener.current = null;
       }
       if (responseListener.current) {
         responseListener.current.remove();
+        responseListener.current = null;
       }
     };
   }, []);
-}
+};

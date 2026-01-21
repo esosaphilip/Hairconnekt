@@ -19,89 +19,101 @@ const local = StyleSheet.create({
 export function renderBookingCard(
   booking: IBooking,
   navigate: NavigateFn,
+  onCancel?: (id: string) => void,
+  onReschedule?: (id: string) => void,
 ) {
   const b = booking;
   const idStr = b.id;
+  // ... (existing variable assignments)
   const providerName = b.providerName;
   const providerBusiness = b.providerBusiness || '';
   const providerImage = b.providerImage;
   const service = b.serviceName;
-  const dateStr = b.date; // e.g. "Freitag, 1. Nov."
-  const timeStr = b.time; // e.g. "10:00 - 13:00 Uhr"
-  const durationStr = b.duration; // "3 Std." or similar if available
+  const dateStr = b.date;
+  const timeStr = b.time;
   const locationStr = b.location || 'Keine Adresse';
   const priceStr = b.price || '';
   const status = b.status;
   const providerId = b.providerId;
-  const ratingNum = b.rating || 4.8; // Default to 4.8 if missing for visuals
+  const ratingNum = b.rating || 4.8;
 
-  // Calculate relative time
+  // existing relativeTime logic...
   const now = new Date();
   const start = new Date(b.startTime);
   const diffMs = start.getTime() - now.getTime();
   const diffHrs = Math.ceil(diffMs / (1000 * 60 * 60));
-
   let relativeTime = "";
-  if (diffHrs > 0 && diffHrs < 24) {
-    relativeTime = `In ${diffHrs} Std.`;
-  } else if (diffHrs < 0) {
-    relativeTime = ""; // Don't show for past/started
-  } else {
-    relativeTime = ""; // Don't show for > 24h (date is enough)
-  }
+  if (diffHrs > 0 && diffHrs < 24) { relativeTime = `In ${diffHrs} Std.`; }
 
   const firstChar = providerName.length > 0 ? providerName.charAt(0) : "?";
   const fallbackLabel = firstChar.toUpperCase();
-
   const isConfirmed = status === 'upcoming' || status === 'confirmed';
   const isCancelled = status === 'cancelled';
-  const isCompleted = status === 'completed';
 
   const badgeLabel = isConfirmed ? 'Bestätigt' : isCancelled ? 'Storniert' : 'Abgeschlossen';
-  const badgeStyle = isConfirmed
-    ? { backgroundColor: colors.success }
-    : isCancelled
-      ? { backgroundColor: colors.error }
-      : { backgroundColor: colors.gray100 };
+  const badgeStyle = isConfirmed ? { backgroundColor: colors.success } : isCancelled ? { backgroundColor: colors.error } : { backgroundColor: colors.gray100 };
   const badgeTextColor = isConfirmed || isCancelled ? colors.white : colors.gray800;
 
-  // Tag style for services (Red/Pink background)
   const tagStyle = { backgroundColor: '#F43F5E', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, alignSelf: 'flex-start' as const };
   const tagText = { color: 'white', fontSize: 12, fontWeight: '600' as const };
 
+  const handleMoreOptions = () => {
+    if (!onCancel && !onReschedule) return;
+
+    // Simple Alert for cross-platform quick action or ActionSheetIOS
+    // Using Alert with options for simplicity and robustness across platforms as requested ("Alert confirmation")
+    // actually, for the menu itself, ActionSheet is better, but user said "Stornieren (Alert confirmation)" implies the confirm step.
+
+    // Let's use ActionSheet logic similar to Detail screen if possible, OR just simple navigation.
+    // Given the constraints and specific request:
+
+    const options = ['Abbrechen'];
+    if (onReschedule) options.push('Verschieben');
+    if (onCancel) options.push('Stornieren');
+
+    // Basic Alert for options if ActionSheet not imported.
+    import('react-native').then(({ ActionSheetIOS, Platform, Alert }) => {
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options,
+            cancelButtonIndex: 0,
+            destructiveButtonIndex: options.indexOf('Stornieren'),
+          },
+          (buttonIndex) => {
+            const option = options[buttonIndex];
+            if (option === 'Verschieben' && onReschedule) onReschedule(idStr);
+            if (option === 'Stornieren' && onCancel) onCancel(idStr);
+          }
+        );
+      } else {
+        // Android Options Alert
+        const buttons = [];
+        buttons.push({ text: 'Abbrechen', style: 'cancel' });
+        if (onReschedule) buttons.push({ text: 'Verschieben', onPress: () => onReschedule(idStr) });
+        if (onCancel) buttons.push({ text: 'Stornieren', style: 'destructive', onPress: () => onCancel(idStr) });
+
+        Alert.alert('Optionen', undefined, buttons);
+      }
+    });
+  };
 
   return (
     <Card key={idStr} style={sx.bookingCard}>
       <TouchableOpacity onPress={() => navigate("AppointmentDetail", { id: idStr })} activeOpacity={0.9}>
-
-        {/* Header: Date and Badge */}
         <View style={sx.headerRow}>
           <Text style={sx.dateText}>{dateStr}</Text>
-          <Badge
-            label={badgeLabel}
-            style={[sx.statusBadge, badgeStyle]}
-            textStyle={{ color: badgeTextColor }}
-          />
+          <Badge label={badgeLabel} style={[sx.statusBadge, badgeStyle]} textStyle={{ color: badgeTextColor }} />
         </View>
 
-        {/* Time Info */}
         <View style={sx.timeRow}>
           <Text style={sx.timeText}>{timeStr}</Text>
           {isConfirmed && <Text style={sx.relativeTime}>{relativeTime}</Text>}
         </View>
 
-        {/* Provider Info */}
-        <TouchableOpacity
-          style={sx.providerContainer}
-          onPress={() => providerId && navigate('ProviderDetail', { id: providerId })}
-          activeOpacity={0.7}
-        >
+        <TouchableOpacity style={sx.providerContainer} onPress={() => providerId && navigate('ProviderDetail', { id: providerId })} activeOpacity={0.7}>
           <Avatar size={48} style={sx.providerAvatar}>
-            {providerImage ? (
-              <AvatarImage uri={providerImage} style={sx.providerImage} />
-            ) : (
-              <AvatarFallback label={fallbackLabel} />
-            )}
+            {providerImage ? <AvatarImage uri={providerImage} style={sx.providerImage} /> : <AvatarFallback label={fallbackLabel} />}
           </Avatar>
           <View style={sx.providerTexts}>
             <Text style={sx.providerName} numberOfLines={1}>{providerName}</Text>
@@ -113,37 +125,30 @@ export function renderBookingCard(
           </View>
         </TouchableOpacity>
 
-        {/* Location */}
         <View style={sx.locationRow}>
           <Icon name="map-pin" size={14} color={colors.gray500} />
           <Text style={sx.locationText} numberOfLines={1}>{locationStr}</Text>
         </View>
 
-        {/* Service Tags */}
         <View style={sx.tagsRow}>
-          <View style={tagStyle}>
-            <Text style={tagText}>{service}</Text>
-          </View>
+          <View style={tagStyle}><Text style={tagText}>{service}</Text></View>
         </View>
 
-        {/* Footer: Price and Actions */}
         <View style={sx.footer}>
           <Text style={sx.priceText}>{priceStr}</Text>
-
           <View style={sx.actions}>
-            <TouchableOpacity
-              style={sx.msgButton}
-              onPress={() => providerId && navigate('Chat', { recipientId: providerId })}
-            >
+            <TouchableOpacity style={sx.msgButton} onPress={() => providerId && navigate('Chat', { recipientId: providerId })}>
               <Icon name="message-square" size={16} color={colors.gray800} />
               <Text style={sx.msgButtonText}>Nachricht</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={sx.moreButton}>
-              <Icon name="ellipsis-horizontal" size={20} color={colors.gray800} />
-            </TouchableOpacity>
+
+            {(onCancel || onReschedule) && (
+              <TouchableOpacity style={sx.moreButton} onPress={handleMoreOptions}>
+                <Icon name="ellipsis-horizontal" size={20} color={colors.gray800} />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-
       </TouchableOpacity>
     </Card>
   );

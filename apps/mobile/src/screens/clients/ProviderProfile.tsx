@@ -274,7 +274,13 @@ export default function ProviderProfile() {
             </Text>
             <View style={styles.galleryGrid}>
               {(provider.portfolioImages || []).map((uri, i) => (
-                <Image key={i} source={{ uri }} style={styles.galleryImage} testID="gallery-image" />
+                <Image
+                  key={i}
+                  source={{ uri }}
+                  style={styles.galleryImage}
+                  testID="gallery-image"
+                  resizeMode="cover"
+                />
               ))}
             </View>
             {(!provider.portfolioImages || provider.portfolioImages.length === 0) && (
@@ -687,14 +693,15 @@ const styles = StyleSheet.create({
   galleryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    // gap property support is inconsistent in older RN, use margins
   },
   galleryImage: {
-    width: '31%',
+    width: '31%', // Fits 3 items with margins (31*3 = 93% + 2*2% margins = 97%)
     aspectRatio: 1,
     borderRadius: 8,
     marginBottom: 8,
-    backgroundColor: '#f3f4f6', // Fallback for loading/missing images
+    marginRight: '2%', // Add margin for spacing
+    backgroundColor: '#e5e7eb', // Fallback color
   },
   ratingBig: {
     fontSize: 32,

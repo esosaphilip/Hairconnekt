@@ -178,6 +178,53 @@ export function AppointmentsScreen() {
     );
   };
 
+  // --- Actions ---
+  const handleReschedule = (id: string) => {
+    navigation.navigate('RescheduleAppointment', { id });
+  };
+
+  const handleCancel = (id: string) => {
+    // Confirmation is handled here (or in renderBookingCard if we wanted, but logic is better here)
+    // Actually renderBookingCard calls onCancel directly if confirmed via its own UI?
+    // Wait, renderBookingCard implements handleMoreOptions containing Alert/ActionSheet.
+    // The UI shows "Stornieren", clicking it calls onCancel.
+    // So here we should show the FINAL confirmation "Are you sure?" OR just execute if the card did the menu.
+    // The User said: "Stornieren (Alert confirmation)".
+    // renderBookingCard's ActionSheet has "Stornieren". Clicking that calls onCancel.
+    // So onCancel should show the "Are you sure?" Alert.
+
+    // Check if renderBookingCard does the confirmation.
+    // My implementation of renderBookingCard executes onCancel immediately when "Stornieren" is tapped in ActionSheet.
+    // So I should do the "Are you sure?" Alert here.
+
+    import('react-native').then(({ Alert }) => {
+      Alert.alert(
+        "Termin stornieren?",
+        "Möchtest du diesen Termin wirklich stornieren?",
+        [
+          { text: "Zurück", style: "cancel" },
+          {
+            text: "Ja, stornieren",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                setLoading(true);
+                await clientBookingApi.cancelAppointment(id);
+                fetchAppointments(); // Refresh list
+              } catch (e) {
+                console.error("Cancel failed", e);
+                // Simple error alert
+                Alert.alert("Fehler", "Termin konnte nicht storniert werden.");
+              } finally {
+                setLoading(false);
+              }
+            }
+          }
+        ]
+      );
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -200,7 +247,13 @@ export function AppointmentsScreen() {
           <FlatList
             data={listData} // Use filtered data
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => renderBookingCard(item, navigation.navigate)} // No internal null return
+            renderItem={({ item }) => renderBookingCard(
+              item,
+              navigation.navigate,
+              // Only pass actions for upcoming appointments
+              activeTab === 'upcoming' ? handleCancel : undefined,
+              activeTab === 'upcoming' ? handleReschedule : undefined
+            )}
             ListHeaderComponent={activeTab === 'upcoming' ? <NextAppointmentCard /> : null}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             contentContainerStyle={styles.listContent}

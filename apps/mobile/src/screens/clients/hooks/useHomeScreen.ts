@@ -103,7 +103,8 @@ export function useHomeScreen() {
                 radiusKm: 50,
                 limit: 20
             });
-            setNearby(items);
+            const uniqueItems = Array.from(new Map(items.map(item => [item.id, item])).values());
+            setNearby(uniqueItems);
             initFavStatus(items);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : t('screens.home.fetchError');

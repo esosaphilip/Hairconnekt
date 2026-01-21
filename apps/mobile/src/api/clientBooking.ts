@@ -16,6 +16,14 @@ export const clientBookingApi = {
     }
   },
 
+  async cancelAppointment(id: string): Promise<void> {
+    try {
+      await http.post(`/appointments/${id}/cancel`);
+    } catch (error) {
+      throw mapApiError(error);
+    }
+  },
+
   async createAppointment(dto: {
     providerId: string;
     serviceIds: string[];
