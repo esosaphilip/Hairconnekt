@@ -27,6 +27,7 @@ interface AppointmentListItem {
   address?: string | null;
   reviewed?: boolean;
   rating?: number;
+  reviewCount?: number;
   cancelledBy?: string | null;
 }
 
@@ -44,16 +45,17 @@ export const BookingAdapter = {
       serviceName: (firstService && firstService.name) || 'Service',
       date: DateService.formatDate(dto.appointmentDate || ''),
       time: DateService.formatTime(dto.startTime || ''),
-      duration: firstService && typeof firstService.durationMinutes === 'number' 
-        ? `${firstService.durationMinutes} Min.` 
+      duration: firstService && typeof firstService.durationMinutes === 'number'
+        ? `${firstService.durationMinutes} Min.`
         : null,
-      price: typeof dto.totalPriceCents === 'number' 
-        ? formatMoneyCents(dto.totalPriceCents) 
+      price: typeof dto.totalPriceCents === 'number'
+        ? formatMoneyCents(dto.totalPriceCents)
         : null,
       location: dto.address || null,
       status: (dto.status as BookingStatus) || 'upcoming',
       isReviewed: !!dto.reviewed,
       rating: dto.rating,
+      reviewCount: dto.reviewCount,
       cancelledBy: dto.cancelledBy,
       rawDate: dto.appointmentDate // Keep raw ISO date for logic
     };

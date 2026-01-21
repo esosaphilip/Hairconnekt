@@ -25,6 +25,7 @@ export interface IBooking {
   status: BookingStatus;
   isReviewed: boolean;
   rating?: number;
+  reviewCount?: number;
   cancelledBy?: string | null;
   // Expanded fields for UI requirements
   startTime: string; // ISO string
