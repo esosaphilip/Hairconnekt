@@ -44,11 +44,6 @@ export function AppointmentsScreen() {
     return () => off();
   }, [activeTab]);
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchAppointments();
-  };
-
   // --- Next Appointment Logic ---
   const nextAppointment = useMemo(() => {
     if (activeTab !== 'upcoming' || appointments.length === 0) return null;
@@ -59,6 +54,19 @@ export function AppointmentsScreen() {
     }
     return null;
   }, [appointments, activeTab]);
+
+  // --- List Data Logic (Filter out next appointment to prevent duplicates/crashes) ---
+  const listData = useMemo(() => {
+    if (activeTab === 'upcoming' && nextAppointment) {
+      return appointments.filter(a => a.id !== nextAppointment.id); // Valid filtering
+    }
+    return appointments;
+  }, [appointments, activeTab, nextAppointment]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAppointments();
+  };
 
   // --- Segmented Control Tab ---
   const Tab = ({ status, label }: { status: typeof activeTab; label: string }) => {
@@ -190,15 +198,9 @@ export function AppointmentsScreen() {
           <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 40 }} />
         ) : (
           <FlatList
-            data={appointments}
+            data={listData} // Use filtered data
             keyExtractor={(item) => item.id}
-            renderItem={({ item }) => {
-              // Hide duplicated next appointment from list if desired, or keep it.
-              // Design usually implies list contains all, or next is pulled out.
-              // Implementing "pull out" logic:
-              if (nextAppointment && item.id === nextAppointment.id) return null;
-              return renderBookingCard(item, navigation.navigate);
-            }}
+            renderItem={({ item }) => renderBookingCard(item, navigation.navigate)} // No internal null return
             ListHeaderComponent={activeTab === 'upcoming' ? <NextAppointmentCard /> : null}
             refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             contentContainerStyle={styles.listContent}

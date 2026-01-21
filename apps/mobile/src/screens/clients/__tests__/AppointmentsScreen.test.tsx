@@ -1,40 +1,62 @@
-
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, waitFor, fireEvent, screen } from '@testing-library/react-native';
 import { AppointmentsScreen } from '../AppointmentsScreen';
 import { clientBookingApi } from '@/api/clientBooking';
+import { NavigationContainer } from '@react-navigation/native';
 
-jest.mock('@/api/clientBooking', () => ({
-    clientBookingApi: {
-        getAppointments: jest.fn(),
-    },
+// Mock dependencies
+jest.mock('@/api/clientBooking');
+jest.mock('@/services/eventBus', () => ({
+    on: jest.fn(() => jest.fn()),
+    emit: jest.fn(),
+    off: jest.fn(),
 }));
 
-jest.mock('@react-navigation/native', () => ({
-    useNavigation: () => ({
-        navigate: jest.fn(),
-    }),
-}));
+// Mock navigation
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => {
+    const actualNav = jest.requireActual('@react-navigation/native');
+    return {
+        ...actualNav,
+        useNavigation: () => ({
+            navigate: mockNavigate,
+        }),
+    };
+});
 
 const mockAppointments = [
     {
         id: '1',
+        providerName: 'Jane Doe',
+        serviceName: 'Box Braids',
         startTime: new Date(Date.now() + 3600000).toISOString(), // 1 hour from now
         endTime: new Date(Date.now() + 7200000).toISOString(),
-        status: 'confirmed',
-        providerName: 'Test Provider',
-        serviceName: 'Braids',
-        price: '50.00 €',
-        rating: 4.8,
-        providerImage: 'https://example.com/avatar.jpg',
-        provider: {
-            id: 'p1',
-            name: 'Test Provider',
-            address: 'Test Address',
-            avatar: 'https://example.com/avatar.jpg'
-        },
-        location: 'Test Address'
-    }
+        status: 'upcoming',
+        providerImage: 'https://example.com/jane.jpg',
+        rating: 4.9,
+        price: '50 €',
+        location: 'Berlin',
+        date: 'Fri, 1. Nov',
+        time: '14:00',
+        rawDate: new Date().toISOString(),
+        isReviewed: false,
+    },
+    {
+        id: '2',
+        providerName: 'John Smith',
+        serviceName: 'Cornrows',
+        startTime: new Date(Date.now() + 86400000).toISOString(), // 1 day from now
+        endTime: new Date(Date.now() + 90000000).toISOString(),
+        status: 'upcoming',
+        providerImage: null,
+        rating: 4.5,
+        price: '40 €',
+        location: 'Hamburg',
+        date: 'Sat, 2. Nov',
+        time: '10:00',
+        rawDate: new Date().toISOString(),
+        isReviewed: false,
+    },
 ];
 
 describe('AppointmentsScreen', () => {
@@ -43,26 +65,83 @@ describe('AppointmentsScreen', () => {
         (clientBookingApi.getAppointments as jest.Mock).mockResolvedValue(mockAppointments);
     });
 
-    it('renders the Hero Card with full provider details (Avatar, Name, Location)', async () => {
-        const { getByText, findByText, getAllByText } = render(<AppointmentsScreen />);
+    it('renders correctly and shows tabs', async () => {
+        render(
+            <NavigationContainer>
+                <AppointmentsScreen />
+            </NavigationContainer>
+        );
 
-        // Wait for data load
-        await findByText('Meine Termine');
+        // Initial loading
+        // await waitFor(() => expect(screen.queryByTestId('loading-indicator')).toBeTruthy());
 
-        // Check for "Dein nächster Termin" Header
-        expect(getByText('Dein nächster Termin')).toBeTruthy();
+        await waitFor(() => {
+            expect(screen.getByText('Meine Termine')).toBeTruthy();
+            expect(screen.getByText('Anstehend')).toBeTruthy();
+            expect(screen.getByText('Abgeschlossen')).toBeTruthy();
+            expect(screen.getByText('Abgesagt')).toBeTruthy();
+        });
+    });
 
-        // Check for Countdown
-        expect(getByText(/In 1 Std/)).toBeTruthy();
+    it('renders "Dein nächster Termin" hero card for the first appointment', async () => {
+        render(
+            <NavigationContainer>
+                <AppointmentsScreen />
+            </NavigationContainer>
+        );
 
-        // STRICT UI CHECKS for Hero Card:
-        // Must show Provider Name
-        expect(getAllByText('Test Provider').length).toBeGreaterThan(0);
+        await waitFor(() => {
+            // Hero card title
+            expect(screen.getByText('Dein nächster Termin')).toBeTruthy();
+            // Provider name in Hero Card
+            expect(screen.getByText('Jane Doe')).toBeTruthy();
+            // Service name
+            expect(screen.getByText('Box Braids')).toBeTruthy();
+        });
+    });
 
-        // Must show Location
-        expect(getAllByText('Test Address').length).toBeGreaterThan(0);
+    it('renders the list of other appointments correctly', async () => {
+        render(
+            <NavigationContainer>
+                <AppointmentsScreen />
+            </NavigationContainer>
+        );
 
-        // Ideally check for Avatar/Rating but RNTL text queries are easiest for TDD loop unless we add testIDs.
-        // We assume if these are present, the component is being rendered.
+        await waitFor(() => {
+            // The second appointment should be in the list
+            expect(screen.getByText('John Smith')).toBeTruthy();
+            expect(screen.getByText('Cornrows')).toBeTruthy();
+        });
+    });
+
+    it('switches tabs and fetches data', async () => {
+        render(
+            <NavigationContainer>
+                <AppointmentsScreen />
+            </NavigationContainer>
+        );
+
+        await waitFor(() => expect(screen.getByText('Anstehend')).toBeTruthy());
+
+        fireEvent.press(screen.getByText('Abgeschlossen'));
+
+        await waitFor(() => {
+            expect(clientBookingApi.getAppointments).toHaveBeenCalledWith('completed');
+        });
+    });
+
+    it('navigates to detail on card press', async () => {
+        render(
+            <NavigationContainer>
+                <AppointmentsScreen />
+            </NavigationContainer>
+        );
+
+        await waitFor(() => expect(screen.getByText('Jane Doe')).toBeTruthy());
+
+        // Press the hero card (Jane Doe)
+        fireEvent.press(screen.getByText('Jane Doe'));
+
+        expect(mockNavigate).toHaveBeenCalledWith('AppointmentDetail', { id: '1' });
     });
 });

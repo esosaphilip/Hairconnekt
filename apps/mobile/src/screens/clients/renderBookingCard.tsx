@@ -131,7 +131,7 @@ export function renderBookingCard(
               <Text style={sx.msgButtonText}>Nachricht</Text>
             </TouchableOpacity>
             <TouchableOpacity style={sx.moreButton}>
-              <Icon name="more-horizontal" size={20} color={colors.gray800} />
+              <Icon name="ellipsis-horizontal" size={20} color={colors.gray800} />
             </TouchableOpacity>
           </View>
         </View>
