@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+
 import { colors, spacing } from '../../theme/tokens';
 import Input from '@/components/Input';
 import Textarea from '@/components/textarea';
 import Button from '@/components/Button';
+import Card from '@/components/Card';
+import Text from '@/components/Text';
+import Icon from '@/components/Icon';
+import Avatar, { AvatarImage, AvatarFallback } from '@/components/avatar';
 import { Switch } from 'react-native';
-import { http } from '@/api/http';
 
+import { http } from '@/api/http';
 import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
-import Avatar, { AvatarImage, AvatarFallback } from '@/components/avatar';
-import Icon from '@/components/Icon';
-import { TouchableOpacity, Platform } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 
 type ProfileData = {
   // Provider
@@ -32,9 +36,11 @@ type ProfileData = {
 
 export function EditProfileScreen() {
   const { user, setUser } = useAuth();
+  const navigation = useNavigation();
   const isProvider = user?.userType === 'PROVIDER';
 
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Provider State
@@ -97,7 +103,7 @@ export function EditProfileScreen() {
   }, [isProvider]);
 
   const handleSave = async () => {
-    setLoading(true);
+    setSaving(true);
     setError(null);
 
     try {
@@ -123,13 +129,15 @@ export function EditProfileScreen() {
         });
       }
 
-      Alert.alert('Gespeichert', 'Profil aktualisiert');
+      Alert.alert('Gespeichert', 'Profil aktualisiert', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
     } catch (e: any) {
       console.error('EditProfile Error:', e);
       let msg = e?.response?.data?.message || e?.message || 'Speichern fehlgeschlagen';
       setError(String(msg));
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -172,141 +180,246 @@ export function EditProfileScreen() {
 
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Profil bearbeiten</Text>
-        {error && <Text style={styles.error}>{error}</Text>}
-        <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
-
+    <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.container}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {error && (
+            <Card style={styles.errorCard}>
+              <Text style={styles.errorText}>{error}</Text>
+            </Card>
+          )}
 
           {/* Profile Image Section */}
-          <View style={{ alignItems: 'center', marginBottom: spacing.md }}>
-            <View style={{ position: 'relative' }}>
-              <Avatar size={100} style={{ width: 100, height: 100, borderRadius: 50 }}>
+          <View style={styles.avatarSection}>
+            <View style={styles.avatarContainer}>
+              <Avatar size={120} style={styles.avatar}>
                 {profileImage ? (
-                  <AvatarImage source={{ uri: profileImage }} style={{ width: 100, height: 100, borderRadius: 50 }} />
+                  <AvatarImage source={{ uri: profileImage }} style={styles.avatar} />
                 ) : null}
                 <AvatarFallback label={
                   (firstName && lastName)
                     ? `${firstName} ${lastName}`
                     : (businessName || '?')
                 }
-                  style={{ backgroundColor: colors.primary + '20' }}
-                  textStyle={{ color: colors.primary, fontSize: 32 }}
+                  style={styles.avatarFallback}
+                  textStyle={styles.avatarText}
                 />
               </Avatar>
               <TouchableOpacity
                 testID="camera-upload-btn"
-                style={{
-                  position: 'absolute',
-                  bottom: 0,
-                  right: 0,
-                  backgroundColor: colors.primary,
-                  padding: 8,
-                  borderRadius: 20,
-                  borderWidth: 2,
-                  borderColor: colors.white,
-                }}
+                style={styles.cameraButton}
                 onPress={handlePickImage}
               >
-                <Icon name="camera" size={16} color="white" />
+                <Icon name="camera" size={20} color="white" />
               </TouchableOpacity>
             </View>
+            <Text style={styles.avatarTypeLabel}>
+              {isProvider ? 'Profilbild & Logo' : 'Profilbild'}
+            </Text>
           </View>
 
           {isProvider ? (
             <>
-              <View>
-                <Text style={styles.label}>Studio/Betriebsname</Text>
-                <Input value={businessName} onChangeText={setBusinessName} placeholder="Mein Studio" />
-              </View>
-              <View>
-                <Text style={styles.label}>Beschreibung</Text>
-                <Textarea value={bio} onChangeText={setBio} placeholder="Über mich und meine Dienstleistungen" numberOfLines={4} />
-              </View>
-              <View style={styles.rowBetween}>
-                <View>
-                  <Text style={styles.label}>Mobiler Service</Text>
-                  <Text style={styles.helper}>Ich komme zu meinen Kunden</Text>
+              <Card style={styles.card}>
+                <Text variant="h3" style={styles.sectionTitle}>Betriebsinformationen</Text>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Studio/Betriebsname</Text>
+                  <Input value={businessName} onChangeText={setBusinessName} placeholder="Mein Studio" />
                 </View>
-                <Switch value={isMobileService} onValueChange={setIsMobileService} />
-              </View>
-              <View>
-                <Text style={styles.label}>Service-Radius (km)</Text>
-                <Input value={serviceRadiusKm} onChangeText={setServiceRadiusKm} keyboardType="numeric" placeholder="z. B. 10" />
-              </View>
-              <View style={styles.rowBetween}>
-                <View>
-                  <Text style={styles.label}>Buchungen am selben Tag</Text>
-                  <Text style={styles.helper}>Erlaube Buchungen für heute</Text>
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Beschreibung</Text>
+                  <Textarea value={bio} onChangeText={setBio} placeholder="Über mich und meine Dienstleistungen" numberOfLines={4} />
                 </View>
-                <Switch value={acceptsSameDayBooking} onValueChange={setAcceptsSameDayBooking} />
-              </View>
-              <View>
-                <Text style={styles.label}>Vorlaufzeit für Buchungen (Tage)</Text>
-                <Input value={advanceBookingDays} onChangeText={setAdvanceBookingDays} keyboardType="numeric" placeholder="z. B. 30" />
-              </View>
+              </Card>
+
+              <Card style={styles.card}>
+                <Text variant="h3" style={styles.sectionTitle}>Service Details</Text>
+
+                <View style={styles.switchRow}>
+                  <View style={styles.switchTextContainer}>
+                    <Text style={styles.switchLabel}>Mobiler Service</Text>
+                    <Text style={styles.switchHelper}>Ich komme zu meinen Kunden</Text>
+                  </View>
+                  <Switch
+                    value={isMobileService}
+                    onValueChange={setIsMobileService}
+                    trackColor={{ false: colors.gray300, true: colors.primary }}
+                  />
+                </View>
+
+                {isMobileService && (
+                  <View style={styles.formGroup}>
+                    <Text style={styles.label}>Service-Radius (km)</Text>
+                    <Input value={serviceRadiusKm} onChangeText={setServiceRadiusKm} keyboardType="numeric" placeholder="z. B. 10" />
+                  </View>
+                )}
+
+                <View style={styles.separator} />
+
+                <View style={styles.switchRow}>
+                  <View style={styles.switchTextContainer}>
+                    <Text style={styles.switchLabel}>Buchungen am selben Tag</Text>
+                    <Text style={styles.switchHelper}>Erlaube kurzfristige Buchungen</Text>
+                  </View>
+                  <Switch
+                    value={acceptsSameDayBooking}
+                    onValueChange={setAcceptsSameDayBooking}
+                    trackColor={{ false: colors.gray300, true: colors.primary }}
+                  />
+                </View>
+
+                <View style={styles.formGroup}>
+                  <Text style={styles.label}>Vorlaufzeit für Buchungen (Tage)</Text>
+                  <Input value={advanceBookingDays} onChangeText={setAdvanceBookingDays} keyboardType="numeric" placeholder="z. B. 30" />
+                </View>
+              </Card>
             </>
           ) : (
-            <>
-              {/* Client Fields */}
-              <View>
+            <Card style={styles.card}>
+              <Text variant="h3" style={styles.sectionTitle}>Persönliche Daten</Text>
+              <View style={styles.formGroup}>
                 <Text style={styles.label}>Vorname</Text>
                 <Input value={firstName} onChangeText={setFirstName} placeholder="Max" />
               </View>
-              <View>
+              <View style={styles.formGroup}>
                 <Text style={styles.label}>Nachname</Text>
                 <Input value={lastName} onChangeText={setLastName} placeholder="Mustermann" />
               </View>
-              <View>
+              <View style={styles.formGroup}>
                 <Text style={styles.label}>Telefonnummer</Text>
                 <Input value={phone} onChangeText={setPhone} placeholder="+49 123..." keyboardType="phone-pad" />
               </View>
-            </>
+            </Card>
           )}
 
-          <Button title={loading ? 'Speichern…' : 'Speichern'} onPress={handleSave} disabled={loading} style={{ backgroundColor: colors.primary }} />
-        </View>
-      </View>
+          <View style={styles.footer}>
+            <Button
+              title={saving ? 'Speichern…' : 'Speichern'}
+              onPress={handleSave}
+              disabled={saving || loading}
+              style={styles.saveButton}
+              loading={saving}
+            />
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: spacing.lg,
-  },
   safeArea: {
     backgroundColor: colors.gray50,
     flex: 1,
   },
-  error: {
+  container: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.md,
+    gap: spacing.md,
+    paddingBottom: 100,
+  },
+  errorCard: {
+    backgroundColor: '#FEF2F2', // red-50
+    borderColor: '#FCA5A5',
+    borderWidth: 1,
+    padding: spacing.sm,
+  },
+  errorText: {
     color: colors.error,
-    marginTop: spacing.sm,
-  },
-  text: {
-    color: colors.gray600,
     fontSize: 14,
-    marginTop: spacing.sm,
   },
-  title: {
-    color: colors.gray800,
-    fontSize: 20,
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginBottom: spacing.xs,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  avatarFallback: {
+    backgroundColor: colors.primary + '20',
+  },
+  avatarText: {
+    color: colors.primary,
+    fontSize: 40,
+  },
+  avatarTypeLabel: {
+    color: colors.gray500,
+    fontSize: 12,
+  },
+  cameraButton: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: colors.primary,
+    padding: 10,
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: colors.gray50,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  card: {
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  sectionTitle: {
+    marginBottom: spacing.xs,
+    fontSize: 18,
     fontWeight: '600',
+    color: colors.gray800,
+  },
+  formGroup: {
+    gap: spacing.xs,
   },
   label: {
     color: colors.gray700,
     fontSize: 14,
     fontWeight: '500',
-    marginBottom: spacing.xs,
   },
-  helper: {
-    color: colors.gray600,
-    fontSize: 12,
-  },
-  rowBetween: {
+  switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
   },
+  switchTextContainer: {
+    flex: 1,
+    paddingRight: spacing.md,
+  },
+  switchLabel: {
+    fontSize: 16,
+    color: colors.gray800,
+    fontWeight: '500',
+  },
+  switchHelper: {
+    color: colors.gray500,
+    fontSize: 12,
+    marginTop: 2,
+  },
+  separator: {
+    height: 1,
+    backgroundColor: colors.gray200,
+    marginVertical: spacing.xs,
+  },
+  footer: {
+    marginTop: spacing.sm,
+  },
+  saveButton: {
+    backgroundColor: colors.primary,
+  }
 });
