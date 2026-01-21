@@ -6,14 +6,16 @@ export type AvatarProps = {
   size?: number;
   style?: StyleProp<ViewStyle>;
   children?: React.ReactNode;
+  source?: ImageSourcePropType;
 };
 
 /**
  * Basic Avatar container
  */
-export function Avatar({ size = 40, style, children }: AvatarProps) {
+export function Avatar({ size = 40, style, children, source }: AvatarProps) {
   return (
     <View style={[styles.container, { width: size, height: size, borderRadius: size / 2 }, style]}>
+      {source && <AvatarImage source={source} size={size} />}
       {children}
     </View>
   );

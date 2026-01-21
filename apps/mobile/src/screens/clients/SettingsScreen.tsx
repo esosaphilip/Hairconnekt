@@ -41,6 +41,7 @@ const IconNames = {
   ChevronRight: 'chevron-right',
   Moon: 'moon',
   Volume2: 'volume-2',
+  LifeBuoy: 'life-buoy',
 };
 
 // Use centralized theme tokens
@@ -187,7 +188,7 @@ export function SettingsScreen() {
 
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Header */}
         <View style={styles.header}>
@@ -195,8 +196,8 @@ export function SettingsScreen() {
         </View>
 
         {/* Account Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Konto</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeader}>Konto</Text>
           <View style={styles.card}>
             {accountSettings.map((item, index) => (
               <React.Fragment key={index}>
@@ -208,8 +209,8 @@ export function SettingsScreen() {
         </View>
 
         {/* App Settings */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>App</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeader}>App</Text>
           <View style={styles.card}>
             {appSettings.map((item, index) => (
               <React.Fragment key={index}>
@@ -221,8 +222,8 @@ export function SettingsScreen() {
         </View>
 
         {/* Legal & Danger Zone */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Rechtliches & Support</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionHeader}>Rechtliches & Support</Text>
           <View style={styles.card}>
             <SettingRow item={{
               icon: IconNames.FileText,
@@ -238,9 +239,9 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
+        <View style={styles.sectionContainer}>
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-            <Text style={styles.logoutText}>Abmelden</Text>
+            <Text style={styles.logoutButtonText}>Abmelden</Text>
           </TouchableOpacity>
         </View>
 

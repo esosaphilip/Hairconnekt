@@ -35,21 +35,9 @@ import { Badge as ComponentsBadge } from '../components/badge';
 
 export const Badge = ComponentsBadge;
 
-// Simple Avatar; supports children (e.g., Text or Image) and size
-export type AvatarProps = {
-  children?: ReactNode;
-  size?: number;
-  style?: StyleProp<ViewStyle>;
-};
-
-export const Avatar: React.FC<AvatarProps> = ({ children, size = 40, style }) => {
-  const normalize = (nodes: ReactNode | ReactNode[] | string | number): ReactNode => {
-    if (typeof nodes === 'string' || typeof nodes === 'number') return <Text>{nodes}</Text>;
-    if (Array.isArray(nodes)) return nodes.map((n, i) => (typeof n === 'string' || typeof n === 'number') ? <Text key={i}>{n}</Text> : n);
-    return nodes;
-  };
-  return <View style={[styles.avatar, { width: size, height: size, borderRadius: size / 2 }, style]}>{normalize(children)}</View>;
-};
+// Re-export Avatar from components to ensure full functionality (source prop, etc.)
+export { Avatar } from '../components/avatar';
+export type { AvatarProps } from '../components/avatar';
 
 export const Button = ComponentsButton;
 
