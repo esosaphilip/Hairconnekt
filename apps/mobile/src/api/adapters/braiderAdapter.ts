@@ -38,7 +38,7 @@ export const BraiderAdapter = {
       id: String(dto.id),
       name: dto.name,
       businessName: dto.business,
-      imageUrl: dto.imageUrl,
+      imageUrl: normalizeUrl(dto.imageUrl), // Normalized!
       isVerified: !!dto.verified,
       rating: dto.rating || 0,
       reviewCount: dto.reviews || 0,
