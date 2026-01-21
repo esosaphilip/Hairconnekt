@@ -91,7 +91,11 @@ export default function ProviderProfile() {
       <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
         {/* Header / Hero Image */}
         <View style={styles.heroWrapper}>
-          <Image source={{ uri: provider.coverImage || provider.imageUrl }} style={styles.heroImage} />
+          <Image
+            source={{ uri: provider.coverImage || provider.imageUrl }}
+            style={styles.heroImage}
+            testID="hero-image"
+          />
 
           {/* Overlay Actions */}
           <SafeAreaView style={styles.headerOverlay}>
@@ -119,6 +123,7 @@ export default function ProviderProfile() {
                   : { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.name)}&background=random` }
               }
               style={styles.avatarImage}
+              testID="avatar-image"
             />
             {provider.isVerified && (
               <View style={styles.verifiedBadge}>

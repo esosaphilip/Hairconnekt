@@ -40,7 +40,7 @@ export default function ProviderCard({ data, isFavorite, onToggleFavorite, onPre
           <View style={styles.avatarContainer}>
             <Avatar size={64} style={styles.avatarWrapper}>
               {data.imageUrl ? (
-                <Image source={{ uri: data.imageUrl }} style={styles.avatarImage} />
+                <Image source={{ uri: data.imageUrl }} style={styles.avatarImage} testID="provider-card-image" />
               ) : (
                 <View style={[styles.fallbackAvatar, styles.avatarWrapper]}>
                   <Text style={styles.fallbackText}>{(data.name || '?').charAt(0).toUpperCase()}</Text>

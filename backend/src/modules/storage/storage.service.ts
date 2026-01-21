@@ -12,7 +12,9 @@ export class StorageService {
     const key = `providers/${providerId}/${Date.now()}-${filename}`;
     const result = await this.r2.uploadObject(bucket, key, fileBuffer);
     const publicBaseUrl =
-      process.env.R2_PUBLIC_BASE_URL || process.env.R2_PUBLIC_URL || '';
+      process.env.R2_PUBLIC_BASE_URL ||
+      process.env.R2_PUBLIC_URL ||
+      'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev';
     const base = publicBaseUrl.replace(/\/$/, '');
     // If no public base URL configured (local dev), or when falling back to local storage,
     // serve from /uploads via Express static middleware (configured in main.ts)
