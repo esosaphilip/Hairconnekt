@@ -21,15 +21,20 @@ const isDeviceSafe = () => {
 };
 
 // Configure notification behavior when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Configure notification behavior when app is in foreground
+try {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+} catch (e) {
+  if (__DEV__) console.warn('[Notifications] Failed to set notification handler', e);
+}
 
 export async function registerForPushNotificationsAsync(): Promise<string | undefined> {
   if (Platform.OS === 'android') {

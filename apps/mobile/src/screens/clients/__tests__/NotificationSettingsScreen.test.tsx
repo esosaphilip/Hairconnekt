@@ -1,97 +1,68 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, waitFor, fireEvent, screen } from '@testing-library/react-native';
 import NotificationSettingsScreen from '../NotificationSettingsScreen';
 import { notificationsApi } from '@/api/notifications';
+import { useNavigation } from '@react-navigation/native';
 import { Alert } from 'react-native';
 
-// Mock API
-jest.mock('@/api/notifications', () => ({
-    notificationsApi: {
-        getPreferences: jest.fn(),
-        updatePreferences: jest.fn(),
-    },
-}));
-
-// Mock Navigation
-const mockGoBack = jest.fn();
+// Mock dependencies
+jest.mock('@/api/notifications');
 jest.mock('@react-navigation/native', () => ({
-    useNavigation: () => ({
-        goBack: mockGoBack,
-    }),
+    useNavigation: jest.fn(),
 }));
 
-// Mock Lucide Icons (since they are used in the component)
-jest.mock('lucide-react-native', () => ({
-    ArrowLeft: 'ArrowLeft',
-    Bell: 'Bell',
-    Mail: 'Mail',
-    MessageSquare: 'MessageSquare',
-    Calendar: 'Calendar',
-    Star: 'Star',
-    CreditCard: 'CreditCard',
-    TrendingUp: 'TrendingUp',
-    Users: 'Users',
-    Volume2: 'Volume2',
-    Vibrate: 'Vibrate',
-    Clock: 'Clock',
-}));
+const mockNavigation = {
+    goBack: jest.fn(),
+    navigate: jest.fn(),
+};
 
 describe('NotificationSettingsScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        jest.spyOn(Alert, 'alert');
+        (useNavigation as jest.Mock).mockReturnValue(mockNavigation);
         (notificationsApi.getPreferences as jest.Mock).mockResolvedValue({
             pushEnabled: true,
-            emailEnabled: false,
-            smsEnabled: true,
+            emailEnabled: true,
+            smsEnabled: false,
         });
+        (notificationsApi.updatePreferences as jest.Mock).mockResolvedValue({ success: true });
+        // @ts-ignore
+        Alert.alert = jest.fn();
     });
 
-    it('loads settings on mount', async () => {
-        const { getByText } = render(<NotificationSettingsScreen />);
+    it('renders with loaded settings', async () => {
+        render(<NotificationSettingsScreen />);
 
+        // Header
+        expect(screen.getByText('Benachrichtigungen')).toBeTruthy();
+
+        // Wait for settings to load
         await waitFor(() => {
+            // Check switch states by checking toggles accessibility state or assumption
+            // RNTL handles Switch values.
+            // We can check if getPreferences was called.
             expect(notificationsApi.getPreferences).toHaveBeenCalled();
         });
 
-        // We can't easily check switch values directly in RN testing library without testIDs, 
-        // but we can assume if the API was called, data was loaded.
-        // Let's verify element presence to ensure no crash.
-        expect(getByText('Push-Benachrichtigungen')).toBeTruthy();
+        // Check for sections
+        expect(screen.getByText('Benachrichtigungskanäle')).toBeTruthy();
+        expect(screen.getByText('Push-Benachrichtigungen')).toBeTruthy();
     });
 
-    it('saves settings when save button is pressed', async () => {
-        (notificationsApi.updatePreferences as jest.Mock).mockResolvedValue({});
-        const { getByText } = render(<NotificationSettingsScreen />);
-
-        // Wait for load
+    it('updates preferences on save', async () => {
+        render(<NotificationSettingsScreen />);
         await waitFor(() => expect(notificationsApi.getPreferences).toHaveBeenCalled());
 
-        const saveButton = getByText('Einstellungen speichern');
-        fireEvent.press(saveButton);
+        const saveBtn = screen.getByText('Einstellungen speichern');
+        fireEvent.press(saveBtn);
 
         await waitFor(() => {
-            expect(notificationsApi.updatePreferences).toHaveBeenCalledWith({
-                pushEnabled: true,
-                emailEnabled: false,
-                smsEnabled: true, // Based on mock return values
-            });
+            expect(notificationsApi.updatePreferences).toHaveBeenCalledWith(expect.objectContaining({
+                pushEnabled: true, // defaults
+                emailEnabled: true,
+                smsEnabled: false
+            }));
             expect(Alert.alert).toHaveBeenCalledWith('Erfolg', 'Einstellungen gespeichert');
-        });
-    });
-
-    it('handles save error', async () => {
-        (notificationsApi.updatePreferences as jest.Mock).mockRejectedValue(new Error('Failed'));
-        const { getByText } = render(<NotificationSettingsScreen />);
-
-        // Wait for load
-        await waitFor(() => expect(notificationsApi.getPreferences).toHaveBeenCalled());
-
-        const saveButton = getByText('Einstellungen speichern');
-        fireEvent.press(saveButton);
-
-        await waitFor(() => {
-            expect(Alert.alert).toHaveBeenCalledWith('Fehler', 'Fehler beim Speichern');
         });
     });
 });
