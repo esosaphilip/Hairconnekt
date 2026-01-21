@@ -32,6 +32,7 @@ export function renderBookingCard(
   const locationStr = b.location || 'Keine Adresse';
   const priceStr = b.price || '';
   const status = b.status;
+  const providerId = b.providerId;
   const ratingNum = b.rating || 4.8; // Default to 4.8 if missing for visuals
 
   // Calculate relative time
@@ -90,7 +91,11 @@ export function renderBookingCard(
         </View>
 
         {/* Provider Info */}
-        <View style={sx.providerContainer}>
+        <TouchableOpacity
+          style={sx.providerContainer}
+          onPress={() => providerId && navigate('ProviderDetail', { id: providerId })}
+          activeOpacity={0.7}
+        >
           <Avatar size={48} style={sx.providerAvatar}>
             {providerImage ? (
               <AvatarImage uri={providerImage} style={sx.providerImage} />
@@ -106,7 +111,7 @@ export function renderBookingCard(
               <Text style={sx.ratingText}>{ratingNum}</Text>
             </View>
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Location */}
         <View style={sx.locationRow}>
@@ -126,7 +131,10 @@ export function renderBookingCard(
           <Text style={sx.priceText}>{priceStr}</Text>
 
           <View style={sx.actions}>
-            <TouchableOpacity style={sx.msgButton}>
+            <TouchableOpacity
+              style={sx.msgButton}
+              onPress={() => providerId && navigate('Chat', { recipientId: providerId })}
+            >
               <Icon name="message-square" size={16} color={colors.gray800} />
               <Text style={sx.msgButtonText}>Nachricht</Text>
             </TouchableOpacity>

@@ -367,7 +367,7 @@ export class AppointmentsService {
   async findOne(id: string, userId: string) {
     const appointment = await this.appointmentRepo.findOne({
       where: { id },
-      relations: ['provider', 'provider.user', 'client', 'appointmentServices', 'serviceAddress']
+      relations: ['provider', 'provider.user', 'client', 'appointmentServices', 'serviceAddress', 'provider.locations', 'provider.locations.address']
     });
 
     if (!appointment) {

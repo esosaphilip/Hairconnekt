@@ -6,6 +6,7 @@ export interface IBookingService {
 }
 
 export interface IBookingProvider {
+  id: string;
   name: string;
   businessName?: string;
   avatarUrl?: string;

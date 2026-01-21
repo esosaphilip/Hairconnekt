@@ -9,6 +9,7 @@ interface AppointmentServiceItem {
 }
 
 interface AppointmentParty {
+  id?: string;
   name?: string;
   businessName?: string;
   avatarUrl?: string;
@@ -39,6 +40,7 @@ export const BookingAdapter = {
 
     return {
       id: String(dto.id),
+      providerId: provider.id,
       providerName: provider.businessName || provider.name || 'Unbekannt',
       providerBusiness: provider.businessName || null,
       providerImage: provider.avatarUrl,
