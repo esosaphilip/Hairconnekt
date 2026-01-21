@@ -3,7 +3,7 @@ import { R2Service } from './r2.service';
 
 @Injectable()
 export class StorageService {
-  constructor(private readonly r2: R2Service) {}
+  constructor(private readonly r2: R2Service) { }
 
   async uploadImage(providerId: string, fileBuffer: Buffer, filename: string) {
     // TODO: Use configured bucket and key pattern once environment & schema are provided
@@ -21,7 +21,8 @@ export class StorageService {
     if ((result as any)?.localPath) {
       url = `${localBase}/${bucket}/${key}`;
     } else if (base) {
-      url = `${base}/${bucket}/${key}`;
+      // R2 Public Access URL maps directly to the bucket root
+      url = `${base}/${key}`;
     } else {
       url = `${localBase}/${bucket}/${key}`;
     }
