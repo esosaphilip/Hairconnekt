@@ -1,107 +1,104 @@
-
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, waitFor, fireEvent, screen } from '@testing-library/react-native';
 import { EditProfileScreen } from '../EditProfileScreen';
 import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
+import { http } from '@/api/http';
+import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { Alert } from 'react-native';
 
 // Mock dependencies
 jest.mock('@/auth/AuthContext', () => ({
     useAuth: jest.fn(),
 }));
+jest.mock('@/services/users');
+jest.mock('@/api/http');
+jest.mock('expo-image-picker');
+jest.mock('@react-navigation/native', () => {
+    const actualNav = jest.requireActual('@react-navigation/native');
+    return {
+        ...actualNav,
+        useNavigation: jest.fn(),
+    };
+});
 
-jest.mock('@/services/users', () => ({
-    usersApi: {
-        getMe: jest.fn(),
-        updateMe: jest.fn(),
-        uploadAvatar: jest.fn(),
-    },
-}));
+const mockNavigation = {
+    goBack: jest.fn(),
+};
 
-jest.mock('@/api/http', () => ({
-    http: {
-        get: jest.fn(),
-        patch: jest.fn(),
-    },
-}));
+const mockClientUser = {
+    id: 'u1',
+    userType: 'CUSTOMER',
+    firstName: 'Max',
+    lastName: 'Power',
+    phone: '123456',
+    profilePictureUrl: 'http://example.com/pic.jpg',
+};
 
-
-// Mock expo-image-picker
-jest.mock('expo-image-picker', () => ({
-    launchImageLibraryAsync: jest.fn(),
-    MediaTypeOptions: {
-        Images: 'Images',
-    },
-}));
-
-import * as ImagePicker from 'expo-image-picker';
+const mockSetUser = jest.fn();
 
 describe('EditProfileScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
+        (useAuth as jest.Mock).mockReturnValue({
+            user: mockClientUser,
+            setUser: mockSetUser,
+        });
+        (useNavigation as jest.Mock).mockReturnValue(mockNavigation);
+        (usersApi.getMe as jest.Mock).mockResolvedValue(mockClientUser);
+        (usersApi.updateMe as jest.Mock).mockResolvedValue(mockClientUser);
+        // @ts-ignore
+        Alert.alert = jest.fn();
     });
 
-    it('renders Client Profile UI with Image Placeholder and Camera Icon (Issue 9)', async () => {
-        // Mock Client User
-        (useAuth as jest.Mock).mockReturnValue({
-            user: { type: 'CLIENT', id: 'c1' },
+    it('renders client profile fields and loads data', async () => {
+        render(<EditProfileScreen />);
+
+        // Check for loading state or wait for fields
+        await waitFor(() => {
+            expect(screen.getByDisplayValue('Max')).toBeTruthy();
+            expect(screen.getByDisplayValue('Power')).toBeTruthy();
         });
 
-        (usersApi.getMe as jest.Mock).mockResolvedValue({
-            firstName: 'Max',
-            lastName: 'Mustermann',
-            phone: '123456',
-            profileImage: null, // No image initially
-        });
-
-        const { getByText, getByTestId, findByText } = render(<EditProfileScreen />);
-
-        await findByText('Profil bearbeiten');
-
-        expect(getByText('MM')).toBeTruthy();
-        expect(getByTestId('camera-upload-btn')).toBeTruthy();
+        expect(screen.getByText('Persönliche Daten')).toBeTruthy();
     });
 
-    it('triggers image picker and upload when camera button is pressed (Issue 16)', async () => {
-        (useAuth as jest.Mock).mockReturnValue({
-            user: { type: 'CLIENT', id: 'c1' },
-        });
+    it('calls updateMe on save', async () => {
+        render(<EditProfileScreen />);
+        await waitFor(() => expect(screen.getByDisplayValue('Max')).toBeTruthy());
 
-        (usersApi.getMe as jest.Mock).mockResolvedValue({
-            firstName: 'Max',
-            lastName: 'Mustermann',
-            phone: '123456',
-            profilePictureUrl: null,
-        });
+        const saveBtn = screen.getByText('Speichern');
+        fireEvent.press(saveBtn);
 
-        // Mock ImagePicker result
+        await waitFor(() => {
+            expect(usersApi.updateMe).toHaveBeenCalledWith({
+                firstName: 'Max',
+                lastName: 'Power',
+                phone: '123456',
+            });
+            expect(Alert.alert).toHaveBeenCalledWith('Gespeichert', expect.any(String), expect.any(Array));
+        });
+    });
+
+    it('uploads image on pick', async () => {
         (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
             canceled: false,
-            assets: [{ uri: 'file://new-image.jpg' }],
+            assets: [{ uri: 'file://new.jpg' }],
         });
+        (usersApi.uploadAvatar as jest.Mock).mockResolvedValue({ url: 'http://example.com/new.jpg' });
 
-        // Mock Upload Success
-        (usersApi.uploadAvatar as jest.Mock).mockResolvedValue({
-            url: 'https://storage.example.com/new-image.jpg',
-        });
+        render(<EditProfileScreen />);
+        await waitFor(() => expect(screen.getByTestId('camera-upload-btn')).toBeTruthy());
 
-        const { getByTestId, findByText } = render(<EditProfileScreen />);
-
-        await findByText('Profil bearbeiten');
-
-        const cameraBtn = getByTestId('camera-upload-btn');
-        fireEvent.press(cameraBtn);
+        fireEvent.press(screen.getByTestId('camera-upload-btn'));
 
         await waitFor(() => {
             expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled();
-        });
-
-        // Verify uploadAvatar called with correct uri
-        // Note: The implementation might pass the whole asset or just URI depending on users.ts
-        // users.ts: uploadAvatar(image: UploadImage) where UploadImage = { uri: string ... } | string
-        await waitFor(() => {
-            expect(usersApi.uploadAvatar).toHaveBeenCalledWith('file://new-image.jpg');
+            expect(usersApi.uploadAvatar).toHaveBeenCalledWith('file://new.jpg');
+            expect(mockSetUser).toHaveBeenCalledWith(expect.objectContaining({
+                profilePictureUrl: 'http://example.com/new.jpg'
+            }));
         });
     });
 });
-

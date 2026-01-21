@@ -107,4 +107,36 @@ describe('AppointmentDetailScreen', () => {
 
         expect(mockNavigate).toHaveBeenCalledWith('ProviderDetail', { id: 'p1' });
     });
+
+
+    it('shows Review button only when status is completed and navigates correctly', async () => {
+        const completedAppointment = { ...mockAppointment, status: 'Completed' };
+        (http.get as jest.Mock).mockResolvedValue({ data: { data: completedAppointment } });
+
+        const navigationMock = { navigate: jest.fn(), goBack: jest.fn() };
+        render(
+            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={navigationMock} />
+        );
+
+        await waitFor(() => expect(screen.getByText('Abgeschlossen')).toBeTruthy());
+
+        const reviewBtn = screen.getByText('Bewerten');
+        expect(reviewBtn).toBeTruthy();
+
+        fireEvent.press(reviewBtn);
+        expect(navigationMock.navigate).toHaveBeenCalledWith('WriteReviews', { appointmentId: '123' });
+    });
+
+    it('does not show Review button when status is pending', async () => {
+        const pendingAppointment = { ...mockAppointment, status: 'Pending' };
+        (http.get as jest.Mock).mockResolvedValue({ data: { data: pendingAppointment } });
+
+        const navigationMock = { navigate: jest.fn(), goBack: jest.fn() };
+        render(
+            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={navigationMock} />
+        );
+
+        await waitFor(() => expect(screen.getByText('Ausstehend')).toBeTruthy());
+        expect(screen.queryByText('Bewerten')).toBeNull();
+    });
 });

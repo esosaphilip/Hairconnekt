@@ -307,12 +307,12 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         )}
 
         {/* Review Button (Completed only) */}
-        {appointment.status === 'completed' && (
+        {(appointment.status || '').toLowerCase() === 'completed' && (
           <View style={styles.actions}>
             <Button
               title="Bewerten"
               icon={<Icon name="star" size={18} color="white" />}
-              onPress={() => navigation.navigate('WriteReview', { appointmentId: id })}
+              onPress={() => navigation.navigate('WriteReviews', { appointmentId: id })}
               style={{ backgroundColor: colors.primary }}
             />
           </View>
