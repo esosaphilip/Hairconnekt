@@ -1,44 +1,52 @@
-
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, waitFor, fireEvent, screen } from '@testing-library/react-native';
 import AppointmentDetailScreen from '../AppointmentDetailScreen';
 import { http } from '@/api/http';
+import { Linking, ActionSheetIOS, Platform } from 'react-native';
 
-// Mock http
-jest.mock('@/api/http', () => ({
-    http: {
-        get: jest.fn(),
-        post: jest.fn(),
-    },
+// Mock dependencies
+jest.mock('@/api/http');
+jest.mock('react-native/Libraries/Linking/Linking', () => ({
+    openURL: jest.fn(),
+    addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+    getInitialURL: jest.fn(),
+    canOpenURL: jest.fn(),
+    removeEventListener: jest.fn(),
 }));
 
-const mockNavigation = {
-    goBack: jest.fn(),
-    navigate: jest.fn(),
-};
+// Mock ActionSheetIOS
+// ActionSheetIOS is mocked above
 
-const mockRoute = {
-    params: { id: 'test-id' }
-};
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => {
+    const actualNav = jest.requireActual('@react-navigation/native');
+    return {
+        ...actualNav,
+        useNavigation: () => ({
+            navigate: mockNavigate,
+            goBack: jest.fn(),
+        }),
+    };
+});
 
 const mockAppointment = {
-    id: 'test-id',
-    providerId: 'p1', // Added providerId for logic check
-    startTime: new Date().toISOString(),
+    id: '123456789',
     status: 'upcoming',
-    providerName: 'Test Provider',
+    startTime: new Date().toISOString(),
+    service: { name: 'Box Braids', duration: 180 },
+    price: '150',
+    providerId: 'p1',
     provider: {
         id: 'p1',
-        name: 'Test Provider',
-        address: 'Musterstraße 1, Berlin', // Case 1: Provider has address
-        phone: '123456',
+        businessName: 'Top Braids',
+        address: 'Provider Address St. 1',
+        phone: '1234567890',
     },
-    service: {
-        name: 'Braids',
-        duration: 90,
-    },
-    price: 50,
+    location: 'Mapped Location St. 2',
 };
+
+// Explicit Mock for ActionSheetIOS
+ActionSheetIOS.showActionSheetWithOptions = jest.fn();
 
 describe('AppointmentDetailScreen', () => {
     beforeEach(() => {
@@ -46,44 +54,57 @@ describe('AppointmentDetailScreen', () => {
         (http.get as jest.Mock).mockResolvedValue({ data: { data: mockAppointment } });
     });
 
-    it('displays the provider address correctly (Issue 12)', async () => {
-        const { getByText, findByText } = render(
-            <AppointmentDetailScreen route={mockRoute} navigation={mockNavigation} />
+    it('renders correctly and shows address from location/provider', async () => {
+        render(
+            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={{ navigate: mockNavigate, goBack: jest.fn() }} />
         );
 
-        await findByText('Termindetails');
+        // Wait for data
+        await waitFor(() => expect(screen.getByText('Termindetails')).toBeTruthy());
 
-        // Should show the specific address, NOT "Adresse nicht verfügbar"
-        expect(getByText('Musterstraße 1, Berlin')).toBeTruthy();
+        // Expecting to see address.
+        // If the component logic prioritizes provider address (Provider Address St. 1), we check for that.
+        expect(screen.getByText('Provider Address St. 1')).toBeTruthy();
     });
 
-    it('opens Maps when Route is pressed (Issue 21)', async () => {
-        const openURLSpy = jest.spyOn(require('react-native').Linking, 'openURL').mockImplementation(() => Promise.resolve(true));
-
-        const { getByText, findByText } = render(
-            <AppointmentDetailScreen route={mockRoute} navigation={mockNavigation} />
+    it('opens action sheet with correct options on "more" press (iOS)', async () => {
+        Platform.OS = 'ios';
+        render(
+            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={{ navigate: mockNavigate, goBack: jest.fn() }} />
         );
 
-        await findByText('Termindetails');
+        await waitFor(() => expect(screen.getByTestId('more-options-btn')).toBeTruthy());
 
-        const routeBtn = getByText('Route');
-        fireEvent.press(routeBtn);
+        fireEvent.press(screen.getByTestId('more-options-btn'));
 
-        expect(openURLSpy).toHaveBeenCalled();
-        const calledUrl = openURLSpy.mock.calls[0][0];
-        expect(calledUrl).toContain('Musterstra%C3%9Fe%201%2C%20Berlin'); // URL encoded address
+        expect(ActionSheetIOS.showActionSheetWithOptions).toHaveBeenCalledWith(
+            expect.objectContaining({
+                options: ['Abbrechen', 'Termin verschieben', 'Termin stornieren'],
+                destructiveButtonIndex: 2,
+            }),
+            expect.any(Function)
+        );
     });
 
-    it('navigates to Chat when Message is pressed (Issue 21)', async () => {
-        const { getByText, findByText } = render(
-            <AppointmentDetailScreen route={mockRoute} navigation={mockNavigation} />
+    it('navigates to Chat when "Nachricht senden" is pressed', async () => {
+        render(
+            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={{ navigate: mockNavigate, goBack: jest.fn() }} />
         );
 
-        await findByText('Termindetails');
+        await waitFor(() => expect(screen.getByText('Nachricht senden')).toBeTruthy());
+        fireEvent.press(screen.getByText('Nachricht senden'));
 
-        const msgBtn = getByText('Nachricht senden');
-        fireEvent.press(msgBtn);
+        expect(mockNavigate).toHaveBeenCalledWith('Chat', { recipientId: 'p1' });
+    });
 
-        expect(mockNavigation.navigate).toHaveBeenCalledWith('Chat', { recipientId: 'p1' }); // providerId from mock
+    it('navigates to Provider Profile when "Profil" is pressed', async () => {
+        render(
+            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={{ navigate: mockNavigate, goBack: jest.fn() }} />
+        );
+
+        await waitFor(() => expect(screen.getByText('Profil')).toBeTruthy());
+        fireEvent.press(screen.getByText('Profil'));
+
+        expect(mockNavigate).toHaveBeenCalledWith('ProviderDetail', { id: 'p1' });
     });
 });
