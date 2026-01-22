@@ -5,6 +5,7 @@ import { clearAuthBundle, clearTokens, getAuthBundle, getRefreshToken, saveAuthB
 import type { AuthBundle, Tokens, PublicUser } from './tokenStorage';
 import type { AuthContextValue } from './types';
 import { registerForPushNotificationsAsync } from '../services/notifications';
+import { normalizeUrl } from '@/utils/url';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -34,6 +35,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
       try {
         const bundle = await getAuthBundle();
         if (mounted) {
+          if (bundle?.user?.profilePictureUrl) {
+            bundle.user.profilePictureUrl = normalizeUrl(bundle.user.profilePictureUrl);
+          }
           if (bundle?.user && bundle?.tokens) {
             // Sync in background
             syncFcm();
@@ -62,6 +66,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const { data } = await http.post('/auth/login', { emailOrPhone, password, deviceId });
       const { user, tokens } = data; // Assuming backend returns { user, tokens }
 
+      if (user?.profilePictureUrl) {
+        user.profilePictureUrl = normalizeUrl(user.profilePictureUrl);
+      }
+
       await saveAuthBundle({ user, tokens });
       setState({ user, tokens, loading: false, error: null });
       setAuthDisabled(false);
@@ -76,6 +84,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     try {
       const { data } = await http.post('/auth/register', payload);
       const { user, tokens } = data;
+
+      if (user?.profilePictureUrl) {
+        user.profilePictureUrl = normalizeUrl(user.profilePictureUrl);
+      }
 
       await saveAuthBundle({ user, tokens });
       setState({ user: user || null, tokens, loading: false, error: null });
@@ -103,6 +115,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const setUser = useCallback(async (user: PublicUser | null) => {
+    if (user?.profilePictureUrl) {
+      user.profilePictureUrl = normalizeUrl(user.profilePictureUrl);
+    }
     setState(s => {
       const newState = { ...s, user };
       saveAuthBundle({ user: newState.user, tokens: newState.tokens });

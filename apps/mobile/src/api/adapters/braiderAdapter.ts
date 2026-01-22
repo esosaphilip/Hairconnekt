@@ -1,11 +1,5 @@
 import { IBraider } from '../../domain/models/braider';
-import { BASE_URL } from '../../config';
-
-const normalizeUrl = (url?: string) => {
-  if (!url) return undefined;
-  if (url.startsWith('http') || url.startsWith('data:')) return url;
-  return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
-};
+import { normalizeUrl } from '@/utils/url';
 
 // DTO for List/Search
 interface NearbyProviderDTO {
@@ -132,7 +126,7 @@ export const BraiderAdapter = {
 
       services: services, // Real services
 
-      portfolioImages: (dto.portfolio && dto.portfolio.length) 
+      portfolioImages: (dto.portfolio && dto.portfolio.length)
         ? dto.portfolio.map((img: string) => normalizeUrl(img)).filter(Boolean)
         : [],
 
