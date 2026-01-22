@@ -37,8 +37,8 @@ interface AppointmentRequestDTO {
 
 export const AppointmentAdapter = {
   toDomain(dto: AppointmentRequestDTO): IAppointmentRequest {
-    const client = dto.client || {};
-    const service = dto.service || {};
+    const client = dto.client || {} as NonNullable<AppointmentRequestDTO['client']>;
+    const service = dto.service || {} as NonNullable<AppointmentRequestDTO['service']>;
     
     // Helper to format price
     const formatPrice = (cents?: number, str?: string) => {

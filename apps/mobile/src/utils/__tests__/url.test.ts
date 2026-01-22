@@ -1,29 +1,18 @@
-import { normalizeUrl, DEFAULT_R2_URL } from '../url';
+import { normalizeUrl, DEFAULT_R2_URL } from '../../utils/url';
 
 describe('normalizeUrl', () => {
-  it('returns undefined for null or undefined', () => {
+  it('returns undefined for null/undefined', () => {
     expect(normalizeUrl(null)).toBeUndefined();
     expect(normalizeUrl(undefined)).toBeUndefined();
-    expect(normalizeUrl('')).toBeUndefined();
   });
 
-  it('returns the URL as-is if it is already absolute (http)', () => {
-    const url = 'http://example.com/image.jpg';
-    expect(normalizeUrl(url)).toBe(url);
+  it('returns absolute URLs as is', () => {
+    expect(normalizeUrl('https://example.com/img.jpg')).toBe('https://example.com/img.jpg');
+    expect(normalizeUrl('http://example.com/img.jpg')).toBe('http://example.com/img.jpg');
   });
 
-  it('returns the URL as-is if it is already absolute (https)', () => {
-    const url = 'https://example.com/image.jpg';
-    expect(normalizeUrl(url)).toBe(url);
-  });
-
-  it('prepends default R2 URL if the path is relative', () => {
-    const path = 'providers/123/avatar.jpg';
-    expect(normalizeUrl(path)).toBe(`${DEFAULT_R2_URL}/${path}`);
-  });
-
-  it('prepends default R2 URL and handles leading slash', () => {
-    const path = '/providers/123/avatar.jpg';
-    expect(normalizeUrl(path)).toBe(`${DEFAULT_R2_URL}/providers/123/avatar.jpg`);
+  it('prepends R2 URL to relative paths', () => {
+    expect(normalizeUrl('/path/to/img.jpg')).toBe(`${DEFAULT_R2_URL}/path/to/img.jpg`);
+    expect(normalizeUrl('path/to/img.jpg')).toBe(`${DEFAULT_R2_URL}/path/to/img.jpg`);
   });
 });

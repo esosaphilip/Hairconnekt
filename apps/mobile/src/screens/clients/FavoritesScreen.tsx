@@ -16,7 +16,7 @@ import { useNavigation, type NavigationProp, type ParamListBase } from '@react-n
 import ArrowLeft from '../../icons/ArrowLeft';
 import Heart from '../../icons/Heart';
 import { Button } from '../../components/Button';
-import { Card } from '../../components/Card';
+import ProviderCard from '../../components/ProviderCard';
 import { listFavorites as listFavoritesApi, removeFavorite as removeFavoriteApi } from '../../services/favorites';
 import { useI18n } from '@/i18n';
 
@@ -24,10 +24,15 @@ import { useI18n } from '@/i18n';
 // Shape matches backend FavoritesService.list mapping
 interface FavoriteItem {
   id: string; // favorite id
-  providerId: string;
+  providerId: string; // The provider's ID
   name: string;
   business?: string | null;
   image?: string;
+  rating?: number | null;
+  reviewCount?: number | null;
+  priceFromCents?: number | null;
+  specialties?: string[];
+  verified?: boolean;
   createdAt?: string;
 }
 
@@ -104,44 +109,24 @@ export function FavoritesScreen() {
   };
 
   const renderItem = (provider: FavoriteItem) => (
-    <Card
+    <ProviderCard
       key={provider.id}
-      // Replaced onClick with onPress on the Card's TouchableOpacity
+      data={{
+        id: provider.providerId,
+        name: provider.name,
+        business: provider.business,
+        imageUrl: provider.image,
+        verified: provider.verified,
+        rating: provider.rating,
+        reviews: provider.reviewCount,
+        specialties: provider.specialties,
+        priceFromCents: provider.priceFromCents,
+        // Calculate/map other missing fields if necessary
+      }}
+      isFavorite={true}
+      onToggleFavorite={() => handleRemoveFavorite(provider.providerId, provider.name)}
       onPress={() => handleNavigateToProvider(provider.providerId)}
-      style={styles.cardItem}
-    >
-      <View style={styles.cardContent}>
-        {/* Image */}
-        <View style={styles.imageWrapper}>
-          <Image
-            source={{ uri: provider.image || "https://placehold.co/200x200" }} // Use a placeholder URI
-            style={styles.providerImage}
-            resizeMode="cover"
-          />
-          {/* Remove Button - Replaced HTML button with TouchableOpacity */}
-          <TouchableOpacity
-            // Important: Stop the propagation so the parent Card press is not triggered
-            onPress={() => handleRemoveFavorite(provider.providerId, provider.name)}
-            style={styles.removeButton}
-          >
-            <Heart size={16} color={COLORS.redHeart} fill={COLORS.redHeart} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Info */}
-        <View style={styles.infoContainer}>
-          <View style={styles.infoTopRow}>
-            <Text style={styles.providerName}>
-              {provider.name}
-            </Text>
-          </View>
-          {provider.business && (
-            <Text style={styles.providerBusiness}>{provider.business}</Text>
-          )}
-          {/* Add more info here like rating, location, etc. */}
-        </View>
-      </View>
-    </Card>
+    />
   );
 
   // --- Render Logic ---

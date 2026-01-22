@@ -39,9 +39,9 @@ export const providerAppointmentsApi = {
     const res = await http.get(`/appointments/${id}/provider-view`);
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
-      return (payload as any).data;
+      return AppointmentAdapter.toDomain((payload as any).data);
     }
-    return payload;
+    return null;
   },
 
   async complete(id: string, body: { finalPrice?: number; paymentConfirmed: boolean; providerNotes?: string }) {

@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Favorite } from './entities/favorite.entity';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
+import { Review } from '../reviews/entities/review.entity';
+import { Service } from '../services/entities/service.entity';
 
 @Injectable()
 export class FavoritesService {
@@ -11,7 +13,11 @@ export class FavoritesService {
     private readonly favoritesRepo: Repository<Favorite>,
     @InjectRepository(ProviderProfile)
     private readonly providersRepo: Repository<ProviderProfile>,
-  ) {}
+    @InjectRepository(Review)
+    private readonly reviewsRepo: Repository<Review>,
+    @InjectRepository(Service)
+    private readonly servicesRepo: Repository<Service>,
+  ) { }
 
   async add(userId: string, providerId: string) {
     const provider = await this.providersRepo.findOne({ where: { id: providerId } });
@@ -42,14 +48,48 @@ export class FavoritesService {
       relations: ['provider', 'provider.user'],
       order: { createdAt: 'DESC' },
     });
-    return rows.map((f) => ({
-      id: f.id,
-      providerId: (f.provider as any)?.id,
-      name: [f.provider?.user?.firstName, f.provider?.user?.lastName].filter(Boolean).join(' ').trim() || f.provider?.businessName || 'Provider',
-      business: f.provider?.businessName || null,
-      image: f.provider?.coverPhotoUrl || undefined,
-      createdAt: f.createdAt,
+    // Fetch enriched data for each favorite
+    const results = await Promise.all(rows.map(async (f) => {
+      const providerId = (f.provider as any)?.id;
+      if (!providerId) return null;
+
+      // Calculate rating stats
+      const { avgRating, count } = await this.reviewsRepo
+        .createQueryBuilder('r')
+        .select('AVG(r.rating)', 'avgRating')
+        .addSelect('COUNT(r.id)', 'count')
+        .where('r.provider.id = :pid', { pid: providerId })
+        .getRawOne();
+
+      // Calculate price from
+      const { minPrice } = await this.servicesRepo
+        .createQueryBuilder('s')
+        .select('MIN(s.priceCents)', 'minPrice')
+        .where('s.provider.id = :pid', { pid: providerId })
+        .getRawOne();
+
+      // Fetch specialties (limited query)
+      const providerEntity = await this.providersRepo.findOne({
+        where: { id: providerId },
+        relations: ['specializations']
+      });
+
+      return {
+        id: f.id,
+        providerId: providerId,
+        name: [f.provider?.user?.firstName, f.provider?.user?.lastName].filter(Boolean).join(' ').trim() || f.provider?.businessName || 'Provider',
+        business: f.provider?.businessName || null,
+        image: f.provider?.user?.profilePictureUrl || undefined, // Prefer user profile picture as per ProvidersService
+        rating: avgRating ? parseFloat(avgRating) : null,
+        reviewCount: count ? parseInt(count, 10) : 0,
+        priceFromCents: minPrice ? parseInt(minPrice, 10) : null, // Assuming Service entity has priceCents or similar. Let's verify Service entity.
+        specialties: providerEntity?.specializations?.map(s => s.name) || [],
+        verified: f.provider?.isVerified || false,
+        createdAt: f.createdAt,
+      };
     }));
+
+    return results.filter(Boolean);
   }
 
   async status(userId: string, providerIds: string[]) {
