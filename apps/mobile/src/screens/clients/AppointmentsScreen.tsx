@@ -289,7 +289,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md
+    marginBottom: spacing.md,
+    marginTop: spacing.sm, // Add top margin to align with status bar better if needed, or remove if SafeArea handles it.
   },
   screenTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
 

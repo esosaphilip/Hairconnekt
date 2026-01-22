@@ -10,7 +10,7 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Icon from '../../components/Icon';
 import { Checkbox } from '../../components/checkbox';
-import { colors, spacing } from '../../theme/tokens';
+import { colors, spacing, radii } from '../../theme/tokens';
 import { useAuth } from '../../auth/AuthContext';
 
 type UnauthStackParamList = {
@@ -73,12 +73,19 @@ export default function RegisterScreen() {
       return;
     }
     try {
+      // Format phone number: remove spaces, remove leading 0, prepend +49
+      let formattedPhone = phone.replace(/\s/g, '');
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = formattedPhone.substring(1);
+      }
+      formattedPhone = `+49${formattedPhone}`;
+
       await registerUser({
         email: email.trim(),
         password,
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        phone: phone.trim(),
+        phone: formattedPhone,
         userType,
       });
       // After successful registration, the root navigator will switch to the authenticated Tabs automatically
@@ -96,9 +103,9 @@ export default function RegisterScreen() {
         >
           {/* Header */}
           <View style={{ alignItems: 'center', marginTop: spacing.xl, marginBottom: spacing.md }}>
-            <Text color={colors.primary} style={{ fontWeight: '700', marginBottom: spacing.xs }}>HairConnekt</Text>
-            <Text style={{ fontWeight: '700', marginBottom: spacing.xs }}>Willkommen bei HairConnekt</Text>
-            <Text color={colors.gray600}>Erstelle dein Konto</Text>
+            <Text color={colors.primary} style={{ fontSize: 32, fontWeight: '700', marginBottom: spacing.xs }}>HairConnekt</Text>
+            <Text style={{ fontSize: 20, fontWeight: '600', marginBottom: spacing.xs }}>Willkommen bei HairConnekt</Text>
+            <Text color={colors.gray600} style={{ fontSize: 16 }}>Erstelle dein Konto</Text>
           </View>
 
           <Card>
@@ -119,7 +126,25 @@ export default function RegisterScreen() {
 
             {/* Phone */}
             <View style={{ marginTop: spacing.md }}>
-              <Input label="Telefonnummer *" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="151 1234 5678" />
+              <Text style={{ marginBottom: 6, color: colors.gray600, fontSize: 14 }}>Telefonnummer *</Text>
+              <View style={{ flexDirection: 'row' }}>
+                <View style={{
+                  backgroundColor: colors.white,
+                  borderColor: colors.gray300,
+                  borderRadius: radii.lg,
+                  borderWidth: 1,
+                  height: 44,
+                  paddingHorizontal: 12,
+                  justifyContent: 'center',
+                  marginRight: spacing.sm,
+                  width: 70
+                }}>
+                  <Text color={colors.gray900}>+49</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Input value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="151 1234 5678" />
+                </View>
+              </View>
             </View>
 
             {/* Password */}
@@ -209,12 +234,11 @@ export default function RegisterScreen() {
             </Button>
 
             <Button
-              variant="outline"
-              disabled
+              variant="primary"
               onPress={() => { /* TODO: implement Apple signup */ }}
-              style={{ backgroundColor: colors.white, borderColor: colors.gray300, marginTop: spacing.sm, opacity: 0.6 }}
-              textStyle={{ color: colors.black, fontWeight: '600' }}
-              icon={<Icon name="logo-apple" size={20} color={colors.black} />}
+              style={{ backgroundColor: colors.black, marginTop: spacing.sm }}
+              textStyle={{ color: colors.white, fontWeight: '600' }}
+              icon={<Icon name="logo-apple" size={20} color={colors.white} />}
             >
               Mit Apple fortfahren
             </Button>

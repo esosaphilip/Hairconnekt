@@ -49,10 +49,23 @@ export function renderBookingCard(
   const fallbackLabel = firstChar.toUpperCase();
   const isConfirmed = status === 'upcoming' || status === 'confirmed';
   const isCancelled = status === 'cancelled';
+  const isPending = status === 'pending';
 
-  const badgeLabel = isConfirmed ? 'Bestätigt' : isCancelled ? 'Storniert' : 'Abgeschlossen';
-  const badgeStyle = isConfirmed ? { backgroundColor: colors.success } : isCancelled ? { backgroundColor: colors.error } : { backgroundColor: colors.gray100 };
-  const badgeTextColor = isConfirmed || isCancelled ? colors.white : colors.gray800;
+  const badgeLabel = isConfirmed ? 'Bestätigt' : isCancelled ? 'Storniert' : isPending ? 'Ausstehend' : 'Abgeschlossen';
+
+  let badgeStyle = { backgroundColor: colors.gray100 };
+  let badgeTextColor = colors.gray800;
+
+  if (isConfirmed) {
+    badgeStyle = { backgroundColor: colors.success };
+    badgeTextColor = colors.white;
+  } else if (isCancelled) {
+    badgeStyle = { backgroundColor: colors.error };
+    badgeTextColor = colors.white;
+  } else if (isPending) {
+    badgeStyle = { backgroundColor: colors.warning }; // Orange
+    badgeTextColor = colors.white;
+  }
 
   const tagStyle = { backgroundColor: '#F43F5E', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, alignSelf: 'flex-start' as const };
   const tagText = { color: 'white', fontSize: 12, fontWeight: '600' as const };
