@@ -1,4 +1,5 @@
 import { IAppointmentRequest, IAppointmentClient, IAppointmentService } from '../../domain/models/appointment';
+import { normalizeUrl } from '@/utils/url';
 
 // Define DTO shapes (approximate based on API usage)
 interface AppointmentRequestDTO {
@@ -67,7 +68,7 @@ export const AppointmentAdapter = {
     const domainClient: IAppointmentClient = {
       id: client.id || '',
       name: [client.firstName, client.lastName].filter(Boolean).join(' ') || client.name || 'Unbekannt',
-      avatar: client.profilePictureUrl || client.avatar,
+      avatar: normalizeUrl(client.profilePictureUrl || client.avatar),
       phone: client.phone || '',
       email: client.email || '',
       totalBookings: client.stats?.totalBookings || 0,
