@@ -142,7 +142,9 @@ export class AppointmentsController {
   }
 
   @Post('reschedule')
-  reschedule(@Body() dto: RescheduleAppointmentDto) {
-    return { message: 'Not implemented - awaiting schemas' };
+  @UseGuards(JwtAuthGuard)
+  async reschedule(@Body() dto: RescheduleAppointmentDto, @Req() req: Request) {
+    const userId = (req.user as any)?.sub;
+    return this.appointmentsService.reschedule(userId, dto.appointmentId, dto.newStartAt, dto.newEndAt);
   }
 }

@@ -139,6 +139,7 @@ export function ProviderMore() {
   const navigation = useNavigation() as { navigate: (routeName: string, params?: Record<string, unknown>) => void; goBack: () => void };
   const { logout, user } = useAuth();
   type ProviderProfileSummary = {
+    id?: string;
     businessName?: string | null;
     isVerified?: boolean;
     acceptsSameDayBooking?: boolean;

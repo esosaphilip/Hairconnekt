@@ -1,5 +1,5 @@
 
-import { apiClient } from './http';
+import { http } from './http';
 
 export interface Address {
     id: string;
@@ -16,27 +16,27 @@ export interface Address {
 
 export const clientUserApi = {
     getAddresses: async (): Promise<Address[]> => {
-        const response = await apiClient.get<{ success: boolean; data: Address[] }>('/users/me/addresses');
+        const response = await http.get<{ success: boolean; data: Address[] }>('/users/me/addresses');
         return response.data.data;
     },
 
     deleteAddress: async (id: string): Promise<void> => {
-        await apiClient.delete(`/users/me/addresses/${id}`);
+        await http.delete(`/users/me/addresses/${id}`);
     },
 
     setDefaultAddress: async (id: string): Promise<void> => {
-        await apiClient.patch(`/users/me/addresses/${id}/default`);
+        await http.patch(`/users/me/addresses/${id}/default`);
     },
 
     updateLanguage: async (language: string): Promise<void> => {
-        await apiClient.patch('/users/me/language', { preferredLanguage: language });
+        await http.patch('/users/me/language', { preferredLanguage: language });
     },
 
     deleteAccount: async (): Promise<void> => {
-        await apiClient.delete('/users/me');
+        await http.delete('/users/me');
     },
 
     changePassword: async (data: { currentPassword: string; newPassword: string }): Promise<void> => {
-        await apiClient.post('/auth/change-password', data);
+        await http.post('/auth/change-password', data);
     },
 };

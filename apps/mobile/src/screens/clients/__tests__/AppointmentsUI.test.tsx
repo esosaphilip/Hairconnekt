@@ -16,11 +16,11 @@ jest.mock('@expo/vector-icons', () => ({
 // Mock direct component imports
 jest.mock('@/components/Icon', () => {
     const { View, Text } = require('react-native');
-    return (props) => <View testID="Icon"><Text>Icon</Text></View>;
+    return (props: any) => <View testID="Icon"><Text>Icon</Text></View>;
 });
 jest.mock('@/components/Text', () => {
     const { Text } = require('react-native');
-    return (props) => <Text {...props} />;
+    return (props: any) => <Text {...props} />;
 });
 jest.mock('@/components/Button', () => {
     const { View, Text, TouchableOpacity } = require('react-native');
@@ -37,11 +37,11 @@ jest.mock('react-native', () => {
 jest.mock('@/ui', () => {
     const { View, Text, TouchableOpacity } = require('react-native');
     return {
-        Avatar: ({ children }) => <View>{children}</View>,
+        Avatar: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
         AvatarImage: () => <View />,
         AvatarFallback: () => <View />,
         Button: ({ title, onPress }) => <TouchableOpacity onPress={onPress}><Text>{title}</Text></TouchableOpacity>,
-        Card: ({ children }) => <View>{children}</View>,
+        Card: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
     };
 });
 jest.mock('@/api/http', () => ({
@@ -102,13 +102,17 @@ describe('Phase B: Appointments & Termindetails', () => {
         it('renders 3-dot menu when onCancel/onReschedule are provided', () => {
             const mockBooking = {
                 id: '123',
+                providerId: 'provider-1',
                 providerName: 'Test Provider',
                 serviceName: 'Service',
                 date: 'Mon, 1 Jan',
                 time: '12:00',
                 price: '50 €',
                 startTime: new Date().toISOString(),
-                status: 'upcoming'
+                endTime: new Date().toISOString(),
+                status: 'upcoming',
+                isReviewed: false,
+                rawDate: new Date().toISOString()
             };
 
             const onCancel = jest.fn();

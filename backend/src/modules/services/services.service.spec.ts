@@ -6,6 +6,8 @@ import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { ServiceCategory } from './entities/service-category.entity';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
+import { StorageService } from '../storage/storage.service';
+
 // Mock Repository Factory
 const mockRepo = () => ({
     findOne: jest.fn(),
@@ -14,6 +16,10 @@ const mockRepo = () => ({
     save: jest.fn((entity) => Promise.resolve({ ...entity, id: 'service-123' })),
     remove: jest.fn(),
 });
+
+const mockStorageService = {
+    uploadImage: jest.fn(),
+};
 
 describe('ServicesService', () => {
     let service: ServicesService;
@@ -28,6 +34,7 @@ describe('ServicesService', () => {
                 { provide: getRepositoryToken(Service), useFactory: mockRepo },
                 { provide: getRepositoryToken(ProviderProfile), useFactory: mockRepo },
                 { provide: getRepositoryToken(ServiceCategory), useFactory: mockRepo },
+                { provide: StorageService, useValue: mockStorageService },
             ],
         }).compile();
 
@@ -58,6 +65,44 @@ describe('ServicesService', () => {
                 durationMinutes: createDto.durationMinutes,
                 providerId: providerId,
                 isActive: true, // Default
+            };
+
+            const result = await service.create(providerId, createDto);
+
+            expect(providerRepo.findOne).toHaveBeenCalledWith({ where: { id: providerId } });
+            expect(serviceRepo.save).toHaveBeenCalledWith(expect.objectContaining(expectedServiceProps));
+            expect(result).toEqual(expect.objectContaining({
+                id: 'service-123',
+                ...expectedServiceProps,
+            }));
+        });
+
+        it('should successfully create a service with extended fields', async () => {
+            const providerId = 'provider-1';
+            const createDto = {
+                name: 'Full Service',
+                description: 'A test service',
+                priceCents: 5000,
+                durationMinutes: 60,
+                categoryId: 'cat-1',
+                requiresConsultation: true,
+                allowOnlineBooking: false,
+                tags: ['braids', 'long'],
+            };
+
+            // Mock Provider Found
+            providerRepo.findOne.mockResolvedValue({ id: providerId });
+
+            // Build expected entity properties (partial)
+            const expectedServiceProps = {
+                name: createDto.name,
+                priceCents: createDto.priceCents,
+                durationMinutes: createDto.durationMinutes,
+                providerId: providerId,
+                isActive: true, // Default
+                requiresConsultation: true,
+                allowOnlineBooking: false,
+                tags: ['braids', 'long'],
             };
 
             const result = await service.create(providerId, createDto);

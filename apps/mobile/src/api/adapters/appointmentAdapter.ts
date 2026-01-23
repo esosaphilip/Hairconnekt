@@ -1,5 +1,5 @@
 import { IAppointmentRequest, IAppointmentClient, IAppointmentService } from '../../domain/models/appointment';
-import { normalizeUrl } from '@/utils/url';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 
 // Define DTO shapes (approximate based on API usage)
 interface AppointmentRequestDTO {
@@ -39,7 +39,7 @@ export const AppointmentAdapter = {
   toDomain(dto: AppointmentRequestDTO): IAppointmentRequest {
     const client = dto.client || {} as NonNullable<AppointmentRequestDTO['client']>;
     const service = dto.service || {} as NonNullable<AppointmentRequestDTO['service']>;
-    
+
     // Helper to format price
     const formatPrice = (cents?: number, str?: string) => {
       if (cents !== undefined) return `€${Math.round(cents / 100)}`;
@@ -62,13 +62,13 @@ export const AppointmentAdapter = {
     const formatRelativeTime = (iso?: string) => {
       if (!iso) return 'Unbekannt';
       // In a real app, use date-fns/moment
-      return 'Vor einiger Zeit'; 
+      return 'Vor einiger Zeit';
     };
 
     const domainClient: IAppointmentClient = {
       id: client.id || '',
       name: [client.firstName, client.lastName].filter(Boolean).join(' ') || client.name || 'Unbekannt',
-      avatar: normalizeUrl(client.profilePictureUrl || client.avatar),
+      avatar: normalizeImageUrl(client.profilePictureUrl || client.avatar),
       phone: client.phone || '',
       email: client.email || '',
       totalBookings: client.stats?.totalBookings || 0,

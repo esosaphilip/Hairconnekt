@@ -3,6 +3,7 @@ import { API_CONFIG } from '@/constants';
 import { IBraider } from '../domain/models/braider';
 import { BraiderAdapter } from './adapters/braiderAdapter';
 import { mapApiError } from '../domain/errors/DomainError';
+import { normalizeImageUrl } from '@/utils/imageUrl';
 
 export const clientBraiderApi = {
   async getNearby(params: { lat: number; lon: number; radiusKm?: number; limit?: number }): Promise<IBraider[]> {
@@ -54,7 +55,11 @@ export const clientBraiderApi = {
   }[]> {
     try {
       const res = await http.get('/search/services', { params });
-      return Array.isArray(res.data?.results) ? res.data.results : [];
+      const results = Array.isArray(res.data?.results) ? res.data.results : [];
+      return results.map((item: any) => ({
+        ...item,
+        imageUrl: normalizeImageUrl(item.imageUrl || item.image_url)
+      }));
     } catch (error) {
       console.error('[clientBraiderApi] searchServices error:', error);
       return [];
@@ -69,7 +74,7 @@ export const clientBraiderApi = {
         id: c.id,
         name: c.nameDe || c.name,
         slug: c.slug,
-        iconUrl: c.iconUrl || c.icon_url || c.imageUrl || c.image_url,
+        iconUrl: normalizeImageUrl(c.iconUrl || c.icon_url || c.imageUrl || c.image_url),
       }));
     } catch (error) {
       return [];

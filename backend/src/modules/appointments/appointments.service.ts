@@ -222,6 +222,9 @@ export class AppointmentsService {
       createdAt: appt.createdAt,
       updatedAt: appt.updatedAt,
       hoursUntil: appt.hoursUntil,
+      notes: appt.clientNotes,
+      cancellationReason: appt.cancellationReason,
+      providerNotes: appt.providerNotes
     };
   }
 
@@ -362,6 +365,66 @@ export class AppointmentsService {
     }
 
     return saveResult;
+  }
+
+  async reschedule(userId: string, appointmentId: string, newStartAt: string, newEndAt: string): Promise<Appointment> {
+    const appt = await this.appointmentRepo.findOne({
+      where: { id: appointmentId },
+      relations: ['provider', 'provider.user', 'client']
+    });
+
+    if (!appt) {
+      throw new NotFoundException(`Appointment with ID "${appointmentId}" not found`);
+    }
+
+    // Ensure authorized: Only client can reschedule their own appointment (or provider, but logic focuses on client here)
+    // If strict role check is needed, logic can be added. Assuming userId is from the requester token.
+    if (appt.client?.id !== userId && appt.provider?.user?.id !== userId) {
+      throw new NotFoundException('Appointment not found or unauthorized');
+    }
+
+    // Cannot reschedule completed or already cancelled appointments differently?
+    // Policy: Allow rescheduling if not completed.
+    if (appt.status === AppointmentStatus.COMPLETED) {
+      throw new BadRequestException('Cannot reschedule a completed appointment.');
+    }
+
+    // Check availability for new time
+    const newStart = new Date(newStartAt);
+    const newEnd = new Date(newEndAt);
+    if (isNaN(newStart.getTime()) || isNaN(newEnd.getTime())) {
+      throw new BadRequestException('Invalid start or end date');
+    }
+
+    await this.checkAvailability(appt.provider.id, newStart, newEnd, appt.id);
+
+    // Update appointment
+    const oldDate = appt.startTime;
+    appt.startTime = newStart;
+    appt.endTime = newEnd;
+    appt.appointmentDate = newStart.toISOString().split('T')[0];
+
+    // Reset status to PENDING if it was confirmed, requiring re-approval
+    // Or keep CONFIRMED? Usually rescheduling requires re-confirmation.
+    const previousStatus = appt.status;
+    appt.status = AppointmentStatus.PENDING;
+
+    const saved = await this.appointmentRepo.save(appt);
+
+    // Notify Provider
+    if (appt.provider?.user?.fcmToken) {
+      const oldDateStr = oldDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const newDateStr = newStart.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+      await this.notificationsService.sendPushNotification(
+        appt.provider.user.fcmToken,
+        'Termin verschoben 🗓️',
+        `${appt.client.firstName} hat einen Termin verschoben.\nAlt: ${oldDateStr}\nNeu: ${newDateStr}`,
+        { type: 'appointment_reschedule', appointmentId: saved.id }
+      );
+    }
+
+    return saved;
   }
 
   async findOne(id: string, userId: string) {

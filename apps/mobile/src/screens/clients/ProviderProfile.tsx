@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { clientBraiderApi } from '@/api/clientBraider';
 import { IBraider } from '@/domain/models/braider';
 import { colors } from '@/theme/tokens'; // Assuming tokens available
-import { normalizeUrl } from '../../utils/url';
+import { normalizeImageUrl } from '../../utils/imageUrl';
 
 // Mock fallback for now if ID fetch fails or while building
 // But we aim to use real data.
@@ -93,11 +93,7 @@ export default function ProviderProfile() {
         {/* Header / Hero Image */}
         <View style={styles.heroWrapper}>
           <Image
-            source={{ uri: (() => {
-              const url = normalizeUrl(provider.coverImage || provider.imageUrl);
-              console.log('ProviderProfile coverImage:', { raw: provider.coverImage, normalized: url });
-              return url;
-            })() }}
+            source={{ uri: normalizeImageUrl(provider.coverImage || provider.imageUrl) }}
             style={styles.heroImage}
             testID="hero-image"
           />
@@ -124,11 +120,12 @@ export default function ProviderProfile() {
             <Image
               source={
                 (provider.profileImage || provider.imageUrl)
-                  ? { uri: (() => {
-                      const url = normalizeUrl(provider.profileImage || provider.imageUrl);
+                  ? {
+                    uri: (() => {
+                      const url = normalizeImageUrl(provider.profileImage || provider.imageUrl);
                       console.log('ProviderProfile avatar:', { raw: provider.profileImage, normalized: url });
                       return url;
-                    })() 
+                    })()
                   }
                   : { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.name)}&background=random` }
               }
@@ -291,7 +288,7 @@ export default function ProviderProfile() {
               {(provider.portfolioImages || []).map((uri, i) => (
                 <Image
                   key={i}
-                  source={{ uri: normalizeUrl(uri) }}
+                  source={{ uri: normalizeImageUrl(uri) }}
                   style={styles.galleryImage}
                   testID="gallery-image"
                   resizeMode="cover"

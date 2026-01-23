@@ -1,5 +1,5 @@
 import { BraiderAdapter } from '../braiderAdapter';
-import { DEFAULT_R2_URL } from '@/utils/url';
+import { API_CONFIG } from '@/constants';
 
 describe('BraiderAdapter', () => {
   describe('toDomain', () => {
@@ -11,7 +11,8 @@ describe('BraiderAdapter', () => {
       };
 
       const domain = BraiderAdapter.toDomain(dto as any);
-      expect(domain.imageUrl).toBe(`${DEFAULT_R2_URL}/providers/1/avatar.jpg`);
+      const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
+      expect(domain.imageUrl).toBe(`${baseUrl}/providers/1/avatar.jpg`);
     });
 
     it('keeps absolute imageUrl', () => {
@@ -38,8 +39,9 @@ describe('BraiderAdapter', () => {
       };
 
       const domain = BraiderAdapter.toDomainProfile(dto);
-      expect(domain.coverImage).toBe(`${DEFAULT_R2_URL}/cover.jpg`);
-      expect(domain.profileImage).toBe(`${DEFAULT_R2_URL}/profile.jpg`);
+      const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
+      expect(domain.coverImage).toBe(`${baseUrl}/cover.jpg`);
+      expect(domain.profileImage).toBe(`${baseUrl}/profile.jpg`);
     });
 
     it('normalizes portfolio images', () => {
@@ -50,8 +52,9 @@ describe('BraiderAdapter', () => {
       };
 
       const domain = BraiderAdapter.toDomainProfile(dto);
+      const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
       expect(domain.portfolioImages).toEqual([
-        `${DEFAULT_R2_URL}/p1.jpg`,
+        `${baseUrl}/p1.jpg`,
         'https://full.com/p2.jpg'
       ]);
     });

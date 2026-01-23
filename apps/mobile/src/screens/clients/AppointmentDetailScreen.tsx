@@ -7,10 +7,12 @@ import Icon from '@/components/Icon';
 import { colors, spacing, radii, shadows } from '@/theme/tokens';
 import type { BookingsStackScreenProps } from '@/navigation/types';
 import { http } from '@/api/http';
+import { clientBookingApi } from '@/api/clientBooking';
+import { IBooking } from '@/domain/models/booking';
 
 export default function AppointmentDetailScreen({ route, navigation }: any) {
   const { id } = route.params;
-  const [appointment, setAppointment] = React.useState<any>(null);
+  const [appointment, setAppointment] = React.useState<IBooking | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -19,9 +21,9 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
     (async () => {
       try {
         setLoading(true);
-        const res = await http.get(`/appointments/${id}`);
+        const data = await clientBookingApi.getAppointment(id);
         if (mounted) {
-          setAppointment(res.data?.data || res.data);
+          setAppointment(data);
         }
       } catch (err: any) {
         if (mounted) setError(err.message || 'Fehler beim Laden');
@@ -33,6 +35,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   }, [id]);
 
   const openMaps = () => {
+    if (!appointment) return;
     const address = appointment.provider?.address || appointment.address;
     if (!address) {
       Alert.alert('Keine Adresse', 'Für diesen Termin ist keine Adresse hinterlegt.');
@@ -125,14 +128,13 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   }
 
   // Helper to safely get nested service details
-  const serviceName = appointment.service?.name || appointment.serviceName || 'Service';
-  const duration = appointment.service?.duration || appointment.duration;
-  const durationText = typeof duration === 'number' ? `${duration} min` : (duration || '—');
-  const priceVal = appointment.totalPrice || appointment.price;
-  const priceText = typeof priceVal === 'number' ? `${priceVal} €` : (priceVal || '—');
+  const serviceName = appointment.serviceName || 'Service';
+  const durationText = appointment.duration || '—';
+  const priceText = appointment.price || '—';
 
   // Helper to get formatted date parts
-  const dateObj = new Date(appointment.startTime);
+  // Use rawDate (ISO) from domain object for parsing
+  const dateObj = new Date(appointment.rawDate || appointment.startTime || appointment.date);
   const day = dateObj.getDate();
   const month = dateObj.toLocaleString('de-DE', { month: 'short' }).toUpperCase();
   const dateStr = dateObj.toLocaleDateString('de-DE');
@@ -201,14 +203,14 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         <View style={styles.card}>
           <View style={styles.providerHeader}>
             <Image
-              source={{ uri: appointment.provider?.avatar || 'https://via.placeholder.com/150' }}
+              source={{ uri: appointment.providerImage || 'https://via.placeholder.com/150' }}
               style={styles.avatar}
             />
             <View style={{ flex: 1 }}>
-              <Text style={styles.cardTitle}>{appointment.provider?.businessName || appointment.providerName}</Text>
+              <Text style={styles.cardTitle}>{appointment.providerBusiness || appointment.providerName}</Text>
               <View style={styles.iconTextRow}>
                 <Icon name="star" size={14} color="#FBBF24" />
-                <Text style={styles.bodyText}>4.9</Text>
+                <Text style={styles.bodyText}>{appointment.rating || '4.9'}</Text>
               </View>
             </View>
             <Button
@@ -229,14 +231,14 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           <View style={styles.providerDetails}>
             <View style={styles.detailRow}>
               <Icon name="map-pin" size={16} color={colors.gray400} />
-              <Text style={[styles.bodyText, { flex: 1 }]}>{appointment.provider?.address || appointment.address || 'Adresse nicht verfügbar'}</Text>
+              <Text style={[styles.bodyText, { flex: 1 }]}>{appointment.location || 'Adresse nicht verfügbar'}</Text>
               <TouchableOpacity>
                 <Icon name="navigation" size={16} color={colors.primary} />
               </TouchableOpacity>
             </View>
             <View style={styles.detailRow}>
               <Icon name="phone" size={16} color={colors.gray400} />
-              <Text style={[styles.bodyText, { color: colors.primary }]}>{appointment.provider?.phone || '+49 123 456 789'}</Text>
+              <Text style={[styles.bodyText, { color: colors.primary }]}>{'+49 123 456 789'}</Text>
             </View>
           </View>
         </View>

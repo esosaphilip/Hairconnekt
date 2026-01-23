@@ -16,6 +16,16 @@ export const clientBookingApi = {
     }
   },
 
+  async getAppointment(id: string): Promise<IBooking> {
+    try {
+      const res = await http.get<{ data: any } | any>(`/appointments/${id}`);
+      const raw = res.data?.data || res.data;
+      return BookingAdapter.toDomain(raw);
+    } catch (error) {
+      throw mapApiError(error);
+    }
+  },
+
   async cancelAppointment(id: string): Promise<void> {
     try {
       await http.post(`/appointments/${id}/cancel`);

@@ -24,6 +24,7 @@ export function mapServiceDTOToEntity(dto: ServiceDTO): Service {
     priceCents: dto.price_cents,
     durationMinutes: dto.duration_minutes,
     isActive: dto.is_active,
+    allowOnlineBooking: true, // Default for now as DTO relies on is_active
     createdAt: new Date(dto.created_at),
     updatedAt: new Date(dto.updated_at),
   };

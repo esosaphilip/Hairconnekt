@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Image,
+  Alert,
 } from 'react-native';
 // Note: In a real app, use a proper icon library like 'react-native-vector-icons'
 import { Feather, Ionicons } from '@expo/vector-icons';
@@ -37,6 +38,9 @@ const Checkbox: React.FC<CheckboxProps> = ({ checked, onValueChange, id }) => (
 
 const showToast = (message: string, type: 'success' | 'error' = 'success') => {
   console.log(`[TOAST - ${type.toUpperCase()}]: ${message}`);
+  if (type === 'error') {
+    Alert.alert('Fehler', message);
+  }
 };
 
 
@@ -68,9 +72,9 @@ export function LoginScreen({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false); // Added state for checkbox
-  
+
   const { login, loading, error } = useAuth();
-  
+
   // Get return URL and user type from initial props/state
   const returnUrl = initialState.returnUrl || "/home";
   const userType = initialState.userType || "client";
@@ -78,7 +82,7 @@ export function LoginScreen({
   const handleLogin = async () => {
     // No need for e.preventDefault() in RN
     if (loading) return; // Prevent double submission
-    
+
     try {
       const { user } = await login(email, password);
       showToast("Erfolgreich angemeldet", 'success');
@@ -110,7 +114,7 @@ export function LoginScreen({
               <Text style={{ color: '#b91c1c', fontSize: 14 }}>Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.</Text>
             </View>
           ) : null}
-          
+
           {/* Logo / Header */}
           <View style={styles.headerContainer}>
             <Text style={styles.logoText}>HairConnekt</Text>
@@ -120,7 +124,7 @@ export function LoginScreen({
 
           {/* Login Form */}
           <View style={styles.formContainer}>
-            
+
             {/* Email Input */}
             <View>
               <Text style={styles.label}>E-Mail oder Telefonnummer</Text>
@@ -140,16 +144,16 @@ export function LoginScreen({
             <View>
               <Text style={styles.label}>Passwort</Text>
               <View style={styles.passwordContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                placeholder="••••••••"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                onSubmitEditing={handleLogin}
-                autoCapitalize="none"
-                placeholderTextColor="#9ca3af"
-              />
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="••••••••"
+                  secureTextEntry={!showPassword}
+                  value={password}
+                  onChangeText={setPassword}
+                  onSubmitEditing={handleLogin}
+                  autoCapitalize="none"
+                  placeholderTextColor="#9ca3af"
+                />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
                   style={styles.passwordToggle}
@@ -188,8 +192,8 @@ export function LoginScreen({
             </View>
 
             {/* Login Button (using TouchableOpacity as a simple RN button) */}
-            <TouchableOpacity 
-              onPress={handleLogin} 
+            <TouchableOpacity
+              onPress={handleLogin}
               style={[styles.button, styles.primaryButton, loading && styles.buttonDisabled]}
               disabled={loading || !email || !password}
             >
@@ -222,7 +226,7 @@ export function LoginScreen({
                   Mit Google fortfahren
                 </Text>
               </TouchableOpacity>
-              
+
               {/* Apple Button */}
               <TouchableOpacity
                 style={[styles.button, styles.blackButton]}
@@ -235,7 +239,7 @@ export function LoginScreen({
               </TouchableOpacity>
             </View>
           </View>
-          
+
           {/* Sign Up Link */}
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>
@@ -369,7 +373,7 @@ const styles = StyleSheet.create({
     fontSize: 14, // text-sm
     color: '#6b7280', // text-gray-600
   },
-  
+
   // Buttons
   button: {
     flexDirection: 'row',

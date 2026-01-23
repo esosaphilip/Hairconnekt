@@ -60,4 +60,19 @@ export class R2Service {
     const data = await fs.promises.readFile(fullPath);
     return { Body: data } as any;
   }
+
+  async getPublicUrl(bucket: string, key: string): Promise<string> {
+    const publicBaseUrl =
+      process.env.R2_PUBLIC_BASE_URL ||
+      process.env.R2_PUBLIC_URL ||
+      'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev';
+
+    // If using local storage fallback (no s3 client or forced local)
+    if (!this.s3 || process.env.USE_LOCAL_STORAGE === 'true') {
+      return `/uploads/${bucket}/${key}`;
+    }
+
+    const base = publicBaseUrl.replace(/\/$/, '');
+    return `${base}/${key}`;
+  }
 }

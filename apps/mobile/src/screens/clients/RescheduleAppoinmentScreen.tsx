@@ -21,6 +21,9 @@ import Button from '../../components/Button';
 import Card from '../../components/Card';
 import Avatar, { AvatarImage } from '../../components/avatar';
 import Textarea from '../../components/textarea';
+import { http } from '@/api/http';
+import { rescheduleAppointment } from '@/api/appointments';
+import { addMinutes } from 'date-fns';
 
 // --- Constants & Utilities ---
 
@@ -72,7 +75,7 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({ selectedDate, onSelectD
               disabled && { opacity: 0.5 },
             ]}
             activeOpacity={0.7}
-         >
+          >
             <CalendarIcon size={16} color={isActive ? PRIMARY_COLOR : '#4B5563'} />
             <Text style={styles.timeSlotText}>
               {new Intl.DateTimeFormat('de-DE', { day: '2-digit', month: '2-digit' }).format(d)}
@@ -100,23 +103,58 @@ export default function RescheduleAppointmentScreen() {
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [currentAppointment, setCurrentAppointment] = useState<any>(null);
 
-  // Mock current appointment data
-  const currentAppointment = {
-    id: id || 'mock_id_123',
-    provider: {
-      name: 'Amara Styles',
-      image: '',
-      businessName: 'Braids & Beauty Berlin',
-    },
-    service: {
-      name: 'Box Braids',
-      duration: '4 Std.',
-      price: '120€',
-    },
-    currentDate: new Date(2024, 10, 25), // Nov 25, 2024
-    currentTime: '14:00',
-  };
+  // Fetch appointment details
+  React.useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setInitialLoading(true);
+        const res = await http.get(`/appointments/${id}`);
+        if (mounted) {
+          // Map API response to local structure if needed, or just use as is
+          // The API returns DTO similar to:
+          /* {
+              id: ...,
+              provider: { name: ..., businessName: ..., avatarUrl: ... },
+              services: [ { name: ... } ],
+              startTime: ...,
+              status: ...
+             }
+          */
+          const data = res.data?.data || res.data;
+          // Transform for local usage
+          const service = data.services?.[0] || {};
+
+          setCurrentAppointment({
+            id: data.id,
+            provider: {
+              name: data.provider?.name,
+              image: data.provider?.avatarUrl,
+              businessName: data.provider?.businessName
+            },
+            service: {
+              name: service.name,
+              duration: service.durationMinutes,
+              price: data.totalPriceCents ? `${(data.totalPriceCents / 100).toFixed(2)}€` : '0€'
+            },
+            currentDate: new Date(data.startTime),
+            currentTime: new Date(data.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            // Store raw duration for calculation
+            durationMinutes: service.durationMinutes || 60
+          });
+        }
+      } catch (err: any) {
+        Alert.alert('Fehler', 'Termin konnte nicht geladen werden');
+        navigation.goBack();
+      } finally {
+        if (mounted) setInitialLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
 
   // Mock available time slots - replace with real data from API
   const availableSlots = [
@@ -134,18 +172,18 @@ export default function RescheduleAppointmentScreen() {
   const isDateDisabled = useCallback((date: Date): boolean => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     // Disable past dates
     if (date < today) return true;
-    
+
     // Disable dates more than 60 days in future
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 60);
     if (date > maxDate) return true;
-    
+
     // Disable Sundays (example)
     if (date.getDay() === 0) return true;
-    
+
     return false;
   }, []);
 
@@ -180,18 +218,35 @@ export default function RescheduleAppointmentScreen() {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Calculate ISO strings
+      // selectedDate is a Date object (e.g. at 00:00:00 local time)
+      // selectedTime is "HH:mm" string
+      const [hours, minutes] = selectedTime.split(':').map(Number);
+
+      const startDate = new Date(selectedDate);
+      startDate.setHours(hours, minutes, 0, 0);
+
+      const duration = currentAppointment.durationMinutes || 60;
+      const endDate = addMinutes(startDate, duration);
+
+      await rescheduleAppointment(
+        currentAppointment.id,
+        startDate.toISOString(),
+        endDate.toISOString()
+      );
 
       showToast('Termin erfolgreich verschoben');
-      navigation.navigate('AppointmentDetails', { id: currentAppointment.id });
-    } catch (error) {
-      showToast('Fehler beim Verschieben des Termins', true);
+
+      // Navigate back to details, which will re-fetch
+      navigation.navigate('AppointmentDetail', { id: currentAppointment.id });
+    } catch (error: any) {
+      const msg = error.response?.data?.message || 'Fehler beim Verschieben des Termins';
+      showToast(msg, true);
     } finally {
       setLoading(false);
     }
   };
-  
+
   // Logic for the back button in the header
   const handleBack = () => {
     if (step === 'time') {
@@ -216,6 +271,18 @@ export default function RescheduleAppointmentScreen() {
     }
   };
 
+  if (initialLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <Text>Laden...</Text>
+      </View>
+    );
+  }
+
+  if (!currentAppointment) {
+    return null;
+  }
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -230,13 +297,13 @@ export default function RescheduleAppointmentScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        
+
         {/* Progress Steps */}
         <View style={styles.progressBarContainer}>
           {['date', 'time', 'confirm'].map((s, index) => {
             const isCurrent = step === s;
             const isCompleted = ['date', 'time', 'confirm'].indexOf(step) > index;
-            
+
             return (
               <React.Fragment key={s}>
                 <View
@@ -325,14 +392,14 @@ export default function RescheduleAppointmentScreen() {
                 selectedDate={selectedDate}
                 onSelectDate={handleDateSelect}
                 isDateDisabled={isDateDisabled}
-                // Placeholder for RN Calendar properties
+              // Placeholder for RN Calendar properties
               />
             </Card>
             <Button
-                title="Weiter"
-                onPress={() => selectedDate && handleDateSelect(selectedDate)}
-                disabled={!selectedDate || isDateDisabled(selectedDate)}
-                style={styles.continueButton}
+              title="Weiter"
+              onPress={() => selectedDate && handleDateSelect(selectedDate)}
+              disabled={!selectedDate || isDateDisabled(selectedDate)}
+              style={styles.continueButton}
             />
           </View>
         )}
@@ -343,7 +410,7 @@ export default function RescheduleAppointmentScreen() {
             <Text style={styles.timeDateText}>
               {formatDate(selectedDate)}
             </Text>
-            
+
             <View style={styles.timeSlotGrid}>
               {availableSlots.map((time) => (
                 <TouchableOpacity
@@ -375,7 +442,7 @@ export default function RescheduleAppointmentScreen() {
           <View style={styles.stepContent}>
             <Card style={styles.confirmationCard}>
               <Text style={styles.confirmationTitle}>Neuer Termin</Text>
-              
+
               <View style={styles.confirmationDetail}>
                 <CalendarIcon size={20} color={PRIMARY_COLOR} style={{ marginTop: 2 }} />
                 <View>
@@ -424,7 +491,7 @@ export default function RescheduleAppointmentScreen() {
                 disabled={loading}
               />
             </View>
-            
+
             <Text style={styles.privacyNote}>
               Der Anbieter wird über die Änderung benachrichtigt und muss diese bestätigen
             </Text>

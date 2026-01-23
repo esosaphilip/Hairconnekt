@@ -83,7 +83,7 @@ export class FavoritesService {
         rating: avgRating ? parseFloat(avgRating) : null,
         reviewCount: count ? parseInt(count, 10) : 0,
         priceFromCents: minPrice ? parseInt(minPrice, 10) : null, // Assuming Service entity has priceCents or similar. Let's verify Service entity.
-        specialties: providerEntity?.specializations?.map(s => s.name) || [],
+        specialties: providerEntity?.specializations?.map(s => s.specialization) || [],
         verified: f.provider?.isVerified || false,
         createdAt: f.createdAt,
       };

@@ -93,6 +93,7 @@ export class ServicesService {
     // Override defaults if explicitly provided in DTO
     if (createDto.isActive !== undefined) service.isActive = createDto.isActive;
     if (createDto.allowOnlineBooking !== undefined) service.allowOnlineBooking = createDto.allowOnlineBooking;
+    if (createDto.requiresConsultation !== undefined) service.requiresConsultation = createDto.requiresConsultation;
     if (createDto.displayOrder !== undefined) service.displayOrder = createDto.displayOrder;
     if (createDto.tags !== undefined) service.tags = createDto.tags; // Map tags
 
@@ -187,6 +188,10 @@ export class ServicesService {
     // Handle Allow Online Booking
     if (updateDto.allowOnlineBooking !== undefined) {
       service.allowOnlineBooking = updateDto.allowOnlineBooking;
+    }
+
+    if (updateDto.requiresConsultation !== undefined) {
+      service.requiresConsultation = updateDto.requiresConsultation;
     }
 
     try {

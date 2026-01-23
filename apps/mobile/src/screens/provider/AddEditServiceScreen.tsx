@@ -10,12 +10,13 @@ import { Switch } from 'react-native';
 import { colors, spacing, radii, typography } from '@/theme/tokens';
 import { http } from '@/api/http';
 import { providersApi } from '@/services/providers';
+import { clientBraiderApi } from '@/api/clientBraider';
 import { logger } from '@/services/logger';
 import { API_CONFIG, MESSAGES, HAIR_CATEGORIES } from '@/constants';
 import Picker from '@/components/Picker';
 import { Slider } from '@/components/slider';
 
-type CategoryItem = { id: string; nameDe?: string; name_en?: string; name_de?: string; name?: string };
+type CategoryItem = { id: string; nameDe?: string; name_en?: string; name_de?: string; name?: string; tags?: string[] };
 
 const durationOptions = [
   { value: 30, label: '30 Min.' },
@@ -71,6 +72,42 @@ export function AddEditServiceScreen() {
     tags: [] as string[],
     imageUrl: '' as string | undefined,
   });
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setCategoriesLoading(true);
+        const cats = await clientBraiderApi.getCategories();
+        if (mounted) {
+          // Map backend categories to include tags from local constants if possible
+          const mapped = cats.map(c => {
+             // Try to find matching local category to preserve tags
+             // Check by slug (e.g. 'braids') inside local ID 'cat_braids' or name
+             const local = HAIR_CATEGORIES.find(hc => 
+               hc.name === c.name || 
+               hc.id === `cat_${c.slug}` ||
+               hc.name.toLowerCase() === c.name.toLowerCase()
+             );
+             return {
+               ...c,
+               name: c.name || local?.name || 'Unbekannt',
+               tags: local?.tags || []
+             };
+          });
+          setCategories(mapped);
+        }
+      } catch (err) {
+        console.warn('Failed to load categories', err);
+        setCategoriesError('Kategorien konnten nicht geladen werden');
+        // Fallback to local if API fails
+        setCategories(HAIR_CATEGORIES.map(c => ({ ...c, nameDe: c.name }))); 
+      } finally {
+        if (mounted) setCategoriesLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   // Keep a ref to formData for the cleanup effect
   const formDataRef = useRef(formData);

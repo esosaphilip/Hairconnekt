@@ -1,5 +1,6 @@
 import { http } from './http';
 import { API_CONFIG } from '@/constants';
+import { add } from 'date-fns';
 
 export type StatusGroup = 'upcoming' | 'completed' | 'cancelled';
 
@@ -43,4 +44,13 @@ export async function getProviderAppointments(status: StatusGroup): Promise<Appo
   const data = res.data;
   const items = Array.isArray(data) ? data : (data?.items ?? []);
   return { items };
+}
+
+export async function rescheduleAppointment(appointmentId: string, newStartAt: string, newEndAt: string): Promise<any> {
+  const res = await http.post(`${API_CONFIG.ENDPOINTS.APPOINTMENTS.BASE}/reschedule`, {
+    appointmentId,
+    newStartAt,
+    newEndAt
+  });
+  return res.data;
 }

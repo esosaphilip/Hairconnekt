@@ -41,4 +41,6 @@ export interface IBooking {
     businessName?: string;
   } | null;
   rawDate: string; // ISO string for sorting/logic
+  notes?: string | null;
+  cancellationReason?: string | null;
 }

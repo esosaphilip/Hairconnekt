@@ -69,6 +69,9 @@ export class Service {
   @Column({ name: 'allow_online_booking', type: 'boolean', default: true })
   allowOnlineBooking: boolean;
 
+  @Column({ name: 'requires_consultation', type: 'boolean', default: false })
+  requiresConsultation: boolean;
+
   @Column({ name: 'display_order', type: 'int', default: 0 })
   displayOrder: number;
 

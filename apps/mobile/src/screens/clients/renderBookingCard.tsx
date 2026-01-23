@@ -53,8 +53,8 @@ export function renderBookingCard(
 
   const badgeLabel = isConfirmed ? 'Bestätigt' : isCancelled ? 'Storniert' : isPending ? 'Ausstehend' : 'Abgeschlossen';
 
-  let badgeStyle = { backgroundColor: colors.gray100 };
-  let badgeTextColor = colors.gray800;
+  let badgeStyle: { backgroundColor: string } = { backgroundColor: colors.gray100 };
+  let badgeTextColor: string = colors.gray800;
 
   if (isConfirmed) {
     badgeStyle = { backgroundColor: colors.success };
@@ -102,9 +102,9 @@ export function renderBookingCard(
       } else {
         // Android Options Alert
         const buttons = [];
-        buttons.push({ text: 'Abbrechen', style: 'cancel' });
+        buttons.push({ text: 'Abbrechen', style: 'cancel' as const });
         if (onReschedule) buttons.push({ text: 'Verschieben', onPress: () => onReschedule(idStr) });
-        if (onCancel) buttons.push({ text: 'Stornieren', style: 'destructive', onPress: () => onCancel(idStr) });
+        if (onCancel) buttons.push({ text: 'Stornieren', style: 'destructive' as const, onPress: () => onCancel(idStr) });
 
         Alert.alert('Optionen', undefined, buttons);
       }

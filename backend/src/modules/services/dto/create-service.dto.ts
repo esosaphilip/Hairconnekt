@@ -43,6 +43,18 @@ export class CreateServiceDto {
   @IsOptional()
   isActive?: boolean;
 
+  @IsBoolean()
+  @IsOptional()
+  allowOnlineBooking?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  requiresConsultation?: boolean;
+
+  @IsOptional()
+  @IsString({ each: true })
+  tags?: string[];
+
   @IsString()
   @IsOptional()
   imageUrl?: string;
