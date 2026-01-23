@@ -5,6 +5,7 @@ import Badge from "@/components/badge";
 import Avatar, { AvatarImage, AvatarFallback } from "@/components/avatar";
 import Icon from "@/components/Icon";
 import { colors } from "@/theme/tokens";
+import { normalizeImageUrl } from "@/utils/imageUrl";
 
 import { IBooking } from "@/domain/models/booking";
 
