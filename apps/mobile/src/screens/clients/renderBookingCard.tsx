@@ -126,7 +126,7 @@ export function renderBookingCard(
 
         <TouchableOpacity style={sx.providerContainer} onPress={() => providerId && navigate('ProviderDetail', { id: providerId })} activeOpacity={0.7}>
           <Avatar size={48} style={sx.providerAvatar}>
-            {providerImage ? <AvatarImage uri={providerImage} style={sx.providerImage} /> : <AvatarFallback label={fallbackLabel} />}
+            {providerImage ? <AvatarImage uri={normalizeImageUrl(providerImage)} style={sx.providerImage} /> : <AvatarFallback label={fallbackLabel} />}
           </Avatar>
           <View style={sx.providerTexts}>
             <Text style={sx.providerName} numberOfLines={1}>{providerName}</Text>

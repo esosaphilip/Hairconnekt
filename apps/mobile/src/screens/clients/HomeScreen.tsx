@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { Avatar, Button, Card, Input } from "@/ui";
 import Icon from "@/components/Icon";
+import { normalizeImageUrl } from "@/utils/imageUrl";
 import { colors, spacing } from "@/theme/tokens";
 import { useLocation } from "@/context/LocationContext";
 import { styles } from "./HomeScreen.styles";
@@ -73,10 +74,10 @@ export function HomeScreen() {
           <View style={styles.headerTopRow}>
             {isAuthenticated ? (
               <View style={styles.userInfo}>
-                <Avatar 
-                  size={40} 
-                  style={styles.initialsAvatar} 
-                  source={user?.profilePictureUrl ? { uri: user.profilePictureUrl } : undefined}
+                <Avatar
+                  size={40}
+                  style={styles.initialsAvatar}
+                  source={user?.profilePictureUrl ? { uri: normalizeImageUrl(user.profilePictureUrl) } : undefined}
                 >
                   <Text style={styles.initialsText}>{initials}</Text>
                 </Avatar>

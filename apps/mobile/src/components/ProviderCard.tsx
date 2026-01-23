@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { Card, Avatar, Badge } from '../ui';
 import Icon from '../components/Icon';
+import { normalizeImageUrl } from '../utils/imageUrl';
 import type { ProviderSummary } from '../services/providers';
 
 export type ProviderCardProps = {
@@ -40,7 +41,7 @@ export default function ProviderCard({ data, isFavorite, onToggleFavorite, onPre
           <View style={styles.avatarContainer}>
             <Avatar size={64} style={styles.avatarWrapper}>
               {data.imageUrl ? (
-                <Image source={{ uri: data.imageUrl }} style={styles.avatarImage} testID="provider-card-image" />
+                <Image source={{ uri: normalizeImageUrl(data.imageUrl) }} style={styles.avatarImage} testID="provider-card-image" />
               ) : (
                 <View style={[styles.fallbackAvatar, styles.avatarWrapper]}>
                   <Text style={styles.fallbackText}>{(data.name || '?').charAt(0).toUpperCase()}</Text>
