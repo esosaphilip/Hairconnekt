@@ -82,18 +82,18 @@ export function AddEditServiceScreen() {
         if (mounted) {
           // Map backend categories to include tags from local constants if possible
           const mapped = cats.map(c => {
-             // Try to find matching local category to preserve tags
-             // Check by slug (e.g. 'braids') inside local ID 'cat_braids' or name
-             const local = HAIR_CATEGORIES.find(hc => 
-               hc.name === c.name || 
-               hc.id === `cat_${c.slug}` ||
-               hc.name.toLowerCase() === c.name.toLowerCase()
-             );
-             return {
-               ...c,
-               name: c.name || local?.name || 'Unbekannt',
-               tags: local?.tags || []
-             };
+            // Try to find matching local category to preserve tags
+            // Check by slug (e.g. 'braids') inside local ID 'cat_braids' or name
+            const local = HAIR_CATEGORIES.find(hc =>
+              hc.name === c.name ||
+              hc.id === `cat_${c.slug}` ||
+              hc.name.toLowerCase() === c.name.toLowerCase()
+            );
+            return {
+              ...c,
+              name: c.name || local?.name || 'Unbekannt',
+              tags: local?.tags || []
+            };
           });
           setCategories(mapped);
         }
@@ -101,7 +101,7 @@ export function AddEditServiceScreen() {
         console.warn('Failed to load categories', err);
         setCategoriesError('Kategorien konnten nicht geladen werden');
         // Fallback to local if API fails
-        setCategories(HAIR_CATEGORIES.map(c => ({ ...c, nameDe: c.name }))); 
+        setCategories(HAIR_CATEGORIES.map(c => ({ ...c, nameDe: c.name })));
       } finally {
         if (mounted) setCategoriesLoading(false);
       }
@@ -423,7 +423,7 @@ export function AddEditServiceScreen() {
               <Picker
                 selectedValue={formData.category}
                 onValueChange={(v: string) => setFormData({ ...formData, category: v, tags: [] })}
-                items={[{ label: 'Kategorie wählen', value: '' }, ...HAIR_CATEGORIES.map((c) => ({ label: c.name, value: c.id }))]}
+                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.name || c.nameDe || 'Unbekannt', value: c.id }))]}
               />
             )}
             {/* Tags Selection */}

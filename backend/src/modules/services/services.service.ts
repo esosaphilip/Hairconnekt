@@ -54,11 +54,25 @@ export class ServicesService {
       throw new NotFoundException('Provider profile not found');
     }
 
-    // Validate and fetch category if provided (only if looks like UUID for legacy support)
-    // If it's a static ID (like 'cat_braids'), skip DB lookup
-    if (createDto.categoryId && createDto.categoryId.length > 20 && !createDto.categoryId.startsWith('cat_')) {
-      // Optional: Could strictly validate if we wanted to enforce UUIDs for old cats
-      // For now, we trust the input if it's a string, or check seed existence
+    // ROBUSTNESS FIX: Handle "cat_" legacy IDs by looking up the real UUID
+    // Mobile app might send "cat_braids" if it fell back to local constants.
+    if (createDto.categoryId && typeof createDto.categoryId === 'string') {
+      if (createDto.categoryId.startsWith('cat_')) {
+        // Extract slug: "cat_braids" -> "braids"
+        const slug = createDto.categoryId.replace('cat_', '');
+        const category = await this.serviceCategoryRepository.findOne({ where: { slug } });
+
+        if (category) {
+          console.log(`[ServicesService] Resolved legacy ID ${createDto.categoryId} to UUID ${category.id}`);
+          createDto.categoryId = category.id;
+        } else {
+          console.warn(`[ServicesService] Could not resolve legacy category ID: ${createDto.categoryId}`);
+          // Let it fail at DB level or proceed if it's somehow valid
+        }
+      } else {
+        // Standard UUID validation could go here optionally
+        // checks existence if we wanted strictness
+      }
     }
 
     // Validate price and duration are integers
