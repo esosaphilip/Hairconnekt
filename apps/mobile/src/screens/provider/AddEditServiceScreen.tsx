@@ -78,30 +78,24 @@ export function AddEditServiceScreen() {
     (async () => {
       try {
         setCategoriesLoading(true);
+        // Fetch valid categories from backend
         const cats = await clientBraiderApi.getCategories();
+        console.log('[AddEditService] Loaded categories:', cats.length);
+
         if (mounted) {
-          // Map backend categories to include tags from local constants if possible
-          const mapped = cats.map(c => {
-            // Try to find matching local category to preserve tags
-            // Check by slug (e.g. 'braids') inside local ID 'cat_braids' or name
-            const local = HAIR_CATEGORIES.find(hc =>
-              hc.name === c.name ||
-              hc.id === `cat_${c.slug}` ||
-              hc.name.toLowerCase() === c.name.toLowerCase()
-            );
-            return {
-              ...c,
-              name: c.name || local?.name || 'Unbekannt',
-              tags: local?.tags || []
-            };
-          });
+          // Map to format needed by picker
+          const mapped = cats.map(c => ({
+            id: c.id,
+            name: c.nameDe || c.name || 'Unbekannt',
+            // retain any extra fields if needed
+          }));
           setCategories(mapped);
         }
       } catch (err) {
         console.warn('Failed to load categories', err);
         setCategoriesError('Kategorien konnten nicht geladen werden');
-        // Fallback to local if API fails
-        setCategories(HAIR_CATEGORIES.map(c => ({ ...c, nameDe: c.name })));
+        // Do NOT fallback to local constants if we want to enforce dynamic categories
+        // or offer a minimal fallback if critical
       } finally {
         if (mounted) setCategoriesLoading(false);
       }
@@ -254,8 +248,8 @@ export function AddEditServiceScreen() {
     })();
   }, [serviceId]);
 
-  // Determine active category from the fetched list to ensure UUID matching
-  const activeCategory = categories.find(c => c.id === formData.category) || HAIR_CATEGORIES.find(c => c.id === formData.category);
+  // Determine active category from the fetched list
+  const activeCategory = categories.find(c => c.id === formData.category);
 
   const toggleTag = (tag: string) => {
     setFormData(prev => {
@@ -423,7 +417,10 @@ export function AddEditServiceScreen() {
               <Picker
                 selectedValue={formData.category}
                 onValueChange={(v: string) => setFormData({ ...formData, category: v, tags: [] })}
-                items={[{ label: 'Kategorie wählen', value: '' }, ...categories.map((c) => ({ label: c.name || c.nameDe || 'Unbekannt', value: c.id }))]}
+                items={[
+                  { label: 'Kategorie wählen', value: '' },
+                  ...categories.map((c) => ({ label: c.name || 'Unbekannt', value: c.id }))
+                ]}
               />
             )}
             {/* Tags Selection */}

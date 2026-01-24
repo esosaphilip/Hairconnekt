@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServicesController } from './services.controller';
+import { ServiceCategoriesController } from './controllers/service-categories.controller';
 import { ServicesService } from './services.service';
 import { Service } from './entities/service.entity';
 import { ServiceCategory } from './entities/service-category.entity';
@@ -10,7 +11,7 @@ import { StorageModule } from '../storage/storage.module';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Service, ServiceCategory, ProviderProfile]), StorageModule],
-  controllers: [ServicesController],
+  controllers: [ServicesController, ServiceCategoriesController],
   providers: [ServicesService],
   exports: [ServicesService],
 })
