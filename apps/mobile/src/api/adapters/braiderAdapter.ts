@@ -181,7 +181,8 @@ export const BraiderAdapter = {
           return null;
         };
 
-        const availabilityMap = (profile.availability || []).reduce((acc: any, curr: any) => {
+        const rawAvailability = profile.availability || dto.availability || [];
+        const availabilityMap = rawAvailability.reduce((acc: any, curr: any) => {
           const germanDay = normalizeWeekday(curr.weekday);
           if (germanDay) {
              acc[germanDay] = `${curr.start} - ${curr.end}`;
