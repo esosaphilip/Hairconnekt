@@ -7,7 +7,9 @@ import * as path from 'path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const corsOrigin = process.env.FRONTEND_URL || true;
+  const corsOrigin = process.env.FRONTEND_URL
+    ? [process.env.FRONTEND_URL, 'http://localhost:5173']
+    : true;
   app.enableCors({ origin: corsOrigin });
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
