@@ -154,22 +154,18 @@ export const BraiderAdapter = {
         
         const normalizeWeekday = (w: any): string | null => {
           if (typeof w === 'number') {
-            // ISO: 1=Mon, 7=Sun
-            // JS: 0=Sun, 1=Mon
-            // Common Backend: often 1=Mon
-            const map = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
-            // If 1-7 range (ISO)
-            if (w >= 1 && w <= 7) {
-               // If w=7, check if it means Sunday. If w=1 means Monday.
-               // Let's assume standard JS index 0-6 first, but handle 7 as Sunday if needed?
-               // Actually, let's look at the failing test expectation. I passed 1 for Monday.
-               // If 1 is Monday, then map[1] is 'Montag'. Perfect.
-               return map[w % 7]; 
+            // Backend uses 0=Monday (from ProvidersService.numberToWeekday)
+            const mapBackend = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+            // If it falls in 0-6 range
+            if (w >= 0 && w <= 6) {
+               return mapBackend[w];
             }
-            return map[w] || null;
+            // Fallback for ISO 1-7 (1=Monday) just in case
+            if (w === 7) return 'Sonntag'; 
+            return null;
           }
           if (typeof w === 'string') {
-             const lower = w.toLowerCase();
+             const lower = w.trim().toLowerCase();
              if (lower.startsWith('mon')) return 'Montag';
              if (lower.startsWith('tue') || lower.startsWith('die')) return 'Dienstag';
              if (lower.startsWith('wed') || lower.startsWith('mit')) return 'Mittwoch';
