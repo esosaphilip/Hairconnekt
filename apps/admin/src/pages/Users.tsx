@@ -9,22 +9,46 @@ export const Users: React.FC = () => {
     const [roleFilter, setRoleFilter] = useState<string>('');
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState('');
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
 
     const fetchUsers = () => {
         setLoading(true);
-        api.get<any>('/admin/users', { params: { role: roleFilter || undefined, search: search || undefined } })
-            .then(res => setUsers(res.data.data))
+        api.get<any>('/admin/users', {
+            params: {
+                role: roleFilter || undefined,
+                search: search || undefined,
+                page: page,
+                limit: 10
+            }
+        })
+            .then(res => {
+                setUsers(res.data.data);
+                // Update pagination meta if available
+                if (res.data.meta) {
+                    setTotalPages(res.data.meta.totalPages);
+                }
+            })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     };
 
     useEffect(() => {
         fetchUsers();
-    }, [roleFilter]); // Search usually triggers on button or debounce, here simplicity sake lets manually trigger or debounce
+    }, [roleFilter, page]); // Re-fetch when page or filter changes
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
+        setPage(1); // Reset to first page on new search
         fetchUsers();
+    };
+
+    const handleNextPage = () => {
+        if (page < totalPages) setPage(p => p + 1);
+    };
+
+    const handlePrevPage = () => {
+        if (page > 1) setPage(p => p - 1);
     };
 
     const toggleVerify = async (userId: string, currentStatus: boolean) => {
@@ -61,7 +85,10 @@ export const Users: React.FC = () => {
                 </form>
                 <select
                     value={roleFilter}
-                    onChange={e => setRoleFilter(e.target.value)}
+                    onChange={e => {
+                        setRoleFilter(e.target.value);
+                        setPage(1); // Reset to page 1 on filter change
+                    }}
                     style={{ padding: '10px', borderRadius: '8px', border: '1px solid #e5e7eb', outline: 'none', backgroundColor: '#fff' }}
                 >
                     <option value="">All Roles</option>
@@ -70,7 +97,7 @@ export const Users: React.FC = () => {
                 </select>
             </div>
 
-            <div style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb' }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e5e7eb', marginBottom: '24px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                     <thead style={{ backgroundColor: '#f9fafb' }}>
                         <tr>
@@ -142,6 +169,43 @@ export const Users: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
+            </div>
+
+            {/* Pagination Controls */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                    Page {page} of {totalPages}
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                        onClick={handlePrevPage}
+                        disabled={page === 1}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            border: '1px solid #d1d5db',
+                            backgroundColor: page === 1 ? '#f3f4f6' : '#fff',
+                            color: page === 1 ? '#9ca3af' : '#374151',
+                            cursor: page === 1 ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        Previous
+                    </button>
+                    <button
+                        onClick={handleNextPage}
+                        disabled={page === totalPages}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '6px',
+                            border: '1px solid #d1d5db',
+                            backgroundColor: page === totalPages ? '#f3f4f6' : '#fff',
+                            color: page === totalPages ? '#9ca3af' : '#374151',
+                            cursor: page === totalPages ? 'not-allowed' : 'pointer'
+                        }}
+                    >
+                        Next
+                    </button>
+                </div>
             </div>
         </div>
     );
