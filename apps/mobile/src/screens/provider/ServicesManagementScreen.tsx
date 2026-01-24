@@ -12,6 +12,7 @@ import { Badge } from '@/components/badge';
 import { Switch } from 'react-native';
 import { colors, spacing, typography } from '@/theme/tokens';
 import { http } from '@/api/http';
+import { clientBraiderApi } from '@/api/clientBraider';
 import { useServices } from '@/presentation/hooks/useServices';
 import { showError, showSuccess } from '@/presentation/utils/errorHandler';
 import { MESSAGES, HAIR_CATEGORIES } from '@/constants';
@@ -21,6 +22,11 @@ export function ServicesManagementScreen() {
   const navigation = useNavigation();
   const { services, loading, error, toggleServiceActive, deleteService, createService, loadServices } = useServices();
   const [refreshing, setRefreshing] = useState(false);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    clientBraiderApi.getCategories().then(setCategories).catch(err => console.error('Failed to load categories', err));
+  }, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -156,7 +162,7 @@ export function ServicesManagementScreen() {
                           <Text style={styles.serviceName}>{service.name}</Text>
                           {service.categoryId ? (
                             <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                              {HAIR_CATEGORIES.find(c => c.id === service.categoryId)?.name ?? service.categoryId}
+                              {categories.find(c => c.id === service.categoryId)?.name ?? HAIR_CATEGORIES.find(c => c.id === service.categoryId)?.name ?? service.categoryId}
                             </Badge>
                           ) : null}
                         </View>
@@ -201,7 +207,7 @@ export function ServicesManagementScreen() {
                           <Text style={styles.serviceName}>{service.name}</Text>
                           {service.categoryId ? (
                             <Badge variant="outline" style={{ marginLeft: spacing.sm }}>
-                              {HAIR_CATEGORIES.find(c => c.id === service.categoryId)?.name ?? service.categoryId}
+                              {categories.find(c => c.id === service.categoryId)?.name ?? HAIR_CATEGORIES.find(c => c.id === service.categoryId)?.name ?? service.categoryId}
                             </Badge>
                           ) : null}
                         </View>

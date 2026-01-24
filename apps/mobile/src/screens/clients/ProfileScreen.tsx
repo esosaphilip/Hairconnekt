@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import {
   View,
   ScrollView,
-  SafeAreaView,
   StyleSheet,
   ActivityIndicator,
   Pressable,
@@ -11,8 +10,10 @@ import {
   Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
+import { normalizeUrl } from '@/utils/url';
 import Icon from '@/components/Icon';
 import * as ImagePicker from 'expo-image-picker';
 import { useI18n } from '@/i18n';
@@ -279,7 +280,7 @@ export function ProfileScreen() {
               <View style={styles.avatar}>
                 {me?.avatarUrl ? (
                   // Use a simple View/Image for Avatar replacement
-                  <Image source={{ uri: me.avatarUrl }} style={styles.avatarImage} />
+                  <Image source={{ uri: normalizeUrl(me.avatarUrl) }} style={styles.avatarImage} />
                 ) : (
                   <Text style={styles.avatarInitials}>{initials}</Text>
                 )}
