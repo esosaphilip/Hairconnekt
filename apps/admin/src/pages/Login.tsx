@@ -15,7 +15,7 @@ export const Login: React.FC = () => {
         setError('');
         try {
             const data = await authService.login(email, password);
-            login(data.accessToken, data.user);
+            login(data.tokens.accessToken, data.user);
             navigate('/');
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {

@@ -29,8 +29,10 @@ export interface Category {
 }
 
 export interface AuthResponse {
-    accessToken: string;
-    refreshToken: string;
+    tokens: {
+        accessToken: string;
+        refreshToken: string;
+    };
     user: User;
 }
 
