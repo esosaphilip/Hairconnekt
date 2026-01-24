@@ -1,5 +1,5 @@
 import { IBraider } from '../../domain/models/braider';
-import { normalizeImageUrl, normalizeImageUrls } from '@/utils/imageUrl';
+import { normalizeUrl } from '@/utils/url';
 
 // DTO for List/Search
 interface NearbyProviderDTO {
@@ -7,6 +7,11 @@ interface NearbyProviderDTO {
   name: string;
   business?: string;
   imageUrl?: string;
+  profilePictureUrl?: string;
+  profileImage?: string;
+  user?: {
+    profilePictureUrl?: string;
+  };
   verified?: boolean;
   rating?: number;
   reviews?: number;
@@ -32,7 +37,7 @@ export const BraiderAdapter = {
       id: String(dto.id),
       name: dto.name,
       businessName: dto.business,
-      imageUrl: normalizeImageUrl(dto.imageUrl), // Normalized!
+      imageUrl: normalizeUrl(dto.imageUrl || dto.profilePictureUrl || dto.profileImage || dto.user?.profilePictureUrl), // Normalized!
       isVerified: !!dto.verified,
       rating: dto.rating || 0,
       reviewCount: dto.reviews || 0,
@@ -97,8 +102,8 @@ export const BraiderAdapter = {
       // Controller: address not explicitly top level in getPublicProfileById return?
       // Actually it returns 'business', 'name', etc.
       // Let's assume address is not critical or is handled by base if 'business' serves as location
-      coverImage: normalizeImageUrl(dto.imageUrl || dto.coverImage), // Cover image
-      profileImage: normalizeImageUrl(profile.user?.profilePictureUrl || profile.profilePictureUrl || dto.imageUrl),
+      coverImage: normalizeUrl(dto.imageUrl || dto.coverImage), // Cover image
+      profileImage: normalizeUrl(profile.user?.profilePictureUrl || profile.profilePictureUrl || dto.imageUrl || dto.profilePictureUrl),
       languages: profile.languages || dto.languages || [],
 
       // Use real data from backend, fallback to mock/defaults if missing (for demo/UI completeness)
@@ -127,7 +132,7 @@ export const BraiderAdapter = {
       services: services, // Real services
 
       portfolioImages: (dto.portfolio && dto.portfolio.length)
-        ? dto.portfolio.map((img: string) => normalizeImageUrl(img)).filter((url): url is string => !!url)
+        ? dto.portfolio.map((img: string) => normalizeUrl(img)).filter((url: string | undefined): url is string => !!url)
         : [],
 
       reviews: (dto.recentReviews && dto.recentReviews.length) ? (dto.recentReviews || []).map((r: any) => ({

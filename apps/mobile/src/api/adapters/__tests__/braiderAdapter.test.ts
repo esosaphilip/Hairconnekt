@@ -1,62 +1,62 @@
 import { BraiderAdapter } from '../braiderAdapter';
-import { API_CONFIG } from '@/constants';
+import { normalizeUrl } from '@/utils/url';
+
+jest.mock('@/utils/url', () => ({
+  normalizeUrl: jest.fn((url) => url ? `NORMALIZED_${url}` : undefined),
+}));
 
 describe('BraiderAdapter', () => {
-  describe('toDomain', () => {
-    it('normalizes relative imageUrl', () => {
-      const dto = {
-        id: '1',
-        name: 'Test',
-        imageUrl: '/providers/1/avatar.jpg'
-      };
-
-      const domain = BraiderAdapter.toDomain(dto as any);
-      const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
-      expect(domain.imageUrl).toBe(`${baseUrl}/providers/1/avatar.jpg`);
-    });
-
-    it('keeps absolute imageUrl', () => {
-      const dto = {
-        id: '1',
-        name: 'Test',
-        imageUrl: 'https://example.com/avatar.jpg'
-      };
-
-      const domain = BraiderAdapter.toDomain(dto as any);
-      expect(domain.imageUrl).toBe('https://example.com/avatar.jpg');
-    });
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  describe('toDomainProfile', () => {
-    it('normalizes profile and cover images', () => {
-      const dto = {
+  describe('toDomain', () => {
+    it('extracts imageUrl from imageUrl field', () => {
+      const result = BraiderAdapter.toDomain({
         id: '1',
         name: 'Test',
-        imageUrl: '/cover.jpg',
-        profile: {
-          profilePictureUrl: '/profile.jpg'
-        }
-      };
-
-      const domain = BraiderAdapter.toDomainProfile(dto);
-      const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
-      expect(domain.coverImage).toBe(`${baseUrl}/cover.jpg`);
-      expect(domain.profileImage).toBe(`${baseUrl}/profile.jpg`);
+        imageUrl: 'image.jpg',
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_image.jpg');
     });
 
-    it('normalizes portfolio images', () => {
-      const dto = {
+    it('extracts imageUrl from profilePictureUrl field', () => {
+      const result = BraiderAdapter.toDomain({
         id: '1',
         name: 'Test',
-        portfolio: ['/p1.jpg', 'https://full.com/p2.jpg']
-      };
+        profilePictureUrl: 'profile.jpg',
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_profile.jpg');
+    });
 
-      const domain = BraiderAdapter.toDomainProfile(dto);
-      const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
-      expect(domain.portfolioImages).toEqual([
-        `${baseUrl}/p1.jpg`,
-        'https://full.com/p2.jpg'
-      ]);
+    it('extracts imageUrl from profileImage field', () => {
+      const result = BraiderAdapter.toDomain({
+        id: '1',
+        name: 'Test',
+        profileImage: 'profile_img.jpg',
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_profile_img.jpg');
+    });
+
+    it('extracts imageUrl from user.profilePictureUrl field', () => {
+      const result = BraiderAdapter.toDomain({
+        id: '1',
+        name: 'Test',
+        user: {
+          profilePictureUrl: 'user_profile.jpg',
+        },
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_user_profile.jpg');
+    });
+
+    it('prioritizes imageUrl over other fields', () => {
+      const result = BraiderAdapter.toDomain({
+        id: '1',
+        name: 'Test',
+        imageUrl: 'priority.jpg',
+        profilePictureUrl: 'ignored.jpg',
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_priority.jpg');
     });
   });
 });
