@@ -254,8 +254,8 @@ export function AddEditServiceScreen() {
     })();
   }, [serviceId]);
 
-  // Legacy category fetching removed in favor of strict taxonomy
-  const activeCategory = HAIR_CATEGORIES.find(c => c.id === formData.category);
+  // Determine active category from the fetched list to ensure UUID matching
+  const activeCategory = categories.find(c => c.id === formData.category) || HAIR_CATEGORIES.find(c => c.id === formData.category);
 
   const toggleTag = (tag: string) => {
     setFormData(prev => {

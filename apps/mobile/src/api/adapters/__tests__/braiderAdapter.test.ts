@@ -58,5 +58,34 @@ describe('BraiderAdapter', () => {
       });
       expect(result.imageUrl).toBe('NORMALIZED_priority.jpg');
     });
+
+    it('extracts imageUrl from profile_picture_url (snake_case)', () => {
+      const result = BraiderAdapter.toDomain({
+        id: '1',
+        name: 'Test',
+        profile_picture_url: 'snake_profile.jpg',
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_snake_profile.jpg');
+    });
+
+    it('extracts imageUrl from user.profile_picture_url (snake_case)', () => {
+      const result = BraiderAdapter.toDomain({
+        id: '1',
+        name: 'Test',
+        user: {
+          profile_picture_url: 'user_snake_profile.jpg',
+        },
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_user_snake_profile.jpg');
+    });
+
+    it('extracts imageUrl from avatar field', () => {
+      const result = BraiderAdapter.toDomain({
+        id: '1',
+        name: 'Test',
+        avatar: 'avatar.jpg',
+      });
+      expect(result.imageUrl).toBe('NORMALIZED_avatar.jpg');
+    });
   });
 });

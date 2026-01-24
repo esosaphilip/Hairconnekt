@@ -33,7 +33,21 @@ function normalizeProvider(input: Record<string, unknown>): ProviderSummary {
     return typeof cents === 'number' ? cents : null;
   })();
 
-  const imageUrlRaw = (input['imageUrl'] ?? input['image'] ?? input['profilePictureUrl'] ?? input['profileImage'] ?? (input['user'] as any)?.['profilePictureUrl']) as unknown;
+  const imageUrlRaw = (
+    input['imageUrl'] ?? 
+    input['image'] ?? 
+    input['profilePictureUrl'] ?? 
+    input['profileImage'] ?? 
+    input['avatar'] ??
+    input['avatarUrl'] ??
+    input['profile_picture_url'] ??
+    input['profile_image'] ??
+    input['image_url'] ??
+    (input['user'] as any)?.['profilePictureUrl'] ??
+    (input['user'] as any)?.['profile_picture_url'] ??
+    (input['user'] as any)?.['avatarUrl'] ??
+    (input['user'] as any)?.['avatar']
+  ) as unknown;
   const imageUrl = typeof imageUrlRaw === 'string' ? imageUrlRaw : null;
   const priceLabelRaw = input['price'] as unknown;
   const priceLabel = typeof priceLabelRaw === 'string' ? priceLabelRaw : null;

@@ -9,8 +9,17 @@ interface NearbyProviderDTO {
   imageUrl?: string;
   profilePictureUrl?: string;
   profileImage?: string;
+  avatar?: string;
+  avatarUrl?: string;
+  // Snake case variants
+  profile_picture_url?: string;
+  profile_image?: string;
+  image_url?: string;
   user?: {
     profilePictureUrl?: string;
+    profile_picture_url?: string;
+    avatarUrl?: string;
+    avatar?: string;
   };
   verified?: boolean;
   rating?: number;
@@ -37,7 +46,20 @@ export const BraiderAdapter = {
       id: String(dto.id),
       name: dto.name,
       businessName: dto.business,
-      imageUrl: normalizeUrl(dto.imageUrl || dto.profilePictureUrl || dto.profileImage || dto.user?.profilePictureUrl), // Normalized!
+      imageUrl: normalizeUrl(
+        dto.imageUrl || 
+        dto.profilePictureUrl || 
+        dto.profileImage || 
+        dto.avatar || 
+        dto.avatarUrl ||
+        dto.profile_picture_url ||
+        dto.profile_image ||
+        dto.image_url ||
+        dto.user?.profilePictureUrl ||
+        dto.user?.profile_picture_url ||
+        dto.user?.avatarUrl ||
+        dto.user?.avatar
+      ), // Normalized!
       isVerified: !!dto.verified,
       rating: dto.rating || 0,
       reviewCount: dto.reviews || 0,
@@ -102,8 +124,19 @@ export const BraiderAdapter = {
       // Controller: address not explicitly top level in getPublicProfileById return?
       // Actually it returns 'business', 'name', etc.
       // Let's assume address is not critical or is handled by base if 'business' serves as location
-      coverImage: normalizeUrl(dto.imageUrl || dto.coverImage), // Cover image
-      profileImage: normalizeUrl(profile.user?.profilePictureUrl || profile.profilePictureUrl || dto.imageUrl || dto.profilePictureUrl),
+      coverImage: normalizeUrl(dto.imageUrl || dto.coverImage || dto.image_url), // Cover image
+      profileImage: normalizeUrl(
+        profile.user?.profilePictureUrl || 
+        profile.profilePictureUrl || 
+        dto.imageUrl || 
+        dto.profilePictureUrl ||
+        dto.profile_picture_url ||
+        profile.user?.profile_picture_url ||
+        dto.avatar ||
+        dto.avatarUrl ||
+        profile.user?.avatar ||
+        profile.user?.avatarUrl
+      ),
       languages: profile.languages || dto.languages || [],
 
       // Use real data from backend, fallback to mock/defaults if missing (for demo/UI completeness)
