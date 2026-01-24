@@ -151,8 +151,41 @@ export const BraiderAdapter = {
 
       hours: (() => {
         const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+        
+        const normalizeWeekday = (w: any): string | null => {
+          if (typeof w === 'number') {
+            // ISO: 1=Mon, 7=Sun
+            // JS: 0=Sun, 1=Mon
+            // Common Backend: often 1=Mon
+            const map = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+            // If 1-7 range (ISO)
+            if (w >= 1 && w <= 7) {
+               // If w=7, check if it means Sunday. If w=1 means Monday.
+               // Let's assume standard JS index 0-6 first, but handle 7 as Sunday if needed?
+               // Actually, let's look at the failing test expectation. I passed 1 for Monday.
+               // If 1 is Monday, then map[1] is 'Montag'. Perfect.
+               return map[w % 7]; 
+            }
+            return map[w] || null;
+          }
+          if (typeof w === 'string') {
+             const lower = w.toLowerCase();
+             if (lower.startsWith('mon')) return 'Montag';
+             if (lower.startsWith('tue') || lower.startsWith('die')) return 'Dienstag';
+             if (lower.startsWith('wed') || lower.startsWith('mit')) return 'Mittwoch';
+             if (lower.startsWith('thu') || lower.startsWith('don')) return 'Donnerstag';
+             if (lower.startsWith('fri') || lower.startsWith('fre')) return 'Freitag';
+             if (lower.startsWith('sat') || lower.startsWith('sam')) return 'Samstag';
+             if (lower.startsWith('sun') || lower.startsWith('son')) return 'Sonntag';
+          }
+          return null;
+        };
+
         const availabilityMap = (profile.availability || []).reduce((acc: any, curr: any) => {
-          acc[curr.weekday] = `${curr.start} - ${curr.end}`;
+          const germanDay = normalizeWeekday(curr.weekday);
+          if (germanDay) {
+             acc[germanDay] = `${curr.start} - ${curr.end}`;
+          }
           return acc;
         }, {});
 
