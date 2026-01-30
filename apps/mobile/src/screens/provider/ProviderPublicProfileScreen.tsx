@@ -221,17 +221,32 @@ export function ProviderPublicProfileScreen() {
           <View style={styles.featureList}>
             {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((dayEn, idx) => {
               const dayDe = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'][idx];
-              // Backend returns 3-letter codes (mon, tue, wed...)
-              const shortCode = dayEn.substring(0, 3).toLowerCase();
-              // Handle 'thu' vs 'thursday' (first 3 chars match). 'tue' match.
-              // 'wed' match. 'fri' match. 'sat' match. 'sun' match. 'mon' match.
-              // Wait, 'Thursday' substring(0,3) is 'Thu'. 'Tuesday' is 'Tue'.
-              // Backend uses 'thu', 'tue'. So substring(0,3).toLowerCase() works for all except maybe... 
-              // 'Sunday' -> 'sun'. 'Saturday' -> 'sat'. 'Friday' -> 'fri'. 'Wednesday' -> 'wed'.
-              // All seem to align with standard 3-letter codes.
-              // Let's verify 'Thursday' -> 'thu'. Yes.
+              
+              // Helper to normalize day string for comparison
+              const normalizeDay = (d: string) => {
+                const s = d.toLowerCase().trim();
+                // Check English full/short
+                if (s.startsWith('mon')) return 0;
+                if (s.startsWith('tue')) return 1;
+                if (s.startsWith('wed')) return 2;
+                if (s.startsWith('thu')) return 3;
+                if (s.startsWith('fri')) return 4;
+                if (s.startsWith('sat')) return 5;
+                if (s.startsWith('sun')) return 6;
+                // Check German full/short
+                if (s.startsWith('mo')) return 0;
+                if (s.startsWith('di')) return 1;
+                if (s.startsWith('mi')) return 2;
+                if (s.startsWith('do')) return 3;
+                if (s.startsWith('fr')) return 4;
+                if (s.startsWith('sa')) return 5;
+                if (s.startsWith('so')) return 6;
+                return -1;
+              };
 
-              const slot = publicData.profile?.availability?.find(a => a.weekday?.toLowerCase() === shortCode);
+              const targetIdx = idx; // 0=Mon, 6=Sun
+              const slot = publicData.profile?.availability?.find(a => normalizeDay(a.weekday || '') === targetIdx);
+
               return (
                 <View key={dayEn} style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
                   <Text style={styles.bodyText}>{dayDe}</Text>
