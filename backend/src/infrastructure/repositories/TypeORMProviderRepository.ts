@@ -38,7 +38,7 @@ export class TypeORMProviderRepository implements IProviderRepository {
 
   async findByUserId(userId: string): Promise<ProviderProfile | null> {
     return this.providersRepo.findOne({
-      where: { userId },
+      where: { user: { id: userId } },
       relations: ['user', 'certifications', 'availability', 'languages', 'specializations', 'locations', 'locations.address'],
     });
   }

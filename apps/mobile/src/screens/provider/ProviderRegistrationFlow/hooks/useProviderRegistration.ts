@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../../../navigation/types';
 import { http } from '../../../../api/http';
 import { FormData, Step, RNFile } from '../types';
+import { useAuth } from '../../../../auth/AuthContext';
 
 const initialFormData: FormData = {
     firstName: "Max", // Prefill for testing speed
@@ -52,6 +53,7 @@ const mockSelectFile = (name: string, isMultiple: boolean = false) => {
 };
 
 export const useProviderRegistration = () => {
+    const { setSession } = useAuth();
     const [step, setStep] = useState<Step>(1);
     const [formData, setFormData] = useState<FormData>(initialFormData);
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -144,8 +146,13 @@ export const useProviderRegistration = () => {
                 languages: formData.languages,
                 specializations: formData.specializations,
             };
-            await http.post('/providers', payload);
-            navigation.navigate('ProviderPendingApproval');
+            const { data } = await http.post('/providers', payload);
+            if (data?.user && data?.tokens) {
+                await setSession(data.user, data.tokens);
+                // Auth flow handles navigation to ProviderTabs
+            } else {
+                navigation.navigate('ProviderPendingApproval');
+            }
         } catch (e: any) {
             const msg = e?.response?.data?.message || e?.message || 'Einreichen fehlgeschlagen';
             Alert.alert('Fehler', String(msg));

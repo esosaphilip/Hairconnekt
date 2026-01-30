@@ -61,6 +61,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     };
   }, []);
 
+  const setSession = useCallback(async (user: PublicUser, tokens: Tokens) => {
+    if (user?.profilePictureUrl) {
+      user.profilePictureUrl = normalizeImageUrl(user.profilePictureUrl);
+    }
+    await saveAuthBundle({ user, tokens });
+    setState({ user, tokens, loading: false, error: null });
+    setAuthDisabled(false);
+    syncFcm();
+  }, [syncFcm]);
+
   const login = useCallback(async (emailOrPhone: string, password: string, deviceId?: string): Promise<{ user: PublicUser | null; tokens: Tokens }> => {
     try {
       const { data } = await http.post('/auth/login', { emailOrPhone, password, deviceId });
@@ -125,7 +135,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const value: AuthContextValue = { ...state, login, logout, setUser, refreshTokens, register };
+  const value: AuthContextValue = { ...state, login, logout, setUser, refreshTokens, register, setSession };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -7,6 +7,7 @@ import {
   OneToOne,
   JoinColumn,
   OneToMany,
+  RelationId,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { ProviderLocation } from './provider-location.entity';
@@ -39,7 +40,7 @@ export class ProviderProfile {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'user_id', type: 'uuid', insert: false, update: false })
+  @RelationId((profile: ProviderProfile) => profile.user)
   userId: string;
 
   // Do not reference inverse property to avoid requiring it on User during startup

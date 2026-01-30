@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Inject, forwardRef } from '@nestjs/common';
 import { IProviderRepository } from '../../domain/repositories/IProviderRepository';
-import { ProviderProfile } from './entities/provider-profile.entity';
+import { ProviderProfile, BusinessType } from './entities/provider-profile.entity';
 import { ProviderAvailability } from './entities/provider-availability.entity';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { AvailabilityDto } from './dto/availability.dto';
@@ -23,6 +23,10 @@ import { CreateTimeOffDto } from './dto/create-time-off.dto';
 import { ProviderTimeOff } from './entities/provider-time-off.entity';
 import { UpdateAddressDto } from './dto/update-address.dto';
 import { Appointment } from '../appointments/entities/appointment.entity';
+import { RegisterProviderDto } from './dto/register-provider.dto';
+import { AuthService } from '../auth/auth.service';
+import { RegisterDto } from '../auth/dto/register.dto';
+import { UserType } from '../users/entities/user.entity';
 import { Service } from '../services/entities/service.entity';
 import { ServicesService } from '../services/services.service';
 import { GeocodingService } from '../../shared/services/geocoding.service';
@@ -62,7 +66,94 @@ export class ProvidersService {
     @InjectRepository(ProviderClient)
     private readonly clientRepo: Repository<ProviderClient>,
     private readonly geocodingService: GeocodingService,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) { }
+
+  /**
+   * Register a new provider with full details
+   */
+  async registerProvider(dto: RegisterProviderDto) {
+    // 1. Create User via AuthService
+    const registerDto: RegisterDto = {
+      email: dto.contact.email,
+      password: dto.password,
+      firstName: dto.contact.firstName,
+      lastName: dto.contact.lastName,
+      phone: dto.contact.phone,
+      userType: UserType.PROVIDER,
+    };
+
+    // This triggers AuthService.register -> creates User -> creates default ProviderProfile
+    const { user, tokens } = await this.authService.register(registerDto);
+
+    // 2. Fetch the created profile
+    const provider = await this.providerRepo.findByUserId(user.id);
+    if (!provider) {
+      // Should not happen if automatic creation works
+      throw new BadRequestException('Failed to create provider profile');
+    }
+
+    // 3. Update Provider details
+    provider.businessName = dto.profile.businessName;
+    provider.businessType = dto.profile.businessType;
+    provider.yearsOfExperience = dto.profile.yearsOfExperience;
+    provider.isMobileService = dto.profile.isMobileService;
+    provider.serviceRadiusKm = dto.profile.serviceRadiusKm;
+
+    // Mark as submitted for verification
+    provider.verificationSubmittedAt = new Date();
+
+    await this.providerEntityRepo.save(provider);
+
+    // 4. Update Address
+    await this.updateAddress(user.id, {
+      street: dto.address.street,
+      houseNumber: dto.address.houseNumber,
+      postalCode: dto.address.postalCode,
+      city: dto.address.city,
+      state: dto.address.state,
+      showOnMap: dto.address.showOnMap
+    });
+
+    // 5. Update Languages
+    await this.updateLanguages(user.id, { languages: dto.languages });
+
+    // 6. Update Specializations (combining specializations and services/categories if needed)
+    // For now taking explicit specializations list
+    await this.updateSpecializations(user.id, { specializations: dto.specializations });
+
+    return { success: true, providerId: provider.id, userId: user.id, user, tokens };
+  }
+
+  /**
+   * Create a new provider profile for a user
+   */
+  async createProfile(user: User) {
+    const existing = await this.providerRepo.findByUserId(user.id);
+    if (existing) return existing;
+
+    // Create default profile
+    const profile = new ProviderProfile();
+    profile.user = user;
+    // Set default values required by DB
+    profile.businessType = BusinessType.INDIVIDUAL;
+    profile.bio = '';
+    profile.cancellationPolicy = 'Flexible';
+    profile.isVerified = false;
+    profile.yearsOfExperience = 0;
+    profile.advanceBookingDays = 30;
+    profile.bufferTimeMinutes = 15;
+    profile.acceptsSameDayBooking = false;
+    profile.stripePayoutsEnabled = false;
+
+    // Initialize related entities if needed (cascades handle save)
+    profile.settings = new ProviderSettings();
+    profile.settings.autoAcceptBookings = false; // default
+    profile.settings.provider = profile;
+
+    return await this.providerEntityRepo.save(profile);
+  }
 
   /**
    * Update provider bio with sanitization

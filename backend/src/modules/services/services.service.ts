@@ -27,7 +27,7 @@ export class ServicesService {
     try {
       // Simplified lookup using standard findOne which is more robust
       const provider = await this.providerProfileRepository.findOne({
-        where: { userId }, // using explicit column
+        where: { user: { id: userId } }, // Using relation instead of explicit column
         select: ['id'], // We only need the ID
       });
 

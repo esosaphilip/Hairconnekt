@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServicesModule } from '../services/services.module';
 import { ProvidersController } from './providers.controller';
@@ -51,6 +52,7 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
     StorageModule,
     ServicesModule,
     SharedModule, // Imported for GeocodingService
+    forwardRef(() => AuthModule),
   ],
   controllers: [ProvidersController],
   providers: [

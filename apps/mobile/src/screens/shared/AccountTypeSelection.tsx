@@ -13,6 +13,7 @@ type UnauthStackParamList = {
   Login: undefined;
   Register: { userType?: 'client' | 'provider' } | undefined;
   AccountType: undefined;
+  ProviderRegistration: undefined;
 };
 
 export default function AccountTypeSelectionScreen() {
@@ -24,8 +25,8 @@ export default function AccountTypeSelectionScreen() {
   };
 
   const goToProviderOnboarding = () => {
-    // Temporarily route providers to the simple register screen
-    navigation.navigate('Register', { userType: 'provider' });
+    // Route to comprehensive provider registration flow
+    navigation.navigate('ProviderRegistration');
   };
 
   return (

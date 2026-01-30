@@ -21,6 +21,8 @@ import { sign, verify, Secret, SignOptions } from 'jsonwebtoken';
 import { EmailService } from '../email/email.service';
 import { SmsService } from '../sms/sms.service';
 import { VerificationCode, VerificationChannel } from './entities/verification-code.entity';
+import { ProviderProfile, BusinessType } from '../providers/entities/provider-profile.entity';
+import { ProviderSettings } from '../providers/entities/provider-settings.entity';
 
 @Injectable()
 export class AuthService {
@@ -164,6 +166,32 @@ export class AuthService {
         lastLogin: new Date(),
       });
       const saved = await userRepo.save(user);
+
+      // AUTOMATICALLY CREATE PROVIDER PROFILE IF USER IS A PROVIDER
+      if (saved.userType === UserType.PROVIDER) {
+        const profileRepo = queryRunner.manager.getRepository(ProviderProfile);
+        const settingsRepo = queryRunner.manager.getRepository(ProviderSettings);
+
+        const profile = profileRepo.create({
+          user: saved,
+          businessType: BusinessType.INDIVIDUAL, // Default
+          bio: '',
+          cancellationPolicy: 'Flexible',
+          isVerified: false,
+          yearsOfExperience: 0,
+          advanceBookingDays: 30,
+          bufferTimeMinutes: 15,
+          acceptsSameDayBooking: false,
+          stripePayoutsEnabled: false,
+        });
+        const savedProfile = await profileRepo.save(profile);
+
+        const settings = settingsRepo.create({
+          provider: savedProfile,
+          autoAcceptBookings: false,
+        });
+        await settingsRepo.save(settings);
+      }
 
       const { accessToken, refreshToken } = this.signTokens(saved);
       // persist refresh token (rotation support) within the same transaction

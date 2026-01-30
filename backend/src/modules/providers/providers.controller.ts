@@ -2,7 +2,7 @@ import { Body, Controller, Get, Patch, Post, Put, Delete, Req, UseGuards, Query,
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { ProvidersService } from './providers.service';
-import { CreateProviderDto } from './dto/create-provider.dto';
+import { RegisterProviderDto } from './dto/register-provider.dto';
 import { UpdateProviderDto } from './dto/update-provider.dto';
 import { AvailabilityDto } from './dto/availability.dto';
 import { UpdateBioDto } from './dto/update-bio.dto';
@@ -29,8 +29,8 @@ export class ProvidersController {
   ) { }
 
   @Post()
-  create(@Body() dto: CreateProviderDto) {
-    return { message: 'Not implemented - awaiting schemas' };
+  async create(@Body() dto: RegisterProviderDto) {
+    return this.providersService.registerProvider(dto);
   }
 
   @Patch('me')
