@@ -1,6 +1,7 @@
 
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProvidersService } from './providers.service';
+import { AuthService } from '../auth/auth.service';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ProviderProfile } from './entities/provider-profile.entity';
 import { ProviderClient } from './entities/provider-client.entity';
@@ -33,6 +34,9 @@ const mockProviderRepo = {
     findByUserId: jest.fn(),
     findAllAppointments: jest.fn(),
     findAppointmentsForDashboard: jest.fn(),
+    findNearby: jest.fn(),
+    getRatingsForProviders: jest.fn(),
+    getServicesForProviders: jest.fn(),
     // Add other methods if needed
 };
 
@@ -53,9 +57,15 @@ const mockGeocoding = {
 describe('ProvidersService', () => {
     let service: ProvidersService;
     let providerClientRepo: Repository<ProviderClient>;
+    let providerEntityRepo: Repository<ProviderProfile>;
     // let providerRepo: any; 
 
     beforeEach(async () => {
+        const mockAuthService = {
+            register: jest.fn(),
+            validateUser: jest.fn(),
+        };
+
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 ProvidersService,
@@ -79,11 +89,16 @@ describe('ProvidersService', () => {
                     provide: getRepositoryToken(ProviderClient),
                     useValue: { ...mockRepo, create: jest.fn(), save: jest.fn(), findOne: jest.fn() } // Specific instance
                 },
+                { provide: AuthService, useValue: mockAuthService },
             ],
         }).compile();
 
         service = module.get<ProvidersService>(ProvidersService);
         providerClientRepo = module.get<Repository<ProviderClient>>(getRepositoryToken(ProviderClient));
+        providerEntityRepo = module.get<Repository<ProviderProfile>>(getRepositoryToken(ProviderProfile));
+
+        // Ensure mockRepo methods are reset
+        jest.clearAllMocks();
     });
 
     it('should be defined', () => {
@@ -152,6 +167,43 @@ describe('ProvidersService', () => {
 
             const result = await service.updateClientVip(userId, clientId, isVIP);
             expect(result.isVIP).toEqual(true);
+        });
+    });
+    describe('getNearbyProviders', () => {
+        it('should fallback to recent providers if findNearby returns empty', async () => {
+            // 1. Mock findNearby to return empty (simulating no geo results)
+            mockProviderRepo.findNearby.mockResolvedValue([]);
+
+            // 2. Mock providerEntityRepo.find to return "recent" providers
+            const recentProviders = [{
+                id: 'recent-1',
+                businessName: 'Recent Hub',
+                user: { firstName: 'Test', lastName: 'User' },
+                isVerified: true,
+                locations: [{ isPrimary: true, address: { latitude: 52.52, longitude: 13.405 } }],
+                coverPhotoUrl: 'http://test.com/img.jpg',
+                acceptsSameDayBooking: true
+            }];
+            (providerEntityRepo.find as jest.Mock).mockResolvedValue(recentProviders);
+
+            mockProviderRepo.getRatingsForProviders.mockResolvedValue([]);
+            mockProviderRepo.getServicesForProviders.mockResolvedValue([]);
+
+            // 3. Call the service
+            const result = await service.getNearbyProviders({ lat: 52.52, lon: 13.405, radiusKm: 10 });
+
+            // 4. Assertions
+            expect(mockProviderRepo.findNearby).toHaveBeenCalled();
+            // Should be called twice? Once for radius, once for expanded.
+
+            expect(providerEntityRepo.find).toHaveBeenCalledWith(expect.objectContaining({
+                where: { isVerified: true },
+                order: { createdAt: 'DESC' }
+            }));
+
+            expect(result.items).toHaveLength(1);
+            expect(result.items[0].id).toBe('recent-1');
+            expect(result.items[0].business).toBe('Recent Hub');
         });
     });
 });
