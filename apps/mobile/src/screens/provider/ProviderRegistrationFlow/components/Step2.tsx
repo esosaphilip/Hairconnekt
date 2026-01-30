@@ -69,11 +69,19 @@ export const Step2 = ({ formData, setFormData }: StepProps) => {
                         <View style={styles.grid3}>
                             <View style={styles.gridCol2}>
                                 <Text style={styles.label}>Straße</Text>
-                                <Input value={formData.street} onChangeText={(v: string) => setFormData({ ...formData, street: v })} />
+                                <Input
+                                    placeholder="Musterstraße"
+                                    value={formData.street}
+                                    onChangeText={(v: string) => setFormData({ ...formData, street: v })}
+                                />
                             </View>
                             <View style={styles.gridCol1}>
                                 <Text style={styles.label}>Nr.</Text>
-                                <Input value={formData.houseNumber} onChangeText={(v: string) => setFormData({ ...formData, houseNumber: v })} />
+                                <Input
+                                    placeholder="123"
+                                    value={formData.houseNumber}
+                                    onChangeText={(v: string) => setFormData({ ...formData, houseNumber: v })}
+                                />
                             </View>
                         </View>
 
@@ -82,13 +90,18 @@ export const Step2 = ({ formData, setFormData }: StepProps) => {
                                 <Text style={styles.label}>PLZ *</Text>
                                 <Input
                                     keyboardType="numeric"
+                                    placeholder="44139"
                                     value={formData.postalCode}
                                     onChangeText={(v: string) => setFormData({ ...formData, postalCode: v })}
                                 />
                             </View>
                             <View style={styles.gridCol2}>
                                 <Text style={styles.label}>Stadt *</Text>
-                                <Input value={formData.city} onChangeText={(v: string) => setFormData({ ...formData, city: v })} />
+                                <Input
+                                    placeholder="Dortmund"
+                                    value={formData.city}
+                                    onChangeText={(v: string) => setFormData({ ...formData, city: v })}
+                                />
                             </View>
                         </View>
 

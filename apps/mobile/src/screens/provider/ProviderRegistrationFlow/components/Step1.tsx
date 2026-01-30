@@ -23,6 +23,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
                 <View style={[styles.formGroup, { flex: 1 }]}>
                     <Text style={styles.label}>Vorname *</Text>
                     <Input
+                        placeholder="Max"
                         value={formData.firstName}
                         onChangeText={(v: string) => setFormData({ ...formData, firstName: v })}
                     />
@@ -30,6 +31,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
                 <View style={[styles.formGroup, { flex: 1 }]}>
                     <Text style={styles.label}>Nachname *</Text>
                     <Input
+                        placeholder="Mustermann"
                         value={formData.lastName}
                         onChangeText={(v: string) => setFormData({ ...formData, lastName: v })}
                     />
