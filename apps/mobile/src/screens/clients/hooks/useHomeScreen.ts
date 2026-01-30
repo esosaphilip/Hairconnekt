@@ -10,6 +10,7 @@ import { useLocation } from '@/context/LocationContext';
 import { useI18n } from '@/i18n';
 import { MESSAGES } from '@/constants';
 import { logger } from '@/services/logger';
+import { API_BASE_URL } from '@/config';
 
 export interface PopularStyle {
     id: string;
@@ -107,10 +108,11 @@ export function useHomeScreen() {
             setNearby(uniqueItems);
             initFavStatus(items);
         } catch (err: unknown) {
-            const message = err instanceof Error ? err.message : t('screens.home.fetchError');
+            // Simply use the translated error message without exposing technical details to the user
+            const message = t('screens.home.fetchError');
             setNearbyError(message);
             setNearby([]);
-            logger.error('Failed to fetch nearby providers', err);
+            logger.error(`Failed to fetch nearby providers from ${API_BASE_URL}`, err);
         } finally {
             setNearbyLoading(false);
         }
