@@ -31,7 +31,7 @@ const PROD_API_URL = 'https://api.hairconnekt.de';
 
 const base = (envUrl && envUrl.trim())
   ? envUrl.trim()
-  : (resolveDevHostFromRN() || (__DEV__ ? emulatorDefault : PROD_API_URL));
+  : PROD_API_URL; // Always default to Production URL to avoid localhost issues on devices
 
 // Export the raw base URL (without /api/v1) for static assets
 export const BASE_URL = base.replace(/\/$/, '');

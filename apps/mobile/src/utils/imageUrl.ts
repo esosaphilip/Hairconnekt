@@ -16,12 +16,12 @@ export function normalizeImageUrl(url: string | null | undefined): string | unde
 
     // Relative path - prepend API base URL
     if (url.startsWith('/')) {
-        const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
+        const baseUrl = API_CONFIG.BASE_URL;
         return `${baseUrl}${url}`;
     }
 
     // Assume it's a path without leading slash
-    const baseUrl = API_CONFIG.BASE_URL || 'http://localhost:3000';
+    const baseUrl = API_CONFIG.BASE_URL;
     return `${baseUrl}/${url}`;
 }
 
