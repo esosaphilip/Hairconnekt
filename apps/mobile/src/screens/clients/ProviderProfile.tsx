@@ -93,7 +93,7 @@ export default function ProviderProfile() {
         {/* Header / Hero Image */}
         <View style={styles.heroWrapper}>
           <Image
-            source={{ uri: normalizeImageUrl(provider.coverImage || provider.imageUrl) }}
+            source={{ uri: normalizeUrl(provider.coverImage || provider.imageUrl) }}
             style={styles.heroImage}
             testID="hero-image"
           />
@@ -122,7 +122,7 @@ export default function ProviderProfile() {
                 (provider.profileImage || provider.imageUrl)
                   ? {
                     uri: (() => {
-                      const url = normalizeImageUrl(provider.profileImage || provider.imageUrl);
+                      const url = normalizeUrl(provider.profileImage || provider.imageUrl);
                       console.log('ProviderProfile avatar:', { raw: provider.profileImage, normalized: url });
                       return url;
                     })()
