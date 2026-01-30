@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Alert } from 'react-native';
+import { View, Text, Alert, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Input } from '../../../../components/Input';
 import { Checkbox } from '../../../../components/checkbox';
 import { Progress } from '../../../../components/progress';
@@ -140,6 +141,15 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
                     <Text style={styles.checkboxLabel}>
                         Ich möchte Marketing-E-Mails erhalten (optional)
                     </Text>
+                </View>
+
+                {/* Back to Login Link */}
+                <View style={{ marginTop: 24, alignItems: "center", marginBottom: 20 }}>
+                    <TouchableOpacity onPress={() => navigation.navigate("Login", { userType: 'provider' })}>
+                        <Text style={{ color: "#6B7280", fontSize: 14 }}>
+                            Bereits registriert? <Text style={{ color: "#111827", fontWeight: "600" }}>Hier anmelden</Text>
+                        </Text>
+                    </TouchableOpacity>
                 </View>
             </View>
         </View>

@@ -154,8 +154,27 @@ export const useProviderRegistration = () => {
                 navigation.navigate('ProviderPendingApproval');
             }
         } catch (e: any) {
-            const msg = e?.response?.data?.message || e?.message || 'Einreichen fehlgeschlagen';
-            Alert.alert('Fehler', String(msg));
+            // Log the full error for debugging
+            console.log('Registration Error:', e);
+
+            let msg = 'Einreichen fehlgeschlagen';
+
+            // Try to extract the specific message from NestJS exception response
+            if (e?.response?.data) {
+                const data = e.response.data;
+                // NestJS often returns { message: string | string[], error: string, statusCode: number }
+                if (Array.isArray(data.message)) {
+                    msg = data.message.join('\n');
+                } else if (typeof data.message === 'string') {
+                    msg = data.message;
+                } else if (data.error) {
+                    msg = data.error;
+                }
+            } else if (e?.message) {
+                msg = e.message;
+            }
+
+            Alert.alert('Fehler', msg);
         }
     };
 
