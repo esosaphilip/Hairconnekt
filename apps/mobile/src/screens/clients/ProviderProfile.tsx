@@ -15,7 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { clientBraiderApi } from '@/api/clientBraider';
 import { IBraider } from '@/domain/models/braider';
 import { colors } from '@/theme/tokens'; // Assuming tokens available
-import { normalizeImageUrl } from '../../utils/imageUrl';
+import { normalizeUrl } from '../../utils/url';
 
 // Mock fallback for now if ID fetch fails or while building
 // But we aim to use real data.
