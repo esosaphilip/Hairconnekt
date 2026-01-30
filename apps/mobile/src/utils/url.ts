@@ -1,6 +1,6 @@
 import { BASE_URL } from '../config';
 
-export const DEFAULT_R2_URL = 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev';
+export const DEFAULT_R2_URL = 'https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev';
 
 /**
  * Strips legacy "uploads/bucketName/" prefixes to make paths R2-compatible
