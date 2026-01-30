@@ -3,9 +3,10 @@ import { View, Text } from 'react-native';
 import { Input } from '../../../../components/Input';
 import { Checkbox } from '../../../../components/checkbox';
 import Picker from '../../../../components/Picker';
-import { Slider } from '../../../../components/slider';
+import Slider from '@react-native-community/slider';
 import { FormData } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
+import { colors } from '../../../../theme/tokens';
 
 const GERMAN_STATES = [
     { label: "Nordrhein-Westfalen", value: "NRW" },
@@ -129,10 +130,15 @@ export const Step2 = ({ formData, setFormData }: StepProps) => {
                     <Text style={styles.label}>Service-Radius (km)</Text>
                     <View style={styles.sliderContainer}>
                         <Slider
+                            style={{ width: '100%', height: 40 }}
+                            minimumValue={0}
+                            maximumValue={50}
+                            step={5}
+                            minimumTrackTintColor={colors.primary}
+                            maximumTrackTintColor={colors.gray200}
+                            thumbTintColor={colors.primary}
                             value={formData.serviceRadius}
                             onValueChange={(v: number) => setFormData({ ...formData, serviceRadius: v })}
-                            max={50}
-                            step={5}
                         />
                         <Text style={styles.hintText}>Ich biete Service im Umkreis von {formData.serviceRadius} km an</Text>
                     </View>

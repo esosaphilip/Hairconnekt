@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { Checkbox } from '../../../../components/checkbox';
-import { Slider } from '../../../../components/slider';
+import Slider from '@react-native-community/slider';
 import { FormData } from '../types';
 import { styles } from '../ProviderRegistrationFlow.styles';
+import { colors } from '../../../../theme/tokens';
 
 interface StepProps {
     formData: FormData;
@@ -45,10 +46,15 @@ export const Step3 = ({ formData, setFormData }: StepProps) => {
                 <Text style={styles.label}>Jahre Erfahrung</Text>
                 <View style={styles.sliderContainer}>
                     <Slider
+                        style={{ width: '100%', height: 40 }}
+                        minimumValue={0}
+                        maximumValue={30}
+                        step={1}
+                        minimumTrackTintColor={colors.primary}
+                        maximumTrackTintColor={colors.gray200}
+                        thumbTintColor={colors.primary}
                         value={formData.yearsExperience}
                         onValueChange={(v: number) => setFormData({ ...formData, yearsExperience: v })}
-                        max={30}
-                        step={1}
                     />
                     <Text style={styles.hintText}>{formData.yearsExperience} Jahre</Text>
                 </View>
