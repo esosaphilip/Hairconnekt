@@ -258,7 +258,8 @@ export class SearchService {
       };
     });
 
-    return { results, categoryName: category.nameDe };
+    const categoryName = category ? category.nameDe : (slug.charAt(0).toUpperCase() + slug.slice(1));
+    return { results, categoryName };
   }
 
   async searchServices(params: { query?: string; category?: string; limit?: number }) {
