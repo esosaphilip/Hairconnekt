@@ -478,9 +478,7 @@ export class ProvidersService {
     const saved = await this.providerRepo.replaceAvailability(provider.id, newRows);
 
     // Availability changes can affect nearby search and dashboard data
-    await this.cache.deleteByPrefix('providers:nearby');
-    const uid = userId;
-    await this.cache.del(`providers:dashboard:user:${uid}`);
+    await this.invalidateProviderCache(provider.id, userId);
 
     return {
       providerId: provider.id,
