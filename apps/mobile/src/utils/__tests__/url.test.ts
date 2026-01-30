@@ -1,23 +1,34 @@
-import { normalizeUrl, DEFAULT_R2_URL } from '../../utils/url';
+import { normalizeUrl, DEFAULT_R2_URL } from '../url';
+import { BASE_URL } from '../../config';
+
+// Mock config module
+jest.mock('../../config', () => ({
+  BASE_URL: 'http://192.168.1.10:3000',
+}));
 
 describe('normalizeUrl', () => {
-  it('returns undefined for null/undefined', () => {
+  it('returns undefined for null/undefined input', () => {
     expect(normalizeUrl(null)).toBeUndefined();
     expect(normalizeUrl(undefined)).toBeUndefined();
+    expect(normalizeUrl('')).toBeUndefined();
   });
 
-  it('returns absolute URLs as is', () => {
-    expect(normalizeUrl('https://example.com/img.jpg')).toBe('https://example.com/img.jpg');
-    expect(normalizeUrl('http://example.com/img.jpg')).toBe('http://example.com/img.jpg');
+  it('returns absolute URLs as-is', () => {
+    const httpsUrl = 'https://example.com/image.jpg';
+    const httpUrl = 'http://example.com/image.jpg';
+    expect(normalizeUrl(httpsUrl)).toBe(httpsUrl);
+    expect(normalizeUrl(httpUrl)).toBe(httpUrl);
   });
 
-  it('prepends Base URL to paths starting with /', () => {
-    // In test env, BASE_URL might be undefined or mocked, typically defaults to http://localhost:3000 in the util if missing
-    const expectedBase = 'http://localhost:3000'; 
-    expect(normalizeUrl('/path/to/img.jpg')).toBe(`${expectedBase}/path/to/img.jpg`);
+  it('prefixes local paths with BASE_URL', () => {
+    const localPath = '/uploads/image.jpg';
+    // Expect: http://192.168.1.10:3000/uploads/image.jpg
+    expect(normalizeUrl(localPath)).toBe('http://192.168.1.10:3000/uploads/image.jpg');
   });
 
-  it('prepends R2 URL to relative paths without leading slash', () => {
-    expect(normalizeUrl('path/to/img.jpg')).toBe(`${DEFAULT_R2_URL}/path/to/img.jpg`);
+  it('prefixes relative paths with DEFAULT_R2_URL', () => {
+    const r2Key = 'providers/123/image.jpg';
+    // Expect: https://pub-.../providers/123/image.jpg
+    expect(normalizeUrl(r2Key)).toBe(`${DEFAULT_R2_URL}/${r2Key}`);
   });
 });

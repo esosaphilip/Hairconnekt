@@ -154,7 +154,7 @@ export function ProviderPublicProfileScreen() {
 
               setPortfolioItems(items.map((it: any) => ({
                 id: it.id,
-                imageUrl: it.imageUrl,
+                imageUrl: normalizeUrl(it.imageUrl) || '',
                 uploadedAt: it.uploadedAt
               })).filter((x: any) => !!x.imageUrl));
             } else {
