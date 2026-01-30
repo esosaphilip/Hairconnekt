@@ -157,15 +157,7 @@ export class SearchService {
   }
 
   async findProvidersByCategory(slug: string) {
-    // 1. Find category
-    const category = await this.categoryRepo.findOne({ where: { slug, isActive: true } });
-    if (!category) {
-      return { results: [] };
-    }
-
-    // 2. Find providers with at least one active service in this category
-    // We must check for BOTH the category.id (UUID) AND the legacy mapping (e.g. 'cat_braids')
-    // to support services created before the migration or via seeds.
+    // 1. Determine legacy ID mapping first
     let legacyId: string | null = null;
     if (slug === 'braids') legacyId = 'cat_braids';
     else if (slug === 'twists') legacyId = 'cat_twists';
@@ -173,7 +165,16 @@ export class SearchService {
     else if (slug === 'natural' || slug === 'natural-styling') legacyId = 'cat_natural';
     else if (slug === 'weave' || slug === 'weaves') legacyId = 'cat_weave';
 
-    const catIds = [category.id];
+    // 2. Find category entity
+    const category = await this.categoryRepo.findOne({ where: { slug, isActive: true } });
+
+    // 3. If neither exists, return empty
+    if (!category && !legacyId) {
+      return { results: [] };
+    }
+
+    const catIds: string[] = [];
+    if (category) catIds.push(category.id);
     if (legacyId) catIds.push(legacyId);
 
     const providers = await this.providersRepo

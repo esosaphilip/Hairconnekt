@@ -966,9 +966,39 @@ export class ProvidersService {
         console.log(`[ProvidersService] Extended search found ${rows.length} rows`);
       }
 
+      // 3. Ultimate Fallback: Recent Verified Providers (ignore location if still empty)
+      // This ensures the "Nearby" section acts as a "Discovery" section if geo-data is missing or sparse.
+      if (!rows || rows.length === 0) {
+        console.log('[ProvidersService] No providers found via Geo-search. Falling back to recent verified providers.');
+
+        const recent = await this.providerEntityRepo.find({
+          where: { isVerified: true },
+          relations: ['user', 'locations', 'locations.address'],
+          order: { createdAt: 'DESC' },
+          take: limit
+        });
+
+        rows = recent.map(p => {
+          const addr = p.locations?.find(l => l.isPrimary)?.address || p.locations?.[0]?.address;
+          return {
+            id: p.id,
+            firstName: p.user?.firstName,
+            lastName: p.user?.lastName,
+            businessName: p.businessName,
+            coverPhotoUrl: p.coverPhotoUrl,
+            isVerified: p.isVerified,
+            acceptsSameDayBooking: p.acceptsSameDayBooking,
+            latitude: addr?.latitude,
+            longitude: addr?.longitude,
+            distanceKm: 0 // Distance irrelevant for fallback
+          };
+        });
+      }
+
     } catch (err) {
       console.error('[ProvidersService] getNearbyProviders query error:', err);
-      throw new BadRequestException('Konnte nahegelegene Anbieter nicht laden');
+      // Don't throw - return empty or fallback to avoid crashing client
+      rows = [];
     }
 
     const ids = rows.map((r) => r.id);
