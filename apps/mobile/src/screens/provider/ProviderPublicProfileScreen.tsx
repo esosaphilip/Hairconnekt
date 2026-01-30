@@ -28,6 +28,7 @@ import { http } from '@/api/http';
 import { BASE_URL } from '../../config';
 import { addFavorite, removeFavorite, favoriteStatus } from '@/services/favorites';
 import { useAuth } from '@/auth/AuthContext';
+import { normalizeUrl } from '../../utils/url';
 import { normalizeDay } from '../../utils/date';
 
 // --- Types for dynamic data ---
