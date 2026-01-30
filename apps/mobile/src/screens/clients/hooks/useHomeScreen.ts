@@ -108,7 +108,6 @@ export function useHomeScreen() {
             setNearby(uniqueItems);
             initFavStatus(items);
         } catch (err: unknown) {
-            // Simply use the translated error message without exposing technical details to the user
             const message = t('screens.home.fetchError');
             setNearbyError(message);
             setNearby([]);

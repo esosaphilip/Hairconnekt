@@ -12,7 +12,7 @@ export const clientBraiderApi = {
       // Handle { success: true, data: { items: [] } } pattern
       const dataObj = res.data?.data ? res.data.data : res.data;
       const items = dataObj?.items ?? [];
-      return items.map(BraiderAdapter.toDomain);
+      return items.map((item: any) => BraiderAdapter.toDomain(item));
     } catch (error) {
       throw mapApiError(error);
     }
@@ -26,7 +26,7 @@ export const clientBraiderApi = {
       // Use the dedicated SearchController
       const res = await http.get('/search', { params: { q: term, ...filters } });
       const items = Array.isArray(res.data?.results) ? res.data.results : (Array.isArray(res.data) ? res.data : []);
-      return items.map(BraiderAdapter.toDomain);
+      return items.map((item: any) => BraiderAdapter.toDomain(item));
     } catch (error) {
       throw mapApiError(error);
     }
@@ -36,7 +36,7 @@ export const clientBraiderApi = {
     try {
       const res = await http.get(`/search/category/${slug}`);
       const items = Array.isArray(res.data?.results) ? res.data.results : [];
-      return items.map(BraiderAdapter.toDomain);
+      return items.map((item: any) => BraiderAdapter.toDomain(item));
     } catch (error) {
       throw mapApiError(error);
     }
