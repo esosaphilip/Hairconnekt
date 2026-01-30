@@ -288,7 +288,7 @@ export default function ProviderProfile() {
               {(provider.portfolioImages || []).map((uri, i) => (
                 <Image
                   key={i}
-                  source={{ uri: normalizeImageUrl(uri) }}
+                  source={{ uri: normalizeUrl(uri) }}
                   style={styles.galleryImage}
                   testID="gallery-image"
                   resizeMode="cover"
