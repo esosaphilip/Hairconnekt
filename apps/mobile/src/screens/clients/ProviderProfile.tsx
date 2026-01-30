@@ -299,6 +299,7 @@ export default function ProviderProfile() {
                       setCurrentImageIndex(i);
                       setIsGalleryVisible(true);
                     }}
+                    style={styles.galleryImageWrapper}
                     testID={`gallery-image-${i}`}
                   >
                     <Image
@@ -363,6 +364,11 @@ export default function ProviderProfile() {
           imageIndex={currentImageIndex}
           visible={isGalleryVisible}
           onRequestClose={() => setIsGalleryVisible(false)}
+          FooterComponent={({ imageIndex }) => (
+            <View style={{ marginBottom: 40, alignItems: 'center' }}>
+              <Text style={{ color: '#fff', fontSize: 16 }}>{imageIndex + 1} / {(provider.portfolioImages || []).length}</Text>
+            </View>
+          )}
         />   {/* Bottom Actions */}
         <View style={[styles.card, styles.bottomBar]}>
           <View style={styles.rowWithIcon}>
@@ -735,15 +741,18 @@ const styles = StyleSheet.create({
   galleryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    // gap property support is inconsistent in older RN, use margins
+    gap: 8, // Use gap for uniform spacing
   },
-  galleryImage: {
-    width: '31%', // Fits 3 items with margins (31*3 = 93% + 2*2% margins = 97%)
+  galleryImageWrapper: {
+    width: '31.5%', // Slightly larger to fit 3 with small gap
     aspectRatio: 1,
     borderRadius: 8,
-    marginBottom: 8,
-    marginRight: '2%', // Add margin for spacing
-    backgroundColor: '#e5e7eb', // Fallback color
+    overflow: 'hidden',
+    backgroundColor: '#F3F4F6',
+  },
+  galleryImage: {
+    width: '100%',
+    height: '100%',
   },
   ratingBig: {
     fontSize: 32,
