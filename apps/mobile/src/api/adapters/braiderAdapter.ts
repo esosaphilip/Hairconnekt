@@ -46,28 +46,42 @@ export const BraiderAdapter = {
       id: String(dto.id),
       name: dto.name,
       businessName: dto.business,
-      imageUrl: normalizeUrl(
-        dto.imageUrl || 
-        dto.profilePictureUrl || 
-        dto.profileImage || 
-        dto.avatar || 
-        dto.avatarUrl ||
-        dto.profile_picture_url ||
-        dto.profile_image ||
-        dto.image_url ||
-        dto.user?.profilePictureUrl ||
-        dto.user?.profile_picture_url ||
-        dto.user?.avatarUrl ||
-        dto.user?.avatar
-      ), // Normalized!
-      isVerified: !!dto.verified,
+      imageUrl: this.extractImageUrl(dto), // Normalized!
       rating: dto.rating || 0,
       reviewCount: dto.reviews || 0,
       distanceKm: dto.distanceKm,
       specialties: dto.specialties || [],
       priceFromCents: dto.priceFromCents,
       isAvailable: !!dto.available,
+      isVerified: !!dto.verified,
     };
+  },
+
+  // Implementation of extractImageUrl helper
+  extractImageUrl(data: NearbyProviderDTO | any): string | undefined {
+    // Priority 1: imageUrl
+    if (data.imageUrl) return normalizeUrl(data.imageUrl);
+
+    // Priority 2: profilePictureUrl (camelCase & snake_case)
+    if (data.profilePictureUrl) return normalizeUrl(data.profilePictureUrl);
+    if (data.profile_picture_url) return normalizeUrl(data.profile_picture_url);
+
+    // Priority 3: profileImage
+    if (data.profileImage) return normalizeUrl(data.profileImage);
+
+    // Priority 4: user.profilePictureUrl
+    if (data.user?.profilePictureUrl) return normalizeUrl(data.user.profilePictureUrl);
+    if (data.user?.profile_picture_url) return normalizeUrl(data.user.profile_picture_url);
+
+    // Priority 5: avatar
+    if (data.avatar) return normalizeUrl(data.avatar);
+    if (data.avatarUrl) return normalizeUrl(data.avatarUrl);
+
+    // Fallback keys from DTO (user.avatar etc)
+    if (data.user?.avatar) return normalizeUrl(data.user.avatar);
+    if (data.user?.avatarUrl) return normalizeUrl(data.user.avatarUrl);
+
+    return undefined;
   },
 
   toDomainProfile(dto: any): IBraider {
@@ -125,18 +139,7 @@ export const BraiderAdapter = {
       // Actually it returns 'business', 'name', etc.
       // Let's assume address is not critical or is handled by base if 'business' serves as location
       coverImage: normalizeUrl(dto.imageUrl || dto.coverImage || dto.image_url), // Cover image
-      profileImage: normalizeUrl(
-        profile.user?.profilePictureUrl || 
-        profile.profilePictureUrl || 
-        dto.imageUrl || 
-        dto.profilePictureUrl ||
-        dto.profile_picture_url ||
-        profile.user?.profile_picture_url ||
-        dto.avatar ||
-        dto.avatarUrl ||
-        profile.user?.avatar ||
-        profile.user?.avatarUrl
-      ),
+      profileImage: this.extractImageUrl({ ...dto, ...profile, user: profile.user || dto.user }),
       languages: profile.languages || dto.languages || [],
 
       // Use real data from backend, fallback to mock/defaults if missing (for demo/UI completeness)
@@ -151,28 +154,28 @@ export const BraiderAdapter = {
 
       hours: (() => {
         const days = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
-        
+
         const normalizeWeekday = (w: any): string | null => {
           if (typeof w === 'number') {
             // Backend uses 0=Monday (from ProvidersService.numberToWeekday)
             const mapBackend = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
             // If it falls in 0-6 range
             if (w >= 0 && w <= 6) {
-               return mapBackend[w];
+              return mapBackend[w];
             }
             // Fallback for ISO 1-7 (1=Monday) just in case
-            if (w === 7) return 'Sonntag'; 
+            if (w === 7) return 'Sonntag';
             return null;
           }
           if (typeof w === 'string') {
-             const lower = w.trim().toLowerCase();
-             if (lower.startsWith('mon')) return 'Montag';
-             if (lower.startsWith('tue') || lower.startsWith('die')) return 'Dienstag';
-             if (lower.startsWith('wed') || lower.startsWith('mit')) return 'Mittwoch';
-             if (lower.startsWith('thu') || lower.startsWith('don')) return 'Donnerstag';
-             if (lower.startsWith('fri') || lower.startsWith('fre')) return 'Freitag';
-             if (lower.startsWith('sat') || lower.startsWith('sam')) return 'Samstag';
-             if (lower.startsWith('sun') || lower.startsWith('son')) return 'Sonntag';
+            const lower = w.trim().toLowerCase();
+            if (lower.startsWith('mon')) return 'Montag';
+            if (lower.startsWith('tue') || lower.startsWith('die')) return 'Dienstag';
+            if (lower.startsWith('wed') || lower.startsWith('mit')) return 'Mittwoch';
+            if (lower.startsWith('thu') || lower.startsWith('don')) return 'Donnerstag';
+            if (lower.startsWith('fri') || lower.startsWith('fre')) return 'Freitag';
+            if (lower.startsWith('sat') || lower.startsWith('sam')) return 'Samstag';
+            if (lower.startsWith('sun') || lower.startsWith('son')) return 'Sonntag';
           }
           return null;
         };
@@ -181,7 +184,7 @@ export const BraiderAdapter = {
         const availabilityMap = rawAvailability.reduce((acc: any, curr: any) => {
           const germanDay = normalizeWeekday(curr.weekday);
           if (germanDay) {
-             acc[germanDay] = `${curr.start} - ${curr.end}`;
+            acc[germanDay] = `${curr.start} - ${curr.end}`;
           }
           return acc;
         }, {});

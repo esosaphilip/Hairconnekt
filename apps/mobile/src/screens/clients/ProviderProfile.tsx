@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ImageViewing from 'react-native-image-viewing';
 import {
   View,
   Text,
@@ -30,7 +31,9 @@ export default function ProviderProfile() {
   const [provider, setProvider] = useState<IBraider | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const [isFavorite, setIsFavorite] = useState<boolean>(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isGalleryVisible, setIsGalleryVisible] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState<'overview' | 'services' | 'gallery' | 'reviews'>('overview');
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
@@ -92,11 +95,15 @@ export default function ProviderProfile() {
       <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
         {/* Header / Hero Image */}
         <View style={styles.heroWrapper}>
-          <Image
-            source={{ uri: normalizeUrl(provider.coverImage || provider.imageUrl) }}
-            style={styles.heroImage}
-            testID="hero-image"
-          />
+          {normalizeUrl(provider.coverImage || provider.imageUrl) ? (
+            <Image
+              source={{ uri: normalizeUrl(provider.coverImage || provider.imageUrl) }}
+              style={styles.heroImage}
+              testID="hero-image"
+            />
+          ) : (
+            <View style={[styles.heroImage, { backgroundColor: '#E5E7EB' }]} />
+          )}
 
           {/* Overlay Actions */}
           <SafeAreaView style={styles.headerOverlay}>
@@ -118,17 +125,14 @@ export default function ProviderProfile() {
           {/* Centered Avatar */}
           <View style={styles.avatarWrapper}>
             <Image
-              source={
-                (provider.profileImage || provider.imageUrl)
-                  ? {
-                    uri: (() => {
-                      const url = normalizeUrl(provider.profileImage || provider.imageUrl);
-                      console.log('ProviderProfile avatar:', { raw: provider.profileImage, normalized: url });
-                      return url;
-                    })()
-                  }
-                  : { uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.name)}&background=random` }
-              }
+              source={{
+                uri: (() => {
+                  const raw = provider.profileImage || provider.imageUrl;
+                  const normalized = normalizeUrl(raw);
+                  if (normalized) return normalized;
+                  return `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.name)}&background=random`;
+                })()
+              }}
               style={styles.avatarImage}
               testID="avatar-image"
             />
@@ -285,15 +289,26 @@ export default function ProviderProfile() {
               Galerie ({(provider.portfolioImages || []).length})
             </Text>
             <View style={styles.galleryGrid}>
-              {(provider.portfolioImages || []).map((uri, i) => (
-                <Image
-                  key={i}
-                  source={{ uri: normalizeUrl(uri) }}
-                  style={styles.galleryImage}
-                  testID="gallery-image"
-                  resizeMode="cover"
-                />
-              ))}
+              {(provider.portfolioImages || []).map((uri, i) => {
+                const normalized = normalizeUrl(uri);
+                if (!normalized) return null;
+                return (
+                  <TouchableOpacity
+                    key={i}
+                    onPress={() => {
+                      setCurrentImageIndex(i);
+                      setIsGalleryVisible(true);
+                    }}
+                    testID={`gallery-image-${i}`}
+                  >
+                    <Image
+                      source={{ uri: normalized }}
+                      style={styles.galleryImage}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                );
+              })}
             </View>
             {(!provider.portfolioImages || provider.portfolioImages.length === 0) && (
               <Text style={styles.emptyStateText}>Noch keine Bilder hochgeladen.</Text>
@@ -314,9 +329,14 @@ export default function ProviderProfile() {
                   </View>
                   <Text style={styles.cardText}>{review.date}</Text>
                 </View>
-                <View style={{ flexDirection: 'row', marginTop: 4, marginBottom: 6 }}>
-                  {Array.from({ length: review.rating }).map((_, i) => (
-                    <Ionicons key={i} name="star" size={14} color="#F59E0B" />
+                <View style={styles.ratingRow}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Ionicons
+                      key={i}
+                      name={i < review.rating ? 'star' : 'star-outline'}
+                      size={14}
+                      color="#F59E0B"
+                    />
                   ))}
                 </View>
                 <Text style={styles.cardText}>{review.text}</Text>
@@ -333,7 +353,17 @@ export default function ProviderProfile() {
           </View>
         )}
 
-        {/* Bottom Actions */}
+
+        {/* Full Screen Image Viewer */}
+        <ImageViewing
+          images={(provider.portfolioImages || [])
+            .map((uri) => normalizeUrl(uri))
+            .filter((uri): uri is string => !!uri)
+            .map((uri) => ({ uri }))}
+          imageIndex={currentImageIndex}
+          visible={isGalleryVisible}
+          onRequestClose={() => setIsGalleryVisible(false)}
+        />   {/* Bottom Actions */}
         <View style={[styles.card, styles.bottomBar]}>
           <View style={styles.rowWithIcon}>
             <Text style={styles.cardText}>Preise starten ab</Text>
@@ -351,7 +381,7 @@ export default function ProviderProfile() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </View >
   );
 }
 
