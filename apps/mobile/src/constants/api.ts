@@ -1,10 +1,12 @@
+import { API_BASE_URL } from '@/config';
+
 /**
  * Centralized API configuration and endpoints
  * NO hardcoded URLs anywhere else in the codebase
  */
 
 export const API_CONFIG = {
-  BASE_URL: process.env.EXPO_PUBLIC_API_URL || '',
+  BASE_URL: API_BASE_URL,
   TIMEOUT: 15000,
   ENDPOINTS: {
     // Auth
