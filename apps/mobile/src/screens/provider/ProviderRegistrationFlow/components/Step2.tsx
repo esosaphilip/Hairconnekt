@@ -38,7 +38,7 @@ export const Step2 = ({ formData, setFormData }: StepProps) => {
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Business-Typ *</Text>
                 <View style={styles.checkboxGroup}>
-                    {["Freelancer", "Salon", "Barber", "Mobil"].map((type) => (
+                    {["INDIVIDUAL", "SALON", "MOBILE"].map((type) => (
                         <View key={type} style={styles.checkboxRow}>
                             <Checkbox
                                 checked={formData.businessTypes.includes(type)}
@@ -52,17 +52,16 @@ export const Step2 = ({ formData, setFormData }: StepProps) => {
                                 }}
                             />
                             <Text style={styles.checkboxLabel}>
-                                {type === "Freelancer" && "Einzelperson / Freelancer"}
-                                {type === "Salon" && "Salon / Barbershop"}
-                                {type === "Barber" && "Barber"}
-                                {type === "Mobil" && "Mobiler Service"}
+                                {type === "INDIVIDUAL" && "Einzelperson / Freelancer"}
+                                {type === "SALON" && "Salon / Barbershop"}
+                                {type === "MOBILE" && "Mobiler Service"}
                             </Text>
                         </View>
                     ))}
                 </View>
             </View>
 
-            {!formData.businessTypes.includes("Mobil") && (
+            {!formData.businessTypes.includes("MOBILE") && (
                 <View>
                     <Text style={styles.cardSectionTitle}>Geschäftsadresse</Text>
                     <View style={styles.formGroup}>
@@ -125,7 +124,7 @@ export const Step2 = ({ formData, setFormData }: StepProps) => {
                 </View>
             )}
 
-            {formData.businessTypes.includes("Mobil") && (
+            {formData.businessTypes.includes("MOBILE") && (
                 <View style={styles.formGroup}>
                     <Text style={styles.label}>Service-Radius (km)</Text>
                     <View style={styles.sliderContainer}>

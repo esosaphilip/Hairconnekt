@@ -125,7 +125,7 @@ export const useProviderRegistration = () => {
                     businessName: formData.businessName || null,
                     businessType: formData.businessTypes[0] || null,
                     yearsOfExperience: formData.yearsExperience,
-                    isMobileService: formData.businessTypes.includes('Mobil'),
+                    isMobileService: formData.businessTypes.includes('MOBILE'),
                     serviceRadiusKm: formData.serviceRadius,
                 },
                 contact: {
