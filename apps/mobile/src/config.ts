@@ -26,7 +26,13 @@ const emulatorDefault = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'ht
 const envUrl = process.env.EXPO_PUBLIC_API_URL;
 const envTimeout = process.env.EXPO_PUBLIC_API_TIMEOUT;
 
-const base = (envUrl && envUrl.trim()) || resolveDevHostFromRN() || emulatorDefault;
+// Production backend URL (from Admin Deployment Guide)
+const PROD_API_URL = 'https://api.hairconnekt.de';
+
+const base = (envUrl && envUrl.trim())
+  ? envUrl.trim()
+  : (resolveDevHostFromRN() || (__DEV__ ? emulatorDefault : PROD_API_URL));
+
 // Export the raw base URL (without /api/v1) for static assets
 export const BASE_URL = base.replace(/\/$/, '');
 export const API_BASE_URL = `${BASE_URL}/api/v1`;
@@ -40,7 +46,8 @@ if (typeof __DEV__ !== 'undefined' && __DEV__) {
   try {
     const scriptURL: string | undefined = (NativeModules as any)?.SourceCode?.scriptURL;
     const host = scriptURL?.match(/https?:\/\/([^:]+):\d+/)?.[1] || 'unknown';
-    console.log(`[Hairconnekt] API_BASE_URL -> ${API_BASE_URL} (script host: ${host}; env: ${envUrl || 'n/a'})`);
+    console.log(`[Hairconnekt] API_BASE_URL -> ${API_BASE_URL}`);
+    console.log(`[Hairconnekt] Environment: ${__DEV__ ? 'DEV' : 'PROD'} (script host: ${host}; env: ${envUrl || 'n/a'})`);
     console.log(`[Hairconnekt] API_TIMEOUT -> ${API_TIMEOUT}`);
     if (GOOGLE_MAPS_API_KEY) {
       console.log('[Hairconnekt] Google Maps key is set');
