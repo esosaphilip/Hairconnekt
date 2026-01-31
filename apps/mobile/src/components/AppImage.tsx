@@ -23,23 +23,28 @@ export const AppImage: React.FC<AppImageProps> = ({
     ...props
 }) => {
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(false);
 
     // If source is provided (e.g. local require), use it directly.
     // Otherwise, normalize the uri.
     const imageSource = source ? source : (uri ? { uri: normalizeUrl(uri) } : null);
-    
-    // If we have a source object with a uri, check if the uri is valid
-    const isValidSource = source || (imageSource && 'uri' in (imageSource as any) && (imageSource as any).uri);
+
+    // Check if we have a valid source to attempt rendering
+    // We allow rendering if we have a source object OR a URI string
+    const canAttemptRender = source || (imageSource && (imageSource as any).uri);
+
+    const [hasError, setHasError] = useState(false);
 
     const handleLoadStart = () => setLoading(true);
     const handleLoadEnd = () => setLoading(false);
-    const handleError = () => {
+
+    const handleError = (e: any) => {
+        console.log('AppImage load error:', e.nativeEvent?.error, imageSource);
         setLoading(false);
-        setError(true);
+        setHasError(true);
+        if (props.onError) props.onError(e);
     };
 
-    if (!isValidSource || error) {
+    if (!canAttemptRender || hasError) {
         return (
             <View style={[styles.placeholderContainer, style]}>
                 <PlaceholderIcon type={placeholder} />

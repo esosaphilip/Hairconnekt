@@ -34,22 +34,10 @@ export function normalizeUrl(url: string | null | undefined): string | undefined
   }
 
   // 2. Detect legacy local "uploads/" paths -> Migrate to R2
-  if (url.includes('uploads/')) {
-    const key = stripUploadsPrefix(url);
-    const cleanKey = key.startsWith('/') ? key.slice(1) : key;
-    return `${DEFAULT_R2_URL}/${cleanKey}`;
-  }
+  // We strip "uploads/" or any leading slash to treat everything as an object key
+  const cleanKey = url.replace(/^\/?(uploads\/[^/]+\/|\/)/, '');
 
-  // 3. Handle backend-served assets (must start with /)
-  // This logic was previously in imageUrl.ts
-  if (url.startsWith('/')) {
-    const cleanBase = BASE_URL.replace(/\/$/, '');
-    return `${cleanBase}${url}`;
-  }
-
-  // 4. Default: Treat as R2 object key
-  const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
-  return `${DEFAULT_R2_URL}/${cleanUrl}`;
+  return `${DEFAULT_R2_URL}/${cleanKey}`;
 }
 
 /**
