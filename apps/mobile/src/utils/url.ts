@@ -26,6 +26,10 @@ export function normalizeUrl(url: string | null | undefined): string | undefined
 
   // 1. Handle absolute URLs, local file URIs, and Base64 data
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://') || url.startsWith('data:')) {
+    // FIX: Replace legacy/wrong R2 domain with correct one if found
+    if (url.includes('pub-08fbbd44374741679ded7c08d0adad27.r2.dev')) {
+      return url.replace('pub-08fbbd44374741679ded7c08d0adad27.r2.dev', 'pub-54d0ff210bf448eebf0f240d376a9358.r2.dev');
+    }
     return url;
   }
 

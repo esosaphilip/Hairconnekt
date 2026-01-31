@@ -65,7 +65,7 @@ export class R2Service {
     const publicBaseUrl =
       process.env.R2_PUBLIC_BASE_URL ||
       process.env.R2_PUBLIC_URL ||
-      'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev';
+      'https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev';
 
     // If using local storage fallback (no s3 client or forced local)
     if (!this.s3 || process.env.USE_LOCAL_STORAGE === 'true') {
