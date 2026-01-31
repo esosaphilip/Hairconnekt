@@ -11,6 +11,22 @@ import { DomainError } from '@/domain/errors/DomainError';
 
 export type BookingStep = 'services' | 'datetime' | 'details' | 'confirmation';
 
+// Helper to parse duration string to minutes
+const parseDurationToMinutes = (durationStr: string): number => {
+    let minutes = 0;
+    // Match "X Std" or "X h"
+    const hoursMatch = durationStr.match(/(\d+)\s*(?:Std|h)/i);
+    if (hoursMatch) minutes += parseInt(hoursMatch[1], 10) * 60;
+
+    // Match "XX Min" or "XX m"
+    const minutesMatch = durationStr.match(/(\d+)\s*(?:Min|m)/i);
+    if (minutesMatch) minutes += parseInt(minutesMatch[1], 10);
+
+    return minutes || 30; // Default to 30 min if parsing fails
+};
+
+import { IBooking } from '@/domain/models/booking';
+
 export const useBookingFlow = (id: string) => {
     const [step, setStep] = useState<BookingStep>('services');
     const [selectedServices, setSelectedServices] = useState<string[]>([]);
@@ -19,6 +35,7 @@ export const useBookingFlow = (id: string) => {
     const [mobileService, setMobileService] = useState<boolean>(false);
     const [notes, setNotes] = useState<string>('');
     const [paymentMethod, setPaymentMethod] = useState<'cash' | 'card' | 'paypal'>('cash');
+    const [bookingResult, setBookingResult] = useState<IBooking | null>(null);
 
     const [provider, setProvider] = useState<IBraider | null>(null);
     const [loadingProvider, setLoadingProvider] = useState<boolean>(true);
@@ -75,7 +92,15 @@ export const useBookingFlow = (id: string) => {
     const getTotalDuration = (): string => {
         const selected = servicesList.filter(s => selectedServices.includes(s.id));
         if (selected.length === 0) return '0 Std.';
-        return selected.map(s => s.duration.split(' ')[0]).join(' / ');
+
+        const totalMinutes = selected.reduce((sum, s) => sum + parseDurationToMinutes(s.duration), 0);
+
+        const hours = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+
+        if (hours > 0 && mins > 0) return `${hours} Std. ${mins} Min`;
+        if (hours > 0) return `${hours} Std.`;
+        return `${mins} Min`;
     };
 
     const handleBack = () => {
@@ -102,12 +127,12 @@ export const useBookingFlow = (id: string) => {
 
                 const selectedServiceObjs = servicesList.filter(s => selectedServices.includes(s.id));
                 const durationMinutes = selectedServiceObjs.reduce((acc, s) => {
-                    return acc + 60;
+                    return acc + parseDurationToMinutes(s.duration);
                 }, 0);
 
                 const end = new Date(start.getTime() + durationMinutes * 60000);
 
-                await clientBookingApi.createAppointment({
+                const result = await clientBookingApi.createAppointment({
                     providerId: provider!.id,
                     serviceIds: selectedServices,
                     startTime: start.toISOString(),
@@ -115,6 +140,7 @@ export const useBookingFlow = (id: string) => {
                     notes: notes
                 });
 
+                setBookingResult(result);
                 setStep('confirmation');
             } catch (err: any) {
                 const errorMessage = err?.response?.data?.message || (err instanceof Error ? err.message : String(err));
@@ -162,5 +188,6 @@ export const useBookingFlow = (id: string) => {
         headerTitle,
         canProceed,
         isAuthenticated,
+        bookingResult,
     };
 };

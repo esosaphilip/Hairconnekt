@@ -296,6 +296,7 @@ export default function ProviderProfile() {
                       uri={uri}
                       style={styles.galleryImage}
                       resizeMode="cover"
+                      testID={`gallery-image-content-${i}`}
                     />
                   </TouchableOpacity>
                 );

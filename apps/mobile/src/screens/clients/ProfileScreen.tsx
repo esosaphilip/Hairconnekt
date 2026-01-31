@@ -25,6 +25,7 @@ import { Switch } from 'react-native';
 import { spacing, colors, typography, radii, FONT_SIZES } from '@/theme/tokens';
 import { logger } from '@/services/logger';
 import AlertModal from '@/components/AlertModal';
+import { AppImage } from '@/components/AppImage';
 
 type MeResponse = {
   id: string;

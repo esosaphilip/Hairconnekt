@@ -64,7 +64,7 @@ describe('ProviderProfile Gallery', () => {
         expect(getByText('Galerie (2)')).toBeTruthy();
 
         // Verify images
-        const images = getAllByTestId('gallery-image');
+        const images = getAllByTestId(/gallery-image-content-/);
         expect(images.length).toBe(2);
         expect(images[0].props.source).toEqual({ uri: 'https://example.com/image1.jpg' });
     });

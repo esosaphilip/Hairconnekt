@@ -24,13 +24,13 @@ describe('BraiderAdapter Hours Mapping', () => {
     expect(monday?.hours).toBe('09:00 - 18:00');
   });
 
-  it('maps Number weekdays correctly (0=Sunday, 1=Monday)', () => {
+  it('maps Number weekdays correctly (0=Monday based on backend)', () => {
     const dto = {
       ...mockDtoBase,
       profile: {
         availability: [
-          { weekday: 1, start: '09:00', end: '18:00' }, // Monday
-          { weekday: 2, start: '09:00', end: '18:00' }, // Tuesday
+          { weekday: 0, start: '09:00', end: '18:00' }, // Monday
+          { weekday: 1, start: '09:00', end: '18:00' }, // Tuesday
         ]
       }
     };

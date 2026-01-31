@@ -30,19 +30,21 @@ describe('Appointment Entity', () => {
   describe('create', () => {
     it('should create an appointment with correct duration and status', () => {
       const services = [mockService1, mockService2];
+      const start = '2023-01-01T10:00:00.000Z';
+      const end = '2023-01-01T11:30:00.000Z';
       const appt = Appointment.create(
         mockProvider,
         mockClient,
         services,
-        '10:00',
-        '11:30',
+        start,
+        end,
         'Please be on time',
       );
 
       expect(appt.provider).toBe(mockProvider);
       expect(appt.client).toBe(mockClient);
-      expect(appt.startTime).toBe('10:00');
-      expect(appt.endTime).toBe('11:30');
+      expect(appt.startTime).toEqual(new Date(start));
+      expect(appt.endTime).toEqual(new Date(end));
       expect(appt.clientNotes).toBe('Please be on time');
       expect(appt.status).toBe(AppointmentStatus.PENDING);
       expect(appt.totalDurationMinutes).toBe(90); // 30 + 60
@@ -53,7 +55,7 @@ describe('Appointment Entity', () => {
 
     it('should throw BadRequestException if no services provided', () => {
       expect(() => {
-        Appointment.create(mockProvider, mockClient, [], '10:00', '11:00');
+        Appointment.create(mockProvider, mockClient, [], '2023-01-01T10:00:00Z', '2023-01-01T11:00:00Z', '');
       }).toThrow(BadRequestException);
     });
   });
@@ -61,18 +63,11 @@ describe('Appointment Entity', () => {
   describe('hoursUntil', () => {
     it('should calculate hours until appointment', () => {
       const appt = new Appointment();
-      // Set date to tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const yyyy = tomorrow.getFullYear();
-      const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-      const dd = String(tomorrow.getDate()).padStart(2, '0');
+      // Set date to future
+      const future = new Date();
+      future.setDate(future.getDate() + 1);
+      appt.startTime = future;
       
-      appt.appointmentDate = `${yyyy}-${mm}-${dd}`;
-      appt.startTime = '10:00:00';
-
-      // Rough check: should be around 24h + (10 - currentHour)
-      // We can mock Date, but let's just check it's positive and roughly correct
       expect(appt.hoursUntil).toBeGreaterThan(0);
     });
   });

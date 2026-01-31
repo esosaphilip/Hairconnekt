@@ -4,6 +4,7 @@ import { StripeService } from './stripe.service';
 import { ProviderProfile } from '../providers/entities/provider-profile.entity';
 import { BankAccount } from './entities/bank-account.entity';
 import { Payout, PayoutStatus } from './entities/payout.entity';
+import { Payment } from './entities/payment.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 
 describe('PaymentsService', () => {
@@ -32,6 +33,11 @@ describe('PaymentsService', () => {
     create: jest.fn(),
     save: jest.fn(),
   };
+  const paymentRepoMock = {
+    create: jest.fn(),
+    save: jest.fn(),
+    findOne: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -42,6 +48,7 @@ describe('PaymentsService', () => {
         { provide: getRepositoryToken(ProviderProfile), useValue: providerRepoMock },
         { provide: getRepositoryToken(BankAccount), useValue: bankRepoMock },
         { provide: getRepositoryToken(Payout), useValue: payoutRepoMock },
+        { provide: getRepositoryToken(Payment), useValue: paymentRepoMock },
       ],
     }).compile();
 

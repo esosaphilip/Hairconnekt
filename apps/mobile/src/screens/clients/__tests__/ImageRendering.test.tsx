@@ -149,7 +149,7 @@ describe('Image Rendering Pipeline', () => {
         await waitFor(() => getByText('Galerie (2)'));
 
         // 3. Check Images
-        const images = getAllByTestId('gallery-image');
+        const images = getAllByTestId(/gallery-image-content-/);
         expect(images).toHaveLength(2);
         expect(images[0].props.source).toEqual({ uri: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/img1.jpg' });
     });

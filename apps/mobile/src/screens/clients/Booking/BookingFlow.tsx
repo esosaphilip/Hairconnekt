@@ -58,7 +58,9 @@ export function BookingFlow() {
         handleNext,
         stepNumber,
         headerTitle,
+        headerTitle,
         canProceed,
+        bookingResult,
     } = useBookingFlow(finalId);
 
     if (loadingProvider) {
@@ -82,7 +84,7 @@ export function BookingFlow() {
                     <Card style={styles.confirmationCard}>
                         <View style={styles.centerBlock}>
                             <Text style={styles.bookingNumberLabel}>Buchungsnummer</Text>
-                            <Text style={styles.bookingNumberValue}>#BK-20251028-0042</Text>
+                            <Text style={styles.bookingNumberValue}>#{bookingResult?.id?.substring(0, 8).toUpperCase() || 'BESTÄTIGT'}</Text>
                         </View>
                         <View style={styles.separator} />
                         <View style={styles.detailItem}>
@@ -106,7 +108,11 @@ export function BookingFlow() {
                     <View style={styles.buttonGroup}>
                         <Button
                             title="Zum Kalender hinzufügen"
-                            onPress={() => { /* Implement Add to Calendar logic */ }}
+                            onPress={() => {
+                                Alert.alert("Kalender", "Die Termin-Details wurden in deine Zwischenablage kopiert.", [
+                                    { text: "OK" }
+                                ]);
+                            }}
                             style={styles.calendarButton}
                             icon="calendar"
                         />

@@ -32,13 +32,13 @@ const mockAppointment = {
         address: 'Musterstraße 1, Berlin',
         phone: '123456',
         businessName: 'Super Salon',
-        avatar: 'http://example.com/avatar.jpg'
+        avatarUrl: 'http://example.com/avatar.jpg'
     },
-    service: {
-        name: 'Full Braids',
-        duration: 120,
-    },
-    totalPrice: 85
+    services: [
+        { name: 'Full Braids', durationMinutes: 120 }
+    ],
+    totalPriceCents: 8500,
+    appointmentDate: new Date().toISOString()
 };
 
 describe('AppointmentDetailScreen - Manual Test Reproduction', () => {
@@ -76,7 +76,8 @@ describe('AppointmentDetailScreen - Manual Test Reproduction', () => {
 
         await findByText('Service-Details');
         expect(getByText('Full Braids')).toBeTruthy();
-        expect(getByText('120 min')).toBeTruthy();
-        expect(getByText('85 €')).toBeTruthy();
+        expect(getByText('120 Min.')).toBeTruthy();
+        // Use partial match or regex for price to avoid space issues
+        expect(getByText(/85,00.*€/)).toBeTruthy();
     });
 });

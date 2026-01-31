@@ -4,9 +4,18 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import * as express from 'express';
 import * as path from 'path';
+import helmet from 'helmet';
+import * as compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  
+  // Security Headers
+  app.use(helmet());
+  
+  // Gzip Compression
+  app.use(compression());
+
   const corsOrigin = process.env.FRONTEND_URL
     ? [process.env.FRONTEND_URL, 'http://localhost:5173']
     : true;

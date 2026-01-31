@@ -100,10 +100,15 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
           onPress: async () => {
             // Implementation of cancel logic
             try {
-              await http.post(`/appointments/${id}/cancel`); // Assuming endpoint
-              navigation.goBack();
-            } catch (e) {
-              Alert.alert("Fehler", "Konnte Termin nicht stornieren.");
+              setLoading(true);
+              await clientBookingApi.cancelAppointment(id);
+              Alert.alert("Erfolg", "Termin wurde storniert.", [
+                { text: "OK", onPress: () => navigation.goBack() }
+              ]);
+            } catch (e: any) {
+              Alert.alert("Fehler", e.message || "Konnte Termin nicht stornieren.");
+            } finally {
+              setLoading(false);
             }
           }
         }

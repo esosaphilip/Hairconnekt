@@ -17,6 +17,7 @@ import { AppointmentService } from '../appointments/entities/appointment-service
 import { PortfolioImage } from '../portfolio/entities/portfolio-image.entity';
 import { BankAccount } from './entities/bank-account.entity';
 import { Payout, PayoutStatus } from './entities/payout.entity';
+import { Payment } from './entities/payment.entity';
 
 // NOTE: This integration test defaults to skipped due to enum type limitations in in-memory DBs.
 // Set RUN_INT_TESTS=true to attempt running with pg-mem, or use a real Postgres (recommended).
@@ -74,12 +75,14 @@ describeInt('PaymentsService (integration with pg-mem)', () => {
     providersRepo = dataSource.getRepository(ProviderProfile);
     bankRepo = dataSource.getRepository(BankAccount);
     payoutRepo = dataSource.getRepository(Payout);
+    const paymentRepo = dataSource.getRepository(Payment);
 
     service = new PaymentsService(
       stripeMock,
       providersRepo,
       bankRepo,
       payoutRepo,
+      paymentRepo,
     );
   });
 

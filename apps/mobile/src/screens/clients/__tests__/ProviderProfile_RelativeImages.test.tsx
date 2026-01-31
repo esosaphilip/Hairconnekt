@@ -76,13 +76,14 @@ describe('ProviderProfile Relative Image Rendering', () => {
         const avatar = getAllByTestId('avatar-image')[0];
 
         // Expected Base URL from normalizeUrl (default R2 URL)
-        const EXPECTED_BASE = 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev';
+        const EXPECTED_R2 = 'https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev';
+        const EXPECTED_API = 'https://api.hairconnekt.de';
 
-        // Verify Cover Image normalization
-        expect(hero.props.source).toEqual({ uri: `${EXPECTED_BASE}/providers/123/cover.jpg` });
+        // Verify Cover Image normalization (No leading slash -> R2)
+        expect(hero.props.source).toEqual({ uri: `${EXPECTED_R2}/providers/123/cover.jpg` });
         
-        // Verify Avatar normalization
-        expect(avatar.props.source).toEqual({ uri: `${EXPECTED_BASE}/providers/123/profile.jpg` });
+        // Verify Avatar normalization (Leading slash -> API)
+        expect(avatar.props.source).toEqual({ uri: `${EXPECTED_API}/providers/123/profile.jpg` });
 
         // 2. Check Gallery Images
         // Find and press Tab
@@ -93,13 +94,13 @@ describe('ProviderProfile Relative Image Rendering', () => {
         await waitFor(() => getByText('Galerie (2)'));
 
         // Check Images
-        const images = getAllByTestId('gallery-image');
+        const images = getAllByTestId(/gallery-image-content-/);
         expect(images).toHaveLength(2);
 
-        // Verify Gallery Image 1 (with leading slash)
-        expect(images[0].props.source).toEqual({ uri: `${EXPECTED_BASE}/portfolio/img1.jpg` });
+        // Verify Gallery Image 1 (with leading slash -> API)
+        expect(images[0].props.source).toEqual({ uri: `${EXPECTED_API}/portfolio/img1.jpg` });
         
-        // Verify Gallery Image 2 (without leading slash)
-        expect(images[1].props.source).toEqual({ uri: `${EXPECTED_BASE}/portfolio/img2.jpg` });
+        // Verify Gallery Image 2 (without leading slash -> R2)
+        expect(images[1].props.source).toEqual({ uri: `${EXPECTED_R2}/portfolio/img2.jpg` });
     });
 });

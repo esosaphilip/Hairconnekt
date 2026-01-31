@@ -1,8 +1,8 @@
 import React from 'react';
+import { View } from 'react-native';
 import { render, waitFor } from '@testing-library/react-native';
 import { ProfileScreen } from '../ProfileScreen';
 import { usersApi } from '@/services/users';
-import { normalizeUrl } from '@/utils/url';
 
 // Mock dependencies
 jest.mock('@/services/users', () => ({
@@ -29,11 +29,7 @@ jest.mock('@/i18n', () => ({
 
 // Mock Utils
 jest.mock('@/utils/url', () => ({
-  normalizeUrl: jest.fn((url) => {
-    if (!url) return undefined;
-    if (url.startsWith('/')) return `http://localhost:3000${url}`;
-    return `R2_URL/${url}`;
-  }),
+  normalizeUrl: jest.fn((url) => url),
 }));
 
 // Mock Components
@@ -43,6 +39,13 @@ jest.mock('@/components/Button', () => 'Button');
 jest.mock('@/components/Card', () => 'Card');
 jest.mock('@/components/separator', () => 'Separator');
 jest.mock('@/components/AlertModal', () => 'AlertModal');
+jest.mock('@/components/AppImage', () => {
+  const React = require('react');
+  // Use string 'View' to avoid ReferenceError with react-native components in jest factory
+  return {
+    AppImage: ({ uri }: any) => React.createElement('View', { testID: 'profile-avatar', accessibilityLabel: uri }),
+  };
+});
 
 // Mock Native Modules
 jest.mock('expo-image-picker', () => ({
@@ -51,11 +54,17 @@ jest.mock('expo-image-picker', () => ({
   MediaTypeOptions: { Images: 'Images' },
 }));
 
-// Don't mock react-native
-// jest.mock('react-native', ...);
+jest.mock('react-native-safe-area-context', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return {
+    SafeAreaView: ({ children }: any) => React.createElement(View, {}, children),
+    useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
+  };
+});
 
 describe('ProfileScreen Avatar', () => {
-  it('calls normalizeUrl with the avatar URL', async () => {
+  it('renders AppImage with the avatar URL', async () => {
     const avatarPath = '/uploads/avatar.jpg';
     (usersApi.getMe as jest.Mock).mockResolvedValue({
       id: '123',
@@ -66,12 +75,13 @@ describe('ProfileScreen Avatar', () => {
       stats: {},
     });
 
-    const { getByText } = render(<ProfileScreen />);
+    const { getByTestId, getByText } = render(<ProfileScreen />);
     
     // Wait for data load
     await waitFor(() => getByText('John Doe'));
 
-    // Verify normalizeUrl was called
-    expect(normalizeUrl).toHaveBeenCalledWith(avatarPath);
+    // Verify AppImage was rendered with correct URI
+    const avatar = getByTestId('profile-avatar');
+    expect(avatar.props.accessibilityLabel).toBe(avatarPath);
   });
 });

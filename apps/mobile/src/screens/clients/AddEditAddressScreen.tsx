@@ -18,6 +18,7 @@ import IconButton from '@/components/IconButton';
 import Input from '@/components/Input';
 import Icon from '@/components/Icon';
 import Picker from '@/components/Picker';
+import { clientUserApi } from '@/api/clientUser';
 import { COLORS, SPACING, FONT_SIZES } from '@/theme/tokens';
 import type { ClientProfileStackScreenProps } from '@/navigation/types';
 
@@ -41,7 +42,6 @@ const GERMAN_STATES: string[] = [
   "Thüringen",
 ];
 
-// Mock function to fetch existing address data for editing
 type AddressFormData = {
   label: string;
   street: string;
@@ -49,19 +49,6 @@ type AddressFormData = {
   city: string;
   state: string;
   isDefault: boolean;
-};
-
-const fetchAddressById = (id: string): AddressFormData => {
-    // This would be an API call in a real app
-    console.log(`Fetching address for ID: ${id}`);
-    return {
-        label: "Zuhause",
-        street: "Musterstraße 123",
-        postalCode: "44139",
-        city: "Dortmund",
-        state: "Nordrhein-Westfalen",
-        isDefault: true,
-    };
 };
 
 
@@ -86,9 +73,22 @@ export function AddEditAddressScreen() {
   // Load existing data if editing
   useEffect(() => {
     if (isEditing) {
-      // In a real app, this would be an async call
-      const existingData = fetchAddressById(id);
-      setFormData(existingData);
+      // Real API Mode
+      clientUserApi.getAddress(id)
+        .then(data => {
+          setFormData({
+            label: data.label,
+            street: data.streetAddress, // Map streetAddress -> street
+            postalCode: data.postalCode,
+            city: data.city,
+            state: data.state,
+            isDefault: data.isDefault
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          Alert.alert("Fehler", "Adresse konnte nicht geladen werden");
+        });
     }
   }, [isEditing, id]);
 
@@ -96,26 +96,43 @@ export function AddEditAddressScreen() {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.label || !formData.street || !formData.postalCode || !formData.city) {
-        // Replaced sonner toast with native Alert
-        Alert.alert("Fehler", "Bitte fülle alle Pflichtfelder aus.");
-        return;
+      Alert.alert("Fehler", "Bitte fülle alle Pflichtfelder aus.");
+      return;
     }
 
-    // In a real app, send formData to the API (POST or PUT)
-    
-    const message = isEditing
-      ? "Adresse erfolgreich aktualisiert!"
-      : "Adresse erfolgreich hinzugefügt!";
+    try {
+      const payload = {
+        label: formData.label,
+        streetAddress: formData.street,
+        postalCode: formData.postalCode,
+        city: formData.city,
+        state: formData.state,
+        country: 'DE', // Hardcoded for now as per app scope
+        isDefault: formData.isDefault
+      };
 
-    // Replaced sonner toast and useNavigate with Alert and navigation
-    Alert.alert("Erfolg", message, [
+      if (isEditing) {
+        await clientUserApi.updateAddress(id, payload);
+      } else {
+        await clientUserApi.createAddress(payload);
+      }
+
+      const message = isEditing
+        ? "Adresse erfolgreich aktualisiert!"
+        : "Adresse erfolgreich hinzugefügt!";
+
+      Alert.alert("Erfolg", message, [
         {
-            text: "OK",
-            onPress: () => navigation.navigate("AddressManagementScreen") // Navigate back to the list
+          text: "OK",
+          onPress: () => navigation.navigate("AddressManagementScreen")
         }
-    ]);
+      ]);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Fehler", "Speichern fehlgeschlagen. Bitte versuche es später erneut.");
+    }
   };
 
   return (

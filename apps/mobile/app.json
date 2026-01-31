@@ -15,7 +15,12 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "de.hairconnekt.app",
-      "googleServicesFile": "./src/GoogleService-Info.plist"
+      "googleServicesFile": "./src/GoogleService-Info.plist",
+      "infoPlist": {
+        "NSCameraUsageDescription": "HairConnekt needs access to your camera to allow you to take photos for your profile and portfolio.",
+        "NSPhotoLibraryUsageDescription": "HairConnekt needs access to your photo library to allow you to upload photos to your profile and portfolio.",
+        "NSLocationWhenInUseUsageDescription": "HairConnekt needs your location to show braiders and services near you."
+      }
     },
     "android": {
       "package": "de.hairconnekt.app",

@@ -63,7 +63,7 @@ describe('ProviderProfile - Gallery', () => {
         await findByText('Galerie (3)');
 
         // 4. Verify images are rendered
-        const images = getAllByTestId('gallery-image');
+        const images = getAllByTestId(/gallery-image-content-/);
         expect(images).toHaveLength(3);
     });
 });

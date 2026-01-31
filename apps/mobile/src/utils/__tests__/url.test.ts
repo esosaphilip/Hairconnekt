@@ -20,10 +20,10 @@ describe('normalizeUrl', () => {
     expect(normalizeUrl(httpUrl)).toBe(httpUrl);
   });
 
-  it('prefixes local paths with BASE_URL', () => {
+  it('prefixes local paths with DEFAULT_R2_URL', () => {
     const localPath = '/uploads/image.jpg';
-    // Expect: http://192.168.1.10:3000/uploads/image.jpg
-    expect(normalizeUrl(localPath)).toBe('http://192.168.1.10:3000/uploads/image.jpg');
+    // Expect R2 URL
+    expect(normalizeUrl(localPath)).toBe('https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/uploads/image.jpg');
   });
 
   it('prefixes relative paths with DEFAULT_R2_URL', () => {

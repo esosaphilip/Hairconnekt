@@ -49,6 +49,9 @@ import { http } from '@/api/http';
 
 describe('AddEditServiceScreen Categories', () => {
   it('fetches categories on mount', async () => {
+    (clientBraiderApi.getCategories as jest.Mock).mockResolvedValue([
+      { id: 'cat1', name: 'Test Cat', tags: [] }
+    ]);
     (http.get as jest.Mock).mockResolvedValue({
       data: [
         { id: 'uuid-1', name: 'Braids', slug: 'braids' },
@@ -62,7 +65,7 @@ describe('AddEditServiceScreen Categories', () => {
     expect(getByText('Neuer Service')).toBeTruthy();
 
     await waitFor(() => {
-      expect(http.get).toHaveBeenCalledWith('/services/categories');
+      expect(clientBraiderApi.getCategories).toHaveBeenCalled();
     });
   });
 });

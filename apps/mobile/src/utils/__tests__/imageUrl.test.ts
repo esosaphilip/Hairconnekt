@@ -17,27 +17,30 @@ describe('imageUrl utility', () => {
             expect(normalizeImageUrl('http://example.com/img.jpg')).toBe('http://example.com/img.jpg');
         });
 
-        it('prepends API path to relative URLs starting with /', () => {
-            expect(normalizeImageUrl('/uploads/img.jpg')).toBe(`${baseUrl}/uploads/img.jpg`);
+        it('prepends API URL to relative URLs starting with /', () => {
+            expect(normalizeImageUrl('/uploads/img.jpg')).toBe('https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/uploads/img.jpg');
         });
 
-        it('prepends API path to relative URLs without /', () => {
-            expect(normalizeImageUrl('uploads/img.jpg')).toBe(`${baseUrl}/uploads/img.jpg`);
+        it('prepends R2 URL to relative URLs without /', () => {
+            expect(normalizeImageUrl('uploads/img.jpg')).toBe('https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/uploads/img.jpg');
         });
     });
 
     describe('normalizeImageUrls', () => {
         it('filters out invalid urls', () => {
             const input = [
-                undefined,
                 'https://valid.com/1.jpg',
+                'invalid',
                 '/local.jpg',
-                null
+                null,
+                undefined,
+                ''
             ];
             const output = normalizeImageUrls(input);
             expect(output).toEqual([
                 'https://valid.com/1.jpg',
-                `${baseUrl}/local.jpg`
+                'https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/invalid',
+                'https://api.hairconnekt.de/local.jpg'
             ]);
         });
     });
