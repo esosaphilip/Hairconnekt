@@ -1,6 +1,6 @@
 
 import { DataSource, QueryRunner } from 'typeorm';
-import { FixR2Domain1769878000000 } from './1769878000000-FixR2Domain';
+import { FixR2Domain1769878000000 } from '../../src/database/migrations/1769878000000-FixR2Domain';
 import { newDb } from 'pg-mem';
 
 describe('FixR2Domain1769878000000', () => {

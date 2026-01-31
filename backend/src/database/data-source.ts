@@ -11,7 +11,7 @@ export const AppDataSource = new DataSource(
     ? {
       type: 'sqlite',
       database: process.env.SQLITE_DB_PATH || 'dev-db.sqlite',
-      migrations: ['src/database/migrations/*{.ts,.js}', '!src/database/migrations/*.spec.{ts,js}'],
+      migrations: ['src/database/migrations/*{.ts,.js}'],
     }
     : url
       ? {
@@ -28,7 +28,7 @@ export const AppDataSource = new DataSource(
           'src/modules/reviews/entities/*.entity{.ts,.js}',
           'src/modules/portfolio/entities/*.entity{.ts,.js}',
         ],
-        migrations: ['src/database/migrations/*{.ts,.js}', '!src/database/migrations/*.spec.{ts,js}'],
+        migrations: ['src/database/migrations/*{.ts,.js}'],
       }
       : {
         type: 'postgres',
@@ -48,6 +48,6 @@ export const AppDataSource = new DataSource(
           'src/modules/reviews/entities/*.entity{.ts,.js}',
           'src/modules/portfolio/entities/*.entity{.ts,.js}',
         ],
-        migrations: ['src/database/migrations/*{.ts,.js}', '!src/database/migrations/*.spec.{ts,js}'],
+        migrations: ['src/database/migrations/*{.ts,.js}'],
       },
 );
