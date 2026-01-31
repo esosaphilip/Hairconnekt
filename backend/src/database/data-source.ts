@@ -9,23 +9,12 @@ const sslEnabled = process.env.DATABASE_SSL === 'true';
 export const AppDataSource = new DataSource(
   useSqlite
     ? {
-        type: 'sqlite',
-        database: process.env.SQLITE_DB_PATH || 'dev-db.sqlite',
-        synchronize: false,
-        logging: false,
-        // Limit entities to core modules to avoid compile-time errors from excluded modules during seeding/dev
-        entities: [
-          'src/modules/users/entities/*.entity{.ts,.js}',
-          'src/modules/providers/entities/*.entity{.ts,.js}',
-          'src/modules/services/entities/*.entity{.ts,.js}',
-          'src/modules/appointments/entities/*.entity{.ts,.js}',
-          'src/modules/reviews/entities/*.entity{.ts,.js}',
-          'src/modules/portfolio/entities/*.entity{.ts,.js}',
-        ],
-        migrations: ['src/database/migrations/*{.ts,.js}'],
-      }
+      type: 'sqlite',
+      database: process.env.SQLITE_DB_PATH || 'dev-db.sqlite',
+      migrations: ['src/database/migrations/*{.ts,.js}', '!src/database/migrations/*.spec.{ts,js}'],
+    }
     : url
-    ? {
+      ? {
         type: 'postgres',
         url,
         ssl: sslEnabled ? { rejectUnauthorized: false } : false,
@@ -39,9 +28,9 @@ export const AppDataSource = new DataSource(
           'src/modules/reviews/entities/*.entity{.ts,.js}',
           'src/modules/portfolio/entities/*.entity{.ts,.js}',
         ],
-        migrations: ['src/database/migrations/*{.ts,.js}'],
+        migrations: ['src/database/migrations/*{.ts,.js}', '!src/database/migrations/*.spec.{ts,js}'],
       }
-    : {
+      : {
         type: 'postgres',
         host: process.env.DATABASE_HOST || 'localhost',
         port: Number(process.env.DATABASE_PORT || 5432),
@@ -59,6 +48,6 @@ export const AppDataSource = new DataSource(
           'src/modules/reviews/entities/*.entity{.ts,.js}',
           'src/modules/portfolio/entities/*.entity{.ts,.js}',
         ],
-        migrations: ['src/database/migrations/*{.ts,.js}'],
+        migrations: ['src/database/migrations/*{.ts,.js}', '!src/database/migrations/*.spec.{ts,js}'],
       },
 );
