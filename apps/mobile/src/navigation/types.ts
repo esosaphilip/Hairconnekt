@@ -40,7 +40,7 @@ export type ClientTabsParamList = {
 export type BookingsStackParamList = {
   BookingsList: undefined;
   AppointmentDetail: { id: string };
-  AppointmentDetails: { id: string }; // Alias
+
   CancelAppointment: { id: string };
   RescheduleAppointment: { id: string };
   AppointmentsOverview: undefined;
