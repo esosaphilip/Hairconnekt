@@ -77,7 +77,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const { user, tokens } = data; // Assuming backend returns { user, tokens }
 
       if (user?.profilePictureUrl) {
-        user.profilePictureUrl = normalizeImageUrl(user.profilePictureUrl);
+        user.profilePictureUrl = normalizeUrl(user.profilePictureUrl);
       }
 
       await saveAuthBundle({ user, tokens });
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const setUser = useCallback(async (user: PublicUser | null) => {
     if (user?.profilePictureUrl) {
-      user.profilePictureUrl = normalizeImageUrl(user.profilePictureUrl);
+      user.profilePictureUrl = normalizeUrl(user.profilePictureUrl);
     }
     setState(s => {
       const newState = { ...s, user };
