@@ -16,7 +16,7 @@ export function BookingsStackScreen() {
     return (
             <BookingsStack.Screen name="BookingsList" component={AppointmentsScreen} options={{ title: t('screens.bookings.title'), headerShown: false }} />
             <BookingsStack.Screen name="AppointmentDetail" component={AppointmentDetailScreen} options={{ title: t('screens.bookings.detailTitle') }} />
-            <BookingsStack.Screen name="AppointmentDetails" component={AppointmentDetailScreen} options={{ title: t('screens.bookings.detailTitle') }} />
+
             <BookingsStack.Screen name="CancelAppointment" component={CancelAppointmentScreen} options={{ title: t('screens.bookings.cancelTitle') }} />
             <BookingsStack.Screen name="RescheduleAppointment" component={RescheduleAppointmentScreen} options={{ title: t('screens.bookings.rescheduleTitle') }} />
             {/* Legacy/Overview route kept just in case but main entry is now AppointmentsScreen */ }
