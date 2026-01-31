@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
+import { AppImage } from '@/components/AppImage';
 import {
   View,
   Text,
@@ -43,13 +44,8 @@ type PortfolioItem = {
   likes: number;
 };
 
-const resolveImageUrl = (path: string | undefined) => {
-  if (!path) return 'https://via.placeholder.com/300';
-  if (path.startsWith('http')) return path;
-  // API_BASE_URL ends with /api/v1, usually. We want the root '.../uploads'
-  const origin = API_BASE_URL.replace(/\/api\/v1\/?$/, '');
-  return `${origin}${path.startsWith('/') ? '' : '/'}${path}`;
-};
+// Local URL logic removed in favor of AppImage
+
 
 export function PortfolioManagementScreen() {
   const navigation = useNavigation<any>();
@@ -92,7 +88,7 @@ export function PortfolioManagementScreen() {
       const items = Array.isArray(list) ? (list as RawPortfolioItem[]) : [];
       const mapped: PortfolioItem[] = items.map((it) => ({
         id: it.id,
-        image: resolveImageUrl(it.imageUrl),
+        image: it.imageUrl || '',
         title: it.caption || it.title || '',
         category: typeof it.category === 'object' ? (it.category?.nameDe || it.category?.nameEn || '') : String(it.category || ''),
         createdAt: it.uploadedAt,
@@ -156,8 +152,8 @@ export function PortfolioManagementScreen() {
     <View style={styles.gridItemWrapper}>
       <Card style={styles.portfolioCard}>
         <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: item.image }}
+          <AppImage
+            uri={item.image}
             style={styles.portfolioImage}
             resizeMode="cover"
           />

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ImageViewing from 'react-native-image-viewing';
+import { AppImage } from '@/components/AppImage';
 import {
   View,
   Text,
@@ -95,15 +96,12 @@ export default function ProviderProfile() {
       <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
         {/* Header / Hero Image */}
         <View style={styles.heroWrapper}>
-          {normalizeUrl(provider.coverImage || provider.imageUrl) ? (
-            <Image
-              source={{ uri: normalizeUrl(provider.coverImage || provider.imageUrl) }}
-              style={styles.heroImage}
-              testID="hero-image"
-            />
-          ) : (
-            <View style={[styles.heroImage, { backgroundColor: '#E5E7EB' }]} />
-          )}
+          <AppImage
+            uri={provider.coverImage || provider.imageUrl}
+            style={styles.heroImage}
+            placeholder="business"
+            testID="hero-image"
+          />
 
           {/* Overlay Actions */}
           <SafeAreaView style={styles.headerOverlay}>
@@ -124,16 +122,10 @@ export default function ProviderProfile() {
 
           {/* Centered Avatar */}
           <View style={styles.avatarWrapper}>
-            <Image
-              source={{
-                uri: (() => {
-                  const raw = provider.profileImage || provider.imageUrl;
-                  const normalized = normalizeUrl(raw);
-                  if (normalized) return normalized;
-                  return `https://ui-avatars.com/api/?name=${encodeURIComponent(provider.name)}&background=random`;
-                })()
-              }}
+            <AppImage
+              uri={provider.profileImage || provider.imageUrl}
               style={styles.avatarImage}
+              placeholder="user"
               testID="avatar-image"
             />
             {provider.isVerified && (
@@ -290,8 +282,6 @@ export default function ProviderProfile() {
             </Text>
             <View style={styles.galleryGrid}>
               {(provider.portfolioImages || []).map((uri, i) => {
-                const normalized = normalizeUrl(uri);
-                if (!normalized) return null;
                 return (
                   <TouchableOpacity
                     key={i}
@@ -302,8 +292,8 @@ export default function ProviderProfile() {
                     style={styles.galleryImageWrapper}
                     testID={`gallery-image-${i}`}
                   >
-                    <Image
-                      source={{ uri: normalized }}
+                    <AppImage
+                      uri={uri}
                       style={styles.galleryImage}
                       resizeMode="cover"
                     />

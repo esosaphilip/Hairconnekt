@@ -30,6 +30,7 @@ import { addFavorite, removeFavorite, favoriteStatus } from '@/services/favorite
 import { useAuth } from '@/auth/AuthContext';
 import { normalizeUrl } from '../../utils/url';
 import { normalizeDay } from '../../utils/date';
+import { AppImage } from '@/components/AppImage';
 
 // --- Types for dynamic data ---
 type PublicProfile = {
@@ -154,7 +155,7 @@ export function ProviderPublicProfileScreen() {
 
               setPortfolioItems(items.map((it: any) => ({
                 id: it.id,
-                imageUrl: normalizeUrl(it.imageUrl) || '',
+                imageUrl: it.imageUrl, // AppImage will handle normalization
                 uploadedAt: it.uploadedAt
               })).filter((x: any) => !!x.imageUrl));
             } else {
@@ -223,7 +224,7 @@ export function ProviderPublicProfileScreen() {
           <View style={styles.featureList}>
             {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((dayEn, idx) => {
               const dayDe = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'][idx];
-              
+
               const targetIdx = idx; // 0=Mon, 6=Sun
               const slot = publicData.profile?.availability?.find(a => normalizeDay(a.weekday || '') === targetIdx);
 
@@ -348,14 +349,13 @@ export function ProviderPublicProfileScreen() {
         <View style={styles.portfolioGrid}>
           {portfolioItems.length > 0 ? (
             portfolioItems.map((item, index) => {
-              const imageUrl = item.imageUrl?.startsWith('http')
-                ? item.imageUrl
-                : `${BASE_URL}${item.imageUrl}`;
+              // AppImage handles it
+
 
               return (
                 <TouchableOpacity key={item.id || index} style={styles.portfolioItem} onPress={() => { /* View Image Modal */ }}>
-                  <Image
-                    source={{ uri: imageUrl }}
+                  <AppImage
+                    uri={item.imageUrl}
                     style={styles.portfolioImage}
                     resizeMode="cover"
                   />

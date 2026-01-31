@@ -28,7 +28,7 @@ export type AvatarImageProps = ImageProps & {
   source?: ImageSourcePropType;
 };
 
-import { BASE_URL } from '../config';
+import { normalizeUrl } from '../utils/url';
 
 /**
  * Avatar image
@@ -36,11 +36,8 @@ import { BASE_URL } from '../config';
 export function AvatarImage({ size, style, uri, source, ...rest }: AvatarImageProps) {
   const dim = size ?? 40;
 
-  // Handle relative URLs (from local backend storage)
-  let finalUri = uri;
-  if (finalUri && typeof finalUri === 'string' && finalUri.startsWith('/')) {
-    finalUri = `${BASE_URL}${finalUri}`;
-  }
+  // Handle relative URLs (from local backend storage) or R2
+  const finalUri = normalizeUrl(uri);
 
   return (
     <Image

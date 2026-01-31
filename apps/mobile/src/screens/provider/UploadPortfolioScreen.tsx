@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AppImage } from '@/components/AppImage';
 import {
   View,
   Text,
@@ -179,9 +180,10 @@ export function UploadPortfolioScreen() {
             <View style={styles.previewGrid}>
               {images.map((image, index) => (
                 <View key={image.uri + index} style={styles.previewItem}>
-                  <Image
-                    source={{ uri: image.uri }}
+                  <AppImage
+                    uri={image.uri}
                     style={styles.previewImage}
+                    resizeMode="cover"
                   />
                   <TouchableOpacity
                     onPress={() => removeImage(index)}
