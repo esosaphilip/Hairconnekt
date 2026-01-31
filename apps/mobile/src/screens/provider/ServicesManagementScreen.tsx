@@ -62,7 +62,16 @@ export function ServicesManagementScreen() {
     return `${(cents / 100).toFixed(2)}€`;
   };
 
+  const isValidUuid = (id: string) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
   const handleToggleService = async (service: Service) => {
+    if (!isValidUuid(service.id)) {
+      Alert.alert('Ungültige Service-ID', `Dieser Service hat eine ungültige ID (${service.id}) und kann nicht aktualisiert werden.`);
+      return;
+    }
     try {
       await toggleServiceActive(service.id, !service.isActive);
       showSuccess(MESSAGES.SUCCESS.SAVE);
@@ -72,6 +81,10 @@ export function ServicesManagementScreen() {
   };
 
   const handleDeleteService = async (service: Service) => {
+    if (!isValidUuid(service.id)) {
+      Alert.alert('Ungültige Service-ID', `Dieser Service hat eine ungültige ID (${service.id}) und kann nicht gelöscht werden.`);
+      return;
+    }
     Alert.alert(
       'Service löschen',
       `Möchtest du "${service.name}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`,
@@ -103,6 +116,10 @@ export function ServicesManagementScreen() {
   };
 
   const onEditService = (id: string) => {
+    if (!isValidUuid(id)) {
+      Alert.alert('Ungültige Service-ID', `Dieser Service hat eine ungültige ID (${id}) und kann nicht bearbeitet werden.`);
+      return;
+    }
     rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: id } });
   };
 
