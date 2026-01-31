@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Avatar, Button, Card, Input } from "@/ui";
 import Icon from "@/components/Icon";
-import { normalizeImageUrl } from "@/utils/imageUrl";
+import { normalizeUrl } from "@/utils/url";
 import { colors, spacing } from "@/theme/tokens";
 import { useLocation } from "@/context/LocationContext";
 import { styles } from "./HomeScreen.styles";

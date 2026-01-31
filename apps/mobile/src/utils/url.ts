@@ -24,8 +24,8 @@ function stripUploadsPrefix(url: string): string {
 export function normalizeUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
 
-  // 1. Handle absolute URLs and local file URIs
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://')) {
+  // 1. Handle absolute URLs, local file URIs, and Base64 data
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://') || url.startsWith('data:')) {
     return url;
   }
 

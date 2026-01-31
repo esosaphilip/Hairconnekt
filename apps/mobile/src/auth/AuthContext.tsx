@@ -5,7 +5,7 @@ import { clearAuthBundle, clearTokens, getAuthBundle, getRefreshToken, saveAuthB
 import type { AuthBundle, Tokens, PublicUser } from './tokenStorage';
 import type { AuthContextValue } from './types';
 import { registerForPushNotificationsAsync } from '../services/notifications';
-import { normalizeImageUrl } from '@/utils/imageUrl';
+import { normalizeUrl } from '@/utils/url';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         const bundle = await getAuthBundle();
         if (mounted) {
           if (bundle?.user?.profilePictureUrl) {
-            bundle.user.profilePictureUrl = normalizeImageUrl(bundle.user.profilePictureUrl);
+            bundle.user.profilePictureUrl = normalizeUrl(bundle.user.profilePictureUrl);
           }
           if (bundle?.user && bundle?.tokens) {
             // Sync in background
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const setSession = useCallback(async (user: PublicUser, tokens: Tokens) => {
     if (user?.profilePictureUrl) {
-      user.profilePictureUrl = normalizeImageUrl(user.profilePictureUrl);
+      user.profilePictureUrl = normalizeUrl(user.profilePictureUrl);
     }
     await saveAuthBundle({ user, tokens });
     setState({ user, tokens, loading: false, error: null });
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
       const { user, tokens } = data;
 
       if (user?.profilePictureUrl) {
-        user.profilePictureUrl = normalizeImageUrl(user.profilePictureUrl);
+        user.profilePictureUrl = normalizeUrl(user.profilePictureUrl);
       }
 
       await saveAuthBundle({ user, tokens });

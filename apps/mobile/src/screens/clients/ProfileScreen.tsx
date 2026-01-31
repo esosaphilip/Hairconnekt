@@ -279,8 +279,7 @@ export function ProfileScreen() {
               {/* Avatar Component equivalent */}
               <View style={styles.avatar}>
                 {me?.avatarUrl ? (
-                  // Use a simple View/Image for Avatar replacement
-                  <Image source={{ uri: normalizeUrl(me.avatarUrl) }} style={styles.avatarImage} />
+                  <AppImage uri={me.avatarUrl} style={styles.avatarImage} />
                 ) : (
                   <Text style={styles.avatarInitials}>{initials}</Text>
                 )}
