@@ -1,13 +1,8 @@
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import ProviderCard from '../ProviderCard';
-import { normalizeUrl } from '@/utils/url';
 
-jest.mock('@/utils/url', () => ({
-  normalizeUrl: jest.fn(url => `NORMALIZED_${url}`),
-}));
-
-// Mock other dependencies
+// Mock dependencies
 jest.mock('../../ui', () => ({
   Card: ({ children }: any) => <>{children}</>,
   Avatar: ({ children }: any) => <>{children}</>,
@@ -16,16 +11,22 @@ jest.mock('../../ui', () => ({
 
 jest.mock('../Icon', () => 'Icon');
 
+// Mock AppImage
+jest.mock('../AppImage', () => ({
+  AppImage: (props: any) => <mock-app-image {...props} testID={props.testID} />,
+}));
+
 describe('ProviderCard Image', () => {
-  it('calls normalizeUrl with imageUrl', () => {
+  it('renders AppImage with correct uri', () => {
     const data = {
       id: '1',
       name: 'Test',
       imageUrl: 'test.jpg',
     };
     
-    render(<ProviderCard data={data} />);
+    const { getByTestId } = render(<ProviderCard data={data} />);
     
-    expect(normalizeUrl).toHaveBeenCalledWith('test.jpg');
+    const appImage = getByTestId('provider-card-image');
+    expect(appImage.props.uri).toBe('test.jpg');
   });
 });

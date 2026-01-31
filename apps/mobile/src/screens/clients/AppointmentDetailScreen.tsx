@@ -1,9 +1,10 @@
 import React from 'react';
-import { StyleSheet, View, Image, ScrollView, TouchableOpacity, Alert, Platform, Linking, ActionSheetIOS } from 'react-native';
+import { StyleSheet, View, ScrollView, TouchableOpacity, Alert, Platform, Linking, ActionSheetIOS } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Text from '@/components/Text';
 import Button from '@/components/Button';
 import Icon from '@/components/Icon';
+import { AppImage } from '@/components/AppImage';
 import { colors, spacing, radii, shadows } from '@/theme/tokens';
 import type { BookingsStackScreenProps } from '@/navigation/types';
 import { http } from '@/api/http';
@@ -202,9 +203,10 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         {/* Provider Info */}
         <View style={styles.card}>
           <View style={styles.providerHeader}>
-            <Image
-              source={{ uri: appointment.providerImage || 'https://via.placeholder.com/150' }}
+            <AppImage
+              uri={appointment.providerImage}
               style={styles.avatar}
+              placeholder="business"
             />
             <View style={{ flex: 1 }}>
               <Text style={styles.cardTitle}>{appointment.providerBusiness || appointment.providerName}</Text>

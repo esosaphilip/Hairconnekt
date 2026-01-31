@@ -13,28 +13,46 @@ function stripUploadsPrefix(url: string): string {
   return url;
 }
 
+/**
+ * Unified image URL normalization
+ * Handles:
+ * 1. Absolute URLs (http/https/file) -> Return as is
+ * 2. Legacy "uploads/" paths -> Strip prefix and point to R2
+ * 3. Relative paths starting with "/" -> Prepend API Base URL (for local assets served by API)
+ * 4. Simple keys (e.g. "providers/123.jpg") -> Point to R2
+ */
 export function normalizeUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;
 
-  // Handle absolute URLs and local file URIs
+  // 1. Handle absolute URLs and local file URIs
   if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('file://')) {
     return url;
   }
 
-  // Detect legacy local "uploads/" paths
+  // 2. Detect legacy local "uploads/" paths -> Migrate to R2
   if (url.includes('uploads/')) {
     const key = stripUploadsPrefix(url);
-    // Ensure no double slashes if key starts with /
     const cleanKey = key.startsWith('/') ? key.slice(1) : key;
     return `${DEFAULT_R2_URL}/${cleanKey}`;
   }
 
-  // Handle relative R2 paths (no leading slash logic needed mostly, but for safety)
-  // If it *starts* with a slash but is NOT an API route (unlikely for images unless local), treat as R2 key?
-  // Actually, backend might send `/providers/123.jpg`.
-  // R2 keys usually don't have leading slash.
+  // 3. Handle backend-served assets (must start with /)
+  // This logic was previously in imageUrl.ts
+  if (url.startsWith('/')) {
+    const cleanBase = BASE_URL.replace(/\/$/, '');
+    return `${cleanBase}${url}`;
+  }
 
-  // Check if it looks like an API Key (no slash at start) vs a local path
+  // 4. Default: Treat as R2 object key
   const cleanUrl = url.startsWith('/') ? url.slice(1) : url;
   return `${DEFAULT_R2_URL}/${cleanUrl}`;
+}
+
+/**
+ * Helper for arrays of URLs
+ */
+export function normalizeUrlList(urls: (string | null | undefined)[]): string[] {
+  return urls
+    .map(normalizeUrl)
+    .filter((url): url is string => !!url);
 }

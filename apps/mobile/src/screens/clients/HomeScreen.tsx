@@ -77,7 +77,7 @@ export function HomeScreen() {
                 <Avatar
                   size={40}
                   style={styles.initialsAvatar}
-                  source={user?.profilePictureUrl ? { uri: normalizeImageUrl(user.profilePictureUrl) } : undefined}
+                  source={user?.profilePictureUrl ? { uri: normalizeUrl(user.profilePictureUrl) } : undefined}
                 >
                   <Text style={styles.initialsText}>{initials}</Text>
                 </Avatar>

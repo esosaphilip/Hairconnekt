@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import { styles } from '../HomeScreen.styles';
 import { PopularStyle } from '../hooks/useHomeScreen';
@@ -10,6 +11,9 @@ interface PopularStyleCardProps {
 }
 
 export const PopularStyleCard: React.FC<PopularStyleCardProps> = ({ item }) => {
+    const source = getStyleImage(item.slug || 'default', item.iconUrl);
+    const isUri = source && typeof source === 'object' && 'uri' in source;
+
     return (
         <TouchableOpacity
             activeOpacity={0.8}
@@ -25,8 +29,9 @@ export const PopularStyleCard: React.FC<PopularStyleCardProps> = ({ item }) => {
             style={styles.popularStyleCard}
         >
             <View style={styles.popularStyleImageContainer}>
-                <Image
-                    source={getStyleImage(item.slug || 'default', item.iconUrl)}
+                <AppImage
+                    source={!isUri ? source : undefined}
+                    uri={isUri ? (source as any).uri : undefined}
                     style={styles.popularStyleImage}
                 />
                 <View style={styles.imageOverlay} />
