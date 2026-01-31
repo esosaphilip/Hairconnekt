@@ -58,7 +58,7 @@ export function BookingFlow() {
         handleNext,
         stepNumber,
         headerTitle,
-        headerTitle,
+
         canProceed,
         bookingResult,
     } = useBookingFlow(finalId);
