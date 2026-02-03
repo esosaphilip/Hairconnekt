@@ -21,6 +21,8 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserType } from '../users/entities/user.entity';
 import { Request } from 'express';
+import { CreateServiceDto } from './dto/create-service.dto';
+import { UpdateServiceDto } from './dto/update-service.dto';
 
 @Controller('providers/me/services')
 export class ServicesController {
@@ -72,7 +74,7 @@ export class ServicesController {
   @Roles(UserType.PROVIDER, UserType.BOTH)
   @Post()
   async create(
-    @Body() createServiceDto: any,
+    @Body() createServiceDto: CreateServiceDto,
     @Req() req: Request & { user: any },
   ) {
     console.log('[FIRE-DEBUG] POST /providers/me/services HIT');
@@ -86,7 +88,7 @@ export class ServicesController {
   @Patch(':id')
   async update(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Body() updateServiceDto: any,
+    @Body() updateServiceDto: UpdateServiceDto,
     @Req() req: Request & { user: any },
   ) {
     const providerId = await this.resolveProviderId(req);

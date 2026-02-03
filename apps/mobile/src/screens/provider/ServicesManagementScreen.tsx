@@ -137,7 +137,7 @@ export function ServicesManagementScreen() {
               <Text style={styles.headerSubtitle}>{activeServices.length} aktive Services</Text>
             </View>
           </View>
-          <Button title="Neu" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } })} style={{ backgroundColor: colors.primary }} />
+          <Button title="Neu" testID="btn-new-service" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } })} style={{ backgroundColor: colors.primary }} />
         </View>
       </View>
 
@@ -187,7 +187,7 @@ export function ServicesManagementScreen() {
                           <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
                         )}
                       </View>
-                      <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
+                      <Switch testID={`switch-${service.id}`} value={service.isActive} onValueChange={() => handleToggleService(service)} />
                     </View>
 
                     <View style={styles.metaRow}>
@@ -202,8 +202,8 @@ export function ServicesManagementScreen() {
                     </View>
 
                     <View style={styles.actionsRow}>
-                      <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
-                      <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
+                      <Button title="Bearbeiten" testID={`edit-${service.id}`} variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
+                      <Button title="Löschen" testID={`delete-${service.id}`} variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
                     </View>
                   </Card>
                 ))}
@@ -232,7 +232,7 @@ export function ServicesManagementScreen() {
                           <Text style={styles.serviceDesc} numberOfLines={2}>{service.description}</Text>
                         )}
                       </View>
-                      <Switch value={service.isActive} onValueChange={() => handleToggleService(service)} />
+                      <Switch testID={`switch-${service.id}`} value={service.isActive} onValueChange={() => handleToggleService(service)} />
                     </View>
 
                     <View style={styles.metaRow}>
@@ -247,8 +247,8 @@ export function ServicesManagementScreen() {
                     </View>
 
                     <View style={styles.actionsRow}>
-                      <Button title="Bearbeiten" variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
-                      <Button title="Löschen" variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
+                      <Button title="Bearbeiten" testID={`edit-${service.id}`} variant="ghost" onPress={() => onEditService(service.id)} style={{ flex: 1 }} />
+                      <Button title="Löschen" testID={`delete-${service.id}`} variant="ghost" onPress={() => handleDeleteService(service)} style={{ marginLeft: spacing.sm }} />
                     </View>
                   </Card>
                 ))}

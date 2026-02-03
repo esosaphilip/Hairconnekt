@@ -171,7 +171,24 @@ export class ServicesService {
 
     // Handle category update
     if (updateDto.categoryId !== undefined) {
-      service.categoryId = updateDto.categoryId;
+      if (updateDto.categoryId === '') {
+        throw new BadRequestException('Category is required');
+      }
+
+      // Handle legacy IDs
+      if (updateDto.categoryId.startsWith('cat_')) {
+        const slug = updateDto.categoryId.replace('cat_', '');
+        const category = await this.serviceCategoryRepository.findOne({ where: { slug } });
+        if (category) {
+          service.categoryId = category.id;
+        } else {
+          // If we can't resolve it, we shouldn't try to save 'cat_' to a UUID column
+          console.warn(`[ServicesService] Could not resolve legacy category ID in update: ${updateDto.categoryId}`);
+          throw new BadRequestException('Invalid category ID');
+        }
+      } else {
+        service.categoryId = updateDto.categoryId;
+      }
     }
 
     // Handle tags update

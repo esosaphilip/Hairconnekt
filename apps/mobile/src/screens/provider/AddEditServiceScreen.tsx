@@ -83,19 +83,28 @@ export function AddEditServiceScreen() {
         console.log('[AddEditService] Loaded categories:', cats.length);
 
         if (mounted) {
-          // Map to format needed by picker
-          const mapped = cats.map(c => ({
-            id: c.id,
-            name: c.nameDe || c.name || 'Unbekannt',
-            // retain any extra fields if needed
-          }));
+          // Map to format needed by picker and hydrate tags from local constants
+          const mapped = cats.map(c => {
+            // Try to find matching local category for tags (backend doesn't store tags yet)
+            // Match by slug (e.g. 'braids') vs legacy ID ('cat_braids')
+            const localMatch = HAIR_CATEGORIES.find(
+              lc => lc.id === `cat_${c.slug}` || lc.name.toLowerCase() === c.name.toLowerCase()
+            );
+
+            return {
+              id: c.id,
+              name: c.name || 'Unbekannt',
+              tags: localMatch?.tags || [],
+              slug: c.slug
+            };
+          });
           setCategories(mapped);
         }
       } catch (err) {
         console.warn('Failed to load categories', err);
         setCategoriesError('Kategorien konnten nicht geladen werden');
-        // Do NOT fallback to local constants if we want to enforce dynamic categories
-        // or offer a minimal fallback if critical
+
+
       } finally {
         if (mounted) setCategoriesLoading(false);
       }
@@ -158,9 +167,10 @@ export function AddEditServiceScreen() {
     // 1. Check if we should save
     const currentData = formData;
     const hasName = !!currentData.name.trim();
+    const hasCategory = !!currentData.category;
     const isClean = wasSubmittedRef.current;
 
-    if (!isClean && hasName && !isSavingRef.current) {
+    if (!isClean && hasName && hasCategory && !isSavingRef.current) {
       console.log('[AutoSave] Saving before exit...');
       isSavingRef.current = true;
       try {
@@ -265,7 +275,7 @@ export function AddEditServiceScreen() {
       setMessage('Bitte einen Service-Namen eingeben');
       return;
     }
-    if (!isEditing && !formData.category) {
+    if (!formData.category) {
       setMessage('Bitte wähle eine Kategorie');
       return;
     }
@@ -424,11 +434,11 @@ export function AddEditServiceScreen() {
               />
             )}
             {/* Tags Selection */}
-            {activeCategory && activeCategory.tags.length > 0 && (
+            {activeCategory && activeCategory.tags && activeCategory.tags.length > 0 && (
               <View style={styles.tagsContainer}>
                 <Text style={styles.subLabel}>Spezialisierungen (Optional)</Text>
                 <View style={styles.tagsRow}>
-                  {activeCategory.tags.map(tag => {
+                  {(activeCategory.tags || []).map(tag => {
                     const isSelected = formData.tags.includes(tag);
                     return (
                       <Pressable

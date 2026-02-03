@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, act } from '@testing-library/react-native';
 import { ServicesManagementScreen } from '../ServicesManagementScreen';
-import { Alert } from 'react-native';
+import { Alert, Switch } from 'react-native';
 
 // Mock dependencies
 jest.mock('@react-navigation/native', () => ({
@@ -25,6 +25,9 @@ const mockToggle = jest.fn();
 const mockDelete = jest.fn();
 const mockLoad = jest.fn();
 
+const validId = '123e4567-e89b-12d3-a456-426614174000';
+const invalidId = 'bad-id';
+
 jest.mock('@/presentation/hooks/useServices', () => ({
   useServices: () => ({
     services: [
@@ -47,56 +50,128 @@ jest.mock('@/api/clientBraider', () => ({
 }));
 
 jest.mock('@expo/vector-icons', () => ({ Ionicons: 'Ionicons' }));
-// Mock Button to render title as text so queries work
+
+// Mock Button
 jest.mock('@/components/Button', () => {
   const React = require('react');
   const { Text, TouchableOpacity } = require('react-native');
-  return ({ title, onPress }: any) => (
-    <TouchableOpacity onPress={onPress}>
+  return ({ title, onPress, testID }: any) => (
+    <TouchableOpacity onPress={onPress} testID={testID}>
       <Text>{title}</Text>
     </TouchableOpacity>
   );
 });
-jest.mock('@/components/Card', () => 'Card');
+
+jest.mock('@/components/Card', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return ({ children }: any) => <View>{children}</View>;
+});
 
 // Spy on Alert
 jest.spyOn(Alert, 'alert');
 
 describe('ServicesManagementScreen Validation', () => {
-  it('allows editing service with valid UUID', () => {
-    const { getAllByText } = render(<ServicesManagementScreen />);
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('navigates to create new service screen on "Neu" button press', () => {
+    const { getByTestId } = render(<ServicesManagementScreen />);
+    fireEvent.press(getByTestId('btn-new-service'));
     
-    // Find "Bearbeiten" buttons. Since we have 2 services, there are 2 buttons.
-    // However, since we mocked Button as string 'Button', we might need to find by text prop or testID.
-    // In the code: <Button title="Bearbeiten" ... />
-    // If 'Button' is a string mock, checking props is harder.
-    // Let's rely on finding the text "Bearbeiten".
-    const editButtons = getAllByText('Bearbeiten');
-    expect(editButtons.length).toBe(2);
-
-    // Click the first one (Valid)
-    fireEvent.press(editButtons[0]);
-
-    // Check navigation
     const { rootNavigationRef } = require('@/navigation/rootNavigation');
     expect(rootNavigationRef.current.navigate).toHaveBeenCalledWith('Mehr', {
       screen: 'AddEditServiceScreen',
-      params: { serviceId: '123e4567-e89b-12d3-a456-426614174000' },
+      params: { serviceId: null },
     });
   });
 
-  it('blocks editing service with invalid UUID', () => {
-    const { getAllByText } = render(<ServicesManagementScreen />);
-    const editButtons = getAllByText('Bearbeiten');
-    
-    // Click the second one (Invalid)
-    fireEvent.press(editButtons[1]);
+  describe('Editing Service', () => {
+    it('allows editing service with valid UUID', () => {
+      const { getByTestId } = render(<ServicesManagementScreen />);
+      fireEvent.press(getByTestId(`edit-${validId}`));
 
-    // Should NOT navigate
-    // Should show Alert
-    expect(Alert.alert).toHaveBeenCalledWith(
-      'Ungültige Service-ID',
-      expect.stringContaining('Dieser Service hat eine ungültige ID')
-    );
+      const { rootNavigationRef } = require('@/navigation/rootNavigation');
+      expect(rootNavigationRef.current.navigate).toHaveBeenCalledWith('Mehr', {
+        screen: 'AddEditServiceScreen',
+        params: { serviceId: validId },
+      });
+    });
+
+    it('blocks editing service with invalid UUID', () => {
+      const { getByTestId } = render(<ServicesManagementScreen />);
+      fireEvent.press(getByTestId(`edit-${invalidId}`));
+
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Ungültige Service-ID',
+        expect.stringContaining('Dieser Service hat eine ungültige ID')
+      );
+      const { rootNavigationRef } = require('@/navigation/rootNavigation');
+      expect(rootNavigationRef.current.navigate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Toggling Service Active State', () => {
+    it('toggles service with valid UUID', async () => {
+      const { getByTestId } = render(<ServicesManagementScreen />);
+      const switchEl = getByTestId(`switch-${validId}`);
+      
+      await act(async () => {
+        fireEvent(switchEl, 'valueChange', false);
+      });
+
+      expect(mockToggle).toHaveBeenCalledWith(validId, false);
+    });
+
+    it('blocks toggling service with invalid UUID', async () => {
+      const { getByTestId } = render(<ServicesManagementScreen />);
+      const switchEl = getByTestId(`switch-${invalidId}`);
+      
+      await act(async () => {
+        fireEvent(switchEl, 'valueChange', false);
+      });
+
+      expect(mockToggle).not.toHaveBeenCalled();
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Ungültige Service-ID',
+        expect.stringContaining('Dieser Service hat eine ungültige ID')
+      );
+    });
+  });
+
+  describe('Deleting Service', () => {
+    it('shows confirmation and deletes service with valid UUID', async () => {
+      const { getByTestId } = render(<ServicesManagementScreen />);
+      fireEvent.press(getByTestId(`delete-${validId}`));
+
+      // Check for confirmation alert
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Service löschen',
+        expect.stringContaining('Möchtest du "Valid Service" wirklich löschen?'),
+        expect.any(Array)
+      );
+
+      // Simulate clicking "Löschen" (destructive button)
+      const alertButtons = (Alert.alert as jest.Mock).mock.calls[0][2];
+      const deleteButton = alertButtons.find((btn: any) => btn.style === 'destructive');
+      
+      await act(async () => {
+        await deleteButton.onPress();
+      });
+
+      expect(mockDelete).toHaveBeenCalledWith(validId);
+    });
+
+    it('blocks deleting service with invalid UUID', () => {
+      const { getByTestId } = render(<ServicesManagementScreen />);
+      fireEvent.press(getByTestId(`delete-${invalidId}`));
+
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'Ungültige Service-ID',
+        expect.stringContaining('Dieser Service hat eine ungültige ID')
+      );
+      expect(mockDelete).not.toHaveBeenCalled();
+    });
   });
 });
