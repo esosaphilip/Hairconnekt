@@ -1,0 +1,73 @@
+{
+  "tech_stack": [
+    "TypeScript",
+    "React Native",
+    "Expo",
+    "React Navigation",
+    "Axios",
+    "Jest"
+  ],
+  "features": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and authorization flow",
+      "files": [
+        "src/auth",
+        "src/screens/auth"
+      ]
+    },
+    {
+      "name": "Provider Services Management",
+      "description": "Manage services offered by providers, including CRUD operations and validation",
+      "files": [
+        "src/screens/provider/ServicesManagementScreen.tsx",
+        "src/domain/usecases/ServiceUseCases.ts",
+        "src/data/repositories/ServiceRepositoryImpl.ts",
+        "src/presentation/hooks/useServices.ts"
+      ]
+    },
+    {
+      "name": "Provider Appointments",
+      "description": "Manage appointments for providers",
+      "files": [
+        "src/api/providerAppointments.ts",
+        "src/screens/provider"
+      ]
+    },
+    {
+      "name": "Client Braider Search",
+      "description": "Search and view braiders/providers",
+      "files": [
+        "src/api/clientBraider.ts",
+        "src/screens/client"
+      ]
+    },
+    {
+      "name": "Client Booking",
+      "description": "Book appointments with providers",
+      "files": [
+        "src/api/clientBooking.ts",
+        "src/screens/client"
+      ]
+    },
+    {
+      "name": "Shared Components",
+      "description": "Reusable UI components",
+      "files": [
+        "src/components/Button.tsx",
+        "src/components/Input.tsx",
+        "src/components/Text.tsx",
+        "src/components/avatar.tsx"
+      ]
+    },
+    {
+      "name": "API Integration",
+      "description": "HTTP client and API endpoints definitions",
+      "files": [
+        "src/api/http.ts",
+        "src/config.ts",
+        "src/api/adapters"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:8081",
+  "loginUser": "provider1@example.com",
+  "loginPassword": "password",
+  "executionArgs": {
+    "projectName": "mobile",
+    "projectPath": "/Users/eseosaedosomwan/Documents/trae_projects/hairconnekt/apps/mobile",
+    "testIds": [
+      "TC008",
+      "TC009",
+      "TC010"
+    ],
+    "additionalInstruction": "Use @testing-library/react-native for tests. Mock the necessary components and navigation. Focus on unit/integration tests for the ServicesManagementScreen.",
+    "envs": {
+      "API_KEY": "sk-user-NrJSrfJ2Ug9wueetf0DFo428Vp1zJmdoDVzLZOM_4loHFMVxpIX5-HIQmajckrOBsApVRMKrh58uFyTMW4VnQjLq8tjSWz9Lm3BauztDZyJU0WECLZFgm4qxvWETw4537Zw"
+    }
+  },
+  "serverPort": 63401
+}
