@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/auth/AuthContext';
 import { ServiceUseCases } from '@/domain/usecases/ServiceUseCases';
 import { ServiceRepositoryImpl } from '@/data/repositories/ServiceRepositoryImpl';
 import type { Service } from '@/domain/entities/Service';
@@ -20,7 +21,26 @@ export function useServices() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const { user } = useAuth();
+
+  const isValidUuid = (id?: string) => {
+    if (!id) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(id);
+  };
+
   const loadServices = useCallback(async () => {
+    // Guard: Require valid auth user ID
+    if (!user?.id || !isValidUuid(user.id)) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('[useServices] Skipping load: Invalid/Missing User ID', user?.id);
+      }
+      // Clear any previous errors and services to prevent stale state
+      setError(null);
+      setServices([]);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -33,11 +53,11 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     loadServices();
-  }, [loadServices]);
+  }, [loadServices]); // Trigger load on mount or when auth changes (loadServices depends on user)
 
   const createService = useCallback(async (data: {
     name: string;
@@ -49,6 +69,11 @@ export function useServices() {
     categoryId?: string;
     tags?: string[];
   }): Promise<Service> => {
+    // Guard: Require valid auth user ID
+    if (!user?.id || !isValidUuid(user.id)) {
+      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+    }
+
     setLoading(true);
     setError(null);
     // Optimistic update disabled to prevent UI glitch on error
@@ -63,9 +88,14 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   const updateService = useCallback(async (id: string, data: Partial<Service>): Promise<Service> => {
+    // Guard: Require valid auth user ID
+    if (!user?.id || !isValidUuid(user.id)) {
+      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+    }
+
     setLoading(true);
     setError(null);
     // Optimistic update disabled to prevent UI glitch on error
@@ -80,9 +110,14 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   const deleteService = useCallback(async (id: string): Promise<void> => {
+    // Guard: Require valid auth user ID
+    if (!user?.id || !isValidUuid(user.id)) {
+      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+    }
+
     setLoading(true);
     setError(null);
     const before = services;
@@ -97,9 +132,14 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, [services]);
+  }, [services, user?.id]);
 
   const toggleServiceActive = useCallback(async (id: string, isActive: boolean): Promise<Service> => {
+    // Guard: Require valid auth user ID
+    if (!user?.id || !isValidUuid(user.id)) {
+      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+    }
+
     setLoading(true);
     setError(null);
     const before = services;
@@ -116,7 +156,7 @@ export function useServices() {
     } finally {
       setLoading(false);
     }
-  }, [services]);
+  }, [services, user?.id]);
 
   return {
     services,
