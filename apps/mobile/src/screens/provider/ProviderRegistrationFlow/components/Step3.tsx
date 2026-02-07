@@ -26,6 +26,7 @@ export const Step3 = ({ formData, setFormData }: StepProps) => {
                     ].map((service) => (
                         <View key={service} style={styles.checkboxRow}>
                             <Checkbox
+                                testID={`reg-cat-${service.replace(/\s+/g, '-').toLowerCase()}`}
                                 checked={formData.serviceCategories.includes(service)}
                                 onCheckedChange={(checked: boolean) => {
                                     setFormData({
@@ -46,6 +47,7 @@ export const Step3 = ({ formData, setFormData }: StepProps) => {
                 <Text style={styles.label}>Jahre Erfahrung</Text>
                 <View style={styles.sliderContainer}>
                     <Slider
+                        testID="reg-exp-slider"
                         style={{ width: '100%', height: 40 }}
                         minimumValue={0}
                         maximumValue={30}
@@ -66,6 +68,7 @@ export const Step3 = ({ formData, setFormData }: StepProps) => {
                     {["Deutsch", "Englisch", "Französisch", "Spanisch", "Türkisch", "Arabisch"].map((lang) => (
                         <View key={lang} style={styles.checkboxRow}>
                             <Checkbox
+                                testID={`reg-lang-${lang.toLowerCase()}`}
                                 checked={formData.languages.includes(lang)}
                                 onCheckedChange={(checked: boolean) => {
                                     setFormData({
@@ -91,6 +94,7 @@ export const Step3 = ({ formData, setFormData }: StepProps) => {
                     ].map((spec) => (
                         <View key={spec} style={styles.checkboxRow}>
                             <Checkbox
+                                testID={`reg-spec-${spec.replace(/\s+/g, '-').toLowerCase()}`}
                                 checked={formData.specializations.includes(spec)}
                                 onCheckedChange={(checked: boolean) => {
                                     setFormData({

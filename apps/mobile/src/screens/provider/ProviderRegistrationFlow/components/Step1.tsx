@@ -14,6 +14,7 @@ interface StepProps {
 }
 
 export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) => {
+    const navigation = useNavigation<any>();
     return (
         <View style={styles.stepContainer}>
             <Text style={styles.stepTitle}>Willkommen!</Text>
@@ -22,16 +23,18 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
             {/* Name Inputs */}
             <View style={styles.grid2}>
                 <View style={[styles.formGroup, { flex: 1 }]}>
-                    <Text style={styles.label}>Vorname *</Text>
-                    <Input
-                        placeholder="Max"
-                        value={formData.firstName}
-                        onChangeText={(v: string) => setFormData({ ...formData, firstName: v })}
-                    />
-                </View>
+                <Text style={styles.label}>Vorname *</Text>
+                <Input
+                  testID="reg-firstname-input"
+                  placeholder="Max"
+                  value={formData.firstName}
+                  onChangeText={(v: string) => setFormData({ ...formData, firstName: v })}
+                />
+              </View>
                 <View style={[styles.formGroup, { flex: 1 }]}>
                     <Text style={styles.label}>Nachname *</Text>
                     <Input
+                        testID="reg-lastname-input"
                         placeholder="Mustermann"
                         value={formData.lastName}
                         onChangeText={(v: string) => setFormData({ ...formData, lastName: v })}
@@ -43,6 +46,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
             <View style={styles.formGroup}>
                 <Text style={styles.label}>E-Mail *</Text>
                 <Input
+                    testID="reg-email-input"
                     keyboardType="email-address"
                     placeholder="max.mueller@email.com"
                     value={formData.email}
@@ -57,6 +61,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
                 <View style={styles.phoneInputRow}>
                     <Input value="+49" style={styles.countryCodeInput} editable={false} />
                     <Input
+                        testID="reg-phone-input"
                         keyboardType="phone-pad"
                         placeholder="151 1234 5678"
                         value={formData.phone}
@@ -70,6 +75,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Passwort *</Text>
                 <Input
+                    testID="reg-password-input"
                     secureTextEntry
                     value={formData.password}
                     onChangeText={(v: string) => setFormData({ ...formData, password: v })}
@@ -96,6 +102,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Passwort wiederholen *</Text>
                 <Input
+                    testID="reg-confirm-password-input"
                     secureTextEntry
                     value={formData.confirmPassword}
                     onChangeText={(v: string) => setFormData({ ...formData, confirmPassword: v })}
@@ -109,6 +116,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
             <View style={styles.checkboxGroup}>
                 <View style={styles.checkboxRow}>
                     <Checkbox
+                        testID="reg-terms-checkbox"
                         checked={formData.acceptTerms}
                         onCheckedChange={(checked: boolean) => setFormData({ ...formData, acceptTerms: checked })}
                     />
@@ -122,6 +130,7 @@ export const Step1 = ({ formData, setFormData, passwordStrength }: StepProps) =>
                 </View>
                 <View style={styles.checkboxRow}>
                     <Checkbox
+                        testID="reg-privacy-checkbox"
                         checked={formData.acceptPrivacy}
                         onCheckedChange={(checked: boolean) => setFormData({ ...formData, acceptPrivacy: checked })}
                     />

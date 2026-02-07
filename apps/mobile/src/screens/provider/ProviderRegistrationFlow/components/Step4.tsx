@@ -29,7 +29,7 @@ export const Step4 = ({ formData, handleFileUpload }: StepProps) => {
             {/* Identity Proof */}
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Identitätsnachweis *</Text>
-                <TouchableOpacity style={styles.uploadBox} onPress={() => handleFileUpload("idDocument", "ID", false)}>
+                <TouchableOpacity testID="reg-upload-id" style={styles.uploadBox} onPress={() => handleFileUpload("idDocument", "ID", false)}>
                     <Icon name="upload" size={32} color={colors.gray500} />
                     <Text style={styles.uploadText}>Personalausweis oder Reisepass</Text>
                     <Button title="Datei auswählen" variant="ghost" />
@@ -42,7 +42,7 @@ export const Step4 = ({ formData, handleFileUpload }: StepProps) => {
             {/* Profile Picture */}
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Profilbild *</Text>
-                <TouchableOpacity style={styles.uploadBox} onPress={() => handleFileUpload("profilePicture", "Profile", false)}>
+                <TouchableOpacity testID="reg-upload-profile" style={styles.uploadBox} onPress={() => handleFileUpload("profilePicture", "Profile", false)}>
                     <Icon name="camera" size={32} color={colors.gray500} />
                     <Text style={styles.uploadText}>Dein öffentliches Profilbild</Text>
                     <Button title="Foto hochladen" variant="ghost" />
@@ -55,7 +55,7 @@ export const Step4 = ({ formData, handleFileUpload }: StepProps) => {
             {/* Portfolio Images */}
             <View style={styles.formGroup}>
                 <Text style={styles.label}>Portfolio (min. 3 Bilder) *</Text>
-                <TouchableOpacity style={styles.uploadBox} onPress={() => handleFileUpload("portfolioImages", "Portfolio", true)}>
+                <TouchableOpacity testID="reg-upload-portfolio" style={styles.uploadBox} onPress={() => handleFileUpload("portfolioImages", "Portfolio", true)}>
                     <Icon name="image" size={32} color={colors.gray500} />
                     <Text style={styles.uploadText}>Zeige deine besten Arbeiten</Text>
                     <Button title="Fotos hinzufügen" variant="ghost" />

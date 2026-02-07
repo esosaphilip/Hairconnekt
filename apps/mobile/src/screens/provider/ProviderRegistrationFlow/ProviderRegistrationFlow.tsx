@@ -84,12 +84,14 @@ export function ProviderRegistrationFlow() {
             {/* Bottom Bar for Primary Actions */}
             <View style={styles.bottomBar}>
                 <Button
+                    testID="reg-next-button"
                     onPress={handleNext}
                     style={styles.nextButton}
                     title={step === 5 ? "Profil einreichen" : "Weiter"}
                 />
                 {step > 1 && (
                     <Button
+                        testID="reg-back-button"
                         variant="ghost"
                         onPress={handleBack}
                         style={styles.backButton}

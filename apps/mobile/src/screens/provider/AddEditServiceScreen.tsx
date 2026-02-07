@@ -426,7 +426,10 @@ export function AddEditServiceScreen() {
             ) : (
               <Picker
                 selectedValue={formData.category}
-                onValueChange={(v: string) => setFormData({ ...formData, category: v, tags: [] })}
+                onValueChange={(v: string) => {
+                  console.log('[AddEditService] Category selected:', v);
+                  setFormData({ ...formData, category: v, tags: [] });
+                }}
                 items={[
                   { label: 'Kategorie wählen', value: '' },
                   ...categories.map((c) => ({ label: c.name || 'Unbekannt', value: c.id }))
@@ -434,7 +437,7 @@ export function AddEditServiceScreen() {
               />
             )}
             {/* Tags Selection */}
-            {activeCategory && activeCategory.tags && activeCategory.tags.length > 0 && (
+            {activeCategory && Array.isArray(activeCategory.tags) && activeCategory.tags.length > 0 && (
               <View style={styles.tagsContainer}>
                 <Text style={styles.subLabel}>Spezialisierungen (Optional)</Text>
                 <View style={styles.tagsRow}>

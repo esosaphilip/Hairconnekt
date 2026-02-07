@@ -129,6 +129,7 @@ export function LoginScreen({
             <View>
               <Text style={styles.label}>E-Mail oder Telefonnummer</Text>
               <TextInput
+                testID="login-email-input"
                 style={styles.input}
                 placeholder="max.mueller@email.com"
                 value={email}
@@ -145,6 +146,7 @@ export function LoginScreen({
               <Text style={styles.label}>Passwort</Text>
               <View style={styles.passwordContainer}>
                 <TextInput
+                  testID="login-password-input"
                   style={styles.passwordInput}
                   placeholder="••••••••"
                   secureTextEntry={!showPassword}
@@ -193,6 +195,7 @@ export function LoginScreen({
 
             {/* Login Button (using TouchableOpacity as a simple RN button) */}
             <TouchableOpacity
+              testID="login-submit-button"
               onPress={handleLogin}
               style={[styles.button, styles.primaryButton, loading && styles.buttonDisabled]}
               disabled={loading || !email || !password}
@@ -243,10 +246,12 @@ export function LoginScreen({
           {/* Sign Up Link */}
           <View style={styles.signupContainer}>
             <Text style={styles.signupText}>
-              Noch kein Konto?{' '}
-              <Text style={styles.signupLink}
-                onPress={() => onRegisterPress(userType, returnUrl)}>
-                Jetzt registrieren
+            Noch kein Konto?{' '}
+            <Text
+              testID="login-signup-link"
+              style={styles.signupLink}
+              onPress={() => onRegisterPress(userType, returnUrl)}>
+              Jetzt registrieren
               </Text>
             </Text>
           </View>

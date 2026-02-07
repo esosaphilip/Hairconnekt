@@ -8,15 +8,16 @@ type PickerProps = {
   onValueChange?: (next: string) => void;
   items: Item[];
   placeholder?: string;
+  testID?: string;
 };
 
-export default function Picker({ selectedValue, onValueChange, items, placeholder = 'Bitte wählen' }: PickerProps) {
+export default function Picker({ selectedValue, onValueChange, items, placeholder = 'Bitte wählen', testID }: PickerProps) {
   const [open, setOpen] = useState(false);
   const selectedLabel = useMemo(() => items.find((i) => i.value === selectedValue)?.label || placeholder, [items, selectedValue, placeholder]);
 
   return (
     <View>
-      <Pressable style={styles.trigger} onPress={() => setOpen(true)}>
+      <Pressable testID={testID} style={styles.trigger} onPress={() => setOpen(true)}>
         <Text style={styles.triggerText}>{selectedLabel}</Text>
       </Pressable>
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
