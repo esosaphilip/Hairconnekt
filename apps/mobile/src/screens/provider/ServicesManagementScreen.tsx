@@ -1,13 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useAuth } from '@/auth/AuthContext';
 import { View, Text, Pressable, StyleSheet, Platform, Alert, ScrollView, KeyboardAvoidingView, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
-import Input from '@/components/Input';
-import Picker from '@/components/Picker';
-import Textarea from '@/components/textarea';
 import { Badge } from '@/components/badge';
 import { Switch } from 'react-native';
 import { colors, spacing, typography } from '@/theme/tokens';
@@ -28,11 +26,15 @@ export function ServicesManagementScreen() {
     clientBraiderApi.getCategories().then(setCategories).catch(err => console.error('Failed to load categories', err));
   }, []);
 
+  const { user, logout } = useAuth();
+
   useFocusEffect(
     React.useCallback(() => {
-      console.log('[ServicesManagementScreen] Screen focused, loading services...');
-      loadServices();
-    }, [loadServices]) // loadServices comes from useServices and should be stable
+      if (user) {
+        console.log('[ServicesManagementScreen] Screen focused, loading services...');
+        loadServices();
+      }
+    }, [loadServices, user])
   );
 
   const onRefresh = React.useCallback(async () => {
@@ -40,12 +42,6 @@ export function ServicesManagementScreen() {
     await loadServices();
     setRefreshing(false);
   }, [loadServices]);
-  const [adding, setAdding] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  // Legacy inline-add state removed/simplified
-  // All addition happens via navigation to AddEditScreen now
-
 
   const activeServices = useMemo(() => services.filter(s => s.isActive), [services]);
   const inactiveServices = useMemo(() => services.filter(s => !s.isActive), [services]);
@@ -69,6 +65,7 @@ export function ServicesManagementScreen() {
 
   const handleToggleService = async (service: Service) => {
     if (!isValidUuid(service.id)) {
+      console.warn(`[ServicesManagement] Invalid service ID for toggle: ${service.id}`);
       Alert.alert('Ungültige Service-ID', `Dieser Service hat eine ungültige ID (${service.id}) und kann nicht aktualisiert werden.`);
       return;
     }
@@ -82,6 +79,7 @@ export function ServicesManagementScreen() {
 
   const handleDeleteService = async (service: Service) => {
     if (!isValidUuid(service.id)) {
+      console.warn(`[ServicesManagement] Invalid service ID for delete: ${service.id}`);
       Alert.alert('Ungültige Service-ID', `Dieser Service hat eine ungültige ID (${service.id}) und kann nicht gelöscht werden.`);
       return;
     }
@@ -110,17 +108,20 @@ export function ServicesManagementScreen() {
     navigation.goBack();
   };
 
+  // Replaced rootNavigationRef with navigation prop where possible for consistency
   const onAddService = () => {
-    // Navigate strictly to new screen
-    rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } });
+    // @ts-ignore - navigation types need update for nested stacks
+    navigation.navigate('AddEditServiceScreen', { serviceId: null });
   };
 
   const onEditService = (id: string) => {
     if (!isValidUuid(id)) {
+      console.warn(`[ServicesManagement] Invalid service ID for edit: ${id}`);
       Alert.alert('Ungültige Service-ID', `Dieser Service hat eine ungültige ID (${id}) und kann nicht bearbeitet werden.`);
       return;
     }
-    rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: id } });
+    // @ts-ignore
+    navigation.navigate('AddEditServiceScreen', { serviceId: id });
   };
 
   return (
@@ -137,7 +138,7 @@ export function ServicesManagementScreen() {
               <Text style={styles.headerSubtitle}>{activeServices.length} aktive Services</Text>
             </View>
           </View>
-          <Button title="Neu" testID="btn-new-service" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } })} style={{ backgroundColor: colors.primary }} />
+          <Button title="Neu" testID="btn-new-service" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
         </View>
       </View>
 
@@ -266,14 +267,27 @@ export function ServicesManagementScreen() {
               <Text style={{ color: colors.gray600, textAlign: 'center', marginBottom: spacing.md }}>
                 Füge deine ersten Services hinzu, damit Kunden dich buchen können
               </Text>
-              <Button title="Service hinzufügen" onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'AddEditServiceScreen', params: { serviceId: null } })} style={{ backgroundColor: colors.primary }} />
+              <Button title="Service hinzufügen" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
             </View>
           )}
 
           {!!error && (
             <Card style={{ padding: spacing.md, alignItems: 'center' }}>
               <Text style={{ color: colors.error, marginBottom: spacing.md, textAlign: 'center' }}>{error}</Text>
-              <Button title="Erneut versuchen" onPress={onRefresh} style={{ backgroundColor: colors.primary, minWidth: 120 }} />
+
+              <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <Button title="Erneut versuchen" onPress={onRefresh} style={{ backgroundColor: colors.primary, minWidth: 120 }} />
+
+                {error.includes('Validation failed (uuid)') && (
+                  <Button
+                    title="Abmelden"
+                    onPress={logout}
+                    variant="outline"
+                    style={{ minWidth: 120, borderColor: colors.error }}
+                    textStyle={{ color: colors.error }}
+                  />
+                )}
+              </View>
             </Card>
           )}
           {loading && (
