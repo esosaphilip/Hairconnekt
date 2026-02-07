@@ -2,27 +2,35 @@ import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 @Injectable()
-export class R2Service {
+export class B2Service {
   private s3: S3Client;
-  private readonly logger = new Logger(R2Service.name);
+  private readonly logger = new Logger(B2Service.name);
   private readonly publicBaseUrl: string;
 
   constructor() {
-    const accountId = process.env.R2_ACCOUNT_ID;
-    const accessKeyId = process.env.R2_ACCESS_KEY_ID;
-    const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+    const keyId = process.env.B2_KEY_ID;
+    const applicationKey = process.env.B2_APPLICATION_KEY;
+    const region = process.env.B2_REGION || 'eu-central-003';
 
-    if (!accountId || !accessKeyId || !secretAccessKey) {
-      throw new Error('R2 Credentials missing. Deployment aborted.');
+    if (!keyId || !applicationKey) {
+      throw new Error('Backblaze B2 Credentials missing. Deployment aborted.');
     }
 
     this.s3 = new S3Client({
       region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId, secretAccessKey },
+      endpoint: `https://s3.${region}.backblazeb2.com`,
+      credentials: {
+        accessKeyId: keyId,
+        secretAccessKey: applicationKey
+      },
     });
 
-    this.publicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || 'https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev').replace(/\/$/, '');
+    // Backblaze B2 public URL format: https://f{region-number}.backblazeb2.com/file/{bucket-name}
+    const bucketName = process.env.B2_BUCKET || 'hairconnekt-images';
+    this.publicBaseUrl = (
+      process.env.B2_PUBLIC_URL ||
+      `https://f003.backblazeb2.com/file/${bucketName}`
+    ).replace(/\/$/, '');
   }
 
   async uploadObject(bucket: string, key: string, body: Buffer | Uint8Array | string, contentType: string = 'image/jpeg') {

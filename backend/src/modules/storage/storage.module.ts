@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { StorageService } from './storage.service';
-import { R2Service } from './r2.service';
+import { B2Service } from './b2.service';
 
 @Module({
-  providers: [StorageService, R2Service],
+  providers: [StorageService, B2Service],
   exports: [StorageService],
 })
-export class StorageModule {}
+export class StorageModule { }
