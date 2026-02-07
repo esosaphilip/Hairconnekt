@@ -1,0 +1,20 @@
+appId: de.hairconnekt.app
+---
+- launchApp
+
+# Login Flow
+- assertVisible: "Willkommen zurück!"
+- tapOn:
+    id: "login-email-input"
+- inputText: "test@hairconnekt.de"
+- tapOn:
+    id: "login-password-input"
+- inputText: "TestPass123"
+- hideKeyboard
+- tapOn:
+    id: "login-submit-button"
+
+# Assertion (Wait for Dashboard)
+- extendedWaitUntil:
+    visible: "Home"
+    timeout: 10000

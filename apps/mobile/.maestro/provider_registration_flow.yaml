@@ -1,0 +1,94 @@
+appId: de.hairconnekt.app
+---
+- launchApp
+
+# Navigate to Registration
+- tapOn:
+    id: "login-signup-link"
+
+# Step 1: Personal Info
+- assertVisible: "Willkommen!"
+- tapOn:
+    id: "reg-firstname-input"
+- inputText: "Maestro"
+- tapOn:
+    id: "reg-lastname-input"
+- inputText: "Test"
+- tapOn:
+    id: "reg-email-input"
+- inputText: "maestro.test@hairconnekt.de"
+- tapOn:
+    id: "reg-phone-input"
+- inputText: "15199999999"
+- tapOn:
+    id: "reg-password-input"
+- inputText: "TestPass123"
+- tapOn:
+    id: "reg-confirm-password-input"
+- inputText: "TestPass123"
+- hideKeyboard
+- tapOn:
+    id: "reg-terms-checkbox"
+- tapOn:
+    id: "reg-privacy-checkbox"
+- tapOn:
+    id: "reg-next-button"
+
+# Step 2: Business Info
+- assertVisible: "Über dein Business"
+- tapOn:
+    id: "reg-business-name"
+- inputText: "Maestro Studio"
+- hideKeyboard
+- tapOn:
+    id: "reg-bus-type-INDIVIDUAL"
+- tapOn:
+    id: "reg-street"
+- inputText: "Teststrasse"
+- tapOn:
+    id: "reg-house-number"
+- inputText: "1"
+- tapOn:
+    id: "reg-zip"
+- inputText: "12345"
+- tapOn:
+    id: "reg-city"
+- inputText: "Berlin"
+- hideKeyboard
+- tapOn:
+    id: "reg-state-picker"
+- tapOn: "Nordrhein-Westfalen"
+- tapOn:
+    id: "reg-next-button"
+
+# Step 3: Services
+- assertVisible: "Deine Dienstleistungen"
+- tapOn:
+    id: "reg-cat-box-braids"
+- tapOn:
+    id: "reg-lang-deutsch"
+- tapOn:
+    id: "reg-next-button"
+
+# Step 4: Verification
+- assertVisible: "Verifizierung"
+- tapOn:
+    id: "reg-upload-id"
+- tapOn:
+    id: "reg-upload-profile"
+- tapOn:
+    id: "reg-upload-portfolio"
+- tapOn:
+    id: "reg-next-button"
+
+# Step 5: Summary
+- assertVisible: "Zusammenfassung"
+- scrollUntilVisible:
+    element:
+        id: "reg-next-button"
+    direction: DOWN
+- tapOn:
+    id: "reg-next-button"
+
+# Assert Success (Pending Approval or Dashboard)
+# Note: Exact assertion depends on backend response
