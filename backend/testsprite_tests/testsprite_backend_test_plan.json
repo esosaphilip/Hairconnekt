@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "auth register endpoint functionality",
+    "description": "Verify that the /auth/register endpoint allows new users to register successfully with valid data and returns appropriate error messages for invalid inputs."
+  },
+  {
+    "id": "TC002",
+    "title": "auth login endpoint functionality",
+    "description": "Test the /auth/login endpoint to ensure users can log in with valid credentials and receive JWT tokens, and that invalid credentials are handled correctly."
+  },
+  {
+    "id": "TC003",
+    "title": "auth refresh token endpoint functionality",
+    "description": "Validate the /auth/refresh endpoint to confirm that it issues a new access token when provided with a valid refresh token and rejects invalid or expired tokens."
+  },
+  {
+    "id": "TC004",
+    "title": "auth change password endpoint functionality",
+    "description": "Check the /auth/change-password endpoint to ensure authenticated users can change their password successfully and that incorrect current passwords are rejected."
+  },
+  {
+    "id": "TC005",
+    "title": "list provider services endpoint functionality",
+    "description": "Verify that the /providers/me/services GET endpoint returns a list of services for the authenticated provider and handles cases where no services exist."
+  },
+  {
+    "id": "TC006",
+    "title": "create provider service endpoint functionality",
+    "description": "Test the /providers/me/services POST endpoint to ensure providers can create new services with valid data and receive appropriate errors for invalid inputs."
+  },
+  {
+    "id": "TC007",
+    "title": "update provider service endpoint functionality",
+    "description": "Validate the /providers/me/services/{id} PATCH endpoint to confirm that providers can update existing services and that updates with invalid data or non-existent service IDs are handled properly."
+  },
+  {
+    "id": "TC008",
+    "title": "delete provider service endpoint functionality",
+    "description": "Check the /providers/me/services/{id} DELETE endpoint to ensure providers can delete their services and that attempts to delete non-existent or unauthorized services are rejected."
+  },
+  {
+    "id": "TC009",
+    "title": "list service categories endpoint functionality",
+    "description": "Verify that the /providers/me/services/categories GET endpoint returns the list of available service categories correctly."
+  },
+  {
+    "id": "TC010",
+    "title": "upload service image endpoint functionality",
+    "description": "Test the /providers/me/services/image POST endpoint to ensure providers can upload images for their services and that invalid file types or sizes are rejected."
+  }
+]
