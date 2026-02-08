@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
@@ -236,22 +236,50 @@ export class UsersService {
   }
 
   async uploadProfilePicture(userId: string, file: any) {
-    const user = await this.userRepo.findById(userId);
-    if (!user) throw new NotFoundException('User not found');
+    try {
+      const user = await this.userRepo.findById(userId);
+      if (!user) throw new NotFoundException('User not found');
 
-    if (!file?.buffer || !file?.originalname) {
-      throw new Error('Image file is required');
+      // Validate file input
+      if (!file) {
+        throw new BadRequestException('No file provided');
+      }
+
+      if (!file.buffer) {
+        throw new BadRequestException('File buffer is missing. Please select a valid image.');
+      }
+
+      if (!file.originalname) {
+        throw new BadRequestException('File name is missing');
+      }
+
+      console.log(`[UsersService] Uploading avatar for user ${userId}: ${file.originalname} (${file.size || file.buffer.length} bytes)`);
+
+      // Upload to storage
+      const { url } = await this.storageService.uploadImage(user.id, file.buffer, file.originalname);
+
+      console.log(`[UsersService] Avatar uploaded successfully: ${url}`);
+
+      // Update user profile
+      user.profilePictureUrl = url;
+      await this.userRepo.save(user);
+
+      return {
+        success: true,
+        profilePictureUrl: url,
+        url // Add url field for compatibility
+      };
+    } catch (error) {
+      console.error(`[UsersService] uploadProfilePicture failed for user ${userId}:`, error);
+
+      // Re-throw known exceptions
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload profile picture. Please try again.';
+      throw new BadRequestException(errorMessage);
     }
-
-    // Upload to storage using R2
-    const { url } = await this.storageService.uploadImage(user.id, file.buffer, file.originalname);
-
-    user.profilePictureUrl = url;
-    await this.userRepo.save(user);
-
-    return {
-      success: true,
-      profilePictureUrl: url
-    };
   }
 }

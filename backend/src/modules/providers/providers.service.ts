@@ -372,58 +372,105 @@ export class ProvidersService {
    * Upload and update profile picture
    */
   async uploadProfilePicture(userId: string, file: any) {
-    const provider = await this.providerRepo.findByUserId(userId);
-    if (!provider) throw new NotFoundException('Provider profile not found');
+    try {
+      const provider = await this.providerRepo.findByUserId(userId);
+      if (!provider) throw new NotFoundException('Provider profile not found');
 
-    if (!file?.buffer || !file?.originalname) {
-      throw new BadRequestException('Image file is required');
+      // Validate file input
+      if (!file) {
+        throw new BadRequestException('No file provided');
+      }
+
+      if (!file.buffer) {
+        throw new BadRequestException('File buffer is missing. Please select a valid image.');
+      }
+
+      if (!file.originalname) {
+        throw new BadRequestException('File name is missing');
+      }
+
+      console.log(`[ProvidersService] Uploading profile picture for provider ${provider.id}: ${file.originalname} (${file.size || file.buffer.length} bytes)`);
+
+      // Upload to storage
+      const { url } = await this.storage.uploadImage(provider.id, file.buffer, file.originalname);
+
+      console.log(`[ProvidersService] Profile picture uploaded successfully: ${url}`);
+
+      // Update User entity (primary profile picture)
+      if (provider.user) {
+        await this.userRepo.update(provider.user.id, { profilePictureUrl: url });
+      }
+
+      // Invalidate caches
+      await this.invalidateProviderCache(provider.id, userId);
+
+      return {
+        success: true,
+        profilePictureUrl: url,
+        url // Add url field for compatibility
+      };
+    } catch (error) {
+      console.error(`[ProvidersService] uploadProfilePicture failed for user ${userId}:`, error);
+
+      // Re-throw known exceptions
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload profile picture. Please try again.';
+      throw new BadRequestException(errorMessage);
     }
-
-    // Upload to storage
-    const { url } = await this.storage.uploadImage(provider.id, file.buffer, file.originalname);
-
-    // Update User entity (primary profile picture)
-    if (provider.user) {
-      await this.userRepo.update(provider.user.id, { profilePictureUrl: url });
-    }
-
-    // Update Provider entity (cover/business photo - optional, but good for sync)
-    // Decide if we want to overwrite cover photo or not. 
-    // Usually "Profile Picture" = User Avatar, "Cover Photo" = Banner.
-    // ProviderProfileScreen seems to try both.
-    // Let's stick to updating User profile picture primarily.
-
-    // Invalidate caches
-    await this.invalidateProviderCache(provider.id, userId);
-
-    return {
-      success: true,
-      profilePictureUrl: url
-    };
   }
 
   /**
    * Upload service image for use in service cards
    */
   async uploadServiceImage(userId: string, file: any) {
-    const provider = await this.providerRepo.findByUserId(userId);
-    if (!provider) throw new NotFoundException('Provider profile not found');
+    try {
+      const provider = await this.providerRepo.findByUserId(userId);
+      if (!provider) throw new NotFoundException('Provider profile not found');
 
-    if (!file?.buffer || !file?.originalname) {
-      throw new BadRequestException('Image file is required');
+      // Validate file input
+      if (!file) {
+        throw new BadRequestException('No file provided');
+      }
+
+      if (!file.buffer) {
+        throw new BadRequestException('File buffer is missing. Please select a valid image.');
+      }
+
+      if (!file.originalname) {
+        throw new BadRequestException('File name is missing');
+      }
+
+      console.log(`[ProvidersService] Uploading service image for provider ${provider.id}: ${file.originalname} (${file.size || file.buffer.length} bytes)`);
+
+      // Upload to storage with service-specific folder
+      const { url } = await this.storage.uploadImage(provider.id, file.buffer, file.originalname);
+
+      console.log(`[ProvidersService] Service image uploaded successfully: ${url}`);
+
+      // Note: We don't persist this URL here. The mobile app receives the URL 
+      // and includes it in the service creation/update payload.
+      // This is just an upload endpoint that returns the URL.
+
+      return {
+        url,
+        success: true
+      };
+    } catch (error) {
+      console.error(`[ProvidersService] uploadServiceImage failed for user ${userId}:`, error);
+
+      // Re-throw known exceptions
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+
+      // Wrap unknown errors
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload service image. Please try again.';
+      throw new BadRequestException(errorMessage);
     }
-
-    // Upload to storage with service-specific folder
-    const { url } = await this.storage.uploadImage(provider.id, file.buffer, file.originalname);
-
-    // Note: We don't persist this URL here. The mobile app receives the URL 
-    // and includes it in the service creation/update payload.
-    // This is just an upload endpoint that returns the URL.
-
-    return {
-      url,
-      success: true
-    };
   }
 
   /**

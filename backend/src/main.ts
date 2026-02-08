@@ -21,6 +21,11 @@ async function bootstrap() {
     : true;
   app.enableCors({ origin: corsOrigin });
   app.setGlobalPrefix('api/v1');
+
+  // Configure request size limits for file uploads (10MB)
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true }),
   );
