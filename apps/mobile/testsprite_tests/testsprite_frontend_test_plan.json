@@ -1,612 +1,621 @@
 [
   {
     "id": "TC001",
-    "title": "Email/Phone Registration and JWT Issuance - Happy Path",
-    "description": "Verify a new user (client or provider) can register with email or phone, receive a JWT, and access protected APIs using the token.",
+    "title": "Provider Registration - Complete Successful Flow",
+    "description": "Verify that a provider can successfully complete all 5 steps of the registration flow with valid inputs and activate their profile.",
     "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the registration screen (client flow)."
+        "description": "Navigate to provider registration start screen"
       },
       {
         "type": "action",
-        "description": "Fill required fields with valid data: name, email or phone, password, role selection (client or provider), and submit registration."
+        "description": "Fill in valid personal info on Step 1 and proceed"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid business details on Step 2 and proceed"
+      },
+      {
+        "type": "action",
+        "description": "Add required services on Step 3 and proceed"
+      },
+      {
+        "type": "action",
+        "description": "Upload verification documents on Step 4 and proceed"
+      },
+      {
+        "type": "action",
+        "description": "Review and confirm registration summary on Step 5"
       },
       {
         "type": "assertion",
-        "description": "API returns 201 Created and a JWT (access token) in response body."
-      },
-      {
-        "type": "action",
-        "description": "Store JWT in local session storage and attach Authorization: Bearer <token> to subsequent requests."
-      },
-      {
-        "type": "action",
-        "description": "Call a protected API endpoint (e.g., GET /me or provider services management for provider role)."
-      },
-      {
-        "type": "assertion",
-        "description": "Protected endpoint returns 200 OK and the expected user/profile payload; JWT allows access matching registered user identity."
+        "description": "Verify profile status is activated and provider can access dashboard"
       }
     ]
   },
   {
     "id": "TC002",
-    "title": "Login Failure with Incorrect Credentials",
-    "description": "Verify login fails with incorrect email/phone or password and returns an appropriate error without issuing JWT.",
+    "title": "Provider Registration - Validation on Required Fields",
+    "description": "Verify validation errors are shown and submission is blocked when required fields are missing or invalid on all 5 steps of provider registration.",
     "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Navigate to the login screen."
+        "description": "Navigate to Step 1 of provider registration"
       },
       {
         "type": "action",
-        "description": "Enter a registered email/phone with an incorrect password and submit."
+        "description": "Attempt to proceed with empty required personal info fields"
       },
       {
         "type": "assertion",
-        "description": "API returns 401 Unauthorized with descriptive error message; no JWT is issued and no authenticated session is created."
+        "description": "Check validation errors prevent moving forward"
       },
       {
         "type": "action",
-        "description": "Attempt to access a protected endpoint without a valid token."
+        "description": "Fill Step 1 valid data and proceed to Step 2"
+      },
+      {
+        "type": "action",
+        "description": "Leave required business details empty and attempt to proceed"
       },
       {
         "type": "assertion",
-        "description": "Access is denied (401) and response explains authentication failure."
+        "description": "Validation errors displayed and progression blocked"
+      },
+      {
+        "type": "action",
+        "description": "Fill valid data on Step 2 and proceed to Step 3"
+      },
+      {
+        "type": "action",
+        "description": "Try to proceed without adding any services"
+      },
+      {
+        "type": "assertion",
+        "description": "Service addition required validation error displayed"
+      },
+      {
+        "type": "action",
+        "description": "Add at least one valid service and proceed to Step 4"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to proceed without uploading verification documents"
+      },
+      {
+        "type": "assertion",
+        "description": "Validation error for missing verification documents shown"
       }
     ]
   },
   {
     "id": "TC003",
-    "title": "Expired JWT Handling",
-    "description": "Verify the system rejects requests made with an expired JWT and forces re-authentication (or returns refresh token flow error).",
-    "category": "security",
+    "title": "Service Management - Add New Service with Valid Data",
+    "description": "Verify providers can add new services with valid inputs, and the service appears correctly in the list with a valid UUID.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Obtain a valid JWT and then simulate/modify token expiry to a past timestamp (or use test harness to issue short-lived token)."
+        "description": "Navigate to Service Management screen"
       },
       {
         "type": "action",
-        "description": "Attach the expired JWT to a protected API request (e.g., GET /me or GET provider appointments)."
+        "description": "Click 'Add Service' to open add service screen"
+      },
+      {
+        "type": "action",
+        "description": "Fill in valid service details (name, description, price)"
+      },
+      {
+        "type": "action",
+        "description": "Submit new service"
       },
       {
         "type": "assertion",
-        "description": "API returns 401 Unauthorized with an 'token expired' or equivalent error code and message; client SDK surfaces the need to re-authenticate or refresh."
+        "description": "Verify new service is listed with a valid UUID and correct data"
       }
     ]
   },
   {
     "id": "TC004",
-    "title": "Client Discovery and Search with Filters - Happy Path",
-    "description": "Verify clients can search for providers by style, location radius, availability filter and that results populate both list and map views with expected providers.",
+    "title": "Service Management - Edit Existing Service",
+    "description": "Verify providers can edit existing services and changes are saved and reflected properly with maintained valid UUID.",
     "category": "functional",
-    "priority": "High",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as a client and open the discovery/search screen."
+        "description": "Navigate to Service Management screen"
       },
       {
         "type": "action",
-        "description": "Enter a style filter (e.g., 'braids'), set location coordinates or allow location permission, set availability filter for next 7 days, and execute search."
+        "description": "Select an existing service from the list"
+      },
+      {
+        "type": "action",
+        "description": "Edit service details (e.g. price or description) with valid inputs"
+      },
+      {
+        "type": "action",
+        "description": "Save changes"
       },
       {
         "type": "assertion",
-        "description": "API returns a list of providers matching style and availability; each provider item includes service details, rating, and a distance metric."
-      },
-      {
-        "type": "assertion",
-        "description": "Map view shows pins for returned providers and tapping a pin reveals provider name and quick actions."
+        "description": "Verify service list shows updated details and UUID remains valid"
       }
     ]
   },
   {
     "id": "TC005",
-    "title": "Search Filters - No Results and Suggested Fallback",
-    "description": "Verify behavior when search filters return zero results: UI shows clear 'no results' state and suggests relaxing filters or alternative providers.",
-    "category": "ui",
+    "title": "Service Management - Delete Existing Service",
+    "description": "Verify providers can delete a service and it gets removed from the service list.",
+    "category": "functional",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as a client and perform a search with extremely restrictive filters (rare style + narrow location radius + immediate availability)."
-      },
-      {
-        "type": "assertion",
-        "description": "UI shows a 'no results' state with messaging and suggestions (e.g., increase radius, remove availability filter) and does not crash."
+        "description": "Navigate to Service Management screen"
       },
       {
         "type": "action",
-        "description": "Select a suggested fallback (e.g., expand radius) and re-run the search."
+        "description": "Select an existing service"
+      },
+      {
+        "type": "action",
+        "description": "Delete the service and confirm deletion"
       },
       {
         "type": "assertion",
-        "description": "New search returns results or properly updates UI; state transition is smooth without data leakage."
+        "description": "Verify service is no longer listed"
       }
     ]
   },
   {
     "id": "TC006",
-    "title": "Client Booking End-to-End with Payment and Provider Notification",
-    "description": "Verify a client can select a provider service, pick an available slot, complete payment (Stripe sandbox), resulting booking is persisted, provider receives booking notification, and payment transaction records platform commission.",
-    "category": "integration",
+    "title": "Service Management - Add/Edit Service with Invalid UUID",
+    "description": "Ensure that invalid UUID formats are rejected during service creation or updates and appropriate validation errors are shown.",
+    "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as client, navigate to a provider profile, select a published service with valid price and duration."
+        "description": "Navigate to add service screen"
       },
       {
         "type": "action",
-        "description": "Open availability calendar, select an available slot, and proceed to booking confirmation."
+        "description": "Attempt to submit service record with invalid UUID"
+      },
+      {
+        "type": "assertion",
+        "description": "Validation error for invalid UUID format is displayed, submission blocked"
       },
       {
         "type": "action",
-        "description": "Enter sandbox payment details (Stripe test card) and submit payment."
+        "description": "Navigate to edit existing service screen"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to save service with corrupted or invalid UUID"
       },
       {
         "type": "assertion",
-        "description": "Payment gateway returns success; booking creation API returns 201 Created with booking ID, status 'booked' (or 'pending' if provider confirmation required) and attached payment transaction ID."
-      },
-      {
-        "type": "assertion",
-        "description": "Provider receives a booking notification (in-app notification payload or pending bookings endpoint shows new booking)."
-      },
-      {
-        "type": "assertion",
-        "description": "Payment record shows gross amount, platform commission calculated per current tier, and provider net amount; funds are visible in sandbox transaction logs."
+        "description": "Validation error is shown, and save is prevented"
       }
     ]
   },
   {
     "id": "TC007",
-    "title": "Booking Attempt on Unavailable or Overlapping Slot",
-    "description": "Verify booking fails when a client attempts to book a slot that is no longer available or overlaps with an existing booking; appropriate error is returned and no payment is processed.",
-    "category": "error handling",
+    "title": "Authentication - Successful Login and Session Persistence",
+    "description": "Verify users can log in with valid credentials, maintain session persistence after app restart, and navigate to their respective dashboards.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Ensure provider has an existing booking or blocked slot at a specific time."
+        "description": "Navigate to login screen"
       },
       {
         "type": "action",
-        "description": "As a client, attempt to book the provider for the same time slot."
+        "description": "Input valid username/email and password"
+      },
+      {
+        "type": "action",
+        "description": "Submit login form"
       },
       {
         "type": "assertion",
-        "description": "Booking API returns 409 Conflict or 400 with descriptive message indicating slot unavailable; no payment transaction is initiated or payment is rolled back before capture."
+        "description": "Verify successful login and redirection to user dashboard"
       },
       {
         "type": "action",
-        "description": "Verify provider's availability remains unchanged and no duplicate bookings exist for that slot."
+        "description": "Restart the application"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify user session is persisted and user remains logged in"
       }
     ]
   },
   {
     "id": "TC008",
-    "title": "Provider Creates Valid Service (CRUD Create and Publish)",
-    "description": "Verify a provider can create a service with valid title, description, price (>0), and duration (within allowed bounds), and that the service appears in provider's list and client discovery.",
-    "category": "functional",
+    "title": "Authentication - Login Failure with Invalid Credentials",
+    "description": "Verify appropriate error messages are shown and login is prevented when invalid or unregistered credentials are provided.",
+    "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as provider and navigate to ServicesManagement screen."
+        "description": "Navigate to login screen"
       },
       {
         "type": "action",
-        "description": "Open 'Create Service' form, enter valid fields: title, description, price = 50, duration = 60 (minutes), select categories and visibility, then submit."
-      },
-      {
-        "type": "assertion",
-        "description": "API returns 201 Created and new service object with persisted ID."
+        "description": "Input invalid username/email and/or password"
       },
       {
         "type": "action",
-        "description": "Reload provider services list and check client discovery search for the service's style/category."
+        "description": "Attempt to login"
       },
       {
         "type": "assertion",
-        "description": "Service appears in provider's list and is discoverable by clients when searching relevant style/category."
+        "description": "Verify error message indicating invalid credentials is displayed and login is blocked"
       }
     ]
   },
   {
     "id": "TC009",
-    "title": "Service Creation Validation Errors (price and duration)",
-    "description": "Verify creating/updating a service with invalid price (<=0) or invalid duration (too short/too long) returns validation errors and does not persist the service.",
-    "category": "error handling",
+    "title": "Provider Dashboard - Display Accurate Appointments and Financial Data",
+    "description": "Verify provider dashboard correctly displays real-time appointment data, accurate financial summaries including earnings and vouchers.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as provider and open 'Create Service' form."
+        "description": "Login as a provider"
       },
       {
         "type": "action",
-        "description": "Attempt to create a service with price = 0 and duration = 0 and submit."
+        "description": "Navigate to provider dashboard"
       },
       {
         "type": "assertion",
-        "description": "API returns 400 Bad Request with validation messages for price and duration; UI shows field-level error messages."
-      },
-      {
-        "type": "action",
-        "description": "Attempt to create a service with an extremely large duration (beyond allowed upper bound) and submit."
+        "description": "Verify appointments list reflects current and upcoming bookings accurately"
       },
       {
         "type": "assertion",
-        "description": "API returns 400 Bad Request with duration validation error and service is not persisted."
+        "description": "Verify financial summaries match backend data including earnings and vouchers"
       }
     ]
   },
   {
     "id": "TC010",
-    "title": "Prevent Deletion of Service with Upcoming Bookings",
-    "description": "Verify a provider cannot delete a service that has upcoming confirmed bookings without explicit handling; system prevents deletion or requires reassign/cancelation.",
+    "title": "Provider Dashboard - Manage Profile and Services",
+    "description": "Verify providers can update profile settings and service offerings from the dashboard and changes reflect immediately.",
     "category": "functional",
-    "priority": "High",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Create a provider service and create an upcoming booking for that service (via client flow)."
+        "description": "Login as provider and access dashboard"
       },
       {
         "type": "action",
-        "description": "As provider, attempt to delete the service from ServicesManagement screen."
+        "description": "Navigate to profile settings from dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Edit profile details with valid data and save"
       },
       {
         "type": "assertion",
-        "description": "API returns 409 Conflict or 400 with message explaining deletion blocked due to upcoming bookings; UI surfaces explanatory modal or error."
+        "description": "Verify profile changes are saved and displayed"
       },
       {
         "type": "action",
-        "description": "Confirm service still exists in provider's service list and upcoming bookings remain intact."
+        "description": "Navigate to service management from dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Add or update services"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify service updates are reflected in the provider's list"
       }
     ]
   },
   {
     "id": "TC011",
-    "title": "Provider Appointment Lifecycle (Confirm → Complete) and Client Status Updates",
-    "description": "Verify provider can change appointment status (e.g., confirm, start, complete), status updates persist, and client sees updated appointment status and can write a review after completion.",
-    "category": "integration",
+    "title": "Client - Discover Providers Using Map and Filters",
+    "description": "Verify clients can discover local hair service providers using the map interface and apply filters to refine search results.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Create a booking (client) that results in an appointment for provider."
+        "description": "Login as client"
       },
       {
         "type": "action",
-        "description": "Authenticate as provider, open appointments list, select the appointment and change status to 'confirmed'."
-      },
-      {
-        "type": "assertion",
-        "description": "Appointment status updates to 'confirmed' in API and client appointments endpoint shows 'confirmed'."
+        "description": "Access provider discovery map"
       },
       {
         "type": "action",
-        "description": "After appointment time, provider marks appointment as 'completed'."
+        "description": "Observe local providers displayed on map"
+      },
+      {
+        "type": "action",
+        "description": "Apply filters (e.g. service type, price range)"
       },
       {
         "type": "assertion",
-        "description": "Appointment status is 'completed'; client is allowed to write a review; analytics and earnings are updated to reflect completed booking."
+        "description": "Verify map updates to show providers matching filters only"
       }
     ]
   },
   {
     "id": "TC012",
-    "title": "Provider Calendar Block Time Prevents Bookings",
-    "description": "Verify provider can block time in calendar which becomes unavailable for client bookings; block/unblock actions update availability correctly.",
+    "title": "Client - Book Appointment with Real-time Availability",
+    "description": "Verify clients can select appointment times based on real-time provider availability and complete the booking process successfully.",
     "category": "functional",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as provider and open calendar interface."
+        "description": "Login as client and select a provider"
       },
       {
         "type": "action",
-        "description": "Block a 2-hour time range in the calendar and save changes."
-      },
-      {
-        "type": "assertion",
-        "description": "Blocked slots are marked unavailable in provider availability API and visually on calendar UI."
+        "description": "View provider's available appointment slots"
       },
       {
         "type": "action",
-        "description": "As a client, attempt to book a service during a blocked slot."
-      },
-      {
-        "type": "assertion",
-        "description": "Booking API returns conflict/unavailable; UI prevents booking flow for blocked times."
+        "description": "Select a valid available slot"
       },
       {
         "type": "action",
-        "description": "Provider unblocks the time and confirm availability restored."
+        "description": "Complete booking with required details"
       },
       {
         "type": "assertion",
-        "description": "Previously blocked slots become bookable and availability endpoints reflect the change."
+        "description": "Verify booking confirmation received and appointment is recorded"
       }
     ]
   },
   {
     "id": "TC013",
-    "title": "Provider Dashboard Analytics Accuracy",
-    "description": "Verify analytics metrics (weekly bookings count, gross revenue, platform commissions, provider net payouts) accurately reflect recorded appointments and payments.",
-    "category": "integration",
+    "title": "Booking - Handle Booking Attempt for Taken Time Slot",
+    "description": "Verify system prevents double booking by handling cases where a user tries to book a time slot that has become unavailable after selection.",
+    "category": "error handling",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Set up test dataset: create multiple appointments across the week for a provider with known service prices and known commission rate."
+        "description": "Client selects an available appointment slot"
       },
       {
         "type": "action",
-        "description": "Ensure payments for those appointments are recorded in the sandbox with expected amounts."
+        "description": "Simulate another user booking the same slot concurrently"
       },
       {
         "type": "action",
-        "description": "Authenticate as provider and open AnalyticsDashboard screen for the same week."
+        "description": "Client attempts to complete booking process"
       },
       {
         "type": "assertion",
-        "description": "Dashboard metrics show booking count equal to created appointments, gross revenue equals sum of gross amounts, platform commission equals expected computed fee, and provider net equals gross minus commission and any subscription fees."
+        "description": "Verify error is shown indicating slot no longer available and booking is blocked"
       }
     ]
   },
   {
     "id": "TC014",
-    "title": "Subscription Billing and Commission Application",
-    "description": "Verify provider subscription tier changes (Basic → Pro → Premium) result in correct billing charges and that commission rates applied to bookings reflect the current subscription tier.",
-    "category": "monetization",
+    "title": "Payments - Successful Secure Payment Processing",
+    "description": "Verify client payments are processed securely and successfully with confirmation and receipt generation.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as provider and subscribe to Basic tier using sandbox payment method; verify subscription record created."
-      },
-      {
-        "type": "assertion",
-        "description": "Subscription billing API returns active Basic subscription and charge is recorded in sandbox transactions."
+        "description": "Complete appointment booking flow up to payment step"
       },
       {
         "type": "action",
-        "description": "Upgrade subscription to Pro through ProviderSubscription screen and confirm upgrade charge."
-      },
-      {
-        "type": "assertion",
-        "description": "Billing reflects prorated or full charge per business rule; provider subscription status updates to Pro."
+        "description": "Enter valid payment details"
       },
       {
         "type": "action",
-        "description": "Create a client booking for this provider and complete payment."
+        "description": "Submit payment"
       },
       {
         "type": "assertion",
-        "description": "Applied commission rate on the booking transaction matches Pro-tier commission; commission is logged and provider net is computed accordingly."
+        "description": "Verify payment success confirmation and receipt availability"
       }
     ]
   },
   {
     "id": "TC015",
-    "title": "HTTP Client Resilience: 5xx Retries and Error Surface",
-    "description": "Verify the centralized HTTP client retries transient server errors (5xx) up to configured attempts and surfaces a clear error after retries fail.",
+    "title": "Payments - Payment Failure Handling",
+    "description": "Verify appropriate error messages and recovery options are provided for payment failures due to invalid data or network errors.",
     "category": "error handling",
-    "priority": "Medium",
+    "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Simulate backend returning HTTP 500 for a critical endpoint (e.g., search endpoint) for the first two attempts and success on third (or configure to fail all attempts for negative test)."
-      },
-      {
-        "type": "action",
-        "description": "Invoke API via the client app which uses centralized http adapter."
+        "description": "Attempt payment with invalid card details or expired payment method"
       },
       {
         "type": "assertion",
-        "description": "HTTP client performs configured retry attempts with exponential/backoff and succeeds when backend recovers; response returned to caller when successful."
+        "description": "Verify error message indicating payment failure is displayed and user can retry"
       },
       {
         "type": "action",
-        "description": "Repeat simulation with persistent 5xx failures beyond retry limit."
+        "description": "Attempt payment with valid details but simulate network failure"
       },
       {
         "type": "assertion",
-        "description": "HTTP client returns a standardized error object after retries exhausted; UI shows user-friendly error message and does not crash."
+        "description": "Verify network error notification and option to retry payment"
       }
     ]
   },
   {
     "id": "TC016",
-    "title": "API Validation: Missing Required Booking Fields Produces 400",
-    "description": "Verify booking API returns 400 Bad Request when required fields are missing (e.g., missing service ID or scheduled time) and UI surfaces validation errors.",
-    "category": "error handling",
+    "title": "Client - Manage Favorites List",
+    "description": "Verify clients can add providers to favorites, view their favorites list, and remove providers as desired.",
+    "category": "functional",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as client and submit booking API payload with missing required fields (e.g., no serviceId or no scheduledAt)."
+        "description": "Login as client"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to a provider profile and add to favorites"
+      },
+      {
+        "type": "action",
+        "description": "Access favorites list"
       },
       {
         "type": "assertion",
-        "description": "API returns 400 Bad Request with field-level error details and validation codes; UI shows respective validation messages and prevents progression."
+        "description": "Verify added provider appears in favorites list"
+      },
+      {
+        "type": "action",
+        "description": "Remove provider from favorites list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify provider is no longer in favorites list"
       }
     ]
   },
   {
     "id": "TC017",
-    "title": "Access Control: Provider-only Endpoints Protected from Clients",
-    "description": "Verify endpoints intended for providers (services management, provider appointments) are inaccessible to client-role users and return 403 Forbidden.",
-    "category": "security",
-    "priority": "High",
+    "title": "In-app Messaging Between Client and Provider",
+    "description": "Verify that clients and providers can exchange messages within the app, and messages are sent, received, and displayed correctly in real time.",
+    "category": "functional",
+    "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Authenticate as client and attempt to call provider-only endpoints (e.g., POST /provider/services, GET /provider/appointments)."
-      },
-      {
-        "type": "assertion",
-        "description": "API returns 403 Forbidden with an appropriate permission error; client cannot create or view provider-only resources."
+        "description": "Login as client and open messaging with a provider"
       },
       {
         "type": "action",
-        "description": "Authenticate as provider and call same endpoints to confirm provider access."
+        "description": "Send a message to provider"
       },
       {
         "type": "assertion",
-        "description": "Provider receives 200/201 expected responses, confirming role-based access control is enforced."
+        "description": "Verify message is delivered and displayed in conversation"
+      },
+      {
+        "type": "action",
+        "description": "Login as provider and respond to the client message"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify client receives provider's message in real time"
       }
     ]
   },
   {
     "id": "TC018",
-    "title": "Token Tampering and Signature Validation",
-    "description": "Verify tampered JWTs are rejected by backend (signature invalid) and result in 401 Unauthorized without exposing sensitive information.",
-    "category": "security",
+    "title": "Subscription - Enforce Feature Access Based on Subscription Tier",
+    "description": "Verify that providers have access only to features corresponding to their subscription tier and any commission rates are correctly applied.",
+    "category": "functional",
     "priority": "High",
     "steps": [
       {
         "type": "action",
-        "description": "Obtain a valid JWT, alter its payload or signature client-side, and attach the tampered token to a request to a protected endpoint."
+        "description": "Login as provider with basic subscription tier"
+      },
+      {
+        "type": "action",
+        "description": "Attempt to access premium features restricted to higher tiers"
       },
       {
         "type": "assertion",
-        "description": "Server validates token signature and returns 401 Unauthorized with generic authentication error; no sensitive error stack traces exposed."
+        "description": "Verify access denied messages or UI disables premium features"
+      },
+      {
+        "type": "action",
+        "description": "Check commission rates applied on provider financials correspond to subscription tier"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify commission rates match expected values for subscription tier"
       }
     ]
   },
   {
     "id": "TC019",
-    "title": "Shared UI Components Render and Basic Accessibility",
-    "description": "Verify shared components (Button, Input, Avatar) render correctly with expected props and basic accessibility attributes are present; snapshot tests to detect regressions.",
-    "category": "ui",
+    "title": "Provider Calendar Management - Add and Modify Availability",
+    "description": "Verify providers can add, edit, and remove availability slots on their calendar and changes are saved correctly.",
+    "category": "functional",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Render Button component with primary and secondary variants and capture snapshot."
-      },
-      {
-        "type": "assertion",
-        "description": "Snapshots match baseline; component exposes accessibilityLabel, role, and responds to tap handlers."
+        "description": "Login as provider and navigate to calendar management"
       },
       {
         "type": "action",
-        "description": "Render Input component with placeholder, value, and error state; capture snapshot and verify aria-like props."
+        "description": "Add new availability slot with valid date and time"
       },
       {
         "type": "assertion",
-        "description": "Input shows placeholder, value and error UI; accessibility props (accessibilityLabel/accessible) are present."
+        "description": "Verify new slot appears correctly in calendar"
       },
       {
         "type": "action",
-        "description": "Render Avatar component with name initials and image fallback (without actual file upload) and capture snapshot."
+        "description": "Edit existing availability slot"
       },
       {
         "type": "assertion",
-        "description": "Avatar displays initials when image is missing and includes accessible label describing user."
+        "description": "Verify slot updates are saved and displayed"
+      },
+      {
+        "type": "action",
+        "description": "Remove availability slot"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify slot is removed from calendar"
       }
     ]
   },
   {
     "id": "TC020",
-    "title": "Search Performance SLA Under Normal Load",
-    "description": "Verify client discovery/search API responds within acceptable SLA (<2s) under a normal dataset and typical mobile network conditions.",
-    "category": "performance",
+    "title": "Provider Portfolio Uploads - Manage Portfolio Entries",
+    "description": "Verify providers can upload, view, and delete portfolio items from their dashboard.",
+    "category": "functional",
     "priority": "Medium",
     "steps": [
       {
         "type": "action",
-        "description": "Prepare a dataset representative of production (hundreds of providers) and run search queries from a mobile client simulator over standard network profile."
+        "description": "Login as provider and navigate to portfolio management"
       },
       {
         "type": "action",
-        "description": "Measure end-to-end time from search request initiation to results rendering in UI across multiple runs."
+        "description": "Upload one or more portfolio items with valid data"
       },
       {
         "type": "assertion",
-        "description": "95th percentile of measured response times is under 2 seconds; any outliers are documented for investigation."
-      }
-    ]
-  },
-  {
-    "id": "TC021",
-    "title": "Concurrent Booking Race Condition Handling",
-    "description": "Verify system correctly handles near-simultaneous booking attempts for the same provider slot from two clients: only one booking is accepted, the other receives a conflict.",
-    "category": "integration",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Identify an available single slot for a provider."
+        "description": "Verify uploaded portfolio items are displayed correctly"
       },
       {
         "type": "action",
-        "description": "Simultaneously initiate booking creation requests for that exact slot from two separate client sessions (simulate concurrency)."
+        "description": "Delete a portfolio item"
       },
       {
         "type": "assertion",
-        "description": "One request returns 201 Created and the other returns 409 Conflict or 400 indicating slot already taken; system does not create duplicate bookings for same timeslot."
-      },
-      {
-        "type": "action",
-        "description": "Verify payment processing behavior: only the successful booking's payment is captured; the failed attempt is not charged (or charge is reversed before capture)."
-      }
-    ]
-  },
-  {
-    "id": "TC022",
-    "title": "Refund and Failed Capture Handling Updates Booking Status",
-    "description": "Verify when a payment fails after booking creation (e.g., charge reversal or captured then refunded), booking status is updated appropriately and analytics/payouts are adjusted.",
-    "category": "integration",
-    "priority": "Medium",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Perform a booking with payment in sandbox and simulate a later payment reversal or refund event via payment provider sandbox webhooks."
-      },
-      {
-        "type": "assertion",
-        "description": "System receives webhook, updates booking/payment status to 'refunded' or 'payment_failed', notifies relevant parties, and flags booking for admin attention if required."
-      },
-      {
-        "type": "assertion",
-        "description": "Provider analytics and pending payout amounts reflect the refund (gross revenue and provider net adjust accordingly)."
-      }
-    ]
-  },
-  {
-    "id": "TC023",
-    "title": "Protected Data Privacy: Provider Earnings Only Accessible to Owner and Admin",
-    "description": "Verify earnings, payout history, and sensitive provider financial details are only accessible to authenticated provider owner and admin roles; other clients cannot access.",
-    "category": "security",
-    "priority": "High",
-    "steps": [
-      {
-        "type": "action",
-        "description": "Authenticate as another client user and attempt to fetch provider earnings/payout endpoints for a target provider."
-      },
-      {
-        "type": "assertion",
-        "description": "API returns 403 Forbidden or 404 Not Found; no financial data is exposed."
-      },
-      {
-        "type": "action",
-        "description": "Authenticate as the provider owner and request earnings/payout endpoints."
-      },
-      {
-        "type": "assertion",
-        "description": "API returns 200 OK with expected earnings and payout history for that provider."
+        "description": "Verify the portfolio item is removed"
       }
     ]
   }

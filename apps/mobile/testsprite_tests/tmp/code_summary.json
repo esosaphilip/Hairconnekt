@@ -4,69 +4,48 @@
     "React Native",
     "Expo",
     "React Navigation",
-    "Axios",
-    "Jest"
+    "Jest",
+    "React Native Testing Library",
+    "Maestro",
+    "Axios"
   ],
   "features": [
     {
-      "name": "Authentication",
-      "description": "User authentication and authorization flow",
+      "name": "Provider Registration Flow",
+      "description": "A 5-step registration process for service providers including personal info, business details, services, verification uploads, and summary.",
       "files": [
-        "src/auth",
-        "src/screens/auth"
+        "src/screens/provider/ProviderRegistrationFlow/ProviderRegistrationFlow.tsx",
+        "src/screens/provider/ProviderRegistrationFlow/components/Step1.tsx",
+        "src/screens/provider/ProviderRegistrationFlow/components/Step2.tsx",
+        "src/screens/provider/ProviderRegistrationFlow/components/Step3.tsx",
+        "src/screens/provider/ProviderRegistrationFlow/components/Step4.tsx",
+        "src/screens/provider/ProviderRegistrationFlow/components/Step5.tsx"
       ]
     },
     {
-      "name": "Provider Services Management",
-      "description": "Manage services offered by providers, including CRUD operations and validation",
+      "name": "Service Management",
+      "description": "Screens for listing, adding, editing, and deleting services offered by a provider. Includes UUID validation and state management.",
       "files": [
         "src/screens/provider/ServicesManagementScreen.tsx",
-        "src/domain/usecases/ServiceUseCases.ts",
-        "src/data/repositories/ServiceRepositoryImpl.ts",
+        "src/screens/provider/AddEditServiceScreen.tsx",
+        "src/domain/entities/Service.ts",
         "src/presentation/hooks/useServices.ts"
       ]
     },
     {
-      "name": "Provider Appointments",
-      "description": "Manage appointments for providers",
+      "name": "Authentication",
+      "description": "Login and authentication flow handling user sessions and secure storage.",
       "files": [
-        "src/api/providerAppointments.ts",
-        "src/screens/provider"
+        "src/screens/shared/UserManualScreen.tsx",
+        "src/auth/AuthContext.tsx"
       ]
     },
     {
-      "name": "Client Braider Search",
-      "description": "Search and view braiders/providers",
+      "name": "Provider Dashboard",
+      "description": "Main dashboard for providers to manage appointments, services, and profile settings.",
       "files": [
-        "src/api/clientBraider.ts",
-        "src/screens/client"
-      ]
-    },
-    {
-      "name": "Client Booking",
-      "description": "Book appointments with providers",
-      "files": [
-        "src/api/clientBooking.ts",
-        "src/screens/client"
-      ]
-    },
-    {
-      "name": "Shared Components",
-      "description": "Reusable UI components",
-      "files": [
-        "src/components/Button.tsx",
-        "src/components/Input.tsx",
-        "src/components/Text.tsx",
-        "src/components/avatar.tsx"
-      ]
-    },
-    {
-      "name": "API Integration",
-      "description": "HTTP client and API endpoints definitions",
-      "files": [
-        "src/api/http.ts",
-        "src/config.ts",
-        "src/api/adapters"
+        "src/screens/provider/ProviderMore.tsx",
+        "src/navigation/tabs/ProviderTabs.tsx"
       ]
     }
   ]

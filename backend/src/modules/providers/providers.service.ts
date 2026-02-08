@@ -403,6 +403,30 @@ export class ProvidersService {
   }
 
   /**
+   * Upload service image for use in service cards
+   */
+  async uploadServiceImage(userId: string, file: any) {
+    const provider = await this.providerRepo.findByUserId(userId);
+    if (!provider) throw new NotFoundException('Provider profile not found');
+
+    if (!file?.buffer || !file?.originalname) {
+      throw new BadRequestException('Image file is required');
+    }
+
+    // Upload to storage with service-specific folder
+    const { url } = await this.storage.uploadImage(provider.id, file.buffer, file.originalname);
+
+    // Note: We don't persist this URL here. The mobile app receives the URL 
+    // and includes it in the service creation/update payload.
+    // This is just an upload endpoint that returns the URL.
+
+    return {
+      url,
+      success: true
+    };
+  }
+
+  /**
    * Get availability settings including schedule and booking rules
    */
   async getAvailabilitySettings(userId: string) {

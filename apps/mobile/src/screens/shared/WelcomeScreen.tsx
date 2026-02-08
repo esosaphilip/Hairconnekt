@@ -48,7 +48,7 @@ export default function WelcomeScreen() {
         <View style={styles.actions}>
           <Button title="Als Kunde anmelden" onPress={goLogin} style={styles.button} />
           <Button title="Als Anbieter anmelden" onPress={goProviderLogin} variant="secondary" style={styles.button} />
-          <Pressable onPress={goAccountType} style={styles.registerButton}>
+          <Pressable testID="welcome-register-button" onPress={goAccountType} style={styles.registerButton}>
             <Text color={colors.white}>Noch kein Konto? <Text style={{ fontWeight: 'bold' }}>Registrieren</Text></Text>
           </Pressable>
         </View>

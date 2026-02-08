@@ -53,7 +53,7 @@ export default function AccountTypeSelectionScreen() {
           </Card>
         </Pressable>
 
-        <Pressable onPress={goToProviderOnboarding} style={styles.cardSpacer}>
+        <Pressable testID="account-type-provider" onPress={goToProviderOnboarding} style={styles.cardSpacer}>
           <Card style={styles.cardPadding}>
             <View style={styles.centeredRow}>
               <View style={styles.iconCircle}>

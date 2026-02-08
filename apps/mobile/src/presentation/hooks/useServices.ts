@@ -52,6 +52,8 @@ export function useServices(serviceUseCasesOverride?: any) {
     setError(null);
     try {
       console.log('[useServices] Making API call to listServices...');
+      // Use 'me' (undefined) to ensure we hit the private /providers/me/services endpoint
+      // instead of the public /providers/:id/services endpoint
       const data = await serviceUseCases.listServices();
       console.log('[useServices] listServices returned:', data?.length, 'services');
       setServices(data || []);
@@ -81,14 +83,17 @@ export function useServices(serviceUseCasesOverride?: any) {
   }): Promise<Service> => {
     // Guard: Require valid auth user ID
     if (!user?.id || !isValidUuid(user.id)) {
-      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+      throw new Error(MESSAGES.ERROR.UNAUTHORIZED || 'Nicht autorisiert (Invalid ID)');
     }
 
     setLoading(true);
     setError(null);
     // Optimistic update disabled to prevent UI glitch on error
     try {
-      const service = await serviceUseCases.createService(data);
+      const service = await serviceUseCases.createService({
+        ...data,
+        providerId: undefined // Use 'me' to ensure we hit the private /providers/me/services endpoint
+      });
       setServices((prev) => [service, ...prev]);
       return service;
     } catch (err: unknown) {
@@ -103,7 +108,7 @@ export function useServices(serviceUseCasesOverride?: any) {
   const updateService = useCallback(async (id: string, data: Partial<Service>): Promise<Service> => {
     // Guard: Require valid auth user ID
     if (!user?.id || !isValidUuid(user.id)) {
-      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+      throw new Error(MESSAGES.ERROR.UNAUTHORIZED || 'Nicht autorisiert (Invalid ID)');
     }
 
     setLoading(true);
@@ -125,7 +130,7 @@ export function useServices(serviceUseCasesOverride?: any) {
   const deleteService = useCallback(async (id: string): Promise<void> => {
     // Guard: Require valid auth user ID
     if (!user?.id || !isValidUuid(user.id)) {
-      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+      throw new Error(MESSAGES.ERROR.UNAUTHORIZED || 'Nicht autorisiert (Invalid ID)');
     }
 
     setLoading(true);
@@ -147,7 +152,7 @@ export function useServices(serviceUseCasesOverride?: any) {
   const toggleServiceActive = useCallback(async (id: string, isActive: boolean): Promise<Service> => {
     // Guard: Require valid auth user ID
     if (!user?.id || !isValidUuid(user.id)) {
-      throw new Error(MESSAGES.ERROR.AUTH_REQUIRED || 'Nicht autorisiert (Invalid ID)');
+      throw new Error(MESSAGES.ERROR.UNAUTHORIZED || 'Nicht autorisiert (Invalid ID)');
     }
 
     setLoading(true);

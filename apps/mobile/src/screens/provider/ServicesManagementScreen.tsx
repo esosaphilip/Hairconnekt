@@ -267,7 +267,7 @@ export function ServicesManagementScreen() {
               <Text style={{ color: colors.gray600, textAlign: 'center', marginBottom: spacing.md }}>
                 Füge deine ersten Services hinzu, damit Kunden dich buchen können
               </Text>
-              <Button title="Service hinzufügen" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
+              <Button title="Service hinzufügen" testID="btn-empty-add-service" onPress={onAddService} style={{ backgroundColor: colors.primary }} />
             </View>
           )}
 

@@ -11,8 +11,8 @@ import { VALIDATION_RULES } from '@/constants';
 export class ServiceUseCases {
   constructor(private readonly serviceRepository: IServiceRepository) { }
 
-  async listServices(): Promise<Service[]> {
-    return this.serviceRepository.list();
+  async listServices(providerId?: string): Promise<Service[]> {
+    return this.serviceRepository.list(providerId);
   }
 
   async getService(id: string): Promise<Service> {
@@ -32,6 +32,7 @@ export class ServiceUseCases {
     allowOnlineBooking?: boolean;
     categoryId?: string;
     tags?: string[];
+    providerId?: string;
   }): Promise<Service> {
     // Validation
     if (!data.name || data.name.trim().length < VALIDATION_RULES.SERVICE.NAME_MIN_LENGTH) {
@@ -61,7 +62,7 @@ export class ServiceUseCases {
       updatedAt: new Date(),
     };
 
-    return this.serviceRepository.create(service);
+    return this.serviceRepository.create(service, data.providerId);
   }
 
   async updateService(id: string, data: Partial<Service>): Promise<Service> {

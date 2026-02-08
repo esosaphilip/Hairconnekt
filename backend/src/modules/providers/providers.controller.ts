@@ -74,6 +74,15 @@ export class ProvidersController {
     return this.providersService.uploadProfilePicture(userId, file);
   }
 
+  @Post('me/services/image')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.PROVIDER)
+  @UseInterceptors(FileInterceptor('file'))
+  uploadServiceImage(@Req() req: Request, @UploadedFile() file: any) {
+    const userId = (req.user as any)?.sub;
+    return this.providersService.uploadServiceImage(userId, file);
+  }
+
   @Put('profile/specializations')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER)

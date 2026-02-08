@@ -14,7 +14,7 @@ interface StepProps {
 
 export const Step5 = ({ formData, setStep }: StepProps) => {
     return (
-        <View style={styles.stepContainer}>
+        <View style={styles.stepContainer} testID="step-5-container">
             <Text style={styles.stepTitle}>Zusammenfassung</Text>
             <Text style={styles.stepSubtitle}>
                 Bitte überprüfe deine Angaben bevor du dein Profil einreichst
@@ -24,7 +24,7 @@ export const Step5 = ({ formData, setStep }: StepProps) => {
             <Card style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
                     <Text style={styles.summarySectionTitle}>Persönliche Informationen</Text>
-                    <TouchableOpacity onPress={() => setStep(1)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
+                    <TouchableOpacity testID="edit-personal-info" onPress={() => setStep(1)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
                 </View>
                 <View style={styles.summaryDetails}>
                     <Text style={styles.summaryText}>{formData.firstName} {formData.lastName}</Text>
@@ -37,7 +37,7 @@ export const Step5 = ({ formData, setStep }: StepProps) => {
             <Card style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
                     <Text style={styles.summarySectionTitle}>Geschäftsinformationen</Text>
-                    <TouchableOpacity onPress={() => setStep(2)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
+                    <TouchableOpacity testID="edit-business-info" onPress={() => setStep(2)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
                 </View>
                 <View style={styles.summaryDetails}>
                     {formData.businessName && <Text style={styles.summaryText}>{formData.businessName}</Text>}
@@ -54,7 +54,7 @@ export const Step5 = ({ formData, setStep }: StepProps) => {
             <Card style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
                     <Text style={styles.summarySectionTitle}>Services & Expertise</Text>
-                    <TouchableOpacity onPress={() => setStep(3)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
+                    <TouchableOpacity testID="edit-services-info" onPress={() => setStep(3)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
                 </View>
                 <View style={styles.summaryDetails}>
                     <Text style={styles.summaryText}>{formData.serviceCategories.join(", ")}</Text>
@@ -67,7 +67,7 @@ export const Step5 = ({ formData, setStep }: StepProps) => {
             <Card style={styles.summaryCard}>
                 <View style={styles.summaryHeader}>
                     <Text style={styles.summarySectionTitle}>Verifizierung</Text>
-                    <TouchableOpacity onPress={() => setStep(4)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
+                    <TouchableOpacity testID="edit-verification-info" onPress={() => setStep(4)}><Text style={styles.editButton}>Bearbeiten</Text></TouchableOpacity>
                 </View>
                 <View style={styles.summaryDetails}>
                     <View style={styles.checkRow}>
@@ -110,7 +110,7 @@ export const Step5 = ({ formData, setStep }: StepProps) => {
 
             {/* Final Confirmation Checkbox */}
             <View style={styles.checkboxRow}>
-                <Checkbox checked={formData.acceptTerms} onCheckedChange={() => { }} />
+                <Checkbox testID="reg-final-confirm-checkbox" checked={formData.acceptTerms} onCheckedChange={() => { }} />
                 <Text style={styles.checkboxLabel}>
                     Ich bestätige, dass alle Angaben korrekt sind
                 </Text>

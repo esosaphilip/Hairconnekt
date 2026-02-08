@@ -119,6 +119,7 @@ type MenuItemData = { icon: string; label: string; path: string; badge?: string 
 const MenuItem: React.FC<{ item: MenuItemData; onPress: (path: string) => void }> = ({ item, onPress }) => (
   <TouchableOpacity
     key={item.label}
+    testID={`menu-item-${item.path}`}
     onPress={() => onPress(item.path)}
     style={styles.menuItem}
     activeOpacity={0.7}

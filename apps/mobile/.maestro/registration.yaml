@@ -1,0 +1,72 @@
+appId: de.hairconnekt.app
+---
+- launchApp
+# Navigate to Registration
+- tapOn:
+    id: "welcome-register-button"
+- tapOn:
+    id: "account-type-provider"
+
+# Step 1: Personal Info
+- tapOn:
+    id: "reg-firstname-input"
+- inputText: "Max"
+- tapOn:
+    id: "reg-lastname-input"
+- inputText: "Mustermann"
+- tapOn:
+    id: "reg-email-input"
+- inputText: "max.mustermann@test.com"
+- tapOn:
+    id: "reg-phone-input"
+- inputText: "15112345678"
+- tapOn:
+    id: "reg-password-input"
+- inputText: "TestPass123"
+- tapOn:
+    id: "reg-confirm-password-input"
+- inputText: "TestPass123"
+- hideKeyboard
+- tapOn:
+    id: "reg-terms-checkbox"
+- tapOn:
+    id: "reg-privacy-checkbox"
+- tapOn:
+    id: "reg-next-button"
+
+# Step 2: Business Info
+- tapOn:
+    id: "reg-business-name"
+- inputText: "Max Cuts"
+- hideKeyboard
+- tapOn:
+    id: "reg-bus-type-INDIVIDUAL"
+- tapOn:
+    id: "reg-postal-code"
+- inputText: "10115"
+- tapOn:
+    id: "reg-city"
+- inputText: "Berlin"
+- hideKeyboard
+- tapOn:
+    id: "reg-next-button"
+
+# Step 3: Services
+- tapOn:
+    id: "reg-cat-box-braids"
+- tapOn:
+    id: "reg-lang-deutsch"
+- tapOn:
+    id: "reg-next-button"
+
+# Step 4: Uploads
+# Note: Automating file uploads requires custom mocking or deep links.
+# We verify the elements exist.
+- assertVisible:
+    id: "reg-upload-id"
+- assertVisible:
+    id: "reg-upload-profile"
+- assertVisible:
+    id: "reg-upload-portfolio"
+
+# Cannot proceed to Step 5 without uploads in the real app.

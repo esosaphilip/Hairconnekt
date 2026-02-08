@@ -1,0 +1,22 @@
+appId: de.hairconnekt.app
+---
+- runFlow: login.yaml
+- tapOn:
+    id: "menu-item-ProviderServicesScreen"
+- tapOn:
+    id: "btn-new-service"
+- tapOn:
+    id: "service-name-input"
+- inputText: "Maestro Test Service"
+- tapOn:
+    id: "category-picker"
+- tapOn: "Braids" # Assuming this category exists. If not, this might fail, but it's a good guess.
+- tapOn:
+    id: "service-price-input"
+- inputText: "50"
+- tapOn:
+    id: "duration-selector"
+- tapOn: "2 Std."
+- tapOn:
+    id: "service-submit-button"
+- assertVisible: "Maestro Test Service"

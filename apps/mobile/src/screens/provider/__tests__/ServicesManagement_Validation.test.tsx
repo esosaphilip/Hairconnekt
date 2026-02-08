@@ -4,9 +4,10 @@ import { ServicesManagementScreen } from '../ServicesManagementScreen';
 import { Alert, Switch } from 'react-native';
 
 // Mock dependencies
+const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
-    navigate: jest.fn(),
+    navigate: mockNavigate,
     goBack: jest.fn(),
   }),
   useFocusEffect: jest.fn(),
@@ -80,10 +81,8 @@ describe('ServicesManagementScreen Validation', () => {
     const { getByTestId } = render(<ServicesManagementScreen />);
     fireEvent.press(getByTestId('btn-new-service'));
     
-    const { rootNavigationRef } = require('@/navigation/rootNavigation');
-    expect(rootNavigationRef.current.navigate).toHaveBeenCalledWith('Mehr', {
-      screen: 'AddEditServiceScreen',
-      params: { serviceId: null },
+    expect(mockNavigate).toHaveBeenCalledWith('AddEditServiceScreen', {
+      serviceId: null
     });
   });
 
@@ -92,10 +91,8 @@ describe('ServicesManagementScreen Validation', () => {
       const { getByTestId } = render(<ServicesManagementScreen />);
       fireEvent.press(getByTestId(`edit-${validId}`));
 
-      const { rootNavigationRef } = require('@/navigation/rootNavigation');
-      expect(rootNavigationRef.current.navigate).toHaveBeenCalledWith('Mehr', {
-        screen: 'AddEditServiceScreen',
-        params: { serviceId: validId },
+      expect(mockNavigate).toHaveBeenCalledWith('AddEditServiceScreen', {
+        serviceId: validId
       });
     });
 
@@ -107,8 +104,7 @@ describe('ServicesManagementScreen Validation', () => {
         'Ungültige Service-ID',
         expect.stringContaining('Dieser Service hat eine ungültige ID')
       );
-      const { rootNavigationRef } = require('@/navigation/rootNavigation');
-      expect(rootNavigationRef.current.navigate).not.toHaveBeenCalled();
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 

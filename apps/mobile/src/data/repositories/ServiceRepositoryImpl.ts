@@ -9,10 +9,11 @@ import { http } from '@/api/http';
 import { createDomainError, ErrorType, mapApiError } from '@/domain/errors/DomainError';
 
 export class ServiceRepositoryImpl implements IServiceRepository {
-  async list(): Promise<Service[]> {
+  async list(providerId?: string): Promise<Service[]> {
     try {
-      // Endpoint: GET /providers/me/services (http client adds base URL /api/v1)
-      const res = await http.get('/providers/me/services');
+      // Endpoint: GET /providers/:id/services (http client adds base URL /api/v1)
+      const id = providerId || 'me';
+      const res = await http.get(`/providers/${id}/services`);
       const payload = res?.data;
 
       // Backend returns direct array of Service objects
@@ -56,7 +57,7 @@ export class ServiceRepositoryImpl implements IServiceRepository {
     }
   }
 
-  async create(service: Service): Promise<Service> {
+  async create(service: Service, providerId?: string): Promise<Service> {
     try {
       const payload = {
         name: service.name,
@@ -71,8 +72,9 @@ export class ServiceRepositoryImpl implements IServiceRepository {
 
       console.log('[ServiceRepo] CREATE Payload:', JSON.stringify(payload, null, 2));
 
-      // Endpoint: POST /providers/me/services (http client adds base URL /api/v1)
-      const res = await http.post('/providers/me/services', payload);
+      // Endpoint: POST /providers/:id/services (http client adds base URL /api/v1)
+      const id = providerId || 'me';
+      const res = await http.post(`/providers/${id}/services`, payload);
       const s = (res?.data && (res.data as any).data) ? (res.data as any).data : (res?.data ?? {});
 
       const mapped: Service = {

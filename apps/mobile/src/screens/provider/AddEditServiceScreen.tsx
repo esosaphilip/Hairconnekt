@@ -412,6 +412,7 @@ export function AddEditServiceScreen() {
           <View style={styles.mtSm}>
             <Text style={styles.label}>Service-Name *</Text>
             <Input
+              testID="service-name-input"
               value={formData.name}
               onChangeText={(t) => setFormData({ ...formData, name: t })}
               placeholder="z.B. 'Box Braids - Medium Length'"
@@ -425,6 +426,7 @@ export function AddEditServiceScreen() {
               <Text style={styles.mutedNote}>Lade Kategorien…</Text>
             ) : (
               <Picker
+                testID="category-picker"
                 selectedValue={formData.category}
                 onValueChange={(v: string) => {
                   console.log('[AddEditService] Category selected:', v);
@@ -479,6 +481,7 @@ export function AddEditServiceScreen() {
             <View style={styles.inputWithIcon}>
               <Ionicons name="logo-euro" size={16} color={colors.gray400} style={styles.iconRight} />
               <Input
+                testID="service-price-input"
                 keyboardType="numeric"
                 value={String(formData.price)}
                 onChangeText={(t) => {
@@ -495,7 +498,7 @@ export function AddEditServiceScreen() {
 
           <View style={styles.mtMd}>
             <Text style={styles.label}>Dauer *</Text>
-            <Pressable onPress={() => setDurationOpen(true)} style={styles.selectTrigger} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
+            <Pressable testID="duration-selector" onPress={() => setDurationOpen(true)} style={styles.selectTrigger} accessibilityRole={Platform.OS === 'web' ? 'button' : undefined}>
               <Text style={styles.selectText}>
                 {durationOptions.find((o) => o.value === formData.duration)?.label || 'Dauer wählen'}
               </Text>
@@ -558,7 +561,7 @@ export function AddEditServiceScreen() {
         <View style={styles.actionsRow}>
           <Button title="Abbrechen" variant="ghost" onPress={onBack} style={styles.flex1} />
           <View style={styles.spacerSm} />
-          <Button title={isEditing ? 'Speichern' : 'Service erstellen'} onPress={handleSubmit} style={styles.submitBtn} disabled={loading} />
+          <Button testID="service-submit-button" title={isEditing ? 'Speichern' : 'Service erstellen'} onPress={handleSubmit} style={styles.submitBtn} disabled={loading} />
         </View>
         {loading && <ActivityIndicator />}
       </ScrollView>
