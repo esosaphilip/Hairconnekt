@@ -75,19 +75,19 @@ describe('ProviderProfile Relative Image Rendering', () => {
         const hero = getAllByTestId('hero-image')[0];
         const avatar = getAllByTestId('avatar-image')[0];
 
-        // Expected Base URL from normalizeUrl (default R2 URL)
-        const EXPECTED_R2 = 'https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev';
+        // Expected Base URL from normalizeUrl (default B2 URL)
+        const EXPECTED_B2 = 'https://f003.backblazeb2.com/file/hairconnekt-images';
         const EXPECTED_API = 'https://api.hairconnekt.de';
 
-        // Verify Cover Image normalization (No leading slash -> R2)
-        expect(hero.props.source).toEqual({ uri: `${EXPECTED_R2}/providers/123/cover.jpg` });
-        
+        // Verify Cover Image normalization (No leading slash -> B2)
+        expect(hero.props.source).toEqual({ uri: `${EXPECTED_B2}/providers/123/cover.jpg` });
+
         // Verify Avatar normalization (Leading slash -> API)
         expect(avatar.props.source).toEqual({ uri: `${EXPECTED_API}/providers/123/profile.jpg` });
 
         // 2. Check Gallery Images
         // Find and press Tab
-        const galleryTabBtn = getByText('Galerie'); 
+        const galleryTabBtn = getByText('Galerie');
         fireEvent.press(galleryTabBtn);
 
         // Wait for Section Header
@@ -99,8 +99,8 @@ describe('ProviderProfile Relative Image Rendering', () => {
 
         // Verify Gallery Image 1 (with leading slash -> API)
         expect(images[0].props.source).toEqual({ uri: `${EXPECTED_API}/portfolio/img1.jpg` });
-        
-        // Verify Gallery Image 2 (without leading slash -> R2)
-        expect(images[1].props.source).toEqual({ uri: `${EXPECTED_R2}/portfolio/img2.jpg` });
+
+        // Verify Gallery Image 2 (without leading slash -> B2)
+        expect(images[1].props.source).toEqual({ uri: `${EXPECTED_B2}/portfolio/img2.jpg` });
     });
 });

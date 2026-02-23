@@ -1,4 +1,4 @@
-import { normalizeUrl, DEFAULT_R2_URL } from '../url';
+import { normalizeUrl, DEFAULT_B2_URL } from '../url';
 import { BASE_URL } from '../../config';
 
 // Mock config module
@@ -20,15 +20,15 @@ describe('normalizeUrl', () => {
     expect(normalizeUrl(httpUrl)).toBe(httpUrl);
   });
 
-  it('prefixes local paths with DEFAULT_R2_URL', () => {
+  it('prefixes local paths with DEFAULT_B2_URL', () => {
     const localPath = '/uploads/image.jpg';
-    // Expect R2 URL
-    expect(normalizeUrl(localPath)).toBe('https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/uploads/image.jpg');
+    // Expect B2 URL
+    expect(normalizeUrl(localPath)).toBe('https://f003.backblazeb2.com/file/hairconnekt-images/uploads/image.jpg');
   });
 
-  it('prefixes relative paths with DEFAULT_R2_URL', () => {
+  it('prefixes relative paths with DEFAULT_B2_URL', () => {
     const r2Key = 'providers/123/image.jpg';
-    // Expect: https://pub-.../providers/123/image.jpg
-    expect(normalizeUrl(r2Key)).toBe(`${DEFAULT_R2_URL}/${r2Key}`);
+    // Expect: DEFAULT_B2_URL/providers/123/image.jpg
+    expect(normalizeUrl(r2Key)).toBe(`${DEFAULT_B2_URL}/${r2Key}`);
   });
 });

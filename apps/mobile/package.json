@@ -16,7 +16,12 @@
     "eas:build:dev": "eas build -p android --profile development",
     "eas:build:prod:android": "eas build -p android --profile production",
     "eas:build:prod:ios": "eas build -p ios --profile production",
-    "test": "jest"
+    "eas:build:e2e:android": "eas build -p android --profile e2e",
+    "eas:build:e2e:ios": "eas build -p ios --profile e2e",
+    "test": "jest",
+    "test:e2e:ios": "maestro test .maestro -e APP_ID=de.hairconnekt.app",
+    "test:e2e:android": "maestro test .maestro -e APP_ID=de.hairconnekt.app",
+    "test:e2e:expo": "maestro test .maestro/01-launch.yaml -e APP_ID=host.exp.exponent"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

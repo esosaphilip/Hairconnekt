@@ -37,7 +37,7 @@ jest.mock('@/auth/AuthContext', () => ({
     useAuth: () => ({
         user: {
             id: 'test-user',
-            profilePictureUrl: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/test/image.jpg',
+            profilePictureUrl: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/test/image.jpg',
             userType: 'client'
         },
         tokens: { accessToken: 'valid' },
@@ -53,9 +53,9 @@ describe('Image Rendering Pipeline', () => {
         (clientBraiderApi.getProfile as jest.Mock).mockResolvedValue({
             id: 'provider-123',
             name: 'Test Provider',
-            profileImage: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/123/profile.jpg',
-            coverImage: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/123/profile.jpg', // Added coverImage
-            imageUrl: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/123/profile.jpg',
+            profileImage: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/123/profile.jpg',
+            coverImage: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/123/profile.jpg', // Added coverImage
+            imageUrl: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/123/profile.jpg',
             portfolioImages: [],
             rating: 5,
             reviewCount: 1,
@@ -75,8 +75,8 @@ describe('Image Rendering Pipeline', () => {
         const hero = getAllByTestId('hero-image')[0];
         const avatar = getAllByTestId('avatar-image')[0];
 
-        expect(hero.props.source).toEqual({ uri: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/123/profile.jpg' });
-        expect(avatar.props.source).toEqual({ uri: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/123/profile.jpg' });
+        expect(hero.props.source).toEqual({ uri: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/123/profile.jpg' });
+        expect(avatar.props.source).toEqual({ uri: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/123/profile.jpg' });
     });
 
     it('Task B: Search Results render properly prefix images', async () => {
@@ -84,7 +84,7 @@ describe('Image Rendering Pipeline', () => {
             {
                 id: 'p1',
                 name: 'Search Result Provider',
-                profileImage: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/p1/avatar.jpg',
+                profileImage: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/p1/avatar.jpg',
                 rating: 4.5,
                 distanceKm: 2.0,
                 specialties: [],
@@ -117,7 +117,7 @@ describe('Image Rendering Pipeline', () => {
         // Only 1 image should be rendered (p1). p2 fallback avatar is View+Text, not Image with testID (unless I added it?)
         // In ProviderCard: fallback is <View ...><Text...</View>, not Image.
         expect(cardImages).toHaveLength(1);
-        expect(cardImages[0].props.source).toEqual({ uri: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/providers/p1/avatar.jpg' });
+        expect(cardImages[0].props.source).toEqual({ uri: 'https://f003.backblazeb2.com/file/hairconnekt-images/providers/p1/avatar.jpg' });
     });
 
     it('Task C: Provider Gallery renders images with R2 prefix', async () => {
@@ -125,8 +125,8 @@ describe('Image Rendering Pipeline', () => {
             id: 'provider-gallery',
             name: 'Gallery Provider',
             portfolioImages: [
-                'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/img1.jpg',
-                'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/img2.jpg'
+                'https://f003.backblazeb2.com/file/hairconnekt-images/img1.jpg',
+                'https://f003.backblazeb2.com/file/hairconnekt-images/img2.jpg'
             ],
             rating: 5,
             reviewCount: 0,
@@ -151,6 +151,6 @@ describe('Image Rendering Pipeline', () => {
         // 3. Check Images
         const images = getAllByTestId(/gallery-image-content-/);
         expect(images).toHaveLength(2);
-        expect(images[0].props.source).toEqual({ uri: 'https://pub-08fbbd44374741679ded7c08d0adad27.r2.dev/img1.jpg' });
+        expect(images[0].props.source).toEqual({ uri: 'https://f003.backblazeb2.com/file/hairconnekt-images/img1.jpg' });
     });
 });

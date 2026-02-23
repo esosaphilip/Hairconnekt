@@ -27,10 +27,16 @@ export class B2Service {
 
     // Backblaze B2 public URL format: https://f{region-number}.backblazeb2.com/file/{bucket-name}
     const bucketName = process.env.B2_BUCKET || 'hairconnekt-images';
-    this.publicBaseUrl = (
-      process.env.B2_PUBLIC_URL ||
-      `https://f003.backblazeb2.com/file/${bucketName}`
-    ).replace(/\/$/, '');
+
+    let base = process.env.B2_PUBLIC_URL || `https://f003.backblazeb2.com/file/${bucketName}`;
+    base = base.replace(/\/$/, '');
+
+    // Auto-append bucket name if the given URL ends with /file
+    if (base.endsWith('/file')) {
+      base = `${base}/${bucketName}`;
+    }
+
+    this.publicBaseUrl = base;
   }
 
   async uploadObject(bucket: string, key: string, body: Buffer | Uint8Array | string, contentType: string = 'image/jpeg') {

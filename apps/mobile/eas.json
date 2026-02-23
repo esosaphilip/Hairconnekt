@@ -3,12 +3,28 @@
     "development": {
       "developmentClient": true,
       "channel": "dev",
-      "android": { "buildType": "apk" }
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production": {
       "channel": "prod",
-      "android": { "buildType": "app-bundle" }
+      "android": {
+        "buildType": "app-bundle"
+      }
+    },
+    "e2e": {
+      "channel": "e2e",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": true
+      }
     }
   },
-  "cli": { "version": ">= 4.0.0", "appVersionSource": "remote" }
+  "cli": {
+    "version": ">= 4.0.0",
+    "appVersionSource": "remote"
+  }
 }

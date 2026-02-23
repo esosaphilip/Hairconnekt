@@ -18,11 +18,11 @@ describe('imageUrl utility', () => {
         });
 
         it('prepends API URL to relative URLs starting with /', () => {
-            expect(normalizeImageUrl('/uploads/img.jpg')).toBe('https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/uploads/img.jpg');
+            expect(normalizeImageUrl('/uploads/img.jpg')).toBe('https://f003.backblazeb2.com/file/hairconnekt-images/uploads/img.jpg');
         });
 
         it('prepends R2 URL to relative URLs without /', () => {
-            expect(normalizeImageUrl('uploads/img.jpg')).toBe('https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/uploads/img.jpg');
+            expect(normalizeImageUrl('uploads/img.jpg')).toBe('https://f003.backblazeb2.com/file/hairconnekt-images/uploads/img.jpg');
         });
     });
 
@@ -39,8 +39,8 @@ describe('imageUrl utility', () => {
             const output = normalizeImageUrls(input);
             expect(output).toEqual([
                 'https://valid.com/1.jpg',
-                'https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev/invalid',
-                'https://api.hairconnekt.de/local.jpg'
+                'https://f003.backblazeb2.com/file/hairconnekt-images/invalid',
+                'https://f003.backblazeb2.com/file/hairconnekt-images/local.jpg'
             ]);
         });
     });

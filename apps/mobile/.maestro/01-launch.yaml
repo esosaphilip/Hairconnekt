@@ -1,0 +1,7 @@
+appId: ${APP_ID}
+---
+# For Expo Go, we just bring the app to the foreground.
+# We assume you have already started the app via `npm run android` or `npm run ios` 
+# and it is currently loaded in Expo Go on your screen.
+- launchApp
+- assertVisible: ".*"
