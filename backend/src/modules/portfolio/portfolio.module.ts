@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PortfolioController } from './portfolio.controller';
-import { ProviderPortfolioController } from './provider-portfolio.controller';
 import { PortfolioService } from './portfolio.service';
 import { PortfolioImage } from './entities/portfolio-image.entity';
 import { PortfolioImageLike } from './entities/portfolio-image-like.entity';
@@ -26,8 +25,8 @@ import { Appointment } from '../appointments/entities/appointment.entity';
       Appointment,
     ]),
   ],
-  controllers: [PortfolioController, ProviderPortfolioController],
+  controllers: [PortfolioController],
   providers: [PortfolioService],
   exports: [PortfolioService],
 })
-export class PortfolioModule {}
+export class PortfolioModule { }

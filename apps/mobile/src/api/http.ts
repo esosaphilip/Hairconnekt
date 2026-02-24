@@ -140,6 +140,12 @@ http.interceptors.response.use(
       }
     }
 
+    // Enhance Network Errors with the requested URL for debugging
+    if (error.message === 'Network Error' || error.message?.includes('timeout')) {
+      const targetUrl = config?.baseURL ? `${config.baseURL}${config.url}` : config?.url;
+      error.message = `${error.message}: Could not reach ${targetUrl || 'backend API'}`;
+    }
+
     return Promise.reject(error);
   },
 );

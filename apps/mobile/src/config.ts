@@ -36,7 +36,7 @@ const base = (envUrl && envUrl.trim())
 // Export the raw base URL (without /api/v1) for static assets
 export const BASE_URL = base.replace(/\/$/, '');
 export const API_BASE_URL = `${BASE_URL}/api/v1`;
-export const API_TIMEOUT = envTimeout ? Number(envTimeout) : 15000;
+export const API_TIMEOUT = envTimeout ? Number(envTimeout) : 30000;
 export const GOOGLE_MAPS_API_KEY = (process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || '').trim();
 
 // Dev aid: log the resolved API base so we can quickly diagnose connectivity issues on devices

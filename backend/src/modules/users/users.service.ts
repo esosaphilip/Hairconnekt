@@ -256,7 +256,7 @@ export class UsersService {
       console.log(`[UsersService] Uploading avatar for user ${userId}: ${file.originalname} (${file.size || file.buffer.length} bytes)`);
 
       // Upload to storage
-      const { url } = await this.storageService.uploadImage(user.id, file.buffer, file.originalname);
+      const { url } = await this.storageService.uploadImage(`profiles/${user.id}`, file.buffer, file.originalname);
 
       console.log(`[UsersService] Avatar uploaded successfully: ${url}`);
 

@@ -64,74 +64,72 @@ export const Step2 = ({ formData, setFormData }: StepProps) => {
                 </View>
             </View>
 
-            {!formData.businessTypes.includes("MOBILE") && (
-                <View>
-                    <Text style={styles.cardSectionTitle}>Geschäftsadresse</Text>
-                    <View style={styles.formGroup}>
-                        <View style={styles.grid3}>
-                            <View style={styles.gridCol2}>
-                                <Text style={styles.label}>Straße</Text>
-                                <Input
-                                    testID="reg-street"
-                                    placeholder="Musterstraße"
-                                    value={formData.street}
-                                    onChangeText={(v: string) => setFormData({ ...formData, street: v })}
-                                />
-                            </View>
-                            <View style={styles.gridCol1}>
-                                <Text style={styles.label}>Nr.</Text>
-                                <Input
-                                    testID="reg-house-number"
-                                    placeholder="123"
-                                    value={formData.houseNumber}
-                                    onChangeText={(v: string) => setFormData({ ...formData, houseNumber: v })}
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.grid3}>
-                            <View style={styles.gridCol1}>
-                                <Text style={styles.label}>PLZ *</Text>
-                                <Input
-                                    testID="reg-zip"
-                                    keyboardType="numeric"
-                                    placeholder="44139"
-                                    value={formData.postalCode}
-                                    onChangeText={(v: string) => setFormData({ ...formData, postalCode: v })}
-                                />
-                            </View>
-                            <View style={styles.gridCol2}>
-                                <Text style={styles.label}>Stadt *</Text>
-                                <Input
-                                    testID="reg-city"
-                                    placeholder="Dortmund"
-                                    value={formData.city}
-                                    onChangeText={(v: string) => setFormData({ ...formData, city: v })}
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.formGroup}>
-                            <Text style={styles.label}>Bundesland *</Text>
-                            <Picker
-                                testID="reg-state-picker"
-                                selectedValue={formData.state}
-                                onValueChange={(v: string) => setFormData({ ...formData, state: v })}
-                                items={GERMAN_STATES}
+            <View>
+                <Text style={styles.cardSectionTitle}>Geschäftsadresse oder Basis-Standort</Text>
+                <View style={styles.formGroup}>
+                    <View style={styles.grid3}>
+                        <View style={styles.gridCol2}>
+                            <Text style={styles.label}>Straße</Text>
+                            <Input
+                                testID="reg-street"
+                                placeholder="Musterstraße"
+                                value={formData.street}
+                                onChangeText={(v: string) => setFormData({ ...formData, street: v })}
                             />
                         </View>
-
-                        <View style={styles.checkboxRow}>
-                            <Checkbox
-                                testID="reg-map-checkbox"
-                                checked={formData.showOnMap}
-                                onCheckedChange={(checked: boolean) => setFormData({ ...formData, showOnMap: checked })}
+                        <View style={styles.gridCol1}>
+                            <Text style={styles.label}>Nr.</Text>
+                            <Input
+                                testID="reg-house-number"
+                                placeholder="123"
+                                value={formData.houseNumber}
+                                onChangeText={(v: string) => setFormData({ ...formData, houseNumber: v })}
                             />
-                            <Text style={styles.checkboxLabel}>Meine Adresse auf Google Maps anzeigen</Text>
                         </View>
                     </View>
+
+                    <View style={styles.grid3}>
+                        <View style={styles.gridCol1}>
+                            <Text style={styles.label}>PLZ *</Text>
+                            <Input
+                                testID="reg-zip"
+                                keyboardType="numeric"
+                                placeholder="44139"
+                                value={formData.postalCode}
+                                onChangeText={(v: string) => setFormData({ ...formData, postalCode: v })}
+                            />
+                        </View>
+                        <View style={styles.gridCol2}>
+                            <Text style={styles.label}>Stadt *</Text>
+                            <Input
+                                testID="reg-city"
+                                placeholder="Dortmund"
+                                value={formData.city}
+                                onChangeText={(v: string) => setFormData({ ...formData, city: v })}
+                            />
+                        </View>
+                    </View>
+
+                    <View style={styles.formGroup}>
+                        <Text style={styles.label}>Bundesland *</Text>
+                        <Picker
+                            testID="reg-state-picker"
+                            selectedValue={formData.state}
+                            onValueChange={(v: string) => setFormData({ ...formData, state: v })}
+                            items={GERMAN_STATES}
+                        />
+                    </View>
+
+                    <View style={styles.checkboxRow}>
+                        <Checkbox
+                            testID="reg-map-checkbox"
+                            checked={formData.showOnMap}
+                            onCheckedChange={(checked: boolean) => setFormData({ ...formData, showOnMap: checked })}
+                        />
+                        <Text style={styles.checkboxLabel}>Meine Adresse auf Google Maps anzeigen</Text>
+                    </View>
                 </View>
-            )}
+            </View>
 
             {formData.businessTypes.includes("MOBILE") && (
                 <View style={styles.formGroup}>

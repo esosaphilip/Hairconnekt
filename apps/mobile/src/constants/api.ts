@@ -21,12 +21,12 @@ export const API_CONFIG = {
     // Providers
     PROVIDERS: {
       ME: '/providers/me',
-      DASHBOARD: '/providers/dashboard',
+      DASHBOARD: '/providers/me/dashboard',
       NEARBY: '/providers/nearby',
       SEARCH: '/providers/search',
       PUBLIC: (id: string) => `/providers/public/${id}`,
-      SETTINGS: '/providers/settings',
-      CLIENTS: '/providers/clients',
+      SETTINGS: '/providers/me/settings',
+      CLIENTS: '/providers/me/clients',
     },
     // Services
     // NOTE: Backend currently only has POST /services and GET /services/provider

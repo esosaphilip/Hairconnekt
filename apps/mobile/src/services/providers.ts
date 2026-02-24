@@ -34,10 +34,10 @@ function normalizeProvider(input: Record<string, unknown>): ProviderSummary {
   })();
 
   const imageUrlRaw = (
-    input['imageUrl'] ?? 
-    input['image'] ?? 
-    input['profilePictureUrl'] ?? 
-    input['profileImage'] ?? 
+    input['imageUrl'] ??
+    input['image'] ??
+    input['profilePictureUrl'] ??
+    input['profileImage'] ??
     input['avatar'] ??
     input['avatarUrl'] ??
     input['profile_picture_url'] ??
@@ -122,7 +122,7 @@ export const providersApi = {
   },
 
   async getDashboard(): Promise<unknown> {
-    const res = await http.get('/providers/dashboard');
+    const res = await http.get('/providers/me/dashboard');
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
       return (payload as any).data;
@@ -149,7 +149,7 @@ export const providersApi = {
   },
 
   async getCalendar(params: { startDate: string; endDate: string; view?: 'day' | 'week' | 'month' }): Promise<any> {
-    const res = await http.get('/providers/calendar', { params });
+    const res = await http.get('/providers/me/calendar', { params });
     const payload = res?.data;
     if (payload && typeof payload === 'object' && 'success' in payload && 'data' in payload) {
       return (payload as any).data ?? { appointments: [], blockedSlots: [], availableSlots: [] };
@@ -191,7 +191,7 @@ export const providersApi = {
       endTime: body.allDay ? undefined : body.endTime,
     };
 
-    // Endpoint: POST /providers/me/calendar/blocks
+    // Endpoint: GET /providers/me/calendar/blocks
     const res = await http.post('/providers/me/calendar/blocks', payload);
     const data = res?.data;
     if (data && typeof data === 'object' && 'success' in data && 'data' in data) {

@@ -42,6 +42,16 @@ export class ProvidersController {
     return { success: true, data };
   }
 
+  // Alias: /providers/public/:id (matches what mobile frontend calls)
+  @Get('public/:id')
+  @UseInterceptors(AppCacheInterceptor)
+  @CacheKeyBuilder((req) => `providers:public:${req.params.id}`)
+  @CacheTTL(300)
+  async getPublicProfileAlias(@Param('id', new ParseUUIDPipe()) id: string) {
+    const data = await this.providersService.getPublicProfileById(id);
+    return { success: true, data };
+  }
+
   // Strict UUID v4 validation ensuring this never shadows "me", "settings", or any string-based sub-route added later.
   @Get(':id([0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})/public')
   @UseInterceptors(AppCacheInterceptor)

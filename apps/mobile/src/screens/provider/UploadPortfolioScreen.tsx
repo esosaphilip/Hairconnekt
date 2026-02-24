@@ -79,6 +79,8 @@ const launchImageLibraryAsync = async (callback: (assets: ImageAsset[]) => void)
   }
 };
 
+import { uploadMultipleImages } from '@/services/uploadService';
+
 // --- Main Component ---
 export function UploadPortfolioScreen() {
   const navigation = useNavigation<any>();
@@ -89,6 +91,7 @@ export function UploadPortfolioScreen() {
   });
   // In RN, 'images' state stores the picker response objects, not web File objects.
   const [images, setImages] = useState<ImageAsset[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const handleImageSelect = () => {
     launchImageLibraryAsync((selectedAssets: ImageAsset[]) => {
@@ -126,22 +129,35 @@ export function UploadPortfolioScreen() {
       Alert.alert("Fehler", "Bitte eine Kategorie auswählen");
       return;
     }
+
+    setSaving(true);
     try {
-      // Alert.alert("Upload gestartet", "Portfolio-Bilder werden hochgeladen...");
-      const meta = images.map(() => ({ serviceCategory: formData.category, caption: formData.title || undefined, isBeforeAfter: false }));
-      const response = await providerPortfolioApi.upload(images.map((img, i) => ({ uri: img.uri, name: `upload_${i}.jpg`, type: 'image/jpeg' })), meta);
+      // Map form data to the metadata expected by the backend
+      const metadata = {
+        serviceCategory: formData.category,
+        caption: formData.title || '',
+      };
+
+      const uris = images.map(img => img.uri);
+
+      const response = await uploadMultipleImages(uris, '/providers/me/portfolio', 'images', metadata);
       const msg = response?.message || 'Portfolio aktualisiert!';
-      if (response) {
+
+      if (response && response.success) {
         Alert.alert("Erfolg", String(msg));
         navigation.navigate("ProviderPortfolioScreen");
+      } else {
+        throw new Error(response.message || 'Ein unerwarteter Fehler ist aufgetreten');
       }
     } catch (e: any) {
-      const msg = e?.response?.data?.message || e?.message || 'Upload fehlgeschlagen';
+      const msg = e?.message || 'Upload fehlgeschlagen';
       Alert.alert("Fehler", String(msg));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const isSubmitDisabled = images.length === 0 || !formData.category;
+  const isSubmitDisabled = images.length === 0 || !formData.category || saving;
 
   return (
     <SafeAreaView style={styles.flexContainer}>

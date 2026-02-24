@@ -271,7 +271,7 @@ export class PortfolioService {
     if (!provider) throw new NotFoundException('Provider not found');
     if (!file?.buffer || !file?.originalname) throw new BadRequestException('Image file is required');
 
-    const { url } = await this.storage.uploadImage(providerId, file.buffer, file.originalname);
+    const { url } = await this.storage.uploadImage(`portfolio/${providerId}`, file.buffer, file.originalname);
 
     // Compute next display order
     const raw = await this.imagesRepo

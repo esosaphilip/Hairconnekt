@@ -80,14 +80,14 @@ export class AuthService {
 
   private signTokens(user: User) {
     const cfg = jwtConfig();
-    const payload = { sub: user.id, email: user.email, userType: user.userType };
+    const payload = { sub: user.id, email: user.email, userType: user.userType, jti: crypto.randomUUID() };
     const accessToken = sign(
       payload,
       cfg.accessTokenSecret as Secret,
       { expiresIn: cfg.accessTokenExpiresIn as any } as SignOptions,
     );
     const refreshToken = sign(
-      { sub: user.id },
+      { sub: user.id, jti: crypto.randomUUID() },
       cfg.refreshTokenSecret as Secret,
       { expiresIn: cfg.refreshTokenExpiresIn as any } as SignOptions,
     );

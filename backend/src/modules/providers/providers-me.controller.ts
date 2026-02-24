@@ -1,10 +1,11 @@
-import { Controller, Get, Patch, Put, Body, Req, UseGuards, Query, UseInterceptors, UploadedFile, Delete, Param, ParseUUIDPipe, Post } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { Controller, Get, Patch, Put, Body, Req, UseGuards, Query, UseInterceptors, UploadedFile, UploadedFiles, Delete, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { Request } from 'express';
 
 import { ProvidersService } from './providers.service';
 import { ServicesService } from '../services/services.service';
+import { PortfolioService } from '../portfolio/portfolio.service';
 
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -29,6 +30,7 @@ export class ProvidersMeController {
     constructor(
         private readonly providersService: ProvidersService,
         private readonly servicesService: ServicesService,
+        private readonly portfolioService: PortfolioService,
     ) { }
 
     @Get()
@@ -45,6 +47,12 @@ export class ProvidersMeController {
     update(@Req() req: Request, @Body() dto: UpdateProviderDto) {
         const userId = (req.user as any)?.sub;
         return this.providersService.updateProfile(userId, dto);
+    }
+
+    @Get('availability')
+    getAvailability(@Req() req: Request) {
+        const userId = (req.user as any)?.sub;
+        return this.providersService.getAvailabilitySettings(userId);
     }
 
     @Put('availability')
@@ -70,6 +78,26 @@ export class ProvidersMeController {
     uploadProfilePicture(@Req() req: Request, @UploadedFile() file: any) {
         const userId = (req.user as any)?.sub;
         return this.providersService.uploadProfilePicture(userId, file);
+    }
+
+    @Post('portfolio')
+    @UseInterceptors(FilesInterceptor('images', 10))
+    async uploadPortfolioImages(
+        @Req() req: Request,
+        @UploadedFiles() files: any[],
+        @Body() body: any,
+    ) {
+        const userId = (req.user as any)?.sub || (req.user as any)?.id;
+        const providerId = await this.servicesService.getProviderIdByUserId(userId);
+
+        if (!files || files.length === 0) {
+            return { success: false, message: 'No images provided' };
+        }
+
+        const results = await Promise.all(
+            files.map(file => this.portfolioService.uploadMultipart(providerId, file, body))
+        );
+        return { success: true, data: results };
     }
 
     @Put('profile/specializations')

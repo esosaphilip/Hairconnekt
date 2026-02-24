@@ -17,6 +17,7 @@ import { Switch } from 'react-native';
 import { http } from '@/api/http';
 import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
+import { uploadImageFile } from '@/services/uploadService';
 
 type ProfileData = {
   // Provider
@@ -158,18 +159,19 @@ export function EditProfileScreen() {
 
         // Upload in background
         try {
-          const uploaded = await usersApi.uploadAvatar(uri);
-          const profilePictureUrl = uploaded.url;
+          const endpoint = isProvider ? '/providers/me/profile-picture' : '/users/me/avatar';
+          const uploaded = await uploadImageFile(uri, endpoint, 'file');
+          const newProfileUrl = uploaded.url;
 
           // Update auth context with new image URL
-          if (user && profilePictureUrl) {
-            await setUser({ ...user, profilePictureUrl });
+          if (user && newProfileUrl) {
+            await setUser({ ...user, profilePictureUrl: newProfileUrl });
           }
         } catch (e) {
           console.error('Upload failed', e);
           Alert.alert('Fehler', 'Bild konnte nicht hochgeladen werden.');
           // Revert on failure
-          setProfileImage(null);
+          setProfileImage(user?.profilePictureUrl || null);
         }
       }
     } catch (e) {

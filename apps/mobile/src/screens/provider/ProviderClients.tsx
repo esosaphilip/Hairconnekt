@@ -67,7 +67,7 @@ export function ProviderClients() {
     try {
       // Use existing API call from http or newer providerClientsApi
       // Using http as it was before to match structure expected by filteredClients
-      const res = await http.get('/providers/clients');
+      const res = await http.get('/providers/me/clients');
       // If res.data is expected structure { success: true, data: { items: [], ... } }
       // Or just { items: [] }
       const payload = res?.data;
