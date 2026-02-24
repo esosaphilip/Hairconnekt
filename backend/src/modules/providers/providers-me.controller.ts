@@ -1,5 +1,6 @@
 import { Controller, Get, Patch, Put, Body, Req, UseGuards, Query, UseInterceptors, UploadedFile, UploadedFiles, Delete, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { CacheTTL } from '@nestjs/cache-manager';
 import { Request } from 'express';
 
@@ -74,14 +75,14 @@ export class ProvidersMeController {
     }
 
     @Post('profile-picture')
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
     uploadProfilePicture(@Req() req: Request, @UploadedFile() file: any) {
         const userId = (req.user as any)?.sub;
         return this.providersService.uploadProfilePicture(userId, file);
     }
 
     @Post('portfolio')
-    @UseInterceptors(FilesInterceptor('images', 10))
+    @UseInterceptors(FilesInterceptor('images', 10, { storage: memoryStorage() }))
     async uploadPortfolioImages(
         @Req() req: Request,
         @UploadedFiles() files: any[],
@@ -231,7 +232,7 @@ export class ProvidersMeController {
 
     // Consolidated Single Source of Truth for Provider Media Uploads
     @Post('services/image')
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
     async uploadServiceImage(@Req() req: Request & { user: any }, @UploadedFile() file: any) {
         const userId = req.user.sub || req.user.id;
         const providerId = await this.servicesService.getProviderIdByUserId(userId);

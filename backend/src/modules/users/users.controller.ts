@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Patch, Post, Delete, Param, Req, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { UsersService } from './users.service';
@@ -53,7 +55,7 @@ export class UsersController {
   // Avatar upload endpoint
   @Post('me/avatar')
   @UseGuards(JwtAuthGuard)
-  @UseInterceptors(require('@nestjs/platform-express').FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
   async uploadAvatar(@Req() req: Request, @UploadedFile() file: any) {
     const userId = (req.user as any)?.sub;
     return this.usersService.uploadProfilePicture(userId, file);

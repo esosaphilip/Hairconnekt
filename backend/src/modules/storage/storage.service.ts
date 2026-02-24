@@ -9,15 +9,15 @@ export class StorageService {
   private readonly ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
 
   constructor() {
+    // Use Cloudflare R2 (S3-compatible) - B2 credentials are expired
+    const accountId = process.env.R2_ACCOUNT_ID || '';
     this.s3Client = new S3Client({
-      endpoint: process.env.B2_ENDPOINT || 'https://s3.eu-central-003.backblazeb2.com',
-      region: process.env.B2_REGION || 'eu-central-003',
+      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      region: 'auto',
       credentials: {
-        accessKeyId: process.env.B2_KEY_ID || '',
-        secretAccessKey: process.env.B2_APPLICATION_KEY || '',
+        accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
       },
-      // Force path style for S3-compatible endpoints
-      forcePathStyle: true,
     });
   }
 
@@ -50,8 +50,7 @@ export class StorageService {
         throw new BadRequestException(`Invalid image type. Allowed: jpg, jpeg, png, gif, webp`);
       }
 
-      const bucket = process.env.B2_BUCKET || 'hairconnekt-images';
-      // Clean filename to remove weird characters
+      const bucket = process.env.R2_BUCKET || 'hairconnekt-images';
       const cleanFilename = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
       const key = `${folderPath}/${Date.now()}-${cleanFilename}`;
 
@@ -66,16 +65,16 @@ export class StorageService {
         })
       );
 
-      // Backblaze public URL format: Note that R2_PUBLIC_BASE_URL might be repurposed in the .env to the Backblaze url
-      const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL || `https://f003.backblazeb2.com/file/${bucket}`;
+      const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL || `https://pub-54d0ff210bf448eebf0f240d376a9358.r2.dev`;
       const url = `${publicBaseUrl}/${key}`;
 
       this.logger.log(`Successfully uploaded: ${url}`);
       return { url };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
-      this.logger.error(`Upload failed for ${filename}:`, error);
-      throw new BadRequestException('Image upload failed. Please try again.');
+      const rawMsg = (error as any)?.message || String(error);
+      this.logger.error(`Upload failed for ${filename}: [${(error as any)?.Code || (error as any)?.name}] ${rawMsg}`);
+      throw new BadRequestException(`Image upload failed: ${(error as any)?.Code || rawMsg}`);
     }
   }
 }
