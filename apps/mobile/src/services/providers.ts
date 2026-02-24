@@ -264,7 +264,7 @@ export const providersApi = {
       type: 'image/jpeg',
     } as any);
 
-    const res = await http.post('/providers/profile-picture', formData, {
+    const res = await http.post('/providers/me/profile-picture', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return res.data;

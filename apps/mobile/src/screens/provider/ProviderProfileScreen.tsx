@@ -176,7 +176,7 @@ export function ProviderProfileScreen() {
 
           if (me?.id) {
             const [dashRes, pubRes] = await Promise.all([
-              http.get('/providers/dashboard'),
+              http.get('/providers/me/dashboard'),
               http.get(`/providers/public/${me.id}`),
             ]);
             if (!mounted) return;
