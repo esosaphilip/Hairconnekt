@@ -3,6 +3,7 @@ import { AuthModule } from '../auth/auth.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServicesModule } from '../services/services.module';
 import { ProvidersController } from './providers.controller';
+import { ProvidersMeController } from './providers-me.controller';
 import { SharedModule } from '../../shared/shared.module';
 import { ProvidersService } from './providers.service';
 import { ProviderProfile } from './entities/provider-profile.entity';
@@ -54,7 +55,7 @@ import { TypeORMProviderRepository } from '../../infrastructure/repositories/Typ
     SharedModule, // Imported for GeocodingService
     forwardRef(() => AuthModule),
   ],
-  controllers: [ProvidersController],
+  controllers: [ProvidersController, ProvidersMeController],
   providers: [
     ProvidersService,
     RolesGuard,

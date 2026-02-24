@@ -53,25 +53,6 @@ export class ServicesController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserType.PROVIDER, UserType.BOTH)
-  @Get()
-  async listForProvider(@Req() req: Request & { user: any }) {
-    console.log('[FIRE-DEBUG] GET /providers/me/services HIT');
-    const userId = req.user.sub || req.user.id;
-    console.log(`[FIRE-DEBUG] User ID from token: ${userId}`);
-    const providerId = await this.servicesService.getProviderIdByUserId(userId);
-    console.log(`[FIRE-DEBUG] Resolved Provider ID: ${providerId}`);
-    try {
-      const services = await this.servicesService.listForProvider(providerId);
-      console.log(`[FIRE-DEBUG] Found ${services.length} services`);
-      return services;
-    } catch (e) {
-      console.error('[FIRE-DEBUG] listForProvider FAILED:', e);
-      throw e;
-    }
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserType.PROVIDER, UserType.BOTH)
   @Post()
   async create(
     @Body() createServiceDto: CreateServiceDto,
@@ -104,17 +85,5 @@ export class ServicesController {
   ) {
     const providerId = await this.resolveProviderId(req);
     return this.servicesService.delete(id, providerId);
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserType.PROVIDER, UserType.BOTH)
-  @Post('image')
-  @UseInterceptors(require('@nestjs/platform-express').FileInterceptor('file'))
-  async uploadServiceImage(
-    @Req() req: Request & { user: any },
-    @UploadedFile() file: any,
-  ) {
-    const providerId = await this.resolveProviderId(req);
-    return this.servicesService.uploadImage(providerId, file);
   }
 }
