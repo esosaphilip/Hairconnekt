@@ -7,10 +7,13 @@ import { providersApi } from '@/services/providers';
 import { PendingApprovalScreen } from '@/screens/provider/PendingApprovalScreen';
 import { ProviderRegistrationFlow } from '@/screens/provider/ProviderRegistrationFlow/ProviderRegistrationFlow';
 import { ProviderDashboard } from '@/screens/provider/ProviderDashboard';
-import { MessagesScreen } from '@/screens/clients/MessagesScreen';
+// [MVP-CUT] Reason: In-app messaging is not needed for MVP launch | Restore in: v2
+// import { MessagesScreen } from '@/screens/clients/MessagesScreen';
 import { ProviderCalendarStackScreen } from '../stacks/ProviderCalendarStack';
-import { ProviderClientsStackScreen } from '../stacks/ProviderClientsStack';
+// [MVP-CUT] Reason: CRM and provider client management features are deferred to post-MVP | Restore in: v2
+// import { ProviderClientsStackScreen } from '../stacks/ProviderClientsStack';
 import { ProviderMoreStackScreen } from '../stacks/ProviderMoreStack';
+import BookingsListScreen from '@/screens/clients/BookingsListScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -51,9 +54,8 @@ export function ProviderTabs() {
     const getProviderTabKey = (name: string) => (
         name === 'Dashboard' ? 'dashboard' :
             name === 'Kalender' ? 'calendar' :
-                name === 'Kunden' ? 'clients' :
-                    name === 'Nachrichten' ? 'messages' :
-                        'more'
+                name === 'Buchungen' ? 'appointments' :
+                    'profile'
     );
 
     if (!checked) {
@@ -79,9 +81,8 @@ export function ProviderTabs() {
                     const iconName =
                         route.name === 'Dashboard' ? 'grid-outline' :
                             route.name === 'Kalender' ? 'calendar-outline' :
-                                route.name === 'Kunden' ? 'people-outline' :
-                                    route.name === 'Nachrichten' ? 'chatbubble-ellipses-outline' :
-                                        'menu-outline';
+                                route.name === 'Buchungen' ? 'list-outline' :
+                                    'person-outline';
                     return <Ionicons name={iconName as any} size={size} color={color} />;
                 },
                 tabBarLabel: t(`providerTabs.${getProviderTabKey(route.name)}`),
@@ -110,25 +111,26 @@ export function ProviderTabs() {
                 })}
             />
             <Tab.Screen
-                name="Kunden"
-                component={ProviderClientsStackScreen}
-                options={{ headerShown: false }}
+                name="Buchungen"
+                component={BookingsListScreen}
+                options={{ headerShown: true, title: 'Buchungen' }}
                 listeners={({ navigation }) => ({
                     tabPress: (e) => {
                         e.preventDefault();
-                        navigation.navigate('Kunden', { screen: 'ProviderClients' });
+                        navigation.navigate('Buchungen');
                     },
                 })}
             />
-            <Tab.Screen name="Nachrichten" component={MessagesScreen} />
+            {/* [MVP-CUT] Reason: In-app messaging is not needed for MVP launch | Restore in: v2 */}
+            {/* <Tab.Screen name="Nachrichten" component={MessagesScreen} /> */}
             <Tab.Screen
-                name="Mehr"
+                name="Profil"
                 component={ProviderMoreStackScreen}
                 options={{ headerShown: false }}
                 listeners={({ navigation }) => ({
                     tabPress: (e) => {
                         e.preventDefault();
-                        navigation.navigate('Mehr', { screen: 'ProviderMore' });
+                        navigation.navigate('Profil', { screen: 'ProviderMore' });
                     },
                 })}
             />

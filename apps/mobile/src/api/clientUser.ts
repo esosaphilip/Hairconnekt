@@ -20,6 +20,16 @@ export const clientUserApi = {
         return response.data.data;
     },
 
+    createAddress: async (payload: Partial<Address>): Promise<Address> => {
+        const response = await http.post<{ success: boolean; data: Address }>('/users/me/addresses', payload);
+        return response.data.data;
+    },
+
+    updateAddress: async (id: string, payload: Partial<Address>): Promise<Address> => {
+        const response = await http.patch<{ success: boolean; data: Address }>(`/users/me/addresses/${id}`, payload);
+        return response.data.data;
+    },
+
     deleteAddress: async (id: string): Promise<void> => {
         await http.delete(`/users/me/addresses/${id}`);
     },

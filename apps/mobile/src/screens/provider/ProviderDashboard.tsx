@@ -73,7 +73,7 @@ export function ProviderDashboard() {
                 </Pressable>
                 <Pressable
                   style={styles.headerActionButton}
-                  onPress={() => navigation.navigate('Mehr', { screen: 'ProviderSettingsScreen' })}
+                  onPress={() => navigation.navigate('Profil', { screen: 'ProviderSettingsScreen' })}
                 >
                   <Ionicons name="settings-outline" size={22} color={colors.gray700} />
                 </Pressable>

@@ -5,7 +5,8 @@ import { useI18n } from '@/i18n';
 
 import { HomeScreen } from '@/screens/clients/HomeScreen';
 import { SearchScreen } from '@/screens/clients/SearchScreen';
-import { MessagesScreen } from '@/screens/clients/MessagesScreen';
+// [MVP-CUT] Reason: In-app messaging is not needed for MVP launch | Restore in: v2
+// import { MessagesScreen } from '@/screens/clients/MessagesScreen';
 import { BookingsStackScreen } from '../stacks/BookingsStack';
 import { ClientProfileStackScreen } from '../stacks/ClientProfileStack';
 
@@ -17,8 +18,7 @@ export function ClientTabs() {
         name === 'Home' ? 'home' :
             name === 'Search' ? 'search' :
                 name === 'Appointments' ? 'appointments' :
-                    name === 'Messages' ? 'messages' :
-                        'profile'
+                    'profile'
     );
     return (
         <Tab.Navigator
@@ -29,8 +29,7 @@ export function ClientTabs() {
                         route.name === 'Home' ? 'home' :
                             route.name === 'Search' ? 'search' :
                                 route.name === 'Appointments' ? 'calendar' :
-                                    route.name === 'Messages' ? 'chatbubble' :
-                                        'person';
+                                    'person';
                     return <Ionicons name={iconName as any} size={size} color={color} />;
                 },
                 tabBarLabel: t(`tabs.${getClientTabKey(route.name)}`),
@@ -40,7 +39,8 @@ export function ClientTabs() {
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="Search" component={SearchScreen} />
             <Tab.Screen name="Appointments" component={BookingsStackScreen} options={{ headerShown: false }} />
-            <Tab.Screen name="Messages" component={MessagesScreen} />
+            {/* [MVP-CUT] Reason: In-app messaging is not needed for MVP launch | Restore in: v2 */}
+            {/* <Tab.Screen name="Messages" component={MessagesScreen} /> */}
             <Tab.Screen
                 name="Profile"
                 component={ClientProfileStackScreen}

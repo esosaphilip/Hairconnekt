@@ -65,7 +65,8 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats, todayYmd }) => {
 
             <Card
                 style={styles.statCard}
-                onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderAnalyticsScreen' })}
+            // [MVP-CUT] Reason: Analytics features are deferred to post-MVP | Restore in: v2
+            // onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderAnalyticsScreen' })}
             >
                 <View style={styles.statHeader}>
                     <Ionicons name="cash-outline" size={16} color={colors.green600} style={styles.statIcon} />
@@ -83,7 +84,8 @@ export const StatsGrid: React.FC<StatsGridProps> = ({ stats, todayYmd }) => {
 
             <Card
                 style={styles.statCard}
-                onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen' })}
+            // [MVP-CUT] Reason: Review features are deferred to post-MVP | Restore in: v2
+            // onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen' })}
             >
                 <View style={styles.statHeader}>
                     <Ionicons name="star-outline" size={16} color={colors.amber600} style={styles.statIcon} />

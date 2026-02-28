@@ -440,7 +440,8 @@ export function ProviderPublicProfileScreen() {
 
           <View style={styles.actionButtons}>
             <Button title="Jetzt buchen" onPress={() => navigation.navigate("Booking", { providerId })} style={styles.bookNowButton} />
-            <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen", { userId: providerId })} style={styles.iconButtonOutline} color={COLORS.textSecondary} />
+            {/* [MVP-CUT] Reason: In-app chat messaging is deferred to post-MVP | Restore in: v2 */}
+            {/* <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen", { userId: providerId })} style={styles.iconButtonOutline} color={COLORS.textSecondary} /> */}
             <IconButton name={isFavorite ? 'heart' : 'heart'} onPress={handleToggleFavorite} style={styles.iconButtonOutline} color={isFavorite ? COLORS.primary : COLORS.textSecondary} />
           </View>
         </View>

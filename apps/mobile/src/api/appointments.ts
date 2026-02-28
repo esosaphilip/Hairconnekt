@@ -47,7 +47,7 @@ export async function getProviderAppointments(status: StatusGroup): Promise<Appo
 }
 
 export async function rescheduleAppointment(appointmentId: string, newStartAt: string, newEndAt: string): Promise<any> {
-  const res = await http.post(`${API_CONFIG.ENDPOINTS.APPOINTMENTS.BASE}/reschedule`, {
+  const res = await http.post<{ success: boolean; data: any }>(`${API_CONFIG.ENDPOINTS.APPOINTMENTS.CREATE}/reschedule`, {
     appointmentId,
     newStartAt,
     newEndAt

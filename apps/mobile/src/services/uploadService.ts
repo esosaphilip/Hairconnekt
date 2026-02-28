@@ -63,7 +63,8 @@ export const uploadImageFile = async (
 export const uploadMultipleImages = async (
     uris: string[],
     endpointPath: string, // e.g. '/providers/me/portfolio'
-    fieldName = 'images'
+    fieldName = 'images',
+    metadata?: Record<string, string>
 ) => {
     const token = await getAccessToken();
     if (!token) {
@@ -83,6 +84,12 @@ export const uploadMultipleImages = async (
             type,
         } as any);
     });
+
+    if (metadata) {
+        Object.keys(metadata).forEach(key => {
+            formData.append(key, metadata[key]);
+        });
+    }
 
     try {
         const fullUrl = `${API_BASE_URL}${endpointPath.startsWith('/') ? '' : '/'}${endpointPath}`;

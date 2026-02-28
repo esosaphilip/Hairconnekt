@@ -13,7 +13,7 @@ jest.mock('../Icon', () => 'Icon');
 
 // Mock AppImage
 jest.mock('../AppImage', () => ({
-  AppImage: (props: any) => <mock-app-image {...props} testID={props.testID} />,
+  AppImage: (props: any) => React.createElement('mock-app-image', props),
 }));
 
 describe('ProviderCard Image', () => {
@@ -23,9 +23,9 @@ describe('ProviderCard Image', () => {
       name: 'Test',
       imageUrl: 'test.jpg',
     };
-    
+
     const { getByTestId } = render(<ProviderCard data={data} />);
-    
+
     const appImage = getByTestId('provider-card-image');
     expect(appImage.props.uri).toBe('test.jpg');
   });

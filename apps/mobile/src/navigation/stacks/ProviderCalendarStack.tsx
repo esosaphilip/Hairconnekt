@@ -15,7 +15,8 @@ export function ProviderCalendarStackScreen() {
             <ProviderCalendarStack.Screen name="ProviderCalendar" component={ProviderCalendar} options={{ title: 'Kalender' }} />
             <ProviderCalendarStack.Screen name="ProviderCalendarScreen" component={ProviderCalendar} options={{ title: 'Kalender' }} />
             <ProviderCalendarStack.Screen name="CreateAppointmentScreen" component={CreateAppointmentScreen} options={{ title: 'Termin erstellen' }} />
-            <ProviderCalendarStack.Screen name="BlockTimeScreen" component={BlockTimeScreen} options={{ title: 'Zeit blockieren' }} />
+            {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
+            {/* <ProviderCalendarStack.Screen name="BlockTimeScreen" component={BlockTimeScreen} options={{ title: 'Zeit blockieren' }} /> */}
             <ProviderCalendarStack.Screen name="AppointmentRequestScreen" component={AppointmentRequestScreen} options={{ title: 'Buchungsanfrage' }} />
         </ProviderCalendarStack.Navigator>
     );

@@ -54,11 +54,10 @@ type AddressFormData = {
 
 export function AddEditAddressScreen() {
   type Nav = ClientProfileStackScreenProps<'AddAddress'>['navigation'];
-  type AddRoute = ClientProfileStackScreenProps<'AddAddress'>['route'];
-  type EditRoute = ClientProfileStackScreenProps<'EditAddress'>['route'];
+  type RouteOptions = ClientProfileStackScreenProps<'AddAddress'>['route'] | ClientProfileStackScreenProps<'EditAddress'>['route'];
   const navigation = useNavigation<Nav>();
-  const route = useRoute<AddRoute | EditRoute>();
-  const id = (route as EditRoute).params?.id;
+  const route = useRoute<RouteOptions>();
+  const id = (route.params as any)?.id;
   const isEditing = !!id;
 
   const [formData, setFormData] = useState<AddressFormData>({
@@ -74,16 +73,21 @@ export function AddEditAddressScreen() {
   useEffect(() => {
     if (isEditing) {
       // Real API Mode
-      clientUserApi.getAddress(id)
-        .then(data => {
-          setFormData({
-            label: data.label,
-            street: data.streetAddress, // Map streetAddress -> street
-            postalCode: data.postalCode,
-            city: data.city,
-            state: data.state,
-            isDefault: data.isDefault
-          });
+      clientUserApi.getAddresses()
+        .then(addresses => {
+          const data = addresses.find(a => a.id === id);
+          if (data) {
+            setFormData({
+              label: data.label,
+              street: data.streetAddress, // Map streetAddress -> street
+              postalCode: data.postalCode,
+              city: data.city,
+              state: data.state,
+              isDefault: data.isDefault
+            });
+          } else {
+            throw new Error('Address not found');
+          }
         })
         .catch(err => {
           console.error(err);
@@ -146,7 +150,6 @@ export function AddEditAddressScreen() {
           </Text>
           {/* Header Save Button */}
           <TouchableOpacity onPress={handleSave} style={styles.headerSaveButton}>
-            <Icon name="save" size={20} color={COLORS.white} style={{ marginRight: SPACING.xs }} />
             <Text style={styles.headerSaveText}>Speichern</Text>
           </TouchableOpacity>
         </View>

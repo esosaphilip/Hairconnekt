@@ -210,14 +210,14 @@ export function AppointmentRequestScreen() {
                       onPress={() => handleCall(request?.client?.phone || '')}
                       style={styles.actionButton}
                     />
-                    <Button
+                    {/* [MVP-CUT] Reason: In-app chat messaging is deferred to post-MVP | Restore in: v2 */}
+                    {/* <Button
                       title="Nachricht"
                       variant="outline"
                       icon="chatbubble-outline"
                       onPress={() => navigation.navigate('ChatScreen', { clientId: request?.client?.id })}
                       style={styles.actionButton}
-                    />
-
+                    /> */}
                   </View>
                 </View>
               </View>

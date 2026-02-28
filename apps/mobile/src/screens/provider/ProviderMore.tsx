@@ -58,41 +58,47 @@ const menuSections = [
   {
     title: "Finanzen",
     items: [
-      {
-        icon: "dollar-sign",
-        label: "Einnahmen & Auszahlungen",
-        path: "TransactionsScreen",
-        badge: null,
-      },
-      {
-        icon: "bar-chart",
-        label: "Statistiken & Berichte",
-        path: "ProviderAnalyticsScreen",
-        badge: null,
-      },
-      {
-        icon: "gift",
-        label: "Gutscheine & Angebote",
-        path: "ProviderVouchersScreen",
-        badge: "3",
-      },
-      {
-        icon: "credit-card",
-        label: "Abonnement & Gebühren",
-        path: "ProviderSubscriptionScreen",
-        badge: "Pro",
-      },
+      // [MVP-CUT] Reason: Finance, analytics, vouchers, and subscriptions are deferred to post-MVP | Restore in: v2
+      /*
+            {
+              icon: "dollar-sign",
+              label: "Einnahmen & Auszahlungen",
+              path: "TransactionsScreen",
+              badge: null,
+            },
+            {
+              icon: "bar-chart",
+              label: "Statistiken & Berichte",
+              path: "ProviderAnalyticsScreen",
+              badge: null,
+            },
+            {
+              icon: "gift",
+              label: "Gutscheine & Angebote",
+              path: "ProviderVouchersScreen",
+              badge: "3",
+            },
+            {
+              icon: "credit-card",
+              label: "Abonnement & Gebühren",
+              path: "ProviderSubscriptionScreen",
+              badge: "Pro",
+            },
+      */
     ],
   },
   {
     title: "Feedback",
     items: [
-      {
-        icon: "star",
-        label: "Bewertungen",
-        path: "ProviderReviewsScreen",
-        badge: "4.8 ★",
-      },
+      // [MVP-CUT] Reason: Reviews system is deferred to post-MVP | Restore in: v2
+      /*
+            {
+              icon: "star",
+              label: "Bewertungen",
+              path: "ProviderReviewsScreen",
+              badge: "4.8 ★",
+            },
+      */
     ],
   },
   {
@@ -104,12 +110,15 @@ const menuSections = [
         path: "ProviderSettingsScreen",
         badge: null,
       },
-      {
-        icon: "help-circle",
-        label: "Hilfe & Support",
-        path: "ProviderHelpScreen",
-        badge: null,
-      },
+      // [MVP-CUT] Reason: Help screen is deferred to post-MVP | Restore in: v2
+      /*
+            {
+              icon: "help-circle",
+              label: "Hilfe & Support",
+              path: "ProviderHelpScreen",
+              badge: null,
+            },
+      */
     ],
   },
 ];

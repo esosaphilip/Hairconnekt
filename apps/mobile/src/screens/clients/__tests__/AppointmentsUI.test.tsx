@@ -6,7 +6,7 @@ import { renderBookingCard } from '../renderBookingCard';
 
 // Mocks
 jest.mock('react-native-safe-area-context', () => ({
-    SafeAreaView: ({ children }) => <>{children}</>,
+    SafeAreaView: ({ children }: any) => <>{children}</>,
 }));
 
 jest.mock('@expo/vector-icons', () => ({
@@ -24,7 +24,7 @@ jest.mock('@/components/Text', () => {
 });
 jest.mock('@/components/Button', () => {
     const { View, Text, TouchableOpacity } = require('react-native');
-    return ({ title, onPress }) => <TouchableOpacity onPress={onPress}><Text>{title}</Text></TouchableOpacity>;
+    return ({ title, onPress }: any) => <TouchableOpacity onPress={onPress}><Text>{title}</Text></TouchableOpacity>;
 });
 
 jest.mock('react-native', () => {
@@ -40,7 +40,7 @@ jest.mock('@/ui', () => {
         Avatar: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
         AvatarImage: () => <View />,
         AvatarFallback: () => <View />,
-        Button: ({ title, onPress }) => <TouchableOpacity onPress={onPress}><Text>{title}</Text></TouchableOpacity>,
+        Button: ({ title, onPress }: any) => <TouchableOpacity onPress={onPress}><Text>{title}</Text></TouchableOpacity>,
         Card: ({ children }: { children: React.ReactNode }) => <View>{children}</View>,
     };
 });

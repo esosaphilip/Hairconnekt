@@ -34,7 +34,7 @@ export default function LoginScreen() {
     }
 
     try {
-      await login({ emailOrPhone: email.trim(), password });
+      await login(email.trim(), password);
       // auth context state update will redirect automatically
     } catch (e: any) {
       Alert.alert('Fehler', e.response?.data?.message || e.message || 'Anmeldung fehlgeschlagen');
@@ -42,7 +42,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.gray100 }}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xl * 4 }}
@@ -68,18 +68,20 @@ export default function LoginScreen() {
             </View>
 
             <View style={{ marginBottom: spacing.md }}>
-              <Input
-                label="Passwort"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-                placeholder="••••••••"
-                rightIcon={
+              <View style={{ position: 'relative' }}>
+                <Input
+                  label="Passwort"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  placeholder="••••••••"
+                />
+                <View style={{ position: 'absolute', right: 12, top: 38 }}>
                   <Pressable onPress={() => setShowPassword(!showPassword)} hitSlop={10}>
                     <Icon name={showPassword ? 'eye-off' : 'eye'} size={20} color={colors.gray400} />
                   </Pressable>
-                }
-              />
+                </View>
+              </View>
               <View style={{ alignItems: 'flex-end', marginTop: spacing.xs }}>
                 <Pressable onPress={() => { /* Navigate to forgot password if exists */ }}>
                   <Text style={{ fontSize: 14, color: colors.primary, fontWeight: '500' }}>Passwort vergessen?</Text>
@@ -112,7 +114,6 @@ export default function LoginScreen() {
               variant="outline"
               onPress={() => { }}
               style={{ marginBottom: spacing.md }}
-              leftIcon={<Icon name="logo-google" size={20} color={colors.gray700} />}
             />
             <Button
               title="Mit Apple fortfahren"
@@ -120,7 +121,6 @@ export default function LoginScreen() {
               onPress={() => { }}
               style={{ backgroundColor: '#000', borderColor: '#000' }}
               textStyle={{ color: '#FFF' }}
-              leftIcon={<Icon name="logo-apple" size={20} color="#FFF" />}
             />
           </Card>
 

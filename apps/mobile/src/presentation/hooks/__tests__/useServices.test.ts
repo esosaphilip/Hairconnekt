@@ -61,9 +61,15 @@ describe('useServices - UUID Validation Error Clearing', () => {
         mockUseAuth.mockReturnValue({
             user: { id: invalidUserId, email: 'test@example.com' },
             loading: false,
+            login: jest.fn(),
+            registerProvider: jest.fn(),
+            registerClient: jest.fn(),
+            logout: jest.fn(),
+            refreshUser: jest.fn(),
+            updateProfileImage: jest.fn()
         } as any);
 
-        rerender();
+        rerender({});
 
         await waitFor(() => {
             expect(result.current.error).toBeNull();
@@ -90,9 +96,15 @@ describe('useServices - UUID Validation Error Clearing', () => {
         mockUseAuth.mockReturnValue({
             user: null,
             loading: false,
+            login: jest.fn(),
+            registerProvider: jest.fn(),
+            registerClient: jest.fn(),
+            logout: jest.fn(),
+            refreshUser: jest.fn(),
+            updateProfileImage: jest.fn()
         } as any);
 
-        rerender();
+        rerender({});
 
         await waitFor(() => {
             expect(result.current.error).toBeNull();

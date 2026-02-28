@@ -186,7 +186,6 @@ export function UploadPortfolioScreen() {
               title="Bilder auswählen"
               variant="outline"
               onPress={handleImageSelect}
-              icon="camera"
               style={styles.selectButton}
             />
           </View>
