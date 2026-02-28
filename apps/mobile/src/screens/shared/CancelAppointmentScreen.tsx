@@ -61,7 +61,7 @@ export default function CancelAppointmentScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { id } = route.params || {}; // Get 'id' from route params
-  
+
   const [selectedReason, setSelectedReason] = useState('');
   const [otherReason, setOtherReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -80,7 +80,7 @@ export default function CancelAppointmentScreen() {
       price: 120,
     },
     // Set appointment date 2 days and 1 hour from now for testing fee calculation
-    date: new Date(Date.now() + 49 * 60 * 60 * 1000), 
+    date: new Date(Date.now() + 49 * 60 * 60 * 1000),
     time: '14:00',
     bookedDate: new Date(),
   };
@@ -116,7 +116,7 @@ export default function CancelAppointmentScreen() {
       };
     }
   };
-  
+
   // Use useMemo to avoid recalculating the fee on every render
   const cancellationFee = useMemo(calculateCancellationFee, [appointment.date, appointment.time, appointment.service.price]);
 
@@ -134,10 +134,9 @@ export default function CancelAppointmentScreen() {
     // Use React Native's built-in Alert for confirmation
     Alert.alert(
       'Stornierung bestätigen',
-      `Sind Sie sicher, dass Sie diesen Termin stornieren möchten? ${
-        cancellationFee.amount > 0 
-          ? `\n\nEs fällt eine Stornierungsgebühr von ${cancellationFee.amount.toFixed(2)}€ an.`
-          : ''
+      `Sind Sie sicher, dass Sie diesen Termin stornieren möchten? ${cancellationFee.amount > 0
+        ? `\n\nEs fällt eine Stornierungsgebühr von ${cancellationFee.amount.toFixed(2)}€ an.`
+        : ''
       }`,
       [
         { text: 'Zurück', style: 'cancel' },
@@ -156,14 +155,14 @@ export default function CancelAppointmentScreen() {
 
       showToast('Termin erfolgreich storniert');
       // Navigate to the list of appointments
-      navigation.navigate('Appointments'); 
+      navigation.navigate('Appointments');
     } catch (error) {
       showToast('Fehler beim Stornieren des Termins', true);
     } finally {
       setLoading(false);
     }
   };
-  
+
   const canSubmit = selectedReason && (selectedReason !== 'other' || otherReason.trim());
 
   return (
@@ -178,7 +177,7 @@ export default function CancelAppointmentScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Termin stornieren</Text>
       </View>
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {/* Warning */}
         <Card style={styles.warningCard}>
@@ -304,7 +303,8 @@ export default function CancelAppointmentScreen() {
         </View>
 
         {/* Alternative Options */}
-        <Card style={styles.alternativeCard}>
+        {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+        {/* <Card style={styles.alternativeCard}>
           <Text style={styles.alternativeTitle}>
             <Text style={styles.alternativeTitleBold}>Alternativen zur Stornierung:</Text>
           </Text>
@@ -315,26 +315,26 @@ export default function CancelAppointmentScreen() {
             variant="outline"
             style={styles.rescheduleButton}
           />
-        </Card>
+        </Card> */}
       </ScrollView>
-      
+
       {/* Action Buttons (Fixed Footer is common in RN) */}
       <View style={styles.footer}>
-          <Button
-            title="Termin stornieren"
-              icon={<X size={20} color={colors.white} />}
-            onPress={handleCancel}
-            disabled={!canSubmit || loading}
-            loading={loading}
-            style={styles.cancelButton}
-          />
+        <Button
+          title="Termin stornieren"
+          icon={<X size={20} color={colors.white} />}
+          onPress={handleCancel}
+          disabled={!canSubmit || loading}
+          loading={loading}
+          style={styles.cancelButton}
+        />
 
-          <Button
-            title="Abbrechen"
-            onPress={() => navigation.goBack()}
-            variant="ghost"
-            style={styles.cancelLinkButton}
-          />
+        <Button
+          title="Abbrechen"
+          onPress={() => navigation.goBack()}
+          variant="ghost"
+          style={styles.cancelLinkButton}
+        />
       </View>
     </View>
   );

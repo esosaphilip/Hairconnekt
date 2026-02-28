@@ -22,8 +22,9 @@ import { NearbyBraiderCard } from "./components/NearbyBraiderCard";
 const quickActions = [
   { iconName: "flash", key: "urgent", color: colors.orange500 },
   { iconName: "car", key: "mobileService", color: colors.blue600 },
-  { iconName: "gift", key: "vouchers", color: colors.purple600 },
-  { iconName: "heart", key: "favorites", color: colors.pink500 },
+  // [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2
+  // { iconName: "gift", key: "vouchers", color: colors.purple600 },
+  // { iconName: "heart", key: "favorites", color: colors.pink500 },
   { iconName: "sparkles", key: "newBraiders", color: colors.amber600 },
 ];
 
@@ -105,7 +106,8 @@ export function HomeScreen() {
                   {t('common.actions.logIn')}
                 </Button>
               )}
-              {isAuthenticated && (
+              {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+              {/* {isAuthenticated && (
                 <TouchableOpacity
                   style={styles.notificationButton}
                   testID="notification-bell"
@@ -114,7 +116,7 @@ export function HomeScreen() {
                   <Icon name="notifications" size={24} color={colors.gray700} />
                   <View style={styles.notificationBadge} />
                 </TouchableOpacity>
-              )}
+              )} */}
             </View>
           </View>
 

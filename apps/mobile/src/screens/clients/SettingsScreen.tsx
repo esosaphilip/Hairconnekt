@@ -230,12 +230,15 @@ export function SettingsScreen() {
               label: "Nutzungsbedingungen",
               route: "TermsScreen"
             }} />
+            {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+            {/*
             <View style={styles.separator} />
             <SettingRow item={{
               icon: IconNames.LifeBuoy,
               label: "Hilfe & Support",
               route: "SupportScreen"
             }} />
+            */}
           </View>
         </View>
 

@@ -65,12 +65,13 @@ export function ProviderDashboard() {
                 <Text style={styles.dateText}>{todayLabel}</Text>
               </View>
               <View style={styles.headerActions}>
-                <Pressable
+                {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+                {/* <Pressable
                   style={styles.headerActionButton}
                   onPress={() => navigation.navigate('ProviderNotificationsScreen')}
                 >
                   <Ionicons name="notifications-outline" size={22} color={colors.gray700} />
-                </Pressable>
+                </Pressable> */}
                 <Pressable
                   style={styles.headerActionButton}
                   onPress={() => navigation.navigate('Profil', { screen: 'ProviderSettingsScreen' })}

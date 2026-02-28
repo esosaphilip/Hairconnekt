@@ -196,6 +196,8 @@ export function ProviderSettingsScreen() {
               checked={bookingAlerts}
               onToggle={(v) => { setBookingAlerts(v); saveSetting('bookingAlerts', v); }}
             />
+            {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+            {/* 
             <View style={styles.divider} />
             <ToggleItem
               icon="message-circle"
@@ -211,7 +213,8 @@ export function ProviderSettingsScreen() {
               subtitle="Bei neuen Bewertungen benachrichtigen"
               checked={reviewAlerts}
               onToggle={(v) => { setReviewAlerts(v); saveSetting('reviewAlerts', v); }}
-            />
+            /> 
+            */}
             <View style={styles.divider} />
             <ToggleItem
               icon="mail"

@@ -82,7 +82,8 @@ export function renderBookingCard(
     // Given the constraints and specific request:
 
     const options = ['Abbrechen'];
-    if (onReschedule) options.push('Verschieben');
+    // [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2
+    // if (onReschedule) options.push('Verschieben');
     if (onCancel) options.push('Stornieren');
 
     // Basic Alert for options if ActionSheet not imported.
@@ -96,7 +97,8 @@ export function renderBookingCard(
           },
           (buttonIndex) => {
             const option = options[buttonIndex];
-            if (option === 'Verschieben' && onReschedule) onReschedule(idStr);
+            // [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2
+            // if (option === 'Verschieben' && onReschedule) onReschedule(idStr);
             if (option === 'Stornieren' && onCancel) onCancel(idStr);
           }
         );
@@ -104,7 +106,8 @@ export function renderBookingCard(
         // Android Options Alert
         const buttons = [];
         buttons.push({ text: 'Abbrechen', style: 'cancel' as const });
-        if (onReschedule) buttons.push({ text: 'Verschieben', onPress: () => onReschedule(idStr) });
+        // [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2
+        // if (onReschedule) buttons.push({ text: 'Verschieben', onPress: () => onReschedule(idStr) });
         if (onCancel) buttons.push({ text: 'Stornieren', style: 'destructive' as const, onPress: () => onCancel(idStr) });
 
         Alert.alert('Optionen', undefined, buttons);
@@ -151,10 +154,11 @@ export function renderBookingCard(
         <View style={sx.footer}>
           <Text style={sx.priceText}>{priceStr}</Text>
           <View style={sx.actions}>
-            <TouchableOpacity style={sx.msgButton} onPress={() => providerId && navigate('Chat', { recipientId: providerId })}>
+            {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+            {/* <TouchableOpacity style={sx.msgButton} onPress={() => providerId && navigate('Chat', { recipientId: providerId })}>
               <Icon name="message-square" size={16} color={colors.gray800} />
               <Text style={sx.msgButtonText}>Nachricht</Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {(onCancel || onReschedule) && (
               <TouchableOpacity style={sx.moreButton} onPress={handleMoreOptions}>

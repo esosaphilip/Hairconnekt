@@ -51,8 +51,10 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
   };
 
   const handleMoreOptions = () => {
-    const options = ['Abbrechen', 'Termin verschieben', 'Termin stornieren'];
-    const destructiveButtonIndex = 2;
+    // [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2
+    // const options = ['Abbrechen', 'Termin verschieben', 'Termin stornieren'];
+    const options = ['Abbrechen', 'Termin stornieren'];
+    const destructiveButtonIndex = 1;
     const cancelButtonIndex = 0;
 
     if (Platform.OS === 'ios') {
@@ -64,10 +66,6 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         },
         (buttonIndex) => {
           if (buttonIndex === 1) {
-            // Reschedule
-            // TODO: Navigate to Reschedule Screen
-            navigation.navigate('RescheduleAppointment', { id });
-          } else if (buttonIndex === 2) {
             handleCancel();
           }
         }
@@ -78,10 +76,6 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         'Wähle eine Aktion',
         [
           { text: 'Abbrechen', style: 'cancel' },
-          {
-            text: 'Termin verschieben',
-            onPress: () => navigation.navigate('RescheduleAppointment', { id })
-          },
           { text: 'Termin stornieren', style: 'destructive', onPress: handleCancel },
         ]
       );
@@ -287,12 +281,13 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
         {/* Actions */}
         {isActionable && (
           <View style={styles.actions}>
-            <Button
+            {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+            {/* <Button
               title="Nachricht senden"
               icon={<Icon name="message-circle" size={18} color="white" />}
               onPress={() => navigation.navigate('Chat', { recipientId: appointment.providerId })}
               style={{ marginBottom: spacing.sm, backgroundColor: colors.primary }}
-            />
+            /> */}
             <View style={styles.secondaryActions}>
               <Button
                 title="Route"
@@ -302,7 +297,8 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
                 textStyle={{ color: colors.primary }}
                 onPress={openMaps}
               />
-              <View style={{ width: spacing.md }} />
+              {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+              {/* <View style={{ width: spacing.md }} />
               <Button
                 title="Verschieben"
                 variant="outline"
@@ -310,13 +306,14 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
                 style={{ flex: 1, borderColor: colors.primary }}
                 textStyle={{ color: colors.primary }}
                 onPress={() => navigation.navigate('RescheduleAppointment', { id })}
-              />
+              /> */}
             </View>
           </View>
         )}
 
         {/* Review Button (Completed only) */}
-        {(appointment.status || '').toLowerCase() === 'completed' && (
+        {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+        {/* {(appointment.status || '').toLowerCase() === 'completed' && (
           <View style={styles.actions}>
             <Button
               title="Bewerten"
@@ -325,7 +322,7 @@ export default function AppointmentDetailScreen({ route, navigation }: any) {
               style={{ backgroundColor: colors.primary }}
             />
           </View>
-        )}
+        )} */}
 
       </ScrollView>
     </SafeAreaView>

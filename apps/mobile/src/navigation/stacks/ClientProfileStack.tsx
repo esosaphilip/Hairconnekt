@@ -25,13 +25,13 @@ import { PersonalInfoScreen } from '@/screens/clients/PersonalInfoScreen';
 // import { LanguageScreen } from '@/screens/shared/LanguageScreen';
 import { PrivacyPolicyScreen } from '@/screens/shared/PrivacyPolicyScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
-// import { PrivacySecurityScreen } from '@/screens/shared/PrivacySecurityScreen';
+import { PrivacySecurityScreen } from '@/screens/shared/PrivacySecurityScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
 // import { SupportScreen } from '@/screens/shared/SupportScreen';
 import { TermsScreen } from '@/screens/shared/TermsScreen';
 import { ImprintScreen } from '@/screens/shared/ImprintScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
-// import { DeleteAccountScreen } from '@/screens/shared/DeleteAccountScreen';
+import { DeleteAccountScreen } from '@/screens/shared/DeleteAccountScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
 // import { LoginScreen as UserManualScreen } from '@/screens/shared/UserManualScreen';
 import { EditProfileScreen } from '@/screens/shared/EditProfileScreen';
@@ -97,15 +97,15 @@ export function ClientProfileStackScreen() {
             {/* <ClientProfileStack.Screen name="Transactions" component={TransactionHistoryScreen} options={{ title: t('screens.profile.menu.transactions') }} /> */}
             {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
             {/* <ClientProfileStack.Screen name="Language" component={LanguageScreen} options={{ title: t('screens.language.title') }} /> */}
-            {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
-            {/* <ClientProfileStack.Screen name="Privacy" component={PrivacySecurityScreen} options={{ title: t('screens.profile.menu.privacy') }} /> */}
+            {/* [MVP-RESTORED] mandatory for GDPR */}
+            <ClientProfileStack.Screen name="Privacy" component={PrivacySecurityScreen} options={{ title: t('screens.profile.menu.privacy') }} />
             {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
             {/* <ClientProfileStack.Screen name="Support" component={SupportScreen} options={{ title: t('screens.profile.menu.support') }} /> */}
             <ClientProfileStack.Screen name="Terms" component={TermsScreen} options={{ title: t('screens.profile.menu.terms') }} />
             <ClientProfileStack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} options={{ title: t('screens.profile.menu.privacyPolicy') }} />
             <ClientProfileStack.Screen name="Imprint" component={ImprintScreen} options={{ title: t('screens.profile.menu.imprint') }} />
-            {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
-            {/* <ClientProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ title: t('screens.profile.menu.deleteAccount') }} /> */}
+            {/* [MVP-RESTORED] mandatory for App Store Guidelines */}
+            <ClientProfileStack.Screen name="DeleteAccount" component={DeleteAccountScreen} options={{ title: t('screens.profile.menu.deleteAccount') }} />
             {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
             {/* <ClientProfileStack.Screen name="About" options={{ title: t('screens.profile.menu.aboutHairConnekt') }}>
                 {() => (

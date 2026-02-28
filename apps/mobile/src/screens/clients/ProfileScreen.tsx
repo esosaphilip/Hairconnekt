@@ -219,7 +219,7 @@ export function ProfileScreen() {
       try {
         const nextUser = user ? { ...user, avatarUrl: res.url } : user;
         if (nextUser) await setUser(nextUser);
-      } catch {}
+      } catch { }
     } catch (err: unknown) {
       logger.error('Avatar upload failed:', err);
       const msg = typeof err === 'object' && err && 'message' in err
@@ -381,10 +381,12 @@ export function ProfileScreen() {
         {/* My Profile Section */}
         <SectionHeader title={t('screens.profile.sections.myProfile')} />
         <Card style={styles.card}>
-          <MenuItem iconName="notifications" label={t('screens.profile.menu.notifications')} onClick={() => navigateTo('Notifications')} />
-          <Separator />
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <MenuItem iconName="notifications" label={t('screens.profile.menu.notifications')} onClick={() => navigateTo('Notifications')} />
+          <Separator /> */}
           <MenuItem iconName="person" label={t('screens.profile.menu.personalInfo')} onClick={() => navigateTo('PersonalInfo')} />
-          <Separator />
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <Separator />
           <MenuItem
             iconName="map"
             label={t('screens.profile.menu.addresses')}
@@ -396,30 +398,34 @@ export function ProfileScreen() {
             iconName="person"
             label={t('screens.profile.menu.preferences')}
             onClick={() => navigateTo('HairPreferences')}
-          />
+          /> */}
         </Card>
 
         {/* My Activities Section */}
         <SectionHeader title={t('screens.profile.sections.myActivities')} />
         <Card style={styles.card}>
-          <MenuItem
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <MenuItem
             iconName="heart"
             label={t('screens.profile.menu.favorites')}
             badge={me?.stats?.favorites ?? 0}
             onClick={() => navigateTo('Favorites')}
-          />
-          <Separator />
+          /> */}
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <Separator />
           <MenuItem
             iconName="star"
             label={t('screens.profile.menu.myReviews')}
             badge={me?.stats?.reviews ?? 0}
             onClick={() => navigateTo('MyReviews')}
-          />
-          <Separator />
-          <MenuItem iconName="calendar" label={t('screens.profile.menu.bookingHistory')} onClick={() => navigateTo('BookingHistory')} />
+          /> */}
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <Separator />
+          <MenuItem iconName="calendar" label={t('screens.profile.menu.bookingHistory')} onClick={() => navigateTo('BookingHistory')} /> */}
         </Card>
 
-        {/* Payments Section */}
+        {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+        {/* 
         <SectionHeader title={t('screens.profile.sections.payments')} />
         <Card style={styles.card}>
           <MenuItem iconName="card" label={t('screens.profile.menu.paymentMethods')} onClick={() => navigateTo('PaymentMethods')} />
@@ -428,10 +434,12 @@ export function ProfileScreen() {
           <Separator />
           <MenuItem iconName="document-text" label={t('screens.profile.menu.transactions')} onClick={() => navigateTo('Transactions')} />
         </Card>
+        */}
 
         {/* Settings Section */}
         <SectionHeader title={t('screens.profile.sections.settings')} />
         <Card style={styles.card}>
+          {/* Settings Section Switches */}
           <View style={styles.settingsBlock}>
             <View style={styles.switchRow}>
               <View style={styles.switchRowLeft}>
@@ -480,21 +488,23 @@ export function ProfileScreen() {
               />
             </View>
           </View>
-          <Separator />
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <Separator />
           <MenuItem
             iconName="globe"
             label={t('screens.profile.menu.language')}
             value={locale === 'de' ? t('common.languages.de') : t('common.languages.en')}
             onClick={() => navigateTo('Language')}
-          />
+          /> */}
           <Separator />
           <MenuItem
             iconName="shield"
             label={t('screens.profile.menu.privacy')}
             onClick={() => navigateTo('Privacy')}
           />
-          <Separator />
-          <MenuItem iconName="help-circle" label={t('screens.profile.menu.support')} onClick={() => navigateTo('Support')} />
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <Separator />
+          <MenuItem iconName="help-circle" label={t('screens.profile.menu.support')} onClick={() => navigateTo('Support')} /> */}
         </Card>
 
         {/* Legal Section */}
@@ -515,7 +525,8 @@ export function ProfileScreen() {
           <MenuItem iconName="document-text" label={t('screens.profile.menu.imprint')} onClick={() => navigateTo('Imprint')} />
         </Card>
 
-        {/* Anbieter werden CTA für CLIENT */}
+        {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+        {/*
         {String(user?.userType || '').toLowerCase() === 'client' && (
           <View style={{ padding: spacing.xl }}>
             <View style={{ backgroundColor: colors.primary, padding: spacing.xl, borderRadius: radii.lg, alignItems: 'center' }}>
@@ -527,6 +538,7 @@ export function ProfileScreen() {
             </View>
           </View>
         )}
+        */}
 
         {/* Account Actions */}
         <SectionHeader title={t('screens.profile.sections.account')} />
@@ -544,12 +556,13 @@ export function ProfileScreen() {
         {/* App Version */}
         <View style={styles.appVersionContainer}>
           <Text style={styles.appVersionText}>HairConnekt v1.0.0</Text>
-          <Pressable
+          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
+          {/* <Pressable
             onPress={() => navigateTo('About')}
             style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }, styles.aboutButton]}
           >
             <Text style={styles.aboutButtonText}>{t('screens.profile.menu.about')}</Text>
-          </Pressable>
+          </Pressable> */}
         </View>
       </ScrollView>
       {/* Logout confirmation (web) */}
@@ -567,7 +580,7 @@ export function ProfileScreen() {
   );
 }
 
- 
+
 
 const styles = StyleSheet.create({
   aboutButton: {

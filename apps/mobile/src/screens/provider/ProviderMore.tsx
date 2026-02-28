@@ -324,7 +324,7 @@ export function ProviderMore() {
 
         {/* Menu Sections */}
         <View style={styles.menuSectionsContainer}>
-          {menuSections.map((section, sectionIndex) => (
+          {menuSections.filter(section => section.items.length > 0).map((section, sectionIndex) => (
             <View key={sectionIndex} style={styles.section}>
               <Text style={styles.sectionTitle}>
                 {section.title}
