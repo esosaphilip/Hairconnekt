@@ -53,6 +53,12 @@ const menuSections = [
         path: "ProviderPortfolioScreen",
         badge: "42",
       },
+      {
+        icon: "clock",
+        label: "Verfügbarkeit",
+        path: "ProviderAvailabilityScreen",
+        badge: null,
+      },
     ],
   },
   {

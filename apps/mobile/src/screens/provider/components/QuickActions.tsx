@@ -25,10 +25,10 @@ export const QuickActions: React.FC = () => {
                 rootNavigationRef.current?.navigate('Kalender', { screen: 'CreateAppointmentScreen' });
                 break;
             case 'Dienste bearbeiten':
-                rootNavigationRef.current?.navigate('Mehr', { screen: 'ServicesManagementScreen' });
+                rootNavigationRef.current?.navigate('Profil', { screen: 'ProviderServicesScreen' });
                 break;
             case 'Verfügbarkeit':
-                rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderAvailabilityScreen' });
+                rootNavigationRef.current?.navigate('Profil', { screen: 'ProviderAvailabilityScreen' });
                 break;
         }
     };
