@@ -58,6 +58,10 @@ jest.mock('expo-image-picker', () => ({
     MediaTypeOptions: { Images: 'Images' },
 }));
 
+jest.mock('@/services/uploadService', () => ({
+    uploadImageFile: jest.fn(),
+}));
+
 jest.mock('@react-navigation/native', () => {
     const actual = jest.requireActual('@react-navigation/native');
     return {
@@ -130,9 +134,11 @@ describe('Phase A: Image Persistence & Rendering', () => {
         (useAuth as jest.Mock).mockReturnValue({
             user: { ...mockUser, profilePictureUrl: null },
             setUser: mockSetUser,
+            tokens: { accessToken: 'valid-token' },
         });
 
-        (usersApi.uploadAvatar as jest.Mock).mockResolvedValue({ url: 'https://new-image.com/pic.jpg' });
+        const { uploadImageFile } = require('@/services/uploadService');
+        (uploadImageFile as jest.Mock).mockResolvedValue({ url: 'https://new-image.com/pic.jpg' });
         (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
             canceled: false,
             assets: [{ uri: 'file://local/image.jpg' }],
@@ -151,8 +157,8 @@ describe('Phase A: Image Persistence & Rendering', () => {
             // Verify ImagePicker was called
             expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled();
 
-            // Verify API upload
-            expect(usersApi.uploadAvatar).toHaveBeenCalledWith('file://local/image.jpg');
+            // Verify API upload via uploadImageFile
+            expect(uploadImageFile).toHaveBeenCalledWith('file://local/image.jpg', '/users/me/avatar', 'file');
 
             // CRITICAL: Verify setUser was called with the new URL
             expect(mockSetUser).toHaveBeenCalledWith(expect.objectContaining({

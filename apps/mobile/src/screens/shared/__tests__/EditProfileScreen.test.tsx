@@ -15,6 +15,9 @@ jest.mock('@/auth/AuthContext', () => ({
 jest.mock('@/services/users');
 jest.mock('@/api/http');
 jest.mock('expo-image-picker');
+jest.mock('@/services/uploadService', () => ({
+    uploadImageFile: jest.fn(),
+}));
 jest.mock('@react-navigation/native', () => {
     const actualNav = jest.requireActual('@react-navigation/native');
     return {
@@ -44,6 +47,7 @@ describe('EditProfileScreen', () => {
         (useAuth as jest.Mock).mockReturnValue({
             user: mockClientUser,
             setUser: mockSetUser,
+            tokens: { accessToken: 'valid-token' },
         });
         (useNavigation as jest.Mock).mockReturnValue(mockNavigation);
         (usersApi.getMe as jest.Mock).mockResolvedValue(mockClientUser);
@@ -82,11 +86,12 @@ describe('EditProfileScreen', () => {
     });
 
     it('uploads image on pick', async () => {
+        const { uploadImageFile } = require('@/services/uploadService');
+        (uploadImageFile as jest.Mock).mockResolvedValue({ url: 'http://example.com/new.jpg' });
         (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
             canceled: false,
             assets: [{ uri: 'file://new.jpg' }],
         });
-        (usersApi.uploadAvatar as jest.Mock).mockResolvedValue({ url: 'http://example.com/new.jpg' });
 
         render(<EditProfileScreen />);
         await waitFor(() => expect(screen.getByTestId('camera-upload-btn')).toBeTruthy());
@@ -95,7 +100,7 @@ describe('EditProfileScreen', () => {
 
         await waitFor(() => {
             expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled();
-            expect(usersApi.uploadAvatar).toHaveBeenCalledWith('file://new.jpg');
+            expect(uploadImageFile).toHaveBeenCalledWith('file://new.jpg', '/users/me/avatar', 'file');
             expect(mockSetUser).toHaveBeenCalledWith(expect.objectContaining({
                 profilePictureUrl: 'http://example.com/new.jpg'
             }));

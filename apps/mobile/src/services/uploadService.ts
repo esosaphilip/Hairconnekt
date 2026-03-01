@@ -38,7 +38,7 @@ export const uploadImageFile = async (
             body: formData,
             headers: {
                 Accept: 'application/json',
-                // Note: Do NOT set Content-Type explicitely; fetch will automatically generate exactly the right boundary string and header
+                'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`,
             },
         });
@@ -99,6 +99,7 @@ export const uploadMultipleImages = async (
             body: formData,
             headers: {
                 Accept: 'application/json',
+                'Content-Type': 'multipart/form-data',
                 Authorization: `Bearer ${token}`,
             },
         });

@@ -450,67 +450,6 @@ exports[`Phase B: Appointments & Termindetails renderBookingCard renders 3-dot m
           onStartShouldSetResponder={[Function]}
           style={
             {
-              "alignItems": "center",
-              "borderColor": "#E5E7EB",
-              "borderRadius": 8,
-              "borderWidth": 1,
-              "flexDirection": "row",
-              "gap": 6,
-              "opacity": 1,
-              "paddingHorizontal": 12,
-              "paddingVertical": 6,
-            }
-          }
-        >
-          <View
-            testID="Icon"
-          >
-            <Text>
-              Icon
-            </Text>
-          </View>
-          <Text
-            style={
-              {
-                "color": "#374151",
-                "fontSize": 13,
-                "fontWeight": "600",
-              }
-            }
-          >
-            Nachricht
-          </Text>
-        </View>
-        <View
-          accessibilityState={
-            {
-              "busy": undefined,
-              "checked": undefined,
-              "disabled": undefined,
-              "expanded": undefined,
-              "selected": undefined,
-            }
-          }
-          accessibilityValue={
-            {
-              "max": undefined,
-              "min": undefined,
-              "now": undefined,
-              "text": undefined,
-            }
-          }
-          accessible={true}
-          collapsable={false}
-          focusable={true}
-          onClick={[Function]}
-          onResponderGrant={[Function]}
-          onResponderMove={[Function]}
-          onResponderRelease={[Function]}
-          onResponderTerminate={[Function]}
-          onResponderTerminationRequest={[Function]}
-          onStartShouldSetResponder={[Function]}
-          style={
-            {
               "opacity": 1,
               "padding": 6,
             }

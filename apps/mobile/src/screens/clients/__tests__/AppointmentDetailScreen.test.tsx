@@ -1,11 +1,11 @@
 import React from 'react';
-import { View } from 'react-native';
 import { render, waitFor, fireEvent, screen } from '@testing-library/react-native';
 import AppointmentDetailScreen from '../AppointmentDetailScreen';
-import { http } from '@/api/http';
-import { Linking, ActionSheetIOS, Platform } from 'react-native';
+import { clientBookingApi } from '@/api/clientBooking';
+import { Linking, ActionSheetIOS, Platform, Alert } from 'react-native';
 
 // Mock dependencies
+jest.mock('@/api/clientBooking');
 jest.mock('@/api/http');
 jest.mock('react-native/Libraries/Linking/Linking', () => ({
     openURL: jest.fn(),
@@ -14,9 +14,6 @@ jest.mock('react-native/Libraries/Linking/Linking', () => ({
     canOpenURL: jest.fn(),
     removeEventListener: jest.fn(),
 }));
-
-// Mock ActionSheetIOS
-// ActionSheetIOS is mocked above
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => {
@@ -30,40 +27,37 @@ jest.mock('@react-navigation/native', () => {
     };
 });
 
+// Explicit Mock for ActionSheetIOS
+ActionSheetIOS.showActionSheetWithOptions = jest.fn();
+Alert.alert = jest.fn() as any;
+
 const mockAppointment = {
     id: '123456789',
     status: 'upcoming',
     startTime: new Date().toISOString(),
-    service: { name: 'Box Braids', duration: 180 },
-    price: '150',
+    serviceName: 'Box Braids',
+    duration: '180 Min.',
+    price: '€150',
     providerId: 'p1',
-    provider: {
-        id: 'p1',
-        businessName: 'Top Braids',
-        address: 'Provider Address St. 1',
-        phone: '1234567890',
-    },
+    providerBusiness: 'Top Braids',
+    providerName: 'Top Braids',
     location: 'Mapped Location St. 2',
+    rating: '4.9',
 };
-
-// Explicit Mock for ActionSheetIOS
-ActionSheetIOS.showActionSheetWithOptions = jest.fn();
 
 describe('AppointmentDetailScreen', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        (http.get as jest.Mock).mockResolvedValue({ data: { data: mockAppointment } });
+        (clientBookingApi.getAppointment as jest.Mock).mockResolvedValue(mockAppointment);
     });
 
-    it('renders correctly and shows address from location/provider', async () => {
+    it('renders correctly and shows address', async () => {
         render(
             <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={{ navigate: mockNavigate, goBack: jest.fn() }} />
         );
 
-        // Wait for data
-        // Component logic seems to fallback to 'Adresse nicht verfügbar' in test env for some reason
-        // Checking for that ensures stability
-        await waitFor(() => expect(screen.getByText('Adresse nicht verfügbar')).toBeTruthy());
+        await waitFor(() => expect(screen.getByText('Top Braids')).toBeTruthy());
+        expect(screen.getByText('Mapped Location St. 2')).toBeTruthy();
     });
 
     it('opens action sheet with correct options on "more" press (iOS)', async () => {
@@ -76,24 +70,22 @@ describe('AppointmentDetailScreen', () => {
 
         fireEvent.press(screen.getByTestId('more-options-btn'));
 
+        // NOTE: the MVP component removed "Termin verschieben" — only ['Abbrechen', 'Termin stornieren'] remain
         expect(ActionSheetIOS.showActionSheetWithOptions).toHaveBeenCalledWith(
             expect.objectContaining({
-                options: ['Abbrechen', 'Termin verschieben', 'Termin stornieren'],
-                destructiveButtonIndex: 2,
+                options: ['Abbrechen', 'Termin stornieren'],
+                destructiveButtonIndex: 1,
+                cancelButtonIndex: 0,
             }),
             expect.any(Function)
         );
     });
 
-    it('navigates to Chat when "Nachricht senden" is pressed', async () => {
-        render(
-            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={{ navigate: mockNavigate, goBack: jest.fn() }} />
-        );
-
-        await waitFor(() => expect(screen.getByText('Nachricht senden')).toBeTruthy());
-        fireEvent.press(screen.getByText('Nachricht senden'));
-
-        expect(mockNavigate).toHaveBeenCalledWith('Chat', { recipientId: 'p1' });
+    // NOTE: "Nachricht senden" was removed from AppointmentDetailScreen (MVP-CUT). 
+    // Manual test: open a booking in the app and verify the chat navigation works.
+    it.skip('navigates to Chat when "Nachricht senden" is pressed', async () => {
+        // SKIP: 'Nachricht senden' button is MVP-CUT (commented out in component).
+        // Restore test when feature is re-enabled in v2.
     });
 
     it('navigates to Provider Profile when "Profil" is pressed', async () => {
@@ -107,28 +99,16 @@ describe('AppointmentDetailScreen', () => {
         expect(mockNavigate).toHaveBeenCalledWith('ProviderDetail', { id: 'p1' });
     });
 
-
-    it('shows Review button only when status is completed and navigates correctly', async () => {
-        const completedAppointment = { ...mockAppointment, status: 'Completed' };
-        (http.get as jest.Mock).mockResolvedValue({ data: { data: completedAppointment } });
-
-        const navigationMock = { navigate: jest.fn(), goBack: jest.fn() };
-        render(
-            <AppointmentDetailScreen route={{ params: { id: '123' } }} navigation={navigationMock} />
-        );
-
-        await waitFor(() => expect(screen.getByText('Abgeschlossen')).toBeTruthy());
-
-        const reviewBtn = screen.getByText('Bewerten');
-        expect(reviewBtn).toBeTruthy();
-
-        fireEvent.press(reviewBtn);
-        expect(navigationMock.navigate).toHaveBeenCalledWith('WriteReviews', { appointmentId: '123' });
+    // NOTE: Review button ("Bewerten") was removed from AppointmentDetailScreen (MVP-CUT).
+    // Manual test: mark a booking as completed and verify the review screen opens.
+    it.skip('shows Review button only when status is completed and navigates correctly', async () => {
+        // SKIP: 'Bewerten' button is MVP-CUT (commented out in component).
+        // Restore test when feature is re-enabled in v2.
     });
 
     it('does not show Review button when status is pending', async () => {
-        const pendingAppointment = { ...mockAppointment, status: 'Pending' };
-        (http.get as jest.Mock).mockResolvedValue({ data: { data: pendingAppointment } });
+        const pendingAppointment = { ...mockAppointment, status: 'pending' };
+        (clientBookingApi.getAppointment as jest.Mock).mockResolvedValue(pendingAppointment);
 
         const navigationMock = { navigate: jest.fn(), goBack: jest.fn() };
         render(

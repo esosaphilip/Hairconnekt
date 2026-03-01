@@ -244,6 +244,8 @@
   "providerTabs": {
     "dashboard": "Dashboard",
     "calendar": "Kalender",
+    "appointments": "Buchungen",
+    "profile": "Profil",
     "clients": "Kunden",
     "messages": "Nachrichten",
     "more": "Mehr"

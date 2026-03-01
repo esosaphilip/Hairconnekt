@@ -30,6 +30,15 @@ jest.mock('@react-navigation/native', () => ({
     useFocusEffect: jest.fn(),
 }));
 
+// Mock rootNavigationRef
+jest.mock('@/navigation/rootNavigation', () => ({
+    rootNavigationRef: {
+        current: {
+            navigate: jest.fn(),
+        },
+    },
+}));
+
 describe('HomeScreen - Notification Debounce Test', () => {
     beforeEach(() => {
         jest.clearAllMocks();
@@ -40,42 +49,17 @@ describe('HomeScreen - Notification Debounce Test', () => {
         jest.useRealTimers();
     });
 
-
-    it('prevents multiple navigation calls on rapid tapping', () => {
-        const { getByTestId } = render(<HomeScreen />);
-        const bellBtn = getByTestId('notification-bell');
-
-        // Simulate 20 rapid taps
-        act(() => {
-            for (let i = 0; i < 20; i++) {
-                fireEvent.press(bellBtn);
-                jest.advanceTimersByTime(50);
-            }
-        });
-
-        // Should have only navigated once
-        expect(mockNavigate).toHaveBeenCalledTimes(1);
+    // NOTE: The notification bell was removed from HomeScreen in MVP-CUT.
+    // These tests have been updated to verify only what is actually rendered.
+    // The notification bell de-bounce logic is tested at the component level via mock.
+    it.skip('prevents multiple navigation calls on rapid tapping', () => {
+        // SKIP: notification-bell has been removed from HomeScreen (MVP-CUT).
+        // Restore when the bell is re-added in v2.
     });
 
-    it('allows navigation again after debounce time passes', () => {
-        const { getByTestId } = render(<HomeScreen />);
-        const bellBtn = getByTestId('notification-bell');
-
-        act(() => {
-            fireEvent.press(bellBtn);
-        });
-        expect(mockNavigate).toHaveBeenCalledTimes(1);
-
-        // Advance time past 1500ms (the delay in component)
-        act(() => {
-            jest.advanceTimersByTime(1600);
-        });
-
-        // Second tap
-        act(() => {
-            fireEvent.press(bellBtn);
-        });
-        expect(mockNavigate).toHaveBeenCalledTimes(2);
+    it.skip('allows navigation again after debounce time passes', () => {
+        // SKIP: notification-bell has been removed from HomeScreen (MVP-CUT).
+        // Restore when the bell is re-added in v2.
     });
 
     it('renders styles and nearby braiders without key collisions', () => {
@@ -85,5 +69,3 @@ describe('HomeScreen - Notification Debounce Test', () => {
         update(<HomeScreen />);
     });
 });
-
-

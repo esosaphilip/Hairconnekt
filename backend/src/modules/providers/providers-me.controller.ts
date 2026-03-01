@@ -81,6 +81,13 @@ export class ProvidersMeController {
         return this.providersService.uploadProfilePicture(userId, file);
     }
 
+    @Get('portfolio')
+    async getMyPortfolio(@Req() req: Request, @Query('limit') limit: number, @Query('sort') sort: string) {
+        const userId = (req.user as any)?.sub || (req.user as any)?.id;
+        const providerId = await this.servicesService.getProviderIdByUserId(userId);
+        return this.portfolioService.listProviderPortfolio(providerId, { limit: Number(limit) || 50, sort: sort });
+    }
+
     @Post('portfolio')
     @UseInterceptors(FilesInterceptor('images', 10, { storage: memoryStorage() }))
     async uploadPortfolioImages(

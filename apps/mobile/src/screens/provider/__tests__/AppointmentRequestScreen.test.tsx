@@ -1,10 +1,10 @@
 import React from 'react';
-import { render, waitFor, fireEvent } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import { AppointmentRequestScreen } from '../AppointmentRequestScreen';
 import { providerAppointmentsApi } from '@/api/providerAppointments';
-import { NavigationContainer } from '@react-navigation/native';
+import { Alert } from 'react-native';
 
-// Mock the API
+// Mock Dependencies
 jest.mock('@/api/providerAppointments', () => ({
   providerAppointmentsApi: {
     providerView: jest.fn(),
@@ -13,9 +13,11 @@ jest.mock('@/api/providerAppointments', () => ({
   },
 }));
 
-// Mock navigation
+jest.spyOn(Alert, 'alert').mockImplementation(() => { });
+
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
+
 jest.mock('@react-navigation/native', () => {
   const actualNav = jest.requireActual('@react-navigation/native');
   return {
@@ -30,91 +32,120 @@ jest.mock('@react-navigation/native', () => {
   };
 });
 
-// Mock UI components that might cause issues
-jest.mock('@/components/avatar', () => {
-  const { View } = require('react-native');
-  return {
-    __esModule: true,
-    default: ({ children }: any) => <View testID="avatar">{children}</View>,
-    AvatarImage: ({ source }: any) => <View testID="avatar-image" source={source} />,
-    AvatarFallback: () => <View />,
-  };
-});
-
-jest.mock('@expo/vector-icons', () => ({
-  Ionicons: 'Ionicons',
-}));
-
 describe('AppointmentRequestScreen', () => {
-  const mockRequest = {
+  const mockRequestData = {
     id: 'req-123',
-    client: {
-      id: 'c-1',
-      name: 'Sarah Connor',
-      avatar: 'https://r2.dev/sarah.jpg',
-      totalBookings: 5,
-      joinedDate: '2024-01-01',
-      phone: '1234567890',
-    },
-    service: {
-      name: 'Haircut',
-      duration: '1 Std.',
-      price: '€50',
-    },
-    requestedDate: '2025-01-01',
-    requestedTime: '10:00',
     requestedAt: 'Vor 2 Stunden',
-    status: 'pending',
-    notes: 'Please be on time',
+    requestedDate: '27. Oktober 2025',
+    requestedTime: '14:00',
+    location: 'Beim Kunden',
+    address: 'Musterstraße 1, Berlin',
+    notes: 'Bitte pünktlich sein.',
+    service: {
+      name: 'Box Braids',
+      price: '€80',
+      duration: '120 Min',
+    },
+    client: {
+      id: 'client-1',
+      name: 'Maria Schmidt',
+      avatar: 'https://example.com/avatar.jpg',
+      phone: '+4912345678',
+      totalBookings: 5,
+      joinedDate: 'Jan 2024',
+    },
     alternativeDates: [],
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (providerAppointmentsApi.providerView as jest.Mock).mockResolvedValue(mockRequest);
+    (providerAppointmentsApi.providerView as jest.Mock).mockResolvedValue(mockRequestData);
   });
 
-  it('renders correctly with loaded data', async () => {
-    const { getByText, getByTestId } = render(
-      <NavigationContainer>
-        <AppointmentRequestScreen />
-      </NavigationContainer>
-    );
+  const renderComponent = () => render(<AppointmentRequestScreen />);
 
-    // Initial loading state
+  it('displays pending appointment details correctly (client name, service, date, time)', async () => {
+    const { getByText, findByText } = renderComponent();
+
+    // Verify loading state
     expect(getByText('Anfrage wird geladen...')).toBeTruthy();
 
-    // Wait for data
-    await waitFor(() => {
-      expect(getByText('Sarah Connor')).toBeTruthy();
-      expect(getByText('5 Buchungen • Mitglied seit 2024-01-01')).toBeTruthy();
-      expect(getByText('Haircut')).toBeTruthy();
-      expect(getByText('€50')).toBeTruthy();
-      expect(getByText('Please be on time')).toBeTruthy();
-    });
+    // Verify data rendered
+    const clientName = await findByText('Maria Schmidt');
+    expect(clientName).toBeTruthy();
+    expect(getByText('Box Braids')).toBeTruthy();
+    expect(getByText('27. Oktober 2025')).toBeTruthy();
+    expect(getByText('14:00 (120 Min)')).toBeTruthy();
+    // Use `await findByText` for notes because they might render slightly differently if wrapped or in a card
+    const notesText = await findByText('Bitte pünktlich sein.');
+    expect(notesText).toBeTruthy();
   });
 
-  it('handles accept action', async () => {
-    (providerAppointmentsApi.accept as jest.Mock).mockResolvedValue({ message: 'Confirmed' });
+  it('pressing "Anfrage annehmen" triggers accept API and navigates', async () => {
+    (providerAppointmentsApi.accept as jest.Mock).mockResolvedValue({ message: 'Success' });
 
-    const { getByText } = render(
-      <NavigationContainer>
-        <AppointmentRequestScreen />
-      </NavigationContainer>
-    );
+    // We use fake timers since component uses setTimeout for navigation
+    jest.useFakeTimers();
 
-    await waitFor(() => expect(getByText('Anfrage annehmen')).toBeTruthy());
+    const { getByText, findByText } = renderComponent();
+    await findByText('Maria Schmidt');
 
+    // Open Modal
     fireEvent.press(getByText('Anfrage annehmen'));
 
-    // Should show confirmation dialog
-    await waitFor(() => expect(getByText('Anfrage annehmen?')).toBeTruthy());
-
-    // Press confirm in dialog
+    // Confirm inside Modal
+    await waitFor(() => {
+      expect(getByText('Bestätigen')).toBeTruthy();
+    });
     fireEvent.press(getByText('Bestätigen'));
 
     await waitFor(() => {
       expect(providerAppointmentsApi.accept).toHaveBeenCalledWith('req-123');
     });
+
+    // Fast forward setTimeout
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('ProviderCalendar');
+
+    jest.useRealTimers();
+  });
+
+  it('pressing "Ablehnen" triggers decline API correctly', async () => {
+    (providerAppointmentsApi.decline as jest.Mock).mockResolvedValue({ message: 'Declined' });
+
+    jest.useFakeTimers();
+
+    const { getByText, getAllByText, findByText } = renderComponent();
+    await findByText('Maria Schmidt');
+
+    // The main screen button
+    const mainDeclineBtn = getByText('Ablehnen');
+    fireEvent.press(mainDeclineBtn);
+
+    // Wait for modal to open and select reason
+    await waitFor(() => getByText('Termin nicht verfügbar'));
+    fireEvent.press(getByText('Termin nicht verfügbar'));
+
+    // Now there are two "Ablehnen" texts. We press the one in the modal's action row
+    const allDecline = getAllByText('Ablehnen');
+    fireEvent.press(allDecline[allDecline.length - 1]);
+
+    await waitFor(() => {
+      expect(providerAppointmentsApi.decline).toHaveBeenCalledWith('req-123', expect.objectContaining({
+        reason: 'Termin nicht verfügbar'
+      }));
+    });
+
+    // Fast forward navigation
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(mockNavigate).toHaveBeenCalledWith('ProviderDashboard');
+
+    jest.useRealTimers();
   });
 });

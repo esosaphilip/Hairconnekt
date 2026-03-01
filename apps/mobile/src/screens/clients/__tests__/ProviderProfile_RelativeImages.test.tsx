@@ -3,6 +3,7 @@ import { render, waitFor, fireEvent } from '@testing-library/react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import ProviderProfile from '../ProviderProfile';
 import { clientBraiderApi } from '@/api/clientBraider';
+import { normalizeUrl } from '@/utils/url';
 
 // 1. Mock the API module completely
 jest.mock('@/api/clientBraider', () => ({
@@ -47,16 +48,18 @@ describe('ProviderProfile Relative Image Rendering', () => {
 
     it('Correctly normalizes relative image paths for gallery, cover, and profile', async () => {
         // Setup Mock with RELATIVE PATHS
+        const profileImagePath = '/providers/123/profile.jpg'; // Leading slash
+        const coverImagePath = 'providers/123/cover.jpg';      // No leading slash
+        const gallery1 = '/portfolio/img1.jpg';                // Leading slash
+        const gallery2 = 'portfolio/img2.jpg';                 // No leading slash
+
         (clientBraiderApi.getProfile as jest.Mock).mockResolvedValue({
             id: 'provider-relative',
             name: 'Relative Path Provider',
-            profileImage: '/providers/123/profile.jpg', // Relative path
-            coverImage: 'providers/123/cover.jpg', // Relative path without leading slash
+            profileImage: profileImagePath,
+            coverImage: coverImagePath,
             imageUrl: '/providers/123/fallback.jpg',
-            portfolioImages: [
-                '/portfolio/img1.jpg',
-                'portfolio/img2.jpg'
-            ],
+            portfolioImages: [gallery1, gallery2],
             rating: 5,
             reviewCount: 0,
             services: []
@@ -75,18 +78,17 @@ describe('ProviderProfile Relative Image Rendering', () => {
         const hero = getAllByTestId('hero-image')[0];
         const avatar = getAllByTestId('avatar-image')[0];
 
-        // Expected Base URL from normalizeUrl (default B2 URL)
-        const EXPECTED_B2 = 'https://f003.backblazeb2.com/file/hairconnekt-images';
-        const EXPECTED_API = 'https://api.hairconnekt.de';
+        // normalizeUrl strips the leading slash and always uses DEFAULT_B2_URL for relative paths
+        const expectedCoverUrl = normalizeUrl(coverImagePath);    // 'providers/123/cover.jpg' -> B2
+        const expectedProfileUrl = normalizeUrl(profileImagePath); // '/providers/123/profile.jpg' -> B2
 
-        // Verify Cover Image normalization (No leading slash -> B2)
-        expect(hero.props.source).toEqual({ uri: `${EXPECTED_B2}/providers/123/cover.jpg` });
+        // Verify Cover Image normalization
+        expect(hero.props.source).toEqual({ uri: expectedCoverUrl });
 
-        // Verify Avatar normalization (Leading slash -> API)
-        expect(avatar.props.source).toEqual({ uri: `${EXPECTED_API}/providers/123/profile.jpg` });
+        // Verify Avatar normalization
+        expect(avatar.props.source).toEqual({ uri: expectedProfileUrl });
 
         // 2. Check Gallery Images
-        // Find and press Tab
         const galleryTabBtn = getByText('Galerie');
         fireEvent.press(galleryTabBtn);
 
@@ -97,10 +99,8 @@ describe('ProviderProfile Relative Image Rendering', () => {
         const images = getAllByTestId(/gallery-image-content-/);
         expect(images).toHaveLength(2);
 
-        // Verify Gallery Image 1 (with leading slash -> API)
-        expect(images[0].props.source).toEqual({ uri: `${EXPECTED_API}/portfolio/img1.jpg` });
-
-        // Verify Gallery Image 2 (without leading slash -> B2)
-        expect(images[1].props.source).toEqual({ uri: `${EXPECTED_B2}/portfolio/img2.jpg` });
+        // Verify Gallery Images with normalized URLs
+        expect(images[0].props.source).toEqual({ uri: normalizeUrl(gallery1) });
+        expect(images[1].props.source).toEqual({ uri: normalizeUrl(gallery2) });
     });
 });

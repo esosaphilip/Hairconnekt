@@ -7,7 +7,8 @@ import { styles } from '../ProviderDashboard.styles';
 import { rootNavigationRef } from '@/navigation/rootNavigation';
 
 const quickActionsData: { label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-    { label: 'Blockierte Zeit', icon: 'close-outline' },
+    // [MVP-CUT] Reason: BlockTimeScreen disabled for MVP | Restore in: v2
+    // { label: 'Blockierte Zeit', icon: 'close-outline' },
     { label: 'Termin erstellen', icon: 'add-outline' },
     { label: 'Dienste bearbeiten', icon: 'create-outline' },
     { label: 'Verfügbarkeit', icon: 'time-outline' },
@@ -16,14 +17,15 @@ const quickActionsData: { label: string; icon: keyof typeof Ionicons.glyphMap }[
 export const QuickActions: React.FC = () => {
     const handlePress = (label: string) => {
         switch (label) {
-            case 'Blockierte Zeit':
-                rootNavigationRef.current?.navigate('Kalender', { screen: 'BlockTimeScreen' });
-                break;
+            // [MVP-CUT] Reason: BlockTimeScreen disabled for MVP | Restore in: v2
+            // case 'Blockierte Zeit':
+            //     rootNavigationRef.current?.navigate('Kalender', { screen: 'BlockTimeScreen' });
+            //     break;
             case 'Termin erstellen':
                 rootNavigationRef.current?.navigate('Kalender', { screen: 'CreateAppointmentScreen' });
                 break;
             case 'Dienste bearbeiten':
-                rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderServicesScreen' });
+                rootNavigationRef.current?.navigate('Mehr', { screen: 'ServicesManagementScreen' });
                 break;
             case 'Verfügbarkeit':
                 rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderAvailabilityScreen' });

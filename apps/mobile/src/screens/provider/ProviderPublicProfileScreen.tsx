@@ -74,8 +74,9 @@ export function ProviderPublicProfileScreen() {
   // Accept both { id } and legacy { providerId }
   const providerId: string | undefined = route?.params?.id ?? route?.params?.providerId;
   const [activeTab, setActiveTab] = useState('about'); // 'about' | 'services' | 'portfolio' | 'reviews'
-  const { tokens } = useAuth();
+  const { tokens, user } = useAuth();
   const isAuthenticated = !!tokens?.accessToken;
+  const isOwnProfile = user?.id === providerId;
 
   // Dynamic data state
   const [publicData, setPublicData] = useState<PublicProfile | null>(null);
@@ -439,10 +440,17 @@ export function ProviderPublicProfileScreen() {
           </View>
 
           <View style={styles.actionButtons}>
-            <Button title="Jetzt buchen" onPress={() => navigation.navigate("Booking", { providerId })} style={styles.bookNowButton} />
-            {/* [MVP-CUT] Reason: In-app chat messaging is deferred to post-MVP | Restore in: v2 */}
-            {/* <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen", { userId: providerId })} style={styles.iconButtonOutline} color={COLORS.textSecondary} /> */}
-            <IconButton name={isFavorite ? 'heart' : 'heart'} onPress={handleToggleFavorite} style={styles.iconButtonOutline} color={isFavorite ? COLORS.primary : COLORS.textSecondary} />
+            {!isOwnProfile && (
+              <>
+                <Button title="Jetzt buchen" onPress={() => navigation.navigate("Booking", { providerId })} style={styles.bookNowButton} />
+                {/* [MVP-CUT] Reason: In-app chat messaging is deferred to post-MVP | Restore in: v2 */}
+                {/* <IconButton name="message-circle" onPress={() => navigation.navigate("ChatScreen", { userId: providerId })} style={styles.iconButtonOutline} color={COLORS.textSecondary} /> */}
+                <IconButton name={isFavorite ? 'heart' : 'heart'} onPress={handleToggleFavorite} style={styles.iconButtonOutline} color={isFavorite ? COLORS.primary : COLORS.textSecondary} />
+              </>
+            )}
+            {isOwnProfile && (
+              <Button title="Profil bearbeiten" onPress={() => navigation.navigate("Profil", { screen: 'ProviderSettingsScreen' })} style={styles.bookNowButton} />
+            )}
           </View>
         </View>
 

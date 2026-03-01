@@ -12,9 +12,12 @@ jest.mock('../../ui', () => ({
 jest.mock('../Icon', () => 'Icon');
 
 // Mock AppImage
-jest.mock('../AppImage', () => ({
-  AppImage: (props: any) => React.createElement('mock-app-image', props),
-}));
+jest.mock('../AppImage', () => {
+  const React = require('react');
+  return {
+    AppImage: (props: any) => React.createElement('mock-app-image', props),
+  };
+});
 
 describe('ProviderCard Image', () => {
   it('renders AppImage with correct uri', () => {

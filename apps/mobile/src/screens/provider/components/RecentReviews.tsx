@@ -17,9 +17,10 @@ export const RecentReviews: React.FC<RecentReviewsProps> = ({ reviews }) => {
         <View>
             <View style={styles.sectionHeaderRow}>
                 <Text style={styles.sectionTitle}>Neueste Bewertungen</Text>
-                <Pressable onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen' })}>
+                {/* [MVP-CUT] Reason: Reviews disabled for MVP | Restore in: v2 */}
+                {/* <Pressable onPress={() => rootNavigationRef.current?.navigate('Mehr', { screen: 'ProviderReviewsScreen' })}>
                     <Text style={styles.seeAllText}>Alle anzeigen</Text>
-                </Pressable>
+                </Pressable> */}
             </View>
 
             <View>

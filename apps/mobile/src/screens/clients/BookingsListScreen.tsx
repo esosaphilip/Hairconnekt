@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { SafeAreaView, FlatList, View, Text, ActivityIndicator, Pressable, StyleSheet } from 'react-native';
 import { useNavigation, type NavigationProp } from '@react-navigation/native';
 import { clientBookingApi } from '@/api/clientBooking';
+import { http } from '@/api/http';
+import { API_CONFIG } from '@/constants';
+import { BookingAdapter } from '@/api/adapters/bookingAdapter';
 import { IBooking, BookingStatus } from '@/domain/models/booking';
 import { colors, spacing } from '@/theme/tokens';
 import { useAuth } from '@/auth/AuthContext';
@@ -18,8 +21,9 @@ import type { BookingsStackParamList } from '@/navigation/types';
 
 export default function BookingsListScreen() {
   const navigation = useNavigation<NavigationProp<BookingsStackParamList>>();
-  const { tokens, loading: authLoading } = useAuth();
+  const { tokens, loading: authLoading, user } = useAuth();
   const isAuthenticated = !!tokens?.accessToken;
+  const isProvider = user?.userType === 'PROVIDER';
   const { t } = useI18n();
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,8 +44,13 @@ export default function BookingsListScreen() {
     setLoading(true);
     setError(null);
     setIsUnauthorized(false);
-    clientBookingApi.getAppointments(status)
-      .then((data) => setItems(data || []))
+    const endpoint = isProvider ? API_CONFIG.ENDPOINTS.APPOINTMENTS.PROVIDER : API_CONFIG.ENDPOINTS.APPOINTMENTS.CLIENT;
+    http.get<{ items?: any[] } | any[]>(endpoint, { params: { status } })
+      .then((res) => {
+        const data = res.data;
+        const mappedItems = Array.isArray(data) ? data : (data?.items ?? []);
+        setItems(mappedItems.map(BookingAdapter.toDomain) || []);
+      })
       .catch((e: unknown) => {
         const err = e as DomainError;
         const unauthorized = err.type === ErrorType.UNAUTHORIZED;

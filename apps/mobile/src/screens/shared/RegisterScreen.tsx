@@ -112,16 +112,16 @@ export default function RegisterScreen() {
             {/* Name */}
             <View style={{ flexDirection: 'row' }}>
               <View style={{ flex: 1 }}>
-                <Input label="Vorname *" value={firstName} onChangeText={setFirstName} autoCapitalize="words" />
+                <Input label="Vorname *" placeholder="Vorname *" value={firstName} onChangeText={setFirstName} autoCapitalize="words" />
               </View>
               <View style={{ flex: 1, marginLeft: spacing.md }}>
-                <Input label="Nachname *" value={lastName} onChangeText={setLastName} autoCapitalize="words" />
+                <Input label="Nachname *" placeholder="Nachname *" value={lastName} onChangeText={setLastName} autoCapitalize="words" />
               </View>
             </View>
 
             {/* Email */}
             <View style={{ marginTop: spacing.md }}>
-              <Input label="E-Mail *" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
+              <Input label="E-Mail *" placeholder="E-Mail *" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
             </View>
 
             {/* Phone */}
@@ -197,21 +197,21 @@ export default function RegisterScreen() {
 
             {/* Terms and newsletter */}
             <View style={{ marginTop: spacing.md }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Pressable testID="accept-terms-checkbox" style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => setAcceptTerms(!acceptTerms)}>
                 <Checkbox checked={acceptTerms} onCheckedChange={setAcceptTerms} />
                 <Text style={{ marginLeft: spacing.sm }}>Ich akzeptiere die AGB und Datenschutzerklärung</Text>
-              </View>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }}>
+              </Pressable>
+              <Pressable style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm }} onPress={() => setNewsletter(!newsletter)}>
                 <Checkbox checked={newsletter} onCheckedChange={setNewsletter} />
                 <Text color={colors.gray600} style={{ marginLeft: spacing.sm }}>Newsletter und Angebote erhalten (optional)</Text>
-              </View>
+              </Pressable>
             </View>
 
             {(localError || error) ? (
               <Text color={colors.error} style={{ marginTop: spacing.md }}>{localError || error}</Text>
             ) : null}
 
-            <Button title={loading ? 'Wird erstellt…' : 'Konto erstellen'} onPress={onSubmit} disabled={!canSubmit} loading={loading} style={{ marginTop: spacing.lg }} />
+            <Button testID="register-submit-button" title={loading ? 'Wird erstellt…' : 'Konto erstellen'} onPress={onSubmit} disabled={!canSubmit} loading={loading} style={{ marginTop: spacing.lg }} />
           </Card>
 
           {/* Separator */}
