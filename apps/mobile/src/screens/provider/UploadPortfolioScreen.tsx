@@ -79,7 +79,6 @@ const launchImageLibraryAsync = async (callback: (assets: ImageAsset[]) => void)
   }
 };
 
-import { uploadMultipleImages } from '@/services/uploadService';
 
 // --- Main Component ---
 export function UploadPortfolioScreen() {
@@ -122,39 +121,15 @@ export function UploadPortfolioScreen() {
 
   const handleSubmit = async () => {
     if (images.length === 0) {
-      Alert.alert("Fehler", "Bitte mindestens ein Bild auswählen");
+      Alert.alert('Fehler', 'Bitte mindestens ein Bild auswählen');
       return;
     }
     if (!formData.category) {
-      Alert.alert("Fehler", "Bitte eine Kategorie auswählen");
+      Alert.alert('Fehler', 'Bitte eine Kategorie auswählen');
       return;
     }
-
-    setSaving(true);
-    try {
-      // Map form data to the metadata expected by the backend
-      const metadata = {
-        serviceCategory: formData.category,
-        caption: formData.title || '',
-      };
-
-      const uris = images.map(img => img.uri);
-
-      const response = await uploadMultipleImages(uris, '/providers/me/portfolio', 'images', metadata);
-      const msg = response?.message || 'Portfolio aktualisiert!';
-
-      if (response && response.success) {
-        Alert.alert("Erfolg", String(msg));
-        navigation.navigate("ProviderPortfolioScreen");
-      } else {
-        throw new Error(response.message || 'Ein unerwarteter Fehler ist aufgetreten');
-      }
-    } catch (e: any) {
-      const msg = e?.message || 'Upload fehlgeschlagen';
-      Alert.alert("Fehler", String(msg));
-    } finally {
-      setSaving(false);
-    }
+    // [UPLOAD-REMOVED] Portfolio upload logic removed — rebuild with new upload system
+    Alert.alert('Funktion nicht verfügbar', 'Portfolio-Upload wird in Kürze unterstützt.');
   };
 
   const isSubmitDisabled = images.length === 0 || !formData.category || saving;

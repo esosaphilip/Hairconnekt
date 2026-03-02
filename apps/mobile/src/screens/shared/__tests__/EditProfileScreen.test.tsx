@@ -5,7 +5,6 @@ import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
 import { http } from '@/api/http';
 import { useNavigation } from '@react-navigation/native';
-import * as ImagePicker from 'expo-image-picker';
 import { Alert } from 'react-native';
 
 // Mock dependencies
@@ -14,10 +13,6 @@ jest.mock('@/auth/AuthContext', () => ({
 }));
 jest.mock('@/services/users');
 jest.mock('@/api/http');
-jest.mock('expo-image-picker');
-jest.mock('@/services/uploadService', () => ({
-    uploadImageFile: jest.fn(),
-}));
 jest.mock('@react-navigation/native', () => {
     const actualNav = jest.requireActual('@react-navigation/native');
     return {
@@ -85,25 +80,17 @@ describe('EditProfileScreen', () => {
         });
     });
 
-    it('uploads image on pick', async () => {
-        const { uploadImageFile } = require('@/services/uploadService');
-        (uploadImageFile as jest.Mock).mockResolvedValue({ url: 'http://example.com/new.jpg' });
-        (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
-            canceled: false,
-            assets: [{ uri: 'file://new.jpg' }],
-        });
-
+    it('shows alert when image pick button is pressed', async () => {
         render(<EditProfileScreen />);
         await waitFor(() => expect(screen.getByTestId('camera-upload-btn')).toBeTruthy());
 
         fireEvent.press(screen.getByTestId('camera-upload-btn'));
 
         await waitFor(() => {
-            expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled();
-            expect(uploadImageFile).toHaveBeenCalledWith('file://new.jpg', '/users/me/avatar', 'file');
-            expect(mockSetUser).toHaveBeenCalledWith(expect.objectContaining({
-                profilePictureUrl: 'http://example.com/new.jpg'
-            }));
+            expect(Alert.alert).toHaveBeenCalledWith(
+                'Funktion nicht verfügbar',
+                expect.any(String)
+            );
         });
     });
 });

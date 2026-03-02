@@ -114,34 +114,7 @@ export const usersApi = {
     return res.data;
   },
 
-  // POST /users/me/avatar (multipart)
-  async uploadAvatar(image: UploadImage): Promise<{ url: string }> {
-    try {
-      const uri = typeof image === 'string' ? image : image?.uri;
-      if (!uri) throw new Error('Image URI is required');
-
-      const formData = new FormData();
-      formData.append('file', {
-        uri,
-        name: 'avatar.jpg',
-        type: guessMimeFromUri(uri),
-      } as any);
-
-      const res = await http.post<{ profilePictureUrl: string; url?: string }>('/users/me/avatar', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      const url = res.data.profilePictureUrl || res.data.url;
-      if (!url) throw new Error('Upload returned no URL');
-
-      return { url };
-    } catch (error) {
-      console.error('Avatar upload failed:', error);
-      throw error;
-    }
-  },
+  // [UPLOAD-REMOVED] uploadAvatar removed — rebuild with new upload system
 };
 
 export default usersApi;

@@ -58,9 +58,6 @@ jest.mock('expo-image-picker', () => ({
     MediaTypeOptions: { Images: 'Images' },
 }));
 
-jest.mock('@/services/uploadService', () => ({
-    uploadImageFile: jest.fn(),
-}));
 
 jest.mock('@react-navigation/native', () => {
     const actual = jest.requireActual('@react-navigation/native');
@@ -77,8 +74,8 @@ import { HomeScreen } from '../HomeScreen';
 import { EditProfileScreen } from '../../shared/EditProfileScreen';
 import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
-import * as ImagePicker from 'expo-image-picker';
 import { NavigationContainer } from '@react-navigation/native';
+import { Alert } from 'react-native';
 
 describe('Phase A: Image Persistence & Rendering', () => {
     const mockUser = {
@@ -129,19 +126,12 @@ describe('Phase A: Image Persistence & Rendering', () => {
         expect(avatar.props.source).toEqual({ uri: mockUser.profilePictureUrl });
     });
 
-    it('EditProfileScreen handles image upload and updates Auth Context', async () => {
-        // Mock user without image initially
+    it('EditProfileScreen shows alert when camera button pressed (upload removed)', async () => {
+        const alertSpy = jest.spyOn(Alert, 'alert');
         (useAuth as jest.Mock).mockReturnValue({
             user: { ...mockUser, profilePictureUrl: null },
             setUser: mockSetUser,
             tokens: { accessToken: 'valid-token' },
-        });
-
-        const { uploadImageFile } = require('@/services/uploadService');
-        (uploadImageFile as jest.Mock).mockResolvedValue({ url: 'https://new-image.com/pic.jpg' });
-        (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValue({
-            canceled: false,
-            assets: [{ uri: 'file://local/image.jpg' }],
         });
 
         const { getByTestId } = render(
@@ -154,16 +144,10 @@ describe('Phase A: Image Persistence & Rendering', () => {
         fireEvent.press(cameraBtn);
 
         await waitFor(() => {
-            // Verify ImagePicker was called
-            expect(ImagePicker.launchImageLibraryAsync).toHaveBeenCalled();
-
-            // Verify API upload via uploadImageFile
-            expect(uploadImageFile).toHaveBeenCalledWith('file://local/image.jpg', '/users/me/avatar', 'file');
-
-            // CRITICAL: Verify setUser was called with the new URL
-            expect(mockSetUser).toHaveBeenCalledWith(expect.objectContaining({
-                profilePictureUrl: 'https://new-image.com/pic.jpg'
-            }));
+            expect(alertSpy).toHaveBeenCalledWith(
+                'Funktion nicht verfügbar',
+                expect.any(String)
+            );
         });
     });
 });

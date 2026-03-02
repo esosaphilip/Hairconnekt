@@ -15,7 +15,6 @@ import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
 import { normalizeUrl } from '@/utils/url';
 import Icon from '@/components/Icon';
-import * as ImagePicker from 'expo-image-picker';
 import { useI18n } from '@/i18n';
 import Text from '@/components/Text';
 import Button from '@/components/Button';
@@ -180,55 +179,10 @@ export function ProfileScreen() {
     };
   }, []);
 
-  // --- Avatar Upload Logic Refactored for RN ---
+  // --- Avatar Upload Logic ---
   const handleAvatarUpload = async () => {
-    if (uploadingAvatar) return;
-
-    // 1. Request Media Library permissions
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert(t('screens.profile.avatar.permissionTitle'), t('screens.profile.avatar.permissionText'));
-      return;
-    }
-
-    // 2. Select Image
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-      base64: true, // Often required for direct API upload
-    });
-
-    if (result.canceled || !result.assets || !result.assets[0].uri) {
-      return; // User cancelled
-    }
-
-    setUploadingAvatar(true);
-    try {
-      const imageUri = result.assets[0].uri;
-      // In a real RN app, the upload function would handle the URI/Blob/Base64,
-      // and not a DOM File object. We mock the call here.
-      const res = await usersApi.uploadAvatar(imageUri);
-
-      // Simple alert for toast replacement
-      Alert.alert(t('common.successTitle'), t('screens.profile.avatar.uploadSuccess'));
-
-      setMe((prev) => (prev ? { ...prev, avatarUrl: res.url } : prev));
-      // Also update the auth bundle so other parts of the app see the new avatar
-      try {
-        const nextUser = user ? { ...user, avatarUrl: res.url } : user;
-        if (nextUser) await setUser(nextUser);
-      } catch { }
-    } catch (err: unknown) {
-      logger.error('Avatar upload failed:', err);
-      const msg = typeof err === 'object' && err && 'message' in err
-        ? (err as { message: string }).message
-        : 'Upload fehlgeschlagen';
-      Alert.alert(t('common.errorTitle'), msg);
-    } finally {
-      setUploadingAvatar(false);
-    }
+    // [UPLOAD-REMOVED] Avatar upload logic removed — rebuild with new upload system
+    Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
   };
 
   const handleLogout = () => {

@@ -1,62 +1,25 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Image, Alert, Platform } from 'react-native';
+import { View, StyleSheet, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import * as ImagePicker from 'expo-image-picker';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
 import { colors, spacing, typography } from '../../theme/tokens';
-import { http } from '../../api/http';
-import { providersApi } from '../../services/providers';
-import { useAuth } from '../../auth/AuthContext';
 
 export function ProviderPhotoUploadScreen() {
     const navigation = useNavigation();
-    const { tokens } = useAuth(); // Assuming we might need token, but http usually handles it
-    const [image, setImage] = useState<string | null>(null);
-    const [uploading, setUploading] = useState(false);
+    const [image] = useState<string | null>(null);
+    const [uploading] = useState(false);
 
     const pickImage = async () => {
-        // Request permission
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Berechtigung fehlt', 'Wir benötigen Zugriff auf deine Fotos.');
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-        });
-
-        if (!result.canceled && result.assets && result.assets.length > 0) {
-            setImage(result.assets[0].uri);
-        }
+        // [UPLOAD-REMOVED] Image picker logic removed — rebuild with new upload system
+        Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
     };
 
     const uploadPhoto = async () => {
-        if (!image) return;
-
-        try {
-            setUploading(true);
-
-            // Upload directly to backend (handles R2 storage and DB update)
-            await providersApi.uploadProfilePicture(image);
-
-            Alert.alert(
-                'Erfolg',
-                'Profilbild erfolgreich aktualisiert',
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
-            );
-        } catch (e: any) {
-            console.error('Upload failed', e);
-            Alert.alert('Fehler', 'Upload fehlgeschlagen: ' + (e.message || 'Unbekannter Fehler'));
-        } finally {
-            setUploading(false);
-        }
+        // [UPLOAD-REMOVED] Upload logic removed — rebuild with new upload system
+        Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
     };
 
     return (

@@ -20,7 +20,7 @@ jest.mock('@/api/http', () => ({
 
 jest.mock('@/services/providers', () => ({
     providersApi: {
-        uploadServiceImage: jest.fn(),
+        
     },
 }));
 

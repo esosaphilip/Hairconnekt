@@ -17,7 +17,6 @@ import { Switch } from 'react-native';
 import { http } from '@/api/http';
 import { useAuth } from '@/auth/AuthContext';
 import { usersApi } from '@/services/users';
-import { uploadImageFile } from '@/services/uploadService';
 
 type ProfileData = {
   // Provider
@@ -143,41 +142,8 @@ export function EditProfileScreen() {
   };
 
   const handlePickImage = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets?.[0]) {
-        const uri = result.assets[0].uri;
-
-        // Optimistic update
-        setProfileImage(uri);
-
-        // Upload in background
-        try {
-          const endpoint = isProvider ? '/providers/me/profile-picture' : '/users/me/avatar';
-          const uploaded = await uploadImageFile(uri, endpoint, 'file');
-          const newProfileUrl = uploaded.url;
-
-          // Update auth context with new image URL
-          if (user && newProfileUrl) {
-            await setUser({ ...user, profilePictureUrl: newProfileUrl });
-          }
-        } catch (e) {
-          console.error('Upload failed', e);
-          Alert.alert('Fehler', 'Bild konnte nicht hochgeladen werden.');
-          // Revert on failure
-          setProfileImage(user?.profilePictureUrl || null);
-        }
-      }
-    } catch (e) {
-      console.error('Picker failed', e);
-      Alert.alert('Fehler', 'Galerie konnte nicht geöffnet werden.');
-    }
+    // [UPLOAD-REMOVED] Image upload logic removed — rebuild with new upload system
+    Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
   };
 
 

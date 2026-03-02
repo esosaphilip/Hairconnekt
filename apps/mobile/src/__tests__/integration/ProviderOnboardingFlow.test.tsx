@@ -6,7 +6,6 @@ import { AppointmentRequestScreen } from '@/screens/provider/AppointmentRequestS
 import { useAuth } from '@/auth/AuthContext';
 import { providersApi } from '@/services/providers';
 import { providerAppointmentsApi } from '@/api/providerAppointments';
-import { uploadImageFile } from '@/services/uploadService';
 import { Alert } from 'react-native';
 
 jest.spyOn(Alert, 'alert').mockImplementation(() => { });
@@ -32,10 +31,6 @@ jest.mock('@/api/providerAppointments', () => ({
         providerView: jest.fn(),
         accept: jest.fn(),
     },
-}));
-
-jest.mock('@/services/uploadService', () => ({
-    uploadImageFile: jest.fn(),
 }));
 
 // Mock useProviderCalendar so the calendar tab doesn't make real API calls
@@ -116,18 +111,12 @@ describe('Integration: Provider Onboarding & Booking Flow', () => {
         };
         (useAuth as jest.Mock).mockReturnValue(authContextMock);
 
-        // ---- STEP 2: Setting up Provider Profile (Services, Portfolio) ----
-        (uploadImageFile as jest.Mock).mockResolvedValue('https://example.com/port.jpg');
-        ((providersApi as any).addService as jest.Mock).mockResolvedValue({ id: 'srv-2', name: 'Twists' });
-        ((providersApi as any).addPortfolioItem as jest.Mock).mockResolvedValue({ id: 'port-1', url: 'https://example.com/port.jpg' });
-
         await (providersApi as any).addService('jane-123', { name: 'Twists', price: 100 });
-        await uploadImageFile('file://photo.jpg', '/providers/me/portfolio');
         await (providersApi as any).addPortfolioItem('jane-123', { url: 'https://example.com/port.jpg' });
 
         expect((providersApi as any).addService).toHaveBeenCalledWith('jane-123', { name: 'Twists', price: 100 });
-        expect(uploadImageFile).toHaveBeenCalledWith('file://photo.jpg', '/providers/me/portfolio');
         expect((providersApi as any).addPortfolioItem).toHaveBeenCalledWith('jane-123', { url: 'https://example.com/port.jpg' });
+        // [UPLOAD-REMOVED] uploadImageFile call removed — upload logic rebuilt with new system
     });
 
     it('provider can view their calendar and navigate to an appointment', async () => {

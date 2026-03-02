@@ -1,4 +1,3 @@
-import * as ImagePicker from 'expo-image-picker';
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet, ScrollView, Platform, Modal, ActivityIndicator, Image, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -127,40 +126,11 @@ export function AddEditServiceScreen() {
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [durationOpen, setDurationOpen] = useState(false);
 
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingImage] = useState(false);
 
   const handleImagePick = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Berechtigung fehlt', 'Wir benötigen Zugriff auf deine Fotos.');
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
-      const selectedUri = result.assets[0].uri;
-      uploadServiceImage(selectedUri);
-    }
-  };
-
-  const uploadServiceImage = async (uri: string) => {
-    try {
-      setUploadingImage(true);
-
-      const { url } = await providersApi.uploadServiceImage(uri);
-      setFormData(prev => ({ ...prev, imageUrl: url }));
-    } catch (e: any) {
-      console.error('Service image upload failed', e);
-      Alert.alert('Upload fehlgeschlagen', e.message || 'Ein Fehler ist aufgetreten');
-    } finally {
-      setUploadingImage(false);
-    }
+    // [UPLOAD-REMOVED] Image pick + upload logic removed — rebuild with new upload system
+    Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
   };
 
   const onBack = async () => {
