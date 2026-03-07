@@ -36,11 +36,13 @@ export function ProviderPhotoUploadScreen() {
 
         setUploading(true);
         try {
-            await providerFilesApi.uploadProviderProfilePicture({
+            console.log('Starting upload...');
+            const response = await providerFilesApi.uploadProviderProfilePicture({
                 uri: asset.uri,
                 name: asset.fileName || 'profile.jpg',
                 type: asset.mimeType || 'image/jpeg',
             });
+            console.log('Upload success:', response);
             
             // Refresh auth context to update avatar everywhere
             // Note: refreshUser might not be available in useAuth depending on implementation

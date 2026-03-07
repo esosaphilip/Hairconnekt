@@ -26,6 +26,7 @@ import { logger } from '@/services/logger';
 import AlertModal from '@/components/AlertModal';
 import { providerFilesApi } from '@/api/providerFiles';
 import * as ImagePicker from 'expo-image-picker';
+import { AppImage } from '@/components/AppImage';
 
 type MeResponse = {
   id: string;
@@ -267,7 +268,7 @@ export function ProfileScreen() {
               {/* Avatar Component equivalent */}
               <View style={styles.avatar}>
                 {me?.avatarUrl ? (
-                  <AppImage uri={me.avatarUrl} style={styles.avatarImage} />
+                  <AppImage uri={normalizeUrl(me.avatarUrl)} style={styles.avatarImage} />
                 ) : (
                   <Text style={styles.avatarInitials}>{initials}</Text>
                 )}

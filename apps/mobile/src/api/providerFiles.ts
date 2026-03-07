@@ -22,8 +22,15 @@ export const providerFilesApi = {
       name: file.name || 'profile.jpg',
       type: file.type || 'image/jpeg',
     } as any);
+    
+    // Explicitly add a console log to debug headers
+    console.log('Uploading Profile Picture to: /providers/me/profile-picture');
+
     const res = await http.post('/providers/me/profile-picture', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: { 
+        'Content-Type': 'multipart/form-data',
+        // 'Accept': 'application/json', // optional, usually default
+      },
     });
     return res?.data;
   },
