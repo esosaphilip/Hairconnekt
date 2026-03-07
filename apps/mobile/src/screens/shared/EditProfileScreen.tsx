@@ -141,9 +141,58 @@ export function EditProfileScreen() {
     }
   };
 
+  // --- Avatar Upload Logic ---
   const handlePickImage = async () => {
-    // [UPLOAD-REMOVED] Image upload logic removed — rebuild with new upload system
-    Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Zugriff verweigert', 'Zugriff auf Fotos erforderlich.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
+        setLoading(true); // Reusing loading state for upload indicator
+
+        // Determine correct endpoint based on user type
+        // Use providerFilesApi which we've already fixed to use correct endpoints
+        const { providerFilesApi } = await import('@/api/providerFiles');
+        
+        if (isProvider) {
+          const res = await providerFilesApi.uploadProviderProfilePicture({
+            uri: asset.uri,
+            name: asset.fileName || 'profile.jpg',
+            type: asset.mimeType || 'image/jpeg',
+          });
+          if (res?.url || res?.profilePictureUrl) {
+             setProfileImage(res.url || res.profilePictureUrl);
+          }
+        } else {
+          const res = await providerFilesApi.uploadAvatar({
+            uri: asset.uri,
+            name: asset.fileName || 'avatar.jpg',
+            type: asset.mimeType || 'image/jpeg',
+          });
+          if (res?.url || res?.profilePictureUrl) {
+             setProfileImage(res.url || res.profilePictureUrl);
+          }
+        }
+        
+        Alert.alert('Erfolg', 'Profilbild aktualisiert!');
+      }
+    } catch (error: any) {
+      console.error('Avatar upload failed:', error);
+      Alert.alert('Fehler', 'Upload fehlgeschlagen: ' + (error.message || 'Unbekannter Fehler'));
+    } finally {
+      setLoading(false);
+    }
   };
 
 

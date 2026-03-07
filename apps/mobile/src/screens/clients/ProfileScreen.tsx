@@ -276,6 +276,7 @@ export function ProfileScreen() {
 
               {/* Camera Icon Button */}
               <Pressable
+                testID="upload-avatar-btn"
                 style={({ pressed }) => [
                   styles.cameraButton,
                   { opacity: uploadingAvatar || pressed ? 0.6 : 1 },
