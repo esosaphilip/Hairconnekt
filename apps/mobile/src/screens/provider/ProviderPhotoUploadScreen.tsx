@@ -3,7 +3,6 @@ import { View, StyleSheet, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
 import { providerFilesApi } from '@/api/providerFiles';
 import { useAuth } from '@/auth/AuthContext';
 import Text from '../../components/Text';
@@ -37,17 +36,10 @@ export function ProviderPhotoUploadScreen() {
 
         setUploading(true);
         try {
-            // Compress image before upload
-            const manipResult = await ImageManipulator.manipulateAsync(
-                asset.uri,
-                [{ resize: { width: 1200 } }], // Resize to max width 1200px
-                { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG } // Compress to 0.8 JPEG
-            );
-
             await providerFilesApi.uploadProviderProfilePicture({
-                uri: manipResult.uri,
+                uri: asset.uri,
                 name: asset.fileName || 'profile.jpg',
-                type: 'image/jpeg', // Always JPEG after compression
+                type: asset.mimeType || 'image/jpeg',
             });
             
             // Refresh auth context to update avatar everywhere

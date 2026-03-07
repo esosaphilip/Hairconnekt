@@ -23,7 +23,6 @@ import Icon from '../../components/Icon';
 import Picker from '../../components/Picker'; // Custom component for dropdowns
 
 import * as ImagePicker from 'expo-image-picker';
-import * as ImageManipulator from 'expo-image-manipulator';
 
 // --- Mock Data ---
 const categories = [
@@ -132,34 +131,12 @@ export function UploadPortfolioScreen() {
     }
     setLoading(true);
     try {
-      // Compress all images before uploading
-      const compressedImages = await Promise.all(
-        images.map(async (img) => {
-          try {
-            const manipResult = await ImageManipulator.manipulateAsync(
-              img.uri,
-              [{ resize: { width: 1200 } }], // Resize to max width 1200px
-              { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG } // Compress to 0.8 JPEG
-            );
-            return {
-              uri: manipResult.uri,
-              name: img.fileName || `photo_${Date.now()}.jpg`,
-              type: 'image/jpeg', // Always JPEG after compression
-            };
-          } catch (err) {
-            console.error('Image compression failed for', img.uri, err);
-            // Fallback to original if compression fails (though unlikely)
-            return {
-              uri: img.uri,
-              name: img.fileName || `photo_${Date.now()}.jpg`,
-              type: img.type || 'image/jpeg',
-            };
-          }
-        })
-      );
-
       await providerFilesApi.uploadPortfolioImages(
-        compressedImages,
+        images.map(img => ({
+          uri: img.uri,
+          name: img.fileName || `photo_${Date.now()}.jpg`,
+          type: img.type || 'image/jpeg',
+        })),
         {
           category: formData.category,
           caption: formData.description || '',
