@@ -31,6 +31,7 @@ import { useAuth } from '@/auth/AuthContext';
 import { normalizeUrl } from '../../utils/url';
 import { normalizeDay } from '../../utils/date';
 import { AppImage } from '@/components/AppImage';
+import ImageViewing from 'react-native-image-viewing';
 
 // --- Types for dynamic data ---
 type PublicProfile = {
@@ -91,6 +92,8 @@ export function ProviderPublicProfileScreen() {
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
   const [loadingPortfolio, setLoadingPortfolio] = useState(false);
   const [errorPortfolio, setErrorPortfolio] = useState<string | null>(null);
+  const [isViewerVisible, setIsViewerVisible] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const [reviews, setReviews] = useState<any[]>([]);
   const [loadingReviews, setLoadingReviews] = useState(false);
@@ -150,9 +153,8 @@ export function ProviderPublicProfileScreen() {
             if (portfolioRes.status === 'fulfilled') {
               const payload = portfolioRes.value.data;
               // Portfolio usually returns { items: [...] } or { success: true, data: { items: [...] } }
-              // Let's handle both
               const dataRoot = (payload?.success && payload?.data) ? payload.data : payload;
-              const items = Array.isArray(dataRoot?.items) ? dataRoot.items : [];
+              const items = Array.isArray(dataRoot?.items) ? dataRoot.items : (Array.isArray(dataRoot) ? dataRoot : []);
 
               setPortfolioItems(items.map((it: any) => ({
                 id: it.id,
@@ -160,7 +162,8 @@ export function ProviderPublicProfileScreen() {
                 uploadedAt: it.uploadedAt
               })).filter((x: any) => !!x.imageUrl));
             } else {
-              setErrorPortfolio('Portfolio konnte nicht geladen werden.');
+              // Silent fail
+              setPortfolioItems([]);
             }
 
             // Reviews
@@ -344,17 +347,19 @@ export function ProviderPublicProfileScreen() {
         <View style={{ paddingVertical: SPACING.md }}>
           <ActivityIndicator />
         </View>
-      ) : errorPortfolio ? (
-        <Text style={styles.bodyText}>{errorPortfolio}</Text>
       ) : (
         <View style={styles.portfolioGrid}>
           {portfolioItems.length > 0 ? (
             portfolioItems.map((item, index) => {
-              // AppImage handles it
-
-
               return (
-                <TouchableOpacity key={item.id || index} style={styles.portfolioItem} onPress={() => { /* View Image Modal */ }}>
+                <TouchableOpacity 
+                  key={item.id || index} 
+                  style={styles.portfolioItem} 
+                  onPress={() => {
+                    setCurrentImageIndex(index);
+                    setIsViewerVisible(true);
+                  }}
+                >
                   <AppImage
                     uri={item.imageUrl}
                     style={styles.portfolioImage}
@@ -368,12 +373,19 @@ export function ProviderPublicProfileScreen() {
               <Text style={[styles.bodyText, { textAlign: 'center', color: COLORS.textSecondary }]}>
                 Noch keine Portfolio-Bilder vorhanden.
               </Text>
-              {/* Debug Info: remove later */}
-              {/* <Text style={{ fontSize: 10, color: 'red' }}>Count: {portfolioItems.length}</Text> */}
             </View>
           )}
         </View>
       )}
+      
+      <ImageViewing
+        images={portfolioItems.map(item => ({ uri: normalizeUrl(item.imageUrl) }))}
+        imageIndex={currentImageIndex}
+        visible={isViewerVisible}
+        onRequestClose={() => setIsViewerVisible(false)}
+        swipeToCloseEnabled={true}
+        doubleTapToZoomEnabled={true}
+      />
     </View>
   );
 

@@ -23,6 +23,7 @@ import Icon from '../../components/Icon';
 import Picker from '../../components/Picker'; // Custom component for dropdowns
 
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 // --- Mock Data ---
 const categories = [
@@ -42,6 +43,7 @@ const categories = [
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { getAuthBundle } from '../../auth/tokenStorage';
 import { providerPortfolioApi } from '@/api/providerPortfolio';
+import { providerFilesApi } from '@/api/providerFiles';
 
 // --- Image Picker Implementation ---
 type ImageAsset = {
@@ -90,7 +92,7 @@ export function UploadPortfolioScreen() {
   });
   // In RN, 'images' state stores the picker response objects, not web File objects.
   const [images, setImages] = useState<ImageAsset[]>([]);
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleImageSelect = () => {
     launchImageLibraryAsync((selectedAssets: ImageAsset[]) => {
@@ -128,11 +130,55 @@ export function UploadPortfolioScreen() {
       Alert.alert('Fehler', 'Bitte eine Kategorie auswählen');
       return;
     }
-    // [UPLOAD-REMOVED] Portfolio upload logic removed — rebuild with new upload system
-    Alert.alert('Funktion nicht verfügbar', 'Portfolio-Upload wird in Kürze unterstützt.');
+    setLoading(true);
+    try {
+      // Compress all images before uploading
+      const compressedImages = await Promise.all(
+        images.map(async (img) => {
+          try {
+            const manipResult = await ImageManipulator.manipulateAsync(
+              img.uri,
+              [{ resize: { width: 1200 } }], // Resize to max width 1200px
+              { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG } // Compress to 0.8 JPEG
+            );
+            return {
+              uri: manipResult.uri,
+              name: img.fileName || `photo_${Date.now()}.jpg`,
+              type: 'image/jpeg', // Always JPEG after compression
+            };
+          } catch (err) {
+            console.error('Image compression failed for', img.uri, err);
+            // Fallback to original if compression fails (though unlikely)
+            return {
+              uri: img.uri,
+              name: img.fileName || `photo_${Date.now()}.jpg`,
+              type: img.type || 'image/jpeg',
+            };
+          }
+        })
+      );
+
+      await providerFilesApi.uploadPortfolioImages(
+        compressedImages,
+        {
+          category: formData.category,
+          caption: formData.description || '',
+          tags: formData.title || '',
+        }
+      );
+      Alert.alert('Erfolg', 'Bilder wurden erfolgreich hochgeladen.');
+      navigation.goBack();
+    } catch (error: any) {
+      Alert.alert(
+        'Fehler',
+        error?.message || 'Upload fehlgeschlagen. Bitte versuche es erneut.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const isSubmitDisabled = images.length === 0 || !formData.category || saving;
+  const isSubmitDisabled = images.length === 0 || !formData.category || loading;
 
   return (
     <SafeAreaView style={styles.flexContainer}>

@@ -30,7 +30,7 @@ export const providerPortfolioApi = {
       const meta = metadata[i] || {};
 
       const formData = new FormData();
-      formData.append('image', {
+      formData.append('images', {
         uri: p.uri,
         name: p.name || `photo_${Date.now()}_${i}.jpg`,
         type: p.type || 'image/jpeg',
@@ -53,7 +53,7 @@ export const providerPortfolioApi = {
       formData.append('metadata', JSON.stringify(metaObj));
 
       try {
-        const res = await http.post('/providers/portfolio', formData, {
+        const res = await http.post('/providers/me/portfolio', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
         results.push(res?.data);

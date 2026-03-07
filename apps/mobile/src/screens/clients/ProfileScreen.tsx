@@ -24,7 +24,8 @@ import { Switch } from 'react-native';
 import { spacing, colors, typography, radii, FONT_SIZES } from '@/theme/tokens';
 import { logger } from '@/services/logger';
 import AlertModal from '@/components/AlertModal';
-import { AppImage } from '@/components/AppImage';
+import { providerFilesApi } from '@/api/providerFiles';
+import * as ImagePicker from 'expo-image-picker';
 
 type MeResponse = {
   id: string;
@@ -181,8 +182,40 @@ export function ProfileScreen() {
 
   // --- Avatar Upload Logic ---
   const handleAvatarUpload = async () => {
-    // [UPLOAD-REMOVED] Avatar upload logic removed — rebuild with new upload system
-    Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert('Zugriff verweigert', 'Zugriff auf Fotos erforderlich.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setUploadingAvatar(true);
+        const asset = result.assets[0];
+        
+        await providerFilesApi.uploadAvatar({
+          uri: asset.uri,
+          name: asset.fileName || 'avatar.jpg',
+          type: asset.mimeType || 'image/jpeg',
+        });
+
+        // Refresh user profile to show new avatar
+        await usersApi.getMe().then(setMe);
+        Alert.alert('Erfolg', 'Profilbild aktualisiert!');
+      }
+    } catch (error) {
+      console.error('Avatar upload failed:', error);
+      Alert.alert('Fehler', 'Upload fehlgeschlagen.');
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleLogout = () => {

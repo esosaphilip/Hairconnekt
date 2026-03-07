@@ -3,11 +3,13 @@ import { CacheTTL } from '@nestjs/cache-manager';
 import { ProvidersService } from './providers.service';
 import { RegisterProviderDto } from './dto/register-provider.dto';
 import { AppCacheInterceptor, CacheKeyBuilder } from '../cache/app-cache.interceptor';
+import { PortfolioService } from '../portfolio/portfolio.service';
 
 @Controller('providers')
 export class ProvidersController {
   constructor(
     private readonly providersService: ProvidersService,
+    private readonly portfolioService: PortfolioService,
   ) { }
 
   @Post()
@@ -40,6 +42,30 @@ export class ProvidersController {
     };
     const data = await this.providersService.getNearbyProviders(params);
     return { success: true, data };
+  }
+
+  // Public endpoint for provider portfolio
+  @Get(':id/portfolio')
+  @UseInterceptors(AppCacheInterceptor)
+  @CacheKeyBuilder((req) => `providers:portfolio:${req.params.id}`)
+  @CacheTTL(300)
+  async getPortfolio(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Query('limit') limit?: number,
+    @Query('sort') sort?: string
+  ) {
+    const result = await this.portfolioService.listProviderPortfolio(id, {
+      limit: Number(limit) || 20,
+      sort: sort
+    });
+
+    return result.items.map(img => ({
+      id: img.id,
+      imageUrl: img.imageUrl,
+      thumbnailUrl: img.thumbnailUrl || img.imageUrl,
+      caption: img.caption,
+      displayOrder: img.displayOrder,
+    }));
   }
 
   // Alias: /providers/public/:id (matches what mobile frontend calls)

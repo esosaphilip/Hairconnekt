@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Image, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
+import { providerFilesApi } from '@/api/providerFiles';
+import { useAuth } from '@/auth/AuthContext';
 import Text from '../../components/Text';
 import Button from '../../components/Button';
 import Card from '../../components/Card';
@@ -9,17 +13,54 @@ import { colors, spacing, typography } from '../../theme/tokens';
 
 export function ProviderPhotoUploadScreen() {
     const navigation = useNavigation();
-    const [image] = useState<string | null>(null);
-    const [uploading] = useState(false);
+    const { user } = useAuth();
+    const [image, setImage] = useState<string | null>(null);
+    const [asset, setAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
+    const [uploading, setUploading] = useState(false);
 
     const pickImage = async () => {
-        // [UPLOAD-REMOVED] Image picker logic removed — rebuild with new upload system
-        Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 0.8,
+        });
+
+        if (!result.canceled && result.assets[0]) {
+            setImage(result.assets[0].uri);
+            setAsset(result.assets[0]);
+        }
     };
 
     const uploadPhoto = async () => {
-        // [UPLOAD-REMOVED] Upload logic removed — rebuild with new upload system
-        Alert.alert('Funktion nicht verfügbar', 'Bildupload wird in Kürze unterstützt.');
+        if (!asset) return;
+
+        setUploading(true);
+        try {
+            // Compress image before upload
+            const manipResult = await ImageManipulator.manipulateAsync(
+                asset.uri,
+                [{ resize: { width: 1200 } }], // Resize to max width 1200px
+                { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG } // Compress to 0.8 JPEG
+            );
+
+            await providerFilesApi.uploadProviderProfilePicture({
+                uri: manipResult.uri,
+                name: asset.fileName || 'profile.jpg',
+                type: 'image/jpeg', // Always JPEG after compression
+            });
+            
+            // Refresh auth context to update avatar everywhere
+            // Note: refreshUser might not be available in useAuth depending on implementation
+            // If not available, we rely on the next fetch or logout/login cycle
+            
+            Alert.alert('Erfolg', 'Profilbild aktualisiert!');
+            navigation.goBack();
+        } catch (error) {
+            Alert.alert('Fehler', 'Upload fehlgeschlagen.');
+        } finally {
+            setUploading(false);
+        }
     };
 
     return (

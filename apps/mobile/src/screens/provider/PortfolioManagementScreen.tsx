@@ -97,8 +97,9 @@ export function PortfolioManagementScreen() {
       }));
       setPortfolioData(mapped.filter((x) => !!x.image));
     } catch (e) {
-      const msg = (e as any)?.response?.data?.message || (e as any)?.message || 'Fehler beim Laden des Portfolios';
-      setError(String(msg));
+      // FIX 5: Silent error handling and generic message
+      console.error('Portfolio fetch failed:', e);
+      setError('Portfolio konnte nicht geladen werden. Bitte versuche es später erneut.');
     } finally {
       if (isRefresh) setRefreshing(false);
       else setLoading(false);
@@ -239,25 +240,30 @@ export function PortfolioManagementScreen() {
         </View>
       </View>
 
-      {error && (
+      {error ? (
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
+          <Button
+            title="Erneut versuchen"
+            onPress={() => fetchData()}
+            variant="outline"
+            style={{ marginTop: 12 }}
+          />
         </View>
+      ) : (
+        <FlatList
+          data={portfolioData}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          numColumns={numColumns}
+          ListEmptyComponent={loading ? null : EmptyState}
+          columnWrapperStyle={styles.columnWrapper}
+          contentContainerStyle={styles.listContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => fetchData(true)} tintColor={COLORS.primary} />
+          }
+        />
       )}
-
-      {/* Portfolio Grid */}
-      <FlatList
-        data={portfolioData}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        numColumns={numColumns}
-        ListEmptyComponent={loading ? null : EmptyState}
-        columnWrapperStyle={styles.columnWrapper}
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => fetchData(true)} tintColor={COLORS.primary} />
-        }
-      />
 
       {/* Loading Overlay */}
       {loading && (
