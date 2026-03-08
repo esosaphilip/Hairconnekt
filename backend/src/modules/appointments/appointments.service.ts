@@ -164,6 +164,7 @@ export class AppointmentsService {
   private statusGroupToStatuses(group: StatusGroup): AppointmentStatus[] {
     switch (group) {
       case 'completed':
+        // Explicitly include COMPLETED status
         return [AppointmentStatus.COMPLETED];
       case 'cancelled':
         return [
@@ -173,6 +174,7 @@ export class AppointmentsService {
         ];
       case 'upcoming':
       default:
+        // Exclude COMPLETED from upcoming
         return [AppointmentStatus.PENDING, AppointmentStatus.CONFIRMED, AppointmentStatus.IN_PROGRESS];
     }
   }
@@ -365,6 +367,51 @@ export class AppointmentsService {
     }
 
     return saveResult;
+  }
+
+  async cancelByClient(id: string, userId: string, reason?: string): Promise<Appointment> {
+    const appt = await this.appointmentRepo.findOne({
+      where: { id },
+      relations: ['provider', 'provider.user', 'client']
+    });
+
+    if (!appt) {
+      throw new NotFoundException(`Appointment with ID "${id}" not found`);
+    }
+
+    // Authorization check
+    if (appt.client?.id !== userId) {
+      throw new NotFoundException('Appointment not found or unauthorized');
+    }
+
+    if (appt.status === AppointmentStatus.COMPLETED) {
+      throw new BadRequestException('Cannot cancel a completed appointment');
+    }
+
+    if (appt.status === AppointmentStatus.CANCELLED_BY_CLIENT || appt.status === AppointmentStatus.CANCELLED_BY_PROVIDER) {
+      throw new BadRequestException('Appointment is already cancelled');
+    }
+
+    appt.status = AppointmentStatus.CANCELLED_BY_CLIENT;
+    if (reason) {
+      appt.cancellationReason = reason;
+    }
+
+    const saved = await this.appointmentRepo.save(appt);
+
+    // Notify Provider
+    if (appt.provider?.user?.fcmToken) {
+      const dateStr = appt.startTime.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+      const timeStr = appt.startTime.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      await this.notificationsService.sendPushNotification(
+        appt.provider.user.fcmToken,
+        'Termin storniert ❌',
+        `${appt.client.firstName} hat den Termin am ${dateStr} um ${timeStr} storniert.`,
+        { type: 'appointment_cancelled', appointmentId: id }
+      );
+    }
+
+    return saved;
   }
 
   async reschedule(userId: string, appointmentId: string, newStartAt: string, newEndAt: string): Promise<Appointment> {

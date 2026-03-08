@@ -12,7 +12,7 @@ import { colors, spacing, typography } from '../../theme/tokens';
 
 export function ProviderPhotoUploadScreen() {
     const navigation = useNavigation();
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [image, setImage] = useState<string | null>(null);
     const [asset, setAsset] = useState<ImagePicker.ImagePickerAsset | null>(null);
     const [uploading, setUploading] = useState(false);
@@ -25,7 +25,7 @@ export function ProviderPhotoUploadScreen() {
             quality: 0.8,
         });
 
-        if (!result.canceled && result.assets[0]) {
+        if (!result.canceled && result.assets && result.assets.length > 0) {
             setImage(result.assets[0].uri);
             setAsset(result.assets[0]);
         }
@@ -36,22 +36,23 @@ export function ProviderPhotoUploadScreen() {
 
         setUploading(true);
         try {
-            console.log('Starting upload...');
+            if (__DEV__) console.log('Starting upload...');
             const response = await providerFilesApi.uploadProviderProfilePicture({
                 uri: asset.uri,
                 name: asset.fileName || 'profile.jpg',
-                type: asset.mimeType || 'image/jpeg',
+                type: (asset as any).mimeType || (asset as any).type || 'image/jpeg',
             });
-            console.log('Upload success:', response);
+            if (__DEV__) console.log('Upload success:', response);
             
-            // Refresh auth context to update avatar everywhere
-            // Note: refreshUser might not be available in useAuth depending on implementation
-            // If not available, we rely on the next fetch or logout/login cycle
+            if (refreshUser) {
+                await refreshUser();
+            }
             
             Alert.alert('Erfolg', 'Profilbild aktualisiert!');
             navigation.goBack();
-        } catch (error) {
-            Alert.alert('Fehler', 'Upload fehlgeschlagen.');
+        } catch (error: any) {
+            const msg = error?.response?.data?.message || error?.message || 'Upload fehlgeschlagen.';
+            Alert.alert('Fehler', msg);
         } finally {
             setUploading(false);
         }

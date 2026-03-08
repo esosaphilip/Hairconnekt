@@ -27,7 +27,7 @@ import { MapViewScreen } from '@/screens/clients/MapViewScreen';
 import { VerificationScreen } from '@/screens/shared/VerificationScreen';
 import { BookingFlow } from '@/screens/clients/Booking/BookingFlow';
 import { PasswordResetScreen } from '@/screens/shared/PasswordResetScreen';
-import { LoginScreen } from '@/screens/shared/UserManualScreen';
+import { LoginScreen } from '@/screens/shared/LoginScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 

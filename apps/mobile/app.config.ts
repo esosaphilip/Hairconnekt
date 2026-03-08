@@ -31,6 +31,13 @@ export default ({ config }: any) => {
           foregroundImage: './assets/adaptive-icon.png',
           backgroundColor: '#ffffff',
         },
+        permissions: [
+          "android.permission.CAMERA",
+          "android.permission.READ_EXTERNAL_STORAGE",
+          "android.permission.WRITE_EXTERNAL_STORAGE",
+          "android.permission.ACCESS_FINE_LOCATION",
+          "android.permission.ACCESS_COARSE_LOCATION"
+        ],
         edgeToEdgeEnabled: true,
         predictiveBackGestureEnabled: false,
         package: 'de.hairconnekt.app',

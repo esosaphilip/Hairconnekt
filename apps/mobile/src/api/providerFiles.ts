@@ -9,9 +9,7 @@ export const providerFilesApi = {
       name: file.name || 'avatar.jpg',
       type: file.type || 'image/jpeg',
     } as any);
-    const res = await http.post('/users/me/avatar', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const res = await http.post('/users/me/avatar', form);
     return res?.data;
   },
 
@@ -23,15 +21,7 @@ export const providerFilesApi = {
       type: file.type || 'image/jpeg',
     } as any);
     
-    // Explicitly add a console log to debug headers
-    console.log('Uploading Profile Picture to: /providers/me/profile-picture');
-
-    const res = await http.post('/providers/me/profile-picture', form, {
-      headers: { 
-        'Content-Type': 'multipart/form-data',
-        // 'Accept': 'application/json', // optional, usually default
-      },
-    });
+    const res = await http.post('/providers/me/profile-picture', form);
     return res?.data;
   },
 
@@ -50,9 +40,7 @@ export const providerFilesApi = {
     if (meta.category) form.append('category', meta.category);
     if (meta.caption) form.append('caption', meta.caption);
     if (meta.tags) form.append('tags', meta.tags);
-    const res = await http.post('/providers/me/portfolio', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const res = await http.post('/providers/me/portfolio', form);
     return res?.data;
   },
 
@@ -63,9 +51,7 @@ export const providerFilesApi = {
       name: file.name || 'service.jpg',
       type: file.type || 'image/jpeg',
     } as any);
-    const res = await http.post('/providers/me/services/image', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    const res = await http.post('/providers/me/services/image', form);
     return res?.data;
   },
 

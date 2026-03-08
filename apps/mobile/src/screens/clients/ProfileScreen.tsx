@@ -374,20 +374,17 @@ export function ProfileScreen() {
           {/* <MenuItem iconName="notifications" label={t('screens.profile.menu.notifications')} onClick={() => navigateTo('Notifications')} />
           <Separator /> */}
           <MenuItem iconName="person" label={t('screens.profile.menu.personalInfo')} onClick={() => navigateTo('PersonalInfo')} />
-          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
-          {/* <Separator />
-          <MenuItem
+          {false && <MenuItem
             iconName="map"
             label={t('screens.profile.menu.addresses')}
             badge={me?.addressesCount ?? 0}
             onClick={() => navigateTo('Addresses')}
-          />
-          <Separator />
-          <MenuItem
+          />}
+          {false && <MenuItem
             iconName="person"
             label={t('screens.profile.menu.preferences')}
             onClick={() => navigateTo('HairPreferences')}
-          /> */}
+          />}
         </Card>
 
         {/* My Activities Section */}
@@ -400,30 +397,21 @@ export function ProfileScreen() {
             badge={me?.stats?.favorites ?? 0}
             onClick={() => navigateTo('Favorites')}
           />
-          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
-          {/* <Separator />
-          <MenuItem
+          {false && <MenuItem
             iconName="star"
             label={t('screens.profile.menu.myReviews')}
             badge={me?.stats?.reviews ?? 0}
             onClick={() => navigateTo('MyReviews')}
-          /> */}
-          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
-          {/* <Separator />
-          <MenuItem iconName="calendar" label={t('screens.profile.menu.bookingHistory')} onClick={() => navigateTo('BookingHistory')} /> */}
+          />}
+          {false && <MenuItem iconName="calendar" label={t('screens.profile.menu.bookingHistory')} onClick={() => navigateTo('BookingHistory')} />}
         </Card>
 
-        {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
-        {/* 
         <SectionHeader title={t('screens.profile.sections.payments')} />
         <Card style={styles.card}>
-          <MenuItem iconName="card" label={t('screens.profile.menu.paymentMethods')} onClick={() => navigateTo('PaymentMethods')} />
-          <Separator />
-          <MenuItem iconName="gift" label={t('screens.profile.menu.vouchers')} badge={0} onClick={() => navigateTo('Vouchers')} />
-          <Separator />
-          <MenuItem iconName="document-text" label={t('screens.profile.menu.transactions')} onClick={() => navigateTo('Transactions')} />
+          {false && <MenuItem iconName="card" label={t('screens.profile.menu.paymentMethods')} onClick={() => navigateTo('PaymentMethods')} />}
+          {false && <MenuItem iconName="gift" label={t('screens.profile.menu.vouchers')} badge={0} onClick={() => navigateTo('Vouchers')} />}
+          {false && <MenuItem iconName="document-text" label={t('screens.profile.menu.transactions')} onClick={() => navigateTo('Transactions')} />}
         </Card>
-        */}
 
         {/* Settings Section */}
         <SectionHeader title={t('screens.profile.sections.settings')} />

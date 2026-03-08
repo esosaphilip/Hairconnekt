@@ -85,8 +85,8 @@ export type ClientProfileStackParamList = {
 export type ProviderTabsParamList = {
   Dashboard: undefined;
   Kalender: undefined;
-  Kunden: undefined;
-  Nachrichten: undefined;
+  Buchungen: undefined;
+  Profil: undefined;
   Mehr: undefined;
 };
 

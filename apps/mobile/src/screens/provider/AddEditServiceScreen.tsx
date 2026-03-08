@@ -79,7 +79,7 @@ export function AddEditServiceScreen() {
         setCategoriesLoading(true);
         // Fetch valid categories from backend
         const cats = await clientBraiderApi.getCategories();
-        console.log('[AddEditService] Loaded categories:', cats.length);
+        if (__DEV__) console.log('[AddEditService] Loaded categories:', cats.length);
 
         if (mounted) {
           // Map to format needed by picker and hydrate tags from local constants
@@ -141,7 +141,7 @@ export function AddEditServiceScreen() {
     const isClean = wasSubmittedRef.current;
 
     if (!isClean && hasName && hasCategory && !isSavingRef.current) {
-      console.log('[AutoSave] Saving before exit...');
+      if (__DEV__) console.log('[AutoSave] Saving before exit...');
       isSavingRef.current = true;
       try {
         const body: any = {
@@ -159,10 +159,10 @@ export function AddEditServiceScreen() {
 
         if (isEditing && serviceId) {
           await http.patch(`/providers/me/services/${serviceId}`, body);
-          console.log('[AutoSave] Update successful');
+          if (__DEV__) console.log('[AutoSave] Update successful');
         } else {
           await http.post('/providers/me/services', body);
-          console.log('[AutoSave] Creation successful');
+          if (__DEV__) console.log('[AutoSave] Creation successful');
         }
       } catch (err) {
         console.warn('[AutoSave] Failed', err);
@@ -272,11 +272,8 @@ export function AddEditServiceScreen() {
       if (isEditing && serviceId) {
         await http.patch(`/providers/me/services/${serviceId}`, body);
         setMessage('Dienst aktualisiert');
-        // Small delay to ensure state is settled before navigation
-        setTimeout(() => {
-          if (navigation.canGoBack()) navigation.goBack();
-          else navigation.navigate('ServicesManagementScreen' as never);
-        }, 500);
+        if (navigation.canGoBack()) navigation.goBack();
+        else navigation.navigate('ServicesManagementScreen' as never);
       } else {
         const res = await http.post('/providers/me/services', body);
         // Accept 200 or 201. Check for ID in various locations just to be safe.

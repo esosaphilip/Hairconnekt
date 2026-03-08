@@ -24,19 +24,7 @@ import Picker from '../../components/Picker'; // Custom component for dropdowns
 
 import * as ImagePicker from 'expo-image-picker';
 
-// --- Mock Data ---
-const categories = [
-  "Box Braids",
-  "Knotless Braids",
-  "Cornrows",
-  "Senegalese Twists",
-  "Passion Twists",
-  "Locs",
-  "Natural Hair Care",
-  "Special Occasion",
-  "Barber Services",
-  "Other",
-];
+import { clientBraiderApi } from '@/api/clientBraider';
 
 // --- Custom Tokens (Imported from a central theme file) ---
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
@@ -92,6 +80,23 @@ export function UploadPortfolioScreen() {
   // In RN, 'images' state stores the picker response objects, not web File objects.
   const [images, setImages] = useState<ImageAsset[]>([]);
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  
+  // Fetch categories on mount
+  React.useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await clientBraiderApi.getCategories();
+        // Use German names (name) or English (slug) as fallback
+        setCategories(data.map(c => c.name));
+      } catch (err) {
+        console.error("Failed to load categories", err);
+        // Fallback if API fails
+        setCategories(["Other"]); 
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const handleImageSelect = () => {
     launchImageLibraryAsync((selectedAssets: ImageAsset[]) => {
@@ -148,7 +153,7 @@ export function UploadPortfolioScreen() {
     } catch (error: any) {
       Alert.alert(
         'Fehler',
-        error?.message || 'Upload fehlgeschlagen. Bitte versuche es erneut.'
+        error?.response?.data?.message || error?.message || 'Upload fehlgeschlagen. Bitte versuche es erneut.'
       );
     } finally {
       setLoading(false);
@@ -226,11 +231,15 @@ export function UploadPortfolioScreen() {
           {/* Category */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>Kategorie *</Text>
-            <Picker
-              selectedValue={formData.category}
-              onValueChange={(value: string) => setFormData({ ...formData, category: value })}
-              items={categories.map((category: string) => ({ label: category, value: category }))}
-            />
+            {categories.length > 0 ? (
+              <Picker
+                selectedValue={formData.category}
+                onValueChange={(value: string) => setFormData({ ...formData, category: value })}
+                items={categories.map((category: string) => ({ label: category, value: category }))}
+              />
+            ) : (
+              <Text style={{color: COLORS.textSecondary}}>Lade Kategorien...</Text>
+            )}
           </View>
 
           {/* Description */}

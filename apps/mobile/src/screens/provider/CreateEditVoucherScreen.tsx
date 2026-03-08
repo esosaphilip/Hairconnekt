@@ -7,6 +7,7 @@ import Input from '../../components/Input';
 import IconButton from '../../components/IconButton';
 import { COLORS, SPACING, FONT_SIZES } from '../../theme/tokens';
 import { providerVouchersApi } from '../../api/providerVouchers';
+import { http } from '@/api/http';
 
 export function CreateEditVoucherScreen() {
   const navigation = useNavigation();
@@ -40,13 +41,13 @@ export function CreateEditVoucherScreen() {
         usageLimits: { totalUses: 100, usesPerClient: 1 }
       };
 
-      if (isEdit) {
-        await providerVouchersApi.update(voucherId, payload);
-        Alert.alert('Erfolg', 'Gutschein aktualisiert');
+      const { id } = route.params || {} as any;
+      if (id) {
+          await http.put(`/providers/me/vouchers/${id}`, payload);
       } else {
-        await providerVouchersApi.create(payload);
-        Alert.alert('Erfolg', 'Gutschein erstellt');
+          await http.post('/providers/me/vouchers', payload);
       }
+      Alert.alert('Erfolg', id ? 'Gutschein aktualisiert.' : 'Gutschein erstellt.');
       navigation.goBack();
     } catch (e: any) {
       const msg = e?.response?.data?.message || e?.message || 'Fehler beim Speichern';

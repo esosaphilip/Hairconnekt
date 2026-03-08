@@ -5,6 +5,7 @@ import { clearAuthBundle, clearTokens, getAuthBundle, getRefreshToken, saveAuthB
 import type { AuthBundle, Tokens, PublicUser } from './tokenStorage';
 import type { AuthContextValue } from './types';
 import { registerForPushNotificationsAsync } from '../services/notifications';
+import { usersApi } from '@/services/users';
 import { normalizeUrl } from '@/utils/url';
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -135,7 +136,19 @@ export function AuthProvider({ children }: PropsWithChildren) {
     });
   }, []);
 
-  const value: AuthContextValue = { ...state, login, logout, setUser, refreshTokens, register, setSession };
+  const refreshUser = useCallback(async () => {
+    try {
+      const user = await usersApi.getMe();
+      if (user) {
+        // Cast to PublicUser if needed, assuming getMe returns compatible type
+        await setUser(user as PublicUser);
+      }
+    } catch (error) {
+      if (__DEV__) console.warn('[Auth] Failed to refresh user:', error);
+    }
+  }, [setUser]);
+
+  const value: AuthContextValue = { ...state, login, logout, setUser, refreshTokens, register, setSession, refreshUser };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

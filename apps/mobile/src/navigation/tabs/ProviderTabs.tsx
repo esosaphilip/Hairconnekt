@@ -15,7 +15,9 @@ import { ProviderCalendarStackScreen } from '../stacks/ProviderCalendarStack';
 import { ProviderMoreStackScreen } from '../stacks/ProviderMoreStack';
 import BookingsListScreen from '@/screens/clients/BookingsListScreen';
 
-const Tab = createBottomTabNavigator();
+import type { ProviderTabsParamList } from '@/navigation/types';
+
+const Tab = createBottomTabNavigator<ProviderTabsParamList>();
 
 export function ProviderTabs() {
     const { t } = useI18n();

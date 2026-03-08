@@ -136,6 +136,17 @@ export class AppointmentsController {
     });
   }
 
+  @Post(':id/cancel')
+  @UseGuards(JwtAuthGuard)
+  async cancelAppointment(
+    @Param('id') id: string,
+    @Req() req: Request,
+    @Body() body: { reason?: string }
+  ) {
+    const userId = (req.user as any)?.sub;
+    return this.appointmentsService.cancelByClient(id, userId, body?.reason);
+  }
+
   @Patch()
   update(@Body() dto: UpdateAppointmentDto) {
     return { message: 'Not implemented - awaiting schemas' };

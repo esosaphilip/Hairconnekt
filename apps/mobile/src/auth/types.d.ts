@@ -11,4 +11,5 @@ export interface AuthContextValue {
   refreshTokens: () => Promise<Tokens | null>;
   logout: () => Promise<void>;
   setUser: (u: PublicUser | null) => Promise<void>;
+  refreshUser?: () => Promise<void>;
 }

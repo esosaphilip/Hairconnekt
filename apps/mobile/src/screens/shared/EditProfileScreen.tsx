@@ -35,7 +35,7 @@ type ProfileData = {
 };
 
 export function EditProfileScreen() {
-  const { user, setUser } = useAuth();
+  const { user, setUser, refreshUser } = useAuth();
   const navigation = useNavigation();
   const isProvider = user?.userType === 'PROVIDER';
 
@@ -185,11 +185,16 @@ export function EditProfileScreen() {
           }
         }
         
+        if (refreshUser) {
+            await refreshUser();
+        }
+
         Alert.alert('Erfolg', 'Profilbild aktualisiert!');
       }
     } catch (error: any) {
       console.error('Avatar upload failed:', error);
-      Alert.alert('Fehler', 'Upload fehlgeschlagen: ' + (error.message || 'Unbekannter Fehler'));
+      const msg = error?.response?.data?.message || error?.message || 'Unbekannter Fehler';
+      Alert.alert('Fehler', 'Upload fehlgeschlagen: ' + msg);
     } finally {
       setLoading(false);
     }
