@@ -10,7 +10,7 @@ import { PersonalInfoScreen } from '@/screens/clients/PersonalInfoScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
 // import { HairPreferencesScreen } from '@/screens/clients/HairPreferencesScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
-// import { FavoritesScreen } from '@/screens/clients/FavoritesScreen';
+import { FavoritesScreen } from '@/screens/clients/FavoritesScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
 // import { MyReviewsScreen } from '@/screens/clients/MyReviewsScreen';
 // [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2
@@ -79,8 +79,8 @@ export function ClientProfileStackScreen() {
             {/* <ClientProfileStack.Screen name="NotificationSettings" component={NotificationSettingsScreen} options={{ title: t('screens.profile.menu.notifications') }} /> */}
             {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
             {/* <ClientProfileStack.Screen name="HairPreferences" component={HairPreferencesScreen} options={{ title: t('screens.profile.menu.preferences') }} /> */}
-            {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
-            {/* <ClientProfileStack.Screen name="Favorites" component={FavoritesScreen} options={{ title: t('screens.profile.menu.favorites') }} /> */}
+            {/* [MVP-RESTORED] */}
+            <ClientProfileStack.Screen name="Favorites" component={FavoritesScreen} options={{ title: t('screens.profile.menu.favorites') }} />
             {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}
             {/* <ClientProfileStack.Screen name="MyReviews" component={MyReviewsScreen} options={{ title: t('screens.profile.menu.myReviews') }} /> */}
             {/* [MVP-CUT] Reason: Feature cut for MVP reduction | Restore in: v2 */}

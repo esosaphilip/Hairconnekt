@@ -22,9 +22,10 @@ import { NearbyBraiderCard } from "./components/NearbyBraiderCard";
 const quickActions = [
   { iconName: "flash", key: "urgent", color: colors.orange500 },
   { iconName: "car", key: "mobileService", color: colors.blue600 },
+  // [MVP-RESTORED]
+  { iconName: "heart", key: "favorites", color: colors.pink500 },
   // [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2
   // { iconName: "gift", key: "vouchers", color: colors.purple600 },
-  // { iconName: "heart", key: "favorites", color: colors.pink500 },
   { iconName: "sparkles", key: "newBraiders", color: colors.amber600 },
 ];
 
@@ -186,8 +187,6 @@ export function HomeScreen() {
                     rootNavigationRef.current?.navigate('Tabs', { screen: 'Search', params: { urgent: true } });
                   } else if (item.key === "mobileService") {
                     rootNavigationRef.current?.navigate('Tabs', { screen: 'Search', params: { mobileService: true } });
-                  } else if (item.key === "vouchers") {
-                    rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Vouchers' } });
                   } else if (item.key === "favorites") {
                     rootNavigationRef.current?.navigate('Tabs', { screen: 'Profile', params: { screen: 'Favorites' } });
                   } else if (item.key === "newBraiders") {

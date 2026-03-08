@@ -393,13 +393,13 @@ export function ProfileScreen() {
         {/* My Activities Section */}
         <SectionHeader title={t('screens.profile.sections.myActivities')} />
         <Card style={styles.card}>
-          {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
-          {/* <MenuItem
+          {/* [MVP-RESTORED] */}
+          <MenuItem
             iconName="heart"
             label={t('screens.profile.menu.favorites')}
             badge={me?.stats?.favorites ?? 0}
             onClick={() => navigateTo('Favorites')}
-          /> */}
+          />
           {/* [MVP-CUT] Reason: Feature disabled for MVP, hidden from UI | Restore in: v2 */}
           {/* <Separator />
           <MenuItem
