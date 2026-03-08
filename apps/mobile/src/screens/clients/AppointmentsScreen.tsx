@@ -24,7 +24,22 @@ export function AppointmentsScreen() {
     try {
       setLoading(true);
       const data = await clientBookingApi.getAppointments(activeTab);
-      const sorted = data.sort((a, b) => {
+      
+      // Strict frontend filtering as safety net
+      const filtered = data.filter(appt => {
+        if (activeTab === 'upcoming') {
+          return ['PENDING', 'CONFIRMED', 'IN_PROGRESS'].includes(appt.status);
+        }
+        if (activeTab === 'completed') {
+          return appt.status === 'COMPLETED';
+        }
+        if (activeTab === 'cancelled') {
+          return ['CANCELLED_BY_CLIENT', 'CANCELLED_BY_PROVIDER', 'NO_SHOW'].includes(appt.status);
+        }
+        return true;
+      });
+
+      const sorted = filtered.sort((a, b) => {
         const dA = new Date(a.startTime).getTime();
         const dB = new Date(b.startTime).getTime();
         return activeTab === 'upcoming' ? dA - dB : dB - dA;
